@@ -214,6 +214,83 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Chat endpoint — Developer Mock Mode (no API key required)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages, system, max_tokens = 800, temperature = 0.7, page, playgroundModel, userId, city } = req.body;
+    
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'messages array is required' });
+    }
+
+    console.log('[/api/chat] 🎭 DEVELOPER MOCK MODE - 1s delay before response');
+    
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Determine if this is a JSON evaluation request by checking the system prompt or last message
+    const isEvaluation = 
+      (system && (system.includes('JSON') || system.includes('tier') || system.includes('evaluation'))) ||
+      (messages[messages.length - 1]?.content?.includes('JSON') || 
+       messages[messages.length - 1]?.content?.includes('tier') ||
+       messages[messages.length - 1]?.content?.includes('score'));
+
+    let mockContent = '';
+
+    if (isEvaluation) {
+      // Return a realistic evaluation JSON response
+      const mockEvaluation = {
+        tier: 'Developing',
+        tier_label: 'Tier 2: Developing',
+        summary: 'Your submission demonstrates solid understanding of the core concepts with room for deeper exploration. The architecture is sound and follows best practices in most areas.',
+        tier_reasoning: 'Your implementation shows competent use of the required technologies and patterns. The code is well-structured and your explanations are clear. To reach the next tier, consider adding more advanced patterns or optimizations.',
+        follow_up_instruction: 'Review the advanced patterns section and try implementing one optimization technique in your next submission.',
+        strengths: [
+          'Clear code structure',
+          'Good variable naming',
+          'Proper error handling in most cases'
+        ],
+        improvements: [
+          'Consider extracting repeated logic into helper functions',
+          'Add more granular comments for complex sections',
+          'Optimize database queries for performance'
+        ]
+      };
+      mockContent = JSON.stringify(mockEvaluation);
+    } else {
+      // Return a helpful text response for general chat
+      const lastMessage = messages[messages.length - 1]?.content || 'Hello';
+      mockContent = `Thanks for your question! I'm currently in Developer Mock Mode (no API key configured). 
+      
+This is a placeholder response. In production, this would be powered by Claude or another AI model. Here's what I can help with:
+- Answer questions about your code
+- Provide learning guidance
+- Evaluate your submissions
+- Suggest improvements
+
+Feel free to refine your work and resubmit!`;
+    }
+
+    // Return OpenAI-compatible format
+    res.json({
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            content: mockContent,
+          },
+        },
+      ],
+    });
+
+  } catch (error) {
+    console.error('[/api/chat] Error:', error);
+    res.status(500).json({
+      error: error.message || 'Chat server error',
+    });
+  }
+});
+
 const PORT = 3001;
 app.listen(PORT, () => {
   const hasApiKey = !!process.env.E2B_API_KEY;

@@ -26,8 +26,7 @@ import {
   Trash2, Plus, FileCode, Package, Play, Key, ExternalLink,
   Zap, GitBranch, RefreshCw, Eye, Terminal, Wand2,
   Database, Table2, Bot, Send, User as UserIcon, Code2, Sparkles as SparklesIcon,
-  HelpCircle, FileText, ChevronRight, Github, SkipForward,
-  Bot, Send, User as UserIcon, MessageCircle,
+  HelpCircle, FileText, ChevronRight, Github, MessageCircle,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

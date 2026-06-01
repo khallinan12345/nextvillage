@@ -335,7 +335,10 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
 
       const { data: existing } = await supabase.from('profiles').select('id').eq('id', actualUserId).maybeSingle();
       if (existing) {
-        await supabase.from('profiles').update(profilePayload).eq('id', actualUserId);
+        // For UPDATE, remove created_at (immutable field) and send only mutable fields
+        const updatePayload = { ...profilePayload };
+        delete updatePayload.created_at;
+        await supabase.from('profiles').update(updatePayload).eq('id', actualUserId);
       } else {
         await supabase.from('profiles').insert(profilePayload);
       }

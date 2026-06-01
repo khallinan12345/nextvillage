@@ -63,11 +63,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fetchingRef.current = true;
       console.log('[Auth] fetchUserProfile for', userId);
       
-      console.log('[Auth] Starting profile query with 5s timeout...');
+      console.log('[Auth] Starting profile query with 15s timeout...');
       
-      // Create timeout promise (5 seconds)
+      // Create timeout promise (15 seconds)
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 15000)
       );
   
       // Create profile fetch promise

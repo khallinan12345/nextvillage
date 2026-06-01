@@ -273,13 +273,14 @@ const AppContent: React.FC = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {showPopup && (
+      {/* Profile Completion Popup — DISABLED FOR DEVELOPMENT */}
+      {/* {showPopup && (
         <ProfileCompletionPopup
           userId={user!.id}
           email={user!.email}
           onComplete={handleProfileCompletion}
         />
-      )}
+      )} */}
     </>
   );
 };

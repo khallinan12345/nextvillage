@@ -419,12 +419,11 @@ Evaluate the submission strictly but fairly. Respond in JSON only, no markdown, 
 
 Pass criteria: the submission shows genuine self-knowledge of the learner's own platform. Vague, generic, or copy-pasted answers should not pass. Honest gaps with specific detail are fine.`;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
+          model: 'claude-sonnet-4-5',
           system: systemPrompt,
           messages: [{ role: 'user', content: text.trim() }],
         }),
@@ -621,12 +620,11 @@ Evaluate the submission strictly but fairly. Respond in JSON only, no markdown, 
 
 Pass criteria: the submission meaningfully addresses the task requirements described above. Incomplete, placeholder, or off-topic submissions should not pass.`;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
+          model: 'claude-sonnet-4-5',
           system: systemPrompt,
           messages: [{ role: 'user', content: text.trim() }],
         }),
