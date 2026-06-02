@@ -341,10 +341,18 @@ Mock response: Your submission looks good so far. In production mode, you'll get
     });
 
   } catch (error) {
-    console.error('[/api/chat] Error:', error);
-    res.status(500).json({
-      error: error.message || 'Chat server error',
-    });
+    console.error('PROXY ROUTE ERROR:', error);
+    // Never return a raw HTML 500 page; always return structured JSON for the client
+    try {
+      return res.status(400).json({
+        error: (error && error.message) ? error.message : String(error),
+        messages: []
+      });
+    } catch (innerErr) {
+      // If responding fails for some reason, log both errors and send minimal JSON
+      console.error('PROXY ROUTE ERROR (while sending response):', innerErr);
+      res.status(400).json({ error: 'Unknown proxy error', messages: [] });
+    }
   }
 });
 
