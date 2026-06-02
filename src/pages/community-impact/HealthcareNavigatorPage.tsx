@@ -23,7 +23,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
@@ -32,7 +32,7 @@ import {
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
   ClipboardList, RefreshCw, Calendar, Mic, MicOff,
   Volume2, VolumeX, X, Lightbulb, Thermometer, Activity,
-  Baby, Stethoscope, ShieldCheck, AlertCircle, XCircle, Award,
+  Baby, Stethoscope, ShieldCheck, AlertCircle, XCircle, Award, WifiOff,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -1344,6 +1344,19 @@ const HealthcareNavigatorPage: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Offline Mode Link */}
+          <Link to="/community-impact/healthcare-offline"
+            className="flex items-center justify-between gap-3 bg-gray-800/60 backdrop-blur-sm rounded-xl px-4 py-3 mb-4 border border-gray-600/30 hover:bg-gray-700/60 transition-colors group">
+            <div className="flex items-center gap-2.5">
+              <WifiOff size={16} className="text-gray-400 group-hover:text-teal-400 transition-colors" />
+              <div>
+                <p className="text-sm font-semibold text-gray-200">No signal? Use Offline Mode</p>
+                <p className="text-xs text-gray-400">Rule-based IMCI triage — works without internet</p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-gray-500 group-hover:text-gray-300 transition-colors" />
+          </Link>
 
           {/* Stats */}
           {patients.length > 0 && (

@@ -84,6 +84,7 @@ import HealthcareNavigatorCertificationPage from './pages/community-impact/Healt
 import EntrepreneurshipConsultantPage from './pages/community-impact/EntrepreneurshipConsultantPage';
 import EntrepreneurshipConsultantCertificationPage from './pages/community-impact/EntrepreneurshipConsultantCertificationPage';
 import AnimalHusbandryPage from './pages/community-impact/AnimalHusbandryPage';
+import OfflineClinicalAssessment from './pages/community-impact/OfflineClinicalAssessment';
 
 // Research Pages
 import ResearchAILearningLab from './pages/research/ResearchAILearningLab';
@@ -241,6 +242,7 @@ const AppContent: React.FC = () => {
         <Route path="/community-impact/entrepreneurship" element={<EntrepreneurshipConsultantPage />} />
         <Route path="/community-impact/entrepreneurship/certification" element={<EntrepreneurshipConsultantCertificationPage />} />
         <Route path="/community-impact/animal-husbandry" element={<AnimalHusbandryPage />} />
+        <Route path="/community-impact/healthcare-offline" element={<OfflineClinicalAssessment />} />
 
         {/* Research Routes */}
         <Route path="/research/ai-learning-lab" element={<ResearchAILearningLab />} />
