@@ -2668,32 +2668,60 @@ Provide assessment now:`;
         );
         rubricEvaluation.improvementAdvice = improvementAdvice;
 
-        const result = await updateSkillsRubricEvaluation(
-          selectedActivity.id,
-          currentModuleSubCategory,
-          rubricEvaluation,
-          chatHistory,
-          true // force completion
-        );
+        const isMockActivity = String(selectedActivity.id ?? '').startsWith('mock-');
+        let result: any = null;
+        if (isMockActivity) {
+          console.warn('[Complete Session] Skipping remote updateSkillsRubricEvaluation for mock activity id:', selectedActivity.id);
+        } else {
+          try {
+            result = await updateSkillsRubricEvaluation(
+              selectedActivity.id,
+              currentModuleSubCategory,
+              rubricEvaluation,
+              chatHistory,
+              true // force completion
+            );
+          } catch (dbErr) {
+            console.warn('[Complete Session] Failed to update remote skills rubric evaluation:', dbErr);
+          }
+        }
 
+        // Always update local UI state so the user is not blocked by remote failures
         setEvaluationResult(rubricEvaluation);
         setShowEvaluationModal(true);
 
         if (result && result.score === 100) {
           handleCelebration();
+        } else if (isMockActivity) {
+          // For mock activities, still celebrate to reflect completion locally
+          handleCelebration();
         }
       } else {
-        const { error } = await supabase
-          .from('dashboard')
-          .update({
-            progress: 'completed',
-            chat_history: JSON.stringify(chatHistory),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedActivity.id);
-        if (error) throw error;
-        alert('Module completed successfully!');
-        handleBackToOverview();
+        const isMockActivity = String(selectedActivity.id ?? '').startsWith('mock-');
+        if (isMockActivity) {
+          console.warn('[Complete Session] Skipping remote dashboard update for mock activity id:', selectedActivity.id);
+          alert('Module completed (mock).');
+          handleBackToOverview();
+        } else {
+          try {
+            const { error } = await supabase
+              .from('dashboard')
+              .update({
+                progress: 'completed',
+                chat_history: JSON.stringify(chatHistory),
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', selectedActivity.id);
+            if (error) throw error;
+            alert('Module completed successfully!');
+            handleBackToOverview();
+          } catch (dbErr) {
+            console.warn('[Complete Session] Failed to update remote dashboard:', dbErr);
+            // Still allow local completion flow
+            alert('Module completed (local).');
+            handleBackToOverview();
+          }
+        }
       }
 
       // Silently tweak personality baseline

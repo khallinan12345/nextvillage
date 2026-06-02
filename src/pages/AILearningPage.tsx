@@ -2299,14 +2299,23 @@ Respond ONLY with valid JSON:
       );
 
       // Always mark completed when the learner explicitly chooses Complete Session
-      await updateActivityEvaluation(
-        currentDashboardId,
-        assessment.evaluation_score,
-        assessment.evaluation_evidence,
-        chatHistory,
-        assessment.unesco_scores,
-        true  // forceComplete
-      );
+      const isMockDashboard = String(currentDashboardId ?? '').startsWith('mock-');
+      if (isMockDashboard) {
+        console.warn('[Complete Session] Skipping remote updateActivityEvaluation for mock dashboard id:', currentDashboardId);
+      } else {
+        try {
+          await updateActivityEvaluation(
+            currentDashboardId,
+            assessment.evaluation_score,
+            assessment.evaluation_evidence,
+            chatHistory,
+            assessment.unesco_scores,
+            true // forceComplete
+          );
+        } catch (dbErr) {
+          console.warn('[Complete Session] Failed to update remote dashboard:', dbErr);
+        }
+      }
 
       const improvementAdvice = await generateImprovementAdvice(assessment.unesco_scores);
 
