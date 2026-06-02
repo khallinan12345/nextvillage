@@ -214,7 +214,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Chat endpoint — Developer Mock Mode (no API key required)
+// Chat endpoint — Real OpenAI or Developer Mock Mode
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages, system, max_tokens = 800, temperature = 0.7, page, playgroundModel, userId, city } = req.body;
@@ -223,7 +223,65 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'messages array is required' });
     }
 
-    console.log('[/api/chat] 🎭 DEVELOPER MOCK MODE - 1s delay before response');
+    const openaiKey = process.env.OPENAI_API_KEY;
+
+    // ── REAL OPENAI MODE ───────────────────────────────────────────────────────
+    if (openaiKey) {
+      console.log('[/api/chat] ✅ Using REAL OpenAI API (key found)');
+      
+      try {
+        // Strongly sanitize incoming messages: OpenAI accepts only {role, content}
+        const sanitizedClientMessages = messages
+          .map(msg => ({
+            role: msg && msg.role,
+            content: msg && (typeof msg.content === 'string' ? msg.content : String(msg.content))
+          }))
+          .filter(m => m.role && m.content);
+
+        // Build message array with optional system prompt, using sanitized messages only
+        const oaiMessages = [];
+        if (system) {
+          oaiMessages.push({ role: 'system', content: String(system) });
+        }
+        oaiMessages.push(...sanitizedClientMessages);
+
+        // Call OpenAI completions endpoint
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',  // or 'gpt-3.5-turbo' if you prefer cheaper model
+            messages: oaiMessages,
+            max_tokens,
+            temperature,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('[/api/chat] OpenAI API error:', data.error);
+          return res.status(response.status).json({
+            error: data.error?.message || 'OpenAI API error',
+          });
+        }
+
+        // Return OpenAI response in same format
+        return res.json(data);
+
+      } catch (oaiError) {
+        console.error('[/api/chat] OpenAI call failed:', oaiError);
+        return res.status(500).json({
+          error: `OpenAI request failed: ${oaiError.message}`,
+        });
+      }
+    }
+
+    // ── DEVELOPER MOCK MODE (no API key) ────────────────────────────────────────
+    console.log('[/api/chat] 🎭 DEVELOPER MOCK MODE (no OPENAI_API_KEY found)');
     
     // Simulate network latency
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -260,15 +318,14 @@ app.post('/api/chat', async (req, res) => {
     } else {
       // Return a helpful text response for general chat
       const lastMessage = messages[messages.length - 1]?.content || 'Hello';
-      mockContent = `Thanks for your question! I'm currently in Developer Mock Mode (no API key configured). 
+      mockContent = `Thanks for your question! I'm currently in Developer Mock Mode (no OPENAI_API_KEY configured). 
       
-This is a placeholder response. In production, this would be powered by Claude or another AI model. Here's what I can help with:
-- Answer questions about your code
-- Provide learning guidance
-- Evaluate your submissions
-- Suggest improvements
+To enable real AI responses:
+1. Add OPENAI_API_KEY=sk-... to your .env file
+2. Restart this server
+3. Your requests will automatically use the real OpenAI API
 
-Feel free to refine your work and resubmit!`;
+Mock response: Your submission looks good so far. In production mode, you'll get detailed feedback powered by OpenAI's models.`;
     }
 
     // Return OpenAI-compatible format
@@ -293,16 +350,27 @@ Feel free to refine your work and resubmit!`;
 
 const PORT = 3001;
 app.listen(PORT, () => {
-  const hasApiKey = !!process.env.E2B_API_KEY;
+  const hasE2bKey = !!process.env.E2B_API_KEY;
+  const hasOpenAiKey = !!process.env.OPENAI_API_KEY;
   
-  console.log('\n🎵 E2B SDK Development Server Running!');
+  console.log('\n🎵 Development Server Running!');
   console.log(`📍 URL: http://localhost:${PORT}`);
-  console.log(`🔑 E2B API Key: ${hasApiKey ? '✅ Found' : '❌ Missing'}`);
+  console.log(`🔑 E2B API Key: ${hasE2bKey ? '✅ Found' : '❌ Missing'}`);
+  console.log(`🤖 OpenAI API Key: ${hasOpenAiKey ? '✅ Found (REAL API)' : '❌ Missing (Mock Mode)'}`);
   console.log('🔗 Vite will proxy /api requests to this server');
-  console.log('💡 This server uses the official E2B SDK with fallback!\n');
   
-  if (!hasApiKey) {
-    console.log('⚠️  WARNING: E2B_API_KEY not found!');
+  if (hasOpenAiKey) {
+    console.log('✨ /api/chat will use REAL OpenAI API\n');
+  } else {
+    console.log('⚠️  /api/chat is in MOCK MODE (no OPENAI_API_KEY found)');
+    console.log('   To enable real OpenAI:');
+    console.log('   1. Get your API key from https://platform.openai.com');
+    console.log('   2. Add OPENAI_API_KEY=sk-... to .env');
+    console.log('   3. Restart this server\n');
+  }
+  
+  if (!hasE2bKey) {
+    console.log('⚠️  E2B_API_KEY not found (needed for /api/execute only)');
     console.log('   1. Get your API key from https://e2b.dev');
     console.log('   2. Add E2B_API_KEY=your_key_here to .env');
     console.log('   3. Restart this server\n');
