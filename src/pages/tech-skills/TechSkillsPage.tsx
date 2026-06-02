@@ -859,9 +859,9 @@ const TechSkillsPage: React.FC = () => {
             <p className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">
               Your progress
             </p>
-            {loadingProgress ? (
+            {!hydrated ? (
               <p className="text-sm text-gray-400 flex items-center gap-1">
-                <Loader2 size={13} className="animate-spin" /> Loading…
+                Loading…
               </p>
             ) : (
               <div className="flex items-center gap-4">
@@ -872,7 +872,7 @@ const TechSkillsPage: React.FC = () => {
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-xs">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-purple-500 to-emerald-500 transition-all duration-500"
-                    style={{ width: `${(totalPassed / totalTasks) * 100}%` }}
+                    style={{ width: `${totalTasks > 0 ? (totalPassed / totalTasks) * 100 : 0}%` }}
                   />
                 </div>
               </div>
