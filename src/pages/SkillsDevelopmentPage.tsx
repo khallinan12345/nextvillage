@@ -1085,6 +1085,7 @@ const SkillsPage: React.FC = () => {
     selectedVoice,
   } = useVoice(voiceMode === 'pidgin');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [historyCache, setHistoryCache] = useState<Record<string, ChatMessage[]>>({});
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -1237,6 +1238,43 @@ const SkillsPage: React.FC = () => {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatHistory]);
+
+  // Load historyCache from localStorage on component mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem('SkillsDevelopmentPage_historyCache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (typeof parsed === 'object' && parsed !== null) {
+          // Restore Date objects in ChatMessage timestamps
+          const restored: Record<string, ChatMessage[]> = {};
+          for (const [key, messages] of Object.entries(parsed)) {
+            if (Array.isArray(messages)) {
+              restored[key] = messages.map((msg: any) => ({
+                ...msg,
+                timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+              }));
+            }
+          }
+          setHistoryCache(restored);
+          console.log('[SkillsPage] Restored historyCache from localStorage:', Object.keys(restored).length, 'activities');
+        }
+      }
+    } catch (err) {
+      console.warn('[SkillsPage] Failed to restore historyCache from localStorage:', err);
+    }
+  }, []);
+
+  // Save historyCache to localStorage whenever it changes
+  useEffect(() => {
+    if (Object.keys(historyCache).length === 0) return; // Don't save empty cache
+    try {
+      localStorage.setItem('SkillsDevelopmentPage_historyCache', JSON.stringify(historyCache));
+      console.log('[SkillsPage] Saved historyCache to localStorage:', Object.keys(historyCache).length, 'activities');
+    } catch (err) {
+      console.warn('[SkillsPage] Failed to save historyCache to localStorage:', err);
+    }
+  }, [historyCache]);
 
   // Fetch user profile
   const fetchUserProfile = async (userId: string) => {
@@ -2968,6 +3006,18 @@ Provide assessment now:`;
   const handleActivitySelect = async (activity: DashboardActivity) => {
     if (!isActivitySelectable(activity)) return;
 
+    // Persist current activity's chat history to local cache before switching
+    try {
+      if (selectedActivity) {
+        const prevKey = String(selectedActivity.learning_module_id ?? selectedActivity.id ?? '');
+        if (prevKey) {
+          setHistoryCache(prev => ({ ...prev, [prevKey]: chatHistory }));
+        }
+      }
+    } catch (err) {
+      console.warn('[Activity Select] Failed to cache current chat history:', err);
+    }
+
     setSelectedActivity(activity);
     
     if ((userGradeLevel === null || userContinent === null) && user?.id) {
@@ -2981,7 +3031,11 @@ Provide assessment now:`;
     }
 
     let initialChatHistory: ChatMessage[] = [];
-    if (activity.progress === 'started' && activity.chat_history) {
+    const newKey = String(activity.learning_module_id ?? activity.id ?? '');
+    // Restore from local cache if present
+    if (newKey && historyCache[newKey] && Array.isArray(historyCache[newKey]) && historyCache[newKey].length > 0) {
+      initialChatHistory = historyCache[newKey];
+    } else if (activity.progress === 'started' && activity.chat_history) {
       try {
         const storedHistory = JSON.parse(activity.chat_history);
         if (Array.isArray(storedHistory) && storedHistory.length > 0) {

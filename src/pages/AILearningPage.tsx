@@ -624,6 +624,7 @@ const AILearningPage: React.FC = () => {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]); // kept for UI compat — hook manages actual selection
   const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [historyCache, setHistoryCache] = useState<Record<string, ChatMessage[]>>({});
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -753,6 +754,43 @@ const AILearningPage: React.FC = () => {
       }, 500);
     }
   }, [isSpeaking, wasListeningBeforeSubmit, voiceInputEnabled, speechRecognition]);
+
+  // Load historyCache from localStorage on component mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem('AILearningPage_historyCache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (typeof parsed === 'object' && parsed !== null) {
+          // Restore Date objects in ChatMessage timestamps
+          const restored: Record<string, ChatMessage[]> = {};
+          for (const [key, messages] of Object.entries(parsed)) {
+            if (Array.isArray(messages)) {
+              restored[key] = messages.map((msg: any) => ({
+                ...msg,
+                timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+              }));
+            }
+          }
+          setHistoryCache(restored);
+          console.log('[AILearning] Restored historyCache from localStorage:', Object.keys(restored).length, 'activities');
+        }
+      }
+    } catch (err) {
+      console.warn('[AILearning] Failed to restore historyCache from localStorage:', err);
+    }
+  }, []);
+
+  // Save historyCache to localStorage whenever it changes
+  useEffect(() => {
+    if (Object.keys(historyCache).length === 0) return; // Don't save empty cache
+    try {
+      localStorage.setItem('AILearningPage_historyCache', JSON.stringify(historyCache));
+      console.log('[AILearning] Saved historyCache to localStorage:', Object.keys(historyCache).length, 'activities');
+    } catch (err) {
+      console.warn('[AILearning] Failed to save historyCache to localStorage:', err);
+    }
+  }, [historyCache]);
 
   // Voice input function
   const startVoiceInput = () => {
@@ -2454,6 +2492,18 @@ Respond ONLY with valid JSON:
   const handleActivitySelect = async (activity: DashboardActivity) => {
     if (!isActivitySelectable(activity)) return;
 
+    // Persist current activity's chat history to local cache before switching
+    try {
+      if (selectedActivity) {
+        const prevKey = String(selectedActivity.learning_module_id ?? selectedActivity.id ?? '');
+        if (prevKey) {
+          setHistoryCache(prev => ({ ...prev, [prevKey]: chatHistory }));
+        }
+      }
+    } catch (err) {
+      console.warn('[Activity Select] Failed to cache current chat history:', err);
+    }
+
     setSelectedActivity(activity);
     
     if ((userGradeLevel === null || userContinent === null) && user?.id) {
@@ -2475,7 +2525,11 @@ Respond ONLY with valid JSON:
         console.log('[Activity Select] Dashboard entry:', dashboardEntry.id, 'isMock:', dashboardEntry.isMock);
 
         let initialChatHistory: ChatMessage[] = [];
-        if (dashboardEntry.chat_history) {
+        // Prefer locally cached history for this learning module id (preserves recent local edits)
+        const newKey = String(activity.learning_module_id ?? activity.id ?? '');
+        if (newKey && historyCache[newKey] && Array.isArray(historyCache[newKey]) && historyCache[newKey].length > 0) {
+          initialChatHistory = historyCache[newKey];
+        } else if (dashboardEntry.chat_history) {
           try {
             const storedHistory = JSON.parse(dashboardEntry.chat_history);
             if (Array.isArray(storedHistory) && storedHistory.length > 0) {
