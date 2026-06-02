@@ -435,7 +435,7 @@ Respond ONLY with valid JSON:
     temperature: 0.15,
   });
 
-  if (!result?.stage_id === undefined || !result?.sub_categories) {
+  if (result?.stage_id === undefined || !result?.sub_categories) {
     throw new Error('Invalid evaluation response');
   }
   return result as SessionEvaluation;

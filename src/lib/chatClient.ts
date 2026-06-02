@@ -43,8 +43,27 @@ export async function chatText({
       city:            _chatCity,
     }),
   });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data?.error || `Chat proxy error ${r.status}`);
+  let data: any;
+  try {
+    data = await r.json();
+  } catch (err) {
+    // If the proxy returned non-JSON (HTML error page), try to extract a helpful message
+    const text = await r.text().catch(() => '');
+    const lowered = (text || '').toLowerCase();
+    if (lowered.includes('api key') || lowered.includes('no ai provider') || lowered.includes('not configured')) {
+      throw new Error('Missing API Key');
+    }
+    throw new Error(`Chat proxy returned non-JSON response (status ${r.status})`);
+  }
+
+  if (!r.ok) {
+    const errMsg = data?.error || data?.message || `Chat proxy error ${r.status}`;
+    const lowered = String(errMsg).toLowerCase();
+    if (lowered.includes('api key') || lowered.includes('no ai provider') || lowered.includes('not configured')) {
+      throw new Error('Missing API Key');
+    }
+    throw new Error(errMsg || `Chat proxy error ${r.status}`);
+  }
 
   // OpenAI-like response passthrough; return the assistant text
   return data?.choices?.[0]?.message?.content ?? '';
@@ -59,94 +78,96 @@ export async function chatJSON({
   page,
   playgroundModel,
 }: BaseArgs): Promise<any> {
+  const r = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages, system, max_tokens, temperature,
+      page:            page            ?? '',
+      playgroundModel: playgroundModel ?? null,
+      userId:          _chatUserId,
+      city:            _chatCity,
+    }),
+  });
+  let data: any;
   try {
-    const r = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages, system, max_tokens, temperature,
-        page:            page            ?? '',
-        playgroundModel: playgroundModel ?? null,
-        userId:          _chatUserId,
-        city:            _chatCity,
-      }),
-    });
-
-    // ── DEBUG: Log response status and headers ──
-    console.log('[chatJSON] Response status:', r.status);
-    console.log('[chatJSON] Content-type:', r.headers.get('content-type'));
-
-    const data = await r.json();
-
-    // ── DEBUG: Log full response structure ──
-    console.log('[chatJSON] Full API response:', {
-      ok: r.ok,
-      status: r.status,
-      dataStructure: Object.keys(data),
-      choices: data?.choices ? `${data.choices.length} choices` : 'none',
-      firstChoiceKeys: data?.choices?.[0] ? Object.keys(data.choices[0]) : 'N/A',
-    });
-
-    if (!r.ok) {
-      const errorMsg = data?.error || `Chat proxy error ${r.status}`;
-      console.error('[chatJSON] API error:', { errorMsg, data });
-      throw new Error(errorMsg);
+    data = await r.json();
+  } catch (err) {
+    const text = await r.text().catch(() => '');
+    const lowered = (text || '').toLowerCase();
+    if (lowered.includes('api key') || lowered.includes('no ai provider') || lowered.includes('not configured')) {
+      throw new Error('Missing API Key');
     }
+    throw new Error(`Chat proxy returned non-JSON response (status ${r.status})`);
+  }
 
-    // ── DEBUG: Log content extraction ──
-    const content = data?.choices?.[0]?.message?.content;
-    console.log('[chatJSON] Extracted content length:', content?.length || 0);
-    console.log('[chatJSON] Extracted content preview:', content?.substring(0, 200));
-
-    let raw = content || '{}';
-    
-    // Strip markdown code fences if present (e.g., ```json ... ``` or ``` ... ```)
-    raw = raw.trim();
-    
-    // ── DEBUG: Check for markdown fences ──
-    if (raw.startsWith('```')) {
-      console.log('[chatJSON] Detected markdown code fence, stripping...');
-      // Remove opening fence (```json or ```)
-      raw = raw.replace(/^```(?:json)?\s*\n?/, '');
-      // Remove closing fence (```)
-      raw = raw.replace(/\n?```\s*$/, '');
-      raw = raw.trim();
-      console.log('[chatJSON] After stripping fences:', raw.substring(0, 200));
+  if (!r.ok) {
+    const errMsg = data?.error || data?.message || `Chat proxy error ${r.status}`;
+    const lowered = String(errMsg).toLowerCase();
+    if (lowered.includes('api key') || lowered.includes('no ai provider') || lowered.includes('not configured')) {
+      throw new Error('Missing API Key');
     }
+    throw new Error(errMsg || `Chat proxy error ${r.status}`);
+  }
+
+  if (!data?.choices?.[0]?.message?.content) {
+    console.warn('[chatJSON] /api/chat returned no assistant content:', data);
+    throw new Error('API returned empty response');
+  }
+
+  const rawContent = data.choices[0].message.content;
+  console.log('[chatJSON] Raw API response length:', rawContent.length);
+  console.log('[chatJSON] Raw API response first 500 chars:', rawContent.slice(0, 500));
+
+  let raw = rawContent.trim();
+
+  // ── Aggressive markdown code fence stripping ────────────────────────────────
+  // Match and remove code fences at start: ```json, ```JSON, ```, etc.
+  raw = raw.replace(/^```(?:json|JSON|js|javascript)?\s*[\r\n]+/, '');
+  
+  // Match and remove code fences at end: ``` with optional whitespace
+  raw = raw.replace(/[\r\n]+```\s*$/, '');
+  raw = raw.replace(/```\s*$/, '');
+
+  raw = raw.trim();
+  
+  console.log('[chatJSON] After fence stripping, first 500 chars:', raw.slice(0, 500));
+
+  // ── Extract JSON if it's buried in other text ────────────────────────────────
+  if (!raw.startsWith('{') && !raw.startsWith('[')) {
+    console.log('[chatJSON] Response does not start with { or [ — attempting extraction...');
     
-    // ── DEBUG: Attempt parse ──
-    try {
-      const parsed = JSON.parse(raw);
-      console.log('[chatJSON] ✅ Successfully parsed JSON');
-      console.log('[chatJSON] Parsed keys:', Object.keys(parsed));
-      return parsed;
-    } catch (parseError) {
-      console.error('[chatJSON] ❌ JSON parse error:', {
-        error: parseError instanceof Error ? parseError.message : 'Unknown error',
-        rawContent: raw.substring(0, 500),
-        rawLength: raw.length,
-      });
-      
-      // ── FALLBACK: Try to extract JSON object if wrapped in text ──
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        console.log('[chatJSON] Found JSON object in response, attempting parse...');
-        try {
-          const extracted = JSON.parse(jsonMatch[0]);
-          console.log('[chatJSON] ✅ Successfully parsed extracted JSON');
-          return extracted;
-        } catch (e) {
-          console.error('[chatJSON] Failed to parse extracted JSON:', e);
-        }
+    // Try to find JSON object or array within the text
+    const jsonMatch = raw.match(/(\{[\s\S]*\})/);
+    if (jsonMatch) {
+      raw = jsonMatch[1].trim();
+      console.log('[chatJSON] Extracted JSON object from text');
+    } else {
+      const arrayMatch = raw.match(/(\[[\s\S]*\])/);
+      if (arrayMatch) {
+        raw = arrayMatch[1].trim();
+        console.log('[chatJSON] Extracted JSON array from text');
+      } else {
+        console.error('[chatJSON] Could not find JSON in response');
+        console.error('[chatJSON] Full raw content:', raw);
+        throw new Error('Response does not contain valid JSON');
       }
-
-      // Return raw if all parsing attempts fail
-      console.error('[chatJSON] All parsing attempts failed, returning raw content as fallback');
-      return raw;
     }
-  } catch (error) {
-    console.error('[chatJSON] Network or other error:', error);
-    throw error;
+  }
+
+  // ── Parse JSON with detailed error handling ────────────────────────────────
+  try {
+    const parsed = JSON.parse(raw);
+    console.log('[chatJSON] Successfully parsed JSON. Keys:', Object.keys(parsed).join(', '));
+    return parsed;
+  } catch (parseError) {
+    console.error('[chatJSON] JSON.parse() failed:', parseError);
+    console.error('[chatJSON] Attempted to parse:', raw.slice(0, 1000));
+    console.error('[chatJSON] Full raw content (last 1000 chars):', raw.slice(-1000));
+    console.error('[chatJSON] Full API response object:', JSON.stringify(data, null, 2));
+    
+    // Do NOT return raw string — throw error so caller can handle it properly
+    throw new Error(`Failed to parse JSON response: ${(parseError as Error).message}\nContent preview: ${raw.slice(0, 200)}`);
   }
 }
 

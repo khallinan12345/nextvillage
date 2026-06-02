@@ -38,7 +38,11 @@
 //   The system prompt is marked with cache_control so repeated calls within
 //   the 5-minute TTL are charged at ~10% of normal input cost.
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// NOTE: do not import optional provider SDKs at module top-level.
+// Some deployment environments may not have optional SDKs installed
+// which would cause the entire serverless function to crash on load.
+// The Gemini client (@google/generative-ai) is lazily imported inside
+// `callGemini` below to avoid top-level import failures.
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -354,6 +358,17 @@ async function callGroq(model, messages, system, max_tokens, temperature) {
 // ── Gemini call ────────────────────────────────────────────────────────────────
 
 async function callGemini(model, messages, system, max_tokens, temperature) {
+  // Lazy import the Gemini SDK to avoid top-level module load failures
+  let GoogleGenerativeAI;
+  try {
+    const mod = await import('@google/generative-ai');
+    GoogleGenerativeAI = mod.GoogleGenerativeAI || mod.default || mod;
+  } catch (err) {
+    const e = new Error(`Gemini SDK not available: ${err.message}`);
+    e.status = 501;
+    throw e;
+  }
+
   const geminiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const geminiModel = geminiClient.getGenerativeModel({ model });
 
@@ -365,29 +380,36 @@ async function callGemini(model, messages, system, max_tokens, temperature) {
   }
   prompt += 'Assistant:';
 
-  const result = await geminiModel.generateContent({
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: { maxOutputTokens: max_tokens, temperature },
-  });
+  try {
+    const result = await geminiModel.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: max_tokens, temperature },
+    });
 
-  const text = result.response.text();
+    const text = result.response.text();
 
-  return {
-    id:     `gemini-${Date.now()}`,
-    object: 'chat.completion',
-    model,
-    choices: [{
-      index:         0,
-      message:       { role: 'assistant', content: text },
-      finish_reason: 'stop',
-    }],
-    usage: {
-      prompt_tokens:     result.response.usageMetadata?.promptTokenCount     ?? 0,
-      completion_tokens: result.response.usageMetadata?.candidatesTokenCount ?? 0,
-      total_tokens:      result.response.usageMetadata?.totalTokenCount      ?? 0,
-    },
-    _route: { provider: 'gemini', model },
-  };
+    return {
+      id:     `gemini-${Date.now()}`,
+      object: 'chat.completion',
+      model,
+      choices: [{
+        index:         0,
+        message:       { role: 'assistant', content: text },
+        finish_reason: 'stop',
+      }],
+      usage: {
+        prompt_tokens:     result.response.usageMetadata?.promptTokenCount     ?? 0,
+        completion_tokens: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+        total_tokens:      result.response.usageMetadata?.totalTokenCount      ?? 0,
+      },
+      _route: { provider: 'gemini', model },
+    };
+  } catch (err) {
+    const e = new Error(err?.message || 'Gemini API error');
+    e.status = err?.status || 502;
+    e.gemini_error = err;
+    throw e;
+  }
 }
 
 
@@ -649,8 +671,9 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature) 
         wasFallback:    provider.name !== 'groq',
       };
     } catch (error) {
-      console.warn(`[chat.js] ⚠️ ${provider.name} failed:`, error.message);
-      errors.push({ provider: provider.name, error: error.message });
+      console.warn(`[chat.js] ⚠️ ${provider.name} failed:`, error?.message || String(error));
+      console.error(`[chat.js] ${provider.name} error details:`, error);
+      errors.push({ provider: provider.name, error: error?.message || String(error) });
 
       if (isRateLimitOrQuotaError(error)) {
         setCooldown(provider.name, COOLDOWN_DURATION);
@@ -662,10 +685,20 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature) 
     }
   }
 
+  // If every provider was skipped because its key is not set, return a 400
+  const allKeysMissing = errors.length > 0 && errors.every(e => typeof e.error === 'string' && e.error.includes('not set'));
+  if (allKeysMissing) {
+    const e = new Error('No AI provider keys are configured on the server. Please set at least one provider API key.');
+    e.status = 400;
+    e.details = errors;
+    throw e;
+  }
+
   const err = new Error(
     `All AI providers failed:\n${errors.map(e => `  ${e.provider}: ${e.error}`).join('\n')}`
   );
   err.status = 503;
+  err.provider_errors = errors;
   throw err;
 }
 
@@ -805,6 +838,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
+    if (messages.length === 0) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'Messages array must contain at least one message' });
+    }
+
+    const invalidMsg = messages.find(m => !m || typeof m.role !== 'string' || (typeof m.content !== 'string' && !Array.isArray(m.content)));
+    if (invalidMsg) {
+      console.error('[chat.js] Invalid message payload detected:', JSON.stringify(invalidMsg));
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'Each message must have a string `role` and a `content` string or array' });
+    }
+
     const { provider, model } = resolveRoute(page, playgroundModel, taskType);
 
     console.log(`[chat.js] page="${page}" taskType="${taskType}" stream=${stream} → provider=${provider} model=${model}`);
@@ -813,7 +858,7 @@ export default async function handler(req, res) {
     if (stream && provider === 'anthropic') {
       if (!process.env.ANTHROPIC_API_KEY) {
         res.setHeader('Content-Type', 'application/json');
-        return res.status(500).json({ error: 'Anthropic API key not configured' });
+        return res.status(400).json({ error: 'Anthropic API key not configured' });
       }
       const usage = await callAnthropicStreaming(model, messages, system, max_tokens, temperature, res);
       logCost({
@@ -856,7 +901,7 @@ export default async function handler(req, res) {
     // ANTHROPIC-ROUTED (Sonnet for coding, Haiku for default/playground)
     if (!process.env.ANTHROPIC_API_KEY) {
       res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({ error: 'Anthropic API key not configured' });
+      return res.status(400).json({ error: 'Anthropic API key not configured' });
     }
 
     const result = await callAnthropic(model, messages, system, max_tokens, temperature);
@@ -872,6 +917,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[chat.js] Error:', error);
+    try { console.error('[chat.js] Error (stringified):', JSON.stringify(error)); } catch (e) { /* ignore */ }
     const status = error.status || 500;
     if (!res.headersSent) {
       res.setHeader('Content-Type', 'application/json');

@@ -1469,7 +1469,7 @@ You MUST respond with ONLY valid JSON in this exact structure:
 }
 
 CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown formatting.
-Do NOT wrap the JSON in markdown code fences (for example, ```json ... ```). Return the raw JSON object only.`;
+Do NOT wrap the JSON in markdown code fences (for example, three backticks followed by "json" and closing three backticks). Return the raw JSON object only.`;
   };
 
   // Build UNESCO AI Competency Framework guidance (enriched with all improvements)

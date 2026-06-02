@@ -2069,7 +2069,7 @@ For each dimension:
 1. Assign a score from 0-3 based ONLY on evidence in the LAST student response
 2. Provide specific evidence from that response
 
-Respond with ONLY valid JSON. Do NOT wrap the JSON in markdown code fences (for example, ```json ... ```):
+Respond with ONLY valid JSON. Do NOT wrap the JSON in markdown code fences (for example, three backticks followed by "json" and closing three backticks):
 {
   "dimensions": [
     ${dimensions.map(d => `{
