@@ -1965,11 +1965,12 @@ LANGUAGE RULES:
       console.error('[Skills Chat] Error calling API:', error);
       
       if (error instanceof Error) {
-        if (error.message?.includes('API key')) {
+        const msg = String(error.message || '').toLowerCase();
+        if (msg.includes('api key') || msg.includes('missing api')) {
           return 'I apologize, but the AI service is not properly configured. Please ensure your OpenAI API key is set in the environment variables and restart the server.';
-        } else if (error.message?.includes('429')) {
+        } else if (msg.includes('429')) {
           return "I'm currently experiencing high demand. Please wait a moment and try again.";
-        } else if (error.message?.includes('401')) {
+        } else if (msg.includes('401')) {
           return "There's an authentication issue with the AI service. Please check that your OpenAI API key is valid and has sufficient credits.";
         } else {
           return `I apologize, but I encountered a technical issue: ${error.message}. Please try again. If the problem persists, please contact support.`;
@@ -2068,20 +2069,12 @@ For each dimension:
 1. Assign a score from 0-3 based ONLY on evidence in the LAST student response
 2. Provide specific evidence from that response
 
-IMPORTANT JSON FORMATTING RULES:
-- You MUST respond with ONLY a valid JSON object
-- Do NOT include any markdown code fences (\`\`\`), explanations, or preamble
-- Do NOT wrap the JSON in triple backticks
-- Start your response directly with { and end with }
-- Every string value must be properly escaped
-- Every dimension must have exactly these keys: "dimension", "score" (number 0-3), "evidence" (string)
-
-Respond with ONLY valid JSON (no markdown, no explanation):
+Respond with ONLY valid JSON. Do NOT wrap the JSON in markdown code fences (for example, ```json ... ```):
 {
   "dimensions": [
     ${dimensions.map(d => `{
       "dimension": "${d}",
-      "score": 1,
+      "score": [0-3],
       "evidence": "[specific evidence from LAST response]"
     }`).join(',\n    ')}
   ]
@@ -2105,38 +2098,51 @@ Provide assessment now:`;
       const assessment = await chatJSON({
         page: 'SkillsDevelopmentPage',
         messages,
-        system: 'You are an expert AI assessment evaluator. You MUST respond ONLY with valid JSON. Do NOT include any markdown code fences (```), explanations, or text outside the JSON object. Your entire response must be a single valid JSON object.',
+        system: 'You are an expert AI assessment evaluator. Evaluate ONLY the most recent student response. Respond only with valid JSON.',
         max_tokens: 1500,
         temperature: 0.3
       });
 
-      // ── DEBUG: Log what we received ──
-      console.log('[Incremental Assessment] Raw assessment response:', assessment);
-      console.log('[Incremental Assessment] Response type:', typeof assessment);
-      console.log('[Incremental Assessment] Is object:', assessment && typeof assessment === 'object');
-      
+      // Parse sanitized JSON responses. If parsing fails, log the raw content and
+      // return a structured mock assessment so the UI can display a helpful fallback.
       let finalAssessment: SkillsRubricEvaluation;
       if (typeof assessment === 'string') {
-        console.error('[Incremental Assessment] ❌ Received string instead of object:', assessment.substring(0, 200));
-        throw new Error(`Invalid assessment format: received string "${assessment.substring(0, 100)}..." instead of JSON object`);
+        const raw = assessment;
+        const cleaned = String(raw)
+          .replace(/```(?:json|JSON|js|javascript)?\s*[\r\n]*/g, '')
+          .replace(/[\r\n]*```\s*$/g, '')
+          .trim();
+        try {
+          finalAssessment = JSON.parse(cleaned) as SkillsRubricEvaluation;
+        } catch (parseError) {
+          console.error('[Incremental Assessment] JSON.parse failed on cleaned response:', parseError);
+          console.error('[Incremental Assessment] Full raw response:', raw);
+          console.error('[Incremental Assessment] Cleaned attempt preview:', cleaned.slice(0, 1000));
+          const dimensions = RUBRIC_DEFINITIONS[subCategory] || [];
+          finalAssessment = {
+            dimensions: dimensions.map(dim => ({
+              dimension: dim,
+              score: 1,
+              evidence: 'Incremental assessment unavailable due to parse failure. Raw response has been logged.'
+            }))
+          } as SkillsRubricEvaluation;
+        }
       } else {
         finalAssessment = assessment as SkillsRubricEvaluation;
       }
       
       if (!finalAssessment.dimensions || !Array.isArray(finalAssessment.dimensions)) {
-        console.error('[Incremental Assessment] ❌ Missing or invalid dimensions:', finalAssessment);
-        throw new Error(`Invalid assessment format: ${JSON.stringify(finalAssessment).substring(0, 200)}`);
+        throw new Error('Invalid assessment format');
       }
 
       for (const dim of finalAssessment.dimensions) {
         if (typeof dim.dimension !== 'string' || typeof dim.score !== 'number' || typeof dim.evidence !== 'string') {
-          console.error('[Incremental Assessment] ❌ Invalid dimension format:', dim);
-          throw new Error(`Invalid dimension format: ${JSON.stringify(dim)}`);
+          throw new Error('Invalid dimension format');
         }
         dim.score = Math.max(0, Math.min(3, Math.round(dim.score)));
       }
       
-      console.log('[Incremental Assessment] ✅ Completed:', finalAssessment);
+      console.log('[Incremental Assessment] Completed:', finalAssessment);
       return finalAssessment;
     } catch (error) {
       console.error('[Incremental Assessment] Error:', error);
@@ -2305,20 +2311,12 @@ For each dimension:
 1. Assign a score from 0-3 based on ALL evidence across the conversation
 2. Provide comprehensive evidence from multiple responses if available
 
-IMPORTANT JSON FORMATTING RULES:
-- You MUST respond with ONLY a valid JSON object
-- Do NOT include any markdown code fences (\`\`\`), explanations, or preamble
-- Do NOT wrap the JSON in triple backticks
-- Start your response directly with { and end with }
-- Every string value must be properly escaped
-- Every dimension must have exactly these keys: "dimension", "score" (number 0-3), "evidence" (string)
-
-Respond with ONLY valid JSON (no markdown, no explanation):
+Respond with ONLY valid JSON:
 {
   "dimensions": [
     ${dimensions.map(d => `{
       "dimension": "${d}",
-      "score": 2,
+      "score": [0-3],
       "evidence": "[comprehensive evidence from conversation]"
     }`).join(',\n    ')}
   ]
@@ -2342,38 +2340,30 @@ Provide assessment now:`;
       const assessment = await chatJSON({
         page: 'SkillsDevelopmentPage',
         messages,
-        system: 'You are an expert AI assessment evaluator for comprehensive skill evaluation. You MUST respond ONLY with valid JSON. Do NOT include any markdown code fences (```), explanations, or text outside the JSON object. Your entire response must be a single valid JSON object.',
+        system: 'You are an expert AI assessment evaluator for comprehensive skill evaluation. Respond only with valid JSON.',
         max_tokens: 2000,
         temperature: 0.3
       });
 
-      // ── DEBUG: Log what we received ──
-      console.log('[Full Assessment] Raw assessment response:', assessment);
-      console.log('[Full Assessment] Response type:', typeof assessment);
-      console.log('[Full Assessment] Is object:', assessment && typeof assessment === 'object');
-
       let finalAssessment: SkillsRubricEvaluation;
       if (typeof assessment === 'string') {
-        console.error('[Full Assessment] ❌ Received string instead of object:', assessment.substring(0, 200));
-        throw new Error(`Invalid assessment format: received string "${assessment.substring(0, 100)}..." instead of JSON object`);
+        finalAssessment = JSON.parse(assessment);
       } else {
         finalAssessment = assessment as SkillsRubricEvaluation;
       }
       
       if (!finalAssessment.dimensions || !Array.isArray(finalAssessment.dimensions)) {
-        console.error('[Full Assessment] ❌ Missing or invalid dimensions:', finalAssessment);
-        throw new Error(`Invalid assessment format: ${JSON.stringify(finalAssessment).substring(0, 200)}`);
+        throw new Error('Invalid assessment format');
       }
 
       for (const dim of finalAssessment.dimensions) {
         if (typeof dim.dimension !== 'string' || typeof dim.score !== 'number' || typeof dim.evidence !== 'string') {
-          console.error('[Full Assessment] ❌ Invalid dimension format:', dim);
-          throw new Error(`Invalid dimension format: ${JSON.stringify(dim)}`);
+          throw new Error('Invalid dimension format');
         }
         dim.score = Math.max(0, Math.min(3, Math.round(dim.score)));
       }
       
-      console.log('[Full Assessment] ✅ Completed:', finalAssessment);
+      console.log('[Full Assessment] Completed:', finalAssessment);
       return finalAssessment;
     } catch (error) {
       console.error('[Full Assessment] Error:', error);

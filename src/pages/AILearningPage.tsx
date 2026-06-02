@@ -398,6 +398,17 @@ interface DashboardActivity {
   isPublic?: boolean;   // false = user-created private, true = shared/canned
 }
 
+interface DashboardEntryResult {
+  id: string;
+  chat_history: string;
+  progress: 'not started' | 'started' | 'completed';
+  isMock?: boolean;
+}
+
+const isValidUuid = (value?: string): boolean => {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+};
+
 interface LearningModule {
   learning_module_id: string;
   title: string;
@@ -1315,14 +1326,27 @@ go deeper immediately — do not praise and move on.`;
   };
 
   // Create or get dashboard entry for learning activity
-  const getOrCreateDashboardEntry = async (activity: DashboardActivity, userId: string, gradeLevel: number | null, continent: string | null) => {
+  const getOrCreateDashboardEntry = async (activity: DashboardActivity, userId: string, gradeLevel: number | null, continent: string | null): Promise<DashboardEntryResult> => {
+    const moduleId = activity.learning_module_id || '';
+    const fallbackId = `mock-dashboard-${moduleId || 'unknown'}`;
+
+    if (!isValidUuid(moduleId)) {
+      console.warn('[Dashboard] Skipping Supabase query for non-UUID learning_module_id:', moduleId);
+      return {
+        id: fallbackId,
+        chat_history: activity.chat_history || '[]',
+        progress: activity.progress || 'not started',
+        isMock: true,
+      };
+    }
+
     try {
       // Check if dashboard entry exists
       const { data: existing, error: checkError } = await supabase
         .from('dashboard')
         .select('*')
         .eq('user_id', userId)
-        .eq('learning_module_id', activity.learning_module_id)
+        .eq('learning_module_id', moduleId)
         .maybeSingle();
 
       if (checkError) {
@@ -1332,17 +1356,20 @@ go deeper immediately — do not praise and move on.`;
 
       if (existing) {
         console.log('[Dashboard] Existing entry found:', existing.id);
-        return existing.id;
+        return {
+          id: existing.id,
+          chat_history: existing.chat_history || '[]',
+          progress: existing.progress || 'not started'
+        };
       }
 
       // Create new dashboard entry
-      console.log('[Dashboard] Creating new entry for module:', activity.learning_module_id);
-      
+      console.log('[Dashboard] Creating new entry for module:', moduleId);
       const { data: newEntry, error: createError } = await supabase
         .from('dashboard')
         .insert({
           user_id: userId,
-          learning_module_id: activity.learning_module_id,
+          learning_module_id: moduleId,
           title: activity.title,
           activity: activity.title,
           category_activity: 'AI Learning',
@@ -1363,11 +1390,20 @@ go deeper immediately — do not praise and move on.`;
       }
 
       console.log('[Dashboard] New entry created:', newEntry.id);
-      return newEntry.id;
+      return {
+        id: newEntry.id,
+        chat_history: newEntry.chat_history || '[]',
+        progress: newEntry.progress || 'started'
+      };
 
     } catch (error) {
       console.error('[Dashboard] Error in getOrCreateDashboardEntry:', error);
-      throw error;
+      return {
+        id: fallbackId,
+        chat_history: activity.chat_history || '[]',
+        progress: activity.progress || 'not started',
+        isMock: true,
+      };
     }
   };
 
@@ -1432,7 +1468,8 @@ You MUST respond with ONLY valid JSON in this exact structure:
   "competency_4_evidence": "<specific quote or description from learner's work>"
 }
 
-CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown formatting.`;
+CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown formatting.
+Do NOT wrap the JSON in markdown code fences (for example, ```json ... ```). Return the raw JSON object only.`;
   };
 
   // Build UNESCO AI Competency Framework guidance (enriched with all improvements)
@@ -1782,11 +1819,12 @@ Respond ONLY with valid JSON:
       console.error('[AI Chat] Error calling API:', error);
       
       if (error instanceof Error) {
-        if (error.message?.includes('API key')) {
+        const msg = String(error.message || '').toLowerCase();
+        if (msg.includes('api key') || msg.includes('missing api')) {
           return 'I apologize, but the AI service is not properly configured. Please ensure your OpenAI API key is set in the environment variables and restart the server.';
-        } else if (error.message?.includes('429')) {
+        } else if (msg.includes('429')) {
           return "I'm currently experiencing high demand. Please wait a moment and try again.";
-        } else if (error.message?.includes('401')) {
+        } else if (msg.includes('401')) {
           return "There's an authentication issue with the AI service. Please check that your OpenAI API key is valid and has sufficient credits.";
         } else {
           return `I apologize, but I encountered a technical issue: ${error.message}. Please try again. If the problem persists, please contact support.`;
@@ -1864,14 +1902,35 @@ CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown.
 
       console.log('[UNESCO Comprehensive Assessment] Raw response:', assessment);
       
-      // Handle both object and string responses
+      // Handle both object and string responses. If a string, aggressively strip markdown fences
+      // and attempt to JSON.parse. If parsing still fails, log the full raw response and
+      // return a safe mock assessment structure so the UI can render a meaningful fallback.
       let finalAssessment;
       if (typeof assessment === 'string') {
+        const raw = assessment;
+        const cleaned = String(raw)
+          .replace(/```(?:json|JSON|js|javascript)?\s*[\r\n]*/g, '')
+          .replace(/[\r\n]*```\s*$/g, '')
+          .trim();
         try {
-          finalAssessment = JSON.parse(assessment);
+          finalAssessment = JSON.parse(cleaned);
         } catch (parseError) {
-          console.error('[UNESCO Assessment] Error parsing string response:', parseError);
-          throw new Error('Invalid JSON response from assessment API');
+          console.error('[UNESCO Assessment] JSON.parse failed on cleaned response:', parseError);
+          console.error('[UNESCO Assessment] Full raw response:', raw);
+          console.error('[UNESCO Assessment] Cleaned attempt preview:', cleaned.slice(0, 1000));
+          // Provide a safe mock structure so the UI shows a structured fallback instead of blank categories
+          finalAssessment = {
+            competency_1_score: 1,
+            competency_1_evidence: 'Unavailable (parse error)',
+            competency_2_score: 1,
+            competency_2_evidence: 'Unavailable (parse error)',
+            competency_3_score: 1,
+            competency_3_evidence: 'Unavailable (parse error)',
+            competency_4_score: 1,
+            competency_4_evidence: 'Unavailable (parse error)',
+            overall_score: 1,
+            overall_evidence: 'Evaluation unavailable due to parse failure. Raw response has been logged for debugging.'
+          } as any;
         }
       } else {
         finalAssessment = assessment;
@@ -2397,33 +2456,17 @@ Respond ONLY with valid JSON:
     // Create or get dashboard entry for this activity
     if (user?.id && activity.learning_module_id) {
       try {
-        const dashboardId = await getOrCreateDashboardEntry(
-          activity, 
-          user.id, 
-          userGradeLevel, 
+        const dashboardEntry = await getOrCreateDashboardEntry(
+          activity,
+          user.id,
+          userGradeLevel,
           userContinent
         );
-        setCurrentDashboardId(dashboardId);
-        console.log('[Activity Select] Dashboard ID:', dashboardId);
-        
-        // Update progress if new
-        if (activity.progress === 'not started') {
-          await updateActivityStatus(dashboardId);
-        }
-
-        // Load chat history from dashboard entry
-        const { data: dashboardEntry, error: fetchError } = await supabase
-          .from('dashboard')
-          .select('chat_history, progress')
-          .eq('id', dashboardId)
-          .single();
-
-        if (fetchError) {
-          console.error('[Dashboard] Error fetching entry:', fetchError);
-        }
+        setCurrentDashboardId(dashboardEntry.id);
+        console.log('[Activity Select] Dashboard entry:', dashboardEntry.id, 'isMock:', dashboardEntry.isMock);
 
         let initialChatHistory: ChatMessage[] = [];
-        if (dashboardEntry?.chat_history) {
+        if (dashboardEntry.chat_history) {
           try {
             const storedHistory = JSON.parse(dashboardEntry.chat_history);
             if (Array.isArray(storedHistory) && storedHistory.length > 0) {
@@ -2434,6 +2477,19 @@ Respond ONLY with valid JSON:
             }
           } catch (error) {
             console.error('Error parsing stored chat history:', error);
+          }
+        }
+
+        if (activity.progress === 'not started') {
+          if (!dashboardEntry.isMock) {
+            await updateActivityStatus(dashboardEntry.id);
+          } else {
+            setAllAIActivities(prev => 
+              prev.map(act => 
+                act.id === activity.id ? { ...act, progress: 'started' } : act
+              )
+            );
+            setSelectedActivity(prev => prev ? { ...prev, progress: 'started' } : prev);
           }
         }
 
