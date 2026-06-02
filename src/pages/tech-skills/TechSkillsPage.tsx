@@ -1,23 +1,15 @@
 // src/pages/tech-skills/TechSkillsPage.tsx
 // Route: /tech-skills
-//
-// New dependencies:
-//   - supabase client (already in project)
-//   - useAuth hook (already in project)
-//
-// New Supabase table required (already created per Kevin):
-//   tech_skills_progress (see schema in conversation)
+// This roadmap page uses localStorage for diagnostic answers
+// and phase task completion persistence.
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Code2, CheckCircle2, Circle, ChevronDown, ChevronUp,
+  CheckCircle2, Circle, ChevronDown, ChevronUp,
   Terminal, GitBranch, FlaskConical, Layers, Trophy, Zap,
-  ExternalLink, BookOpen, Lock, Send, Loader2, AlertCircle,
-  ThumbsUp, RefreshCw, ClipboardList
+  ExternalLink, BookOpen, Lock, Send, ClipboardList
 } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
-import { useAuth } from '../../hooks/useAuth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,16 +47,13 @@ interface DiagItem {
   submitPrompt: string;
 }
 
-type TaskStatus = 'locked' | 'available' | 'submitted' | 'pass' | 'needs_work';
-
-interface ProgressRecord {
-  phase_id: string;
-  task_name: string;
-  status: TaskStatus;
-  submission_text?: string;
-  ai_feedback?: string;
-  attempt_count: number;
+interface DiagnosticAnswerState {
+  text: string;
+  submitted: boolean;
 }
+
+type DiagnosticAnswers = Record<string, DiagnosticAnswerState>;
+type PhaseTaskProgress = Record<string, Record<string, boolean>>;
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -376,98 +365,74 @@ const PHASES: Phase[] = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+const DIAGNOSTIC_STORAGE_KEY = 'employability_diagnostic_answers';
+const PHASE_PROGRESS_STORAGE_KEY = 'employability_phase_progress';
 
-// Flat ordered list of all task keys for sequential gating
-const ALL_TASK_KEYS: string[] = PHASES.flatMap(p =>
-  p.tracks.flatMap(t => t.tasks.map(task => `${p.id}::${task.name}`))
-);
+function buildInitialDiagnosticAnswers(): DiagnosticAnswers {
+  return DIAGNOSTICS.reduce<DiagnosticAnswers>((acc, item) => {
+    acc[item.q] = { text: '', submitted: false };
+    return acc;
+  }, {});
+}
 
-function taskKey(phaseId: string, taskName: string) {
-  return `${phaseId}::${taskName}`;
+function buildInitialPhaseProgress(): PhaseTaskProgress {
+  return PHASES.reduce<PhaseTaskProgress>((phaseAcc, phase) => {
+    phaseAcc[phase.id] = phase.tracks.reduce<Record<string, boolean>>((taskAcc, track) => {
+      track.tasks.forEach((task) => {
+        taskAcc[task.name] = false;
+      });
+      return taskAcc;
+    }, {});
+    return phaseAcc;
+  }, {});
+}
+
+function sanitizeDiagnosticAnswers(raw: unknown): DiagnosticAnswers {
+  const initial = buildInitialDiagnosticAnswers();
+  if (!raw || typeof raw !== 'object') return initial;
+  const source = raw as Record<string, unknown>;
+  DIAGNOSTICS.forEach((item) => {
+    const candidate = source[item.q];
+    if (candidate && typeof candidate === 'object') {
+      const typed = candidate as Record<string, unknown>;
+      initial[item.q] = {
+        text: typeof typed.text === 'string' ? typed.text : '',
+        submitted: Boolean(typed.submitted),
+      };
+    }
+  });
+  return initial;
+}
+
+function sanitizePhaseProgress(raw: unknown): PhaseTaskProgress {
+  const initial = buildInitialPhaseProgress();
+  if (!raw || typeof raw !== 'object') return initial;
+  const source = raw as Record<string, unknown>;
+
+  PHASES.forEach((phase) => {
+    const phaseData = source[phase.id];
+    if (!phaseData || typeof phaseData !== 'object') return;
+    const typedPhaseData = phaseData as Record<string, unknown>;
+    phase.tracks.forEach((track) => {
+      track.tasks.forEach((task) => {
+        initial[phase.id][task.name] = Boolean(typedPhaseData[task.name]);
+      });
+    });
+  });
+
+  return initial;
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
 const DiagCard: React.FC<{
   item: DiagItem;
-  record: ProgressRecord | null;
-  onEvaluated: (rec: ProgressRecord) => void;
-}> = ({ item, record, onEvaluated }) => {
-  const { user } = useAuth();
+  answer: DiagnosticAnswerState;
+  onAnswerChange: (diagName: string, text: string) => void;
+  onSubmit: (diagName: string) => void;
+}> = ({ item, answer, onAnswerChange, onSubmit }) => {
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState(record?.submission_text ?? '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const passed = record?.status === 'pass';
-
-  const handleSubmit = async () => {
-    if (!text.trim() || !user?.id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const systemPrompt = `You are a rigorous but encouraging technical mentor evaluating a self-assessment submitted by a developer learner.
-
-The diagnostic is: "${item.q}"
-What good evidence looks like: ${item.submitPrompt}
-
-Evaluate the submission strictly but fairly. Respond in JSON only, no markdown, no preamble:
-{
-  "pass": true | false,
-  "feedback": "2-4 sentences. If pass=true: confirm what was demonstrated and what to carry into Phase 1. If pass=false: be specific about what is vague, missing, or needs more depth, and what to resubmit."
-}
-
-Pass criteria: the submission shows genuine self-knowledge of the learner's own platform. Vague, generic, or copy-pasted answers should not pass. Honest gaps with specific detail are fine.`;
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
-          system: systemPrompt,
-          messages: [{ role: 'user', content: text.trim() }],
-        }),
-      });
-      if (!response.ok) throw new Error(`API error ${response.status}`);
-      const data = await response.json();
-      const raw = data.content?.[0]?.text ?? '{}';
-      let parsed: { pass: boolean; feedback: string };
-      try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
-      catch { throw new Error('Could not parse evaluation response.'); }
-
-      const newStatus: TaskStatus = parsed.pass ? 'pass' : 'needs_work';
-      const { error: dbError } = await supabase
-        .from('tech_skills_progress')
-        .upsert({
-          user_id: user.id,
-          phase_id: 'diag',
-          track_label: 'Diagnostic',
-          task_name: item.q,
-          status: newStatus,
-          submission_text: text.trim(),
-          ai_feedback: parsed.feedback,
-          ai_score: parsed.pass ? 1 : 0,
-          submitted_at: new Date().toISOString(),
-          evaluated_at: new Date().toISOString(),
-          attempt_count: (record?.attempt_count ?? 0) + 1,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,phase_id,task_name' });
-      if (dbError) throw new Error(dbError.message);
-
-      onEvaluated({
-        phase_id: 'diag',
-        task_name: item.q,
-        status: newStatus,
-        submission_text: text.trim(),
-        ai_feedback: parsed.feedback,
-        attempt_count: (record?.attempt_count ?? 0) + 1,
-      });
-    } catch (e: any) {
-      setError(e.message ?? 'Evaluation failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const passed = answer.submitted;
 
   return (
     <div className={`rounded-lg border bg-white p-4 transition-shadow hover:shadow-sm ${
@@ -483,9 +448,7 @@ Pass criteria: the submission shows genuine self-knowledge of the learner's own 
             <div className="flex items-center gap-2 mb-1">
               {passed
                 ? <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
-                : record?.status === 'needs_work'
-                  ? <RefreshCw size={14} className="text-amber-400 flex-shrink-0" />
-                  : <Circle size={14} className="text-purple-300 flex-shrink-0" />
+                : <Circle size={14} className="text-purple-300 flex-shrink-0" />
               }
               <p className="text-xs font-mono uppercase tracking-wider text-purple-500">{item.q}</p>
             </div>
@@ -519,55 +482,21 @@ Pass criteria: the submission shows genuine self-knowledge of the learner's own 
             </p>
           </div>
 
-          {/* Prior feedback */}
-          {record?.ai_feedback && (
-            <div className={`rounded-md p-3 border ${
-              passed ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'
-            }`}>
-              <p className={`text-xs font-mono uppercase tracking-wider mb-1 ${
-                passed ? 'text-emerald-700' : 'text-amber-700'
-              }`}>
-                {passed
-                  ? <><ThumbsUp size={11} className="inline mr-1" />Passed — mentor feedback</>
-                  : <><AlertCircle size={11} className="inline mr-1" />Needs work — attempt {record.attempt_count}</>
-                }
-              </p>
-              <p className="text-xs text-gray-700 leading-relaxed">{record.ai_feedback}</p>
-            </div>
-          )}
-
           {/* Textarea + submit */}
-          {!passed && (
-            <>
-              <textarea
-                value={text}
-                onChange={e => setText(e.target.value)}
-                placeholder="Write your answer here — be specific about your platform..."
-                rows={6}
-                className="w-full text-sm rounded-md border border-purple-200 bg-white p-3 resize-y focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
-              {error && (
-                <p className="text-xs text-red-600 flex items-center gap-1">
-                  <AlertCircle size={12} /> {error}
-                </p>
-              )}
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !text.trim()}
-                className="inline-flex items-center gap-2 rounded-lg bg-purple-600 text-white text-xs font-semibold px-4 py-2 hover:bg-purple-700 transition-colors disabled:opacity-40"
-              >
-                {loading
-                  ? <><Loader2 size={13} className="animate-spin" /> Evaluating…</>
-                  : <><Send size={13} /> Submit for evaluation</>
-                }
-              </button>
-              {record?.status === 'needs_work' && (
-                <p className="text-xs text-gray-400 font-mono">
-                  Attempt {(record.attempt_count ?? 0) + 1} · revise and resubmit anytime
-                </p>
-              )}
-            </>
-          )}
+          <textarea
+            value={answer.text}
+            onChange={(e) => onAnswerChange(item.q, e.target.value)}
+            placeholder="Write your answer here — be specific about your platform..."
+            rows={6}
+            className="w-full text-sm rounded-md border border-purple-200 bg-white p-3 resize-y focus:outline-none focus:ring-2 focus:ring-purple-400"
+          />
+          <button
+            onClick={() => onSubmit(item.q)}
+            disabled={!answer.text.trim()}
+            className="inline-flex items-center gap-2 rounded-lg bg-purple-600 text-white text-xs font-semibold px-4 py-2 hover:bg-purple-700 transition-colors disabled:opacity-40"
+          >
+            <Send size={13} /> Submit for evaluation
+          </button>
           {passed && (
             <p className="text-xs text-emerald-600 font-mono flex items-center gap-1">
               <CheckCircle2 size={13} /> Complete
@@ -579,205 +508,21 @@ Pass criteria: the submission shows genuine self-knowledge of the learner's own 
   );
 };
 
-// ── Submission panel ──────────────────────────────────────────────────────────
-
-interface SubmissionPanelProps {
-  task: Task;
-  phaseId: string;
-  phaseColor: string;
-  phaseBg: string;
-  record: ProgressRecord | null;
-  onEvaluated: (rec: ProgressRecord) => void;
-}
-
-const SubmissionPanel: React.FC<SubmissionPanelProps> = ({
-  task, phaseId, phaseColor, phaseBg, record, onEvaluated
-}) => {
-  const { user } = useAuth();
-  const [text, setText] = useState(record?.submission_text ?? '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const alreadyPassed = record?.status === 'pass';
-
-  const handleSubmit = async () => {
-    if (!text.trim() || !user?.id) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      // ── 1. Call Anthropic via edge function (or directly) for evaluation ──
-      const systemPrompt = `You are a rigorous but encouraging technical mentor evaluating evidence submitted by a developer learner named Silas.
-
-The task is: "${task.name}"
-What good evidence looks like: ${task.submitPrompt}
-
-Evaluate the submission strictly but fairly. Respond in JSON only, no markdown, no preamble:
-{
-  "pass": true | false,
-  "feedback": "2-4 sentences. If pass=true: confirm what was done well and what to carry forward. If pass=false: be specific about exactly what is missing or needs improvement and what to resubmit."
-}
-
-Pass criteria: the submission meaningfully addresses the task requirements described above. Incomplete, placeholder, or off-topic submissions should not pass.`;
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
-          system: systemPrompt,
-          messages: [{ role: 'user', content: text.trim() }],
-        }),
-      });
-
-      if (!response.ok) throw new Error(`API error ${response.status}`);
-      const data = await response.json();
-      const raw = data.content?.[0]?.text ?? '{}';
-      let parsed: { pass: boolean; feedback: string };
-      try {
-        parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
-      } catch {
-        throw new Error('Could not parse evaluation response.');
-      }
-
-      const newStatus: TaskStatus = parsed.pass ? 'pass' : 'needs_work';
-
-      // ── 2. Upsert into tech_skills_progress ──
-      const { error: dbError } = await supabase
-        .from('tech_skills_progress')
-        .upsert({
-          user_id: user.id,
-          phase_id: phaseId,
-          track_label: '', // caller could pass this; fine as empty for now
-          task_name: task.name,
-          status: newStatus,
-          submission_text: text.trim(),
-          ai_feedback: parsed.feedback,
-          ai_score: parsed.pass ? 1 : 0,
-          submitted_at: new Date().toISOString(),
-          evaluated_at: new Date().toISOString(),
-          attempt_count: (record?.attempt_count ?? 0) + 1,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,phase_id,task_name' });
-
-      if (dbError) throw new Error(dbError.message);
-
-      const updated: ProgressRecord = {
-        phase_id: phaseId,
-        task_name: task.name,
-        status: newStatus,
-        submission_text: text.trim(),
-        ai_feedback: parsed.feedback,
-        attempt_count: (record?.attempt_count ?? 0) + 1,
-      };
-      onEvaluated(updated);
-    } catch (e: any) {
-      setError(e.message ?? 'Evaluation failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="mt-3 rounded-lg border border-gray-200 p-4 space-y-3">
-
-      {/* What to submit */}
-      <div className="rounded-md p-3" style={{ background: phaseBg, borderLeft: `3px solid ${phaseColor}` }}>
-        <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: phaseColor }}>
-          <ClipboardList size={11} className="inline mr-1" />What to submit
-        </p>
-        <p className="text-xs text-gray-700 leading-relaxed">{task.submitPrompt}</p>
-        <p className="text-xs text-gray-500 mt-2 italic">
-          Paste from your terminal, AI Playground, GitHub, or document editor.
-          You can work from nextvillage.community or your own website.
-          The AI evaluator checks your submission against these criteria.
-        </p>
-      </div>
-
-      {/* Feedback from previous attempt */}
-      {record?.ai_feedback && (
-        <div className={`rounded-md p-3 border ${
-          record.status === 'pass'
-            ? 'bg-emerald-50 border-emerald-200'
-            : 'bg-amber-50 border-amber-200'
-        }`}>
-          <p className={`text-xs font-mono uppercase tracking-wider mb-1 ${
-            record.status === 'pass' ? 'text-emerald-700' : 'text-amber-700'
-          }`}>
-            {record.status === 'pass'
-              ? <><ThumbsUp size={11} className="inline mr-1" />Passed — mentor feedback</>
-              : <><AlertCircle size={11} className="inline mr-1" />Needs work — attempt {record.attempt_count}</>
-            }
-          </p>
-          <p className="text-xs text-gray-700 leading-relaxed">{record.ai_feedback}</p>
-        </div>
-      )}
-
-      {/* Submission textarea */}
-      {!alreadyPassed && (
-        <>
-          <textarea
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="Paste your evidence here — terminal output, code, document text, URLs..."
-            rows={8}
-            className="w-full text-sm font-mono rounded-md border border-gray-200 bg-gray-50 p-3 resize-y focus:outline-none focus:ring-2 focus:border-transparent"
-            style={{ '--tw-ring-color': phaseColor } as any}
-          />
-
-          {error && (
-            <p className="text-xs text-red-600 flex items-center gap-1">
-              <AlertCircle size={12} /> {error}
-            </p>
-          )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !text.trim()}
-            className="inline-flex items-center gap-2 rounded-lg text-white text-xs font-semibold px-4 py-2 transition-opacity disabled:opacity-40"
-            style={{ background: phaseColor }}
-          >
-            {loading
-              ? <><Loader2 size={13} className="animate-spin" /> Evaluating…</>
-              : <><Send size={13} /> Submit for evaluation</>
-            }
-          </button>
-
-          {record?.status === 'needs_work' && (
-            <p className="text-xs text-gray-400 font-mono">
-              Attempt {(record.attempt_count ?? 0) + 1} · revise and resubmit anytime
-            </p>
-          )}
-        </>
-      )}
-
-      {alreadyPassed && (
-        <p className="text-xs text-emerald-600 font-mono flex items-center gap-1">
-          <CheckCircle2 size={13} /> Task complete · next task is now unlocked
-        </p>
-      )}
-    </div>
-  );
-};
-
 // ── TaskRow ───────────────────────────────────────────────────────────────────
 
 interface TaskRowProps {
   task: Task;
-  phaseId: string;
   phaseColor: string;
   phaseBg: string;
-  status: TaskStatus;
-  record: ProgressRecord | null;
-  onEvaluated: (rec: ProgressRecord) => void;
+  locked: boolean;
+  completed: boolean;
+  onToggleComplete: (taskName: string, completed: boolean) => void;
 }
 
 const TaskRow: React.FC<TaskRowProps> = ({
-  task, phaseId, phaseColor, phaseBg, status, record, onEvaluated
+  task, phaseColor, phaseBg, locked, completed, onToggleComplete
 }) => {
   const [open, setOpen] = useState(false);
-  const locked = status === 'locked';
-  const passed = status === 'pass';
 
   return (
     <div className={`border-b border-gray-100 last:border-0 ${locked ? 'opacity-50' : ''}`}>
@@ -785,24 +530,19 @@ const TaskRow: React.FC<TaskRowProps> = ({
       <div className="flex items-start gap-3 py-3 px-1">
         {/* Status icon */}
         <div className="mt-0.5 flex-shrink-0">
-          {passed
+          {completed
             ? <CheckCircle2 size={18} style={{ color: phaseColor }} />
             : locked
               ? <Lock size={18} className="text-gray-300" />
-              : status === 'needs_work'
-                ? <RefreshCw size={18} className="text-amber-400" />
-                : <Circle size={18} className="text-gray-300" />
+              : <Circle size={18} className="text-gray-300" />
           }
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium leading-snug ${passed ? 'line-through text-gray-400' : locked ? 'text-gray-400' : 'text-gray-800'}`}>
+          <p className={`text-sm font-medium leading-snug ${completed ? 'line-through text-gray-400' : locked ? 'text-gray-400' : 'text-gray-800'}`}>
             {task.name}
           </p>
           <p className="text-xs text-gray-400 mt-0.5 italic">{task.short}</p>
-          {status === 'needs_work' && (
-            <p className="text-xs text-amber-500 mt-0.5 font-mono">↩ revise and resubmit</p>
-          )}
         </div>
 
         <button
@@ -839,17 +579,24 @@ const TaskRow: React.FC<TaskRowProps> = ({
               </p>
               <p className="text-xs leading-relaxed text-emerald-900">{task.platform}</p>
             </div>
+
+            <div className="rounded-md p-3 bg-white border border-gray-200">
+              <p className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-2">
+                <ClipboardList size={11} className="inline mr-1" />What to submit
+              </p>
+              <p className="text-xs text-gray-700 leading-relaxed">{task.submitPrompt}</p>
+            </div>
           </div>
 
-          {/* Submission panel */}
-          <SubmissionPanel
-            task={task}
-            phaseId={phaseId}
-            phaseColor={phaseColor}
-            phaseBg={phaseBg}
-            record={record}
-            onEvaluated={onEvaluated}
-          />
+          <label className="inline-flex items-center gap-2 text-sm text-gray-700 select-none">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300"
+              checked={completed}
+              onChange={(e) => onToggleComplete(task.name, e.target.checked)}
+            />
+            Mark this task complete
+          </label>
         </div>
       )}
     </div>
@@ -860,12 +607,16 @@ const TaskRow: React.FC<TaskRowProps> = ({
 
 interface PhaseSectionProps {
   phase: Phase;
-  progressMap: Map<string, ProgressRecord>;
-  onEvaluated: (rec: ProgressRecord) => void;
-  diagAllPassed: boolean;
+  locked: boolean;
+  completedCount: number;
+  totalCount: number;
+  onToggleTask: (phaseId: string, taskName: string, completed: boolean) => void;
+  phaseProgress: PhaseTaskProgress;
 }
 
-const PhaseSection: React.FC<PhaseSectionProps> = ({ phase, progressMap, onEvaluated, diagAllPassed }) => {
+const PhaseSection: React.FC<PhaseSectionProps> = ({
+  phase, locked, completedCount, totalCount, onToggleTask, phaseProgress
+}) => {
   const [open, setOpen] = useState(phase.id === 'p1');
 
   const phaseIcon = {
@@ -875,13 +626,10 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({ phase, progressMap, onEvalu
     p4: <Trophy size={16} />,
   }[phase.id];
 
-  const allTasks = phase.tracks.flatMap(t => t.tasks);
-  const passedCount = allTasks.filter(t => progressMap.get(taskKey(phase.id, t.name))?.status === 'pass').length;
-
   return (
     <div className="mb-8">
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => !locked && setOpen(o => !o)}
         className="w-full text-left flex items-start gap-3 mb-4"
       >
         <span
@@ -898,7 +646,8 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({ phase, progressMap, onEvalu
           <p className="text-xs text-gray-400 font-mono mt-0.5">{phase.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 mt-1 flex-shrink-0">
-          <span className="text-xs font-mono text-gray-400">{passedCount}/{allTasks.length}</span>
+          {locked && <Lock size={12} className="text-gray-400" />}
+          <span className="text-xs font-mono text-gray-400">{completedCount}/{totalCount}</span>
           {open ? <ChevronUp size={18} className="text-gray-300" /> : <ChevronDown size={18} className="text-gray-300" />}
         </div>
       </button>
@@ -912,29 +661,16 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({ phase, progressMap, onEvalu
                   {track.label}
                 </p>
                 {track.tasks.map((task, i) => {
-                  const key = taskKey(phase.id, task.name);
-                  const rec = progressMap.get(key) ?? null;
-                  const globalIdx = ALL_TASK_KEYS.indexOf(key);
-                  const prevKey = globalIdx > 0 ? ALL_TASK_KEYS[globalIdx - 1] : null;
-                  const prevPassed = prevKey
-                    ? progressMap.get(prevKey)?.status === 'pass'
-                    : diagAllPassed; // first task unlocks only after diagnostics pass
-                  const status: TaskStatus = rec?.status === 'pass'
-                    ? 'pass'
-                    : !prevPassed
-                      ? 'locked'
-                      : rec?.status ?? 'available';
-
+                  const completed = Boolean(phaseProgress[phase.id]?.[task.name]);
                   return (
                     <TaskRow
                       key={i}
                       task={task}
-                      phaseId={phase.id}
                       phaseColor={phase.color}
                       phaseBg={phase.colorBg}
-                      status={status}
-                      record={rec}
-                      onEvaluated={onEvaluated}
+                      locked={locked}
+                      completed={completed}
+                      onToggleComplete={(taskName, checked) => onToggleTask(phase.id, taskName, checked)}
                     />
                   );
                 })}
@@ -964,39 +700,104 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({ phase, progressMap, onEvalu
 
 const TechSkillsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [progressMap, setProgressMap] = useState<Map<string, ProgressRecord>>(new Map());
-  const [loadingProgress, setLoadingProgress] = useState(true);
+  const [diagnosticAnswers, setDiagnosticAnswers] = useState<DiagnosticAnswers>(() => buildInitialDiagnosticAnswers());
+  const [phaseProgress, setPhaseProgress] = useState<PhaseTaskProgress>(() => buildInitialPhaseProgress());
+  const [hydrated, setHydrated] = useState(false);
 
-  // Load all progress records for this user
   useEffect(() => {
-    if (!user?.id) { setLoadingProgress(false); return; }
-    supabase
-      .from('tech_skills_progress')
-      .select('phase_id, task_name, status, submission_text, ai_feedback, attempt_count')
-      .eq('user_id', user.id)
-      .then(({ data, error }) => {
-        if (error) console.error('[TechSkillsPage] progress load error:', error);
-        if (data) {
-          const map = new Map<string, ProgressRecord>();
-          data.forEach((r: any) => map.set(taskKey(r.phase_id, r.task_name), r));
-          setProgressMap(map);
-        }
-        setLoadingProgress(false);
-      });
-  }, [user?.id]);
+    try {
+      const rawDiagnostics = localStorage.getItem(DIAGNOSTIC_STORAGE_KEY);
+      if (rawDiagnostics) {
+        setDiagnosticAnswers(sanitizeDiagnosticAnswers(JSON.parse(rawDiagnostics)));
+      }
+    } catch (error) {
+      console.error('[TechSkillsPage] Failed to parse diagnostic answers from localStorage', error);
+    }
 
-  const handleEvaluated = useCallback((rec: ProgressRecord) => {
-    setProgressMap(prev => {
-      const next = new Map(prev);
-      next.set(taskKey(rec.phase_id, rec.task_name), rec);
-      return next;
-    });
+    try {
+      const rawPhaseProgress = localStorage.getItem(PHASE_PROGRESS_STORAGE_KEY);
+      if (rawPhaseProgress) {
+        setPhaseProgress(sanitizePhaseProgress(JSON.parse(rawPhaseProgress)));
+      }
+    } catch (error) {
+      console.error('[TechSkillsPage] Failed to parse phase progress from localStorage', error);
+    }
+
+    setHydrated(true);
   }, []);
 
-  const totalTasks = PHASES.reduce((sum, p) => sum + p.tracks.reduce((s, t) => s + t.tasks.length, 0), 0);
-  const totalPassed = [...progressMap.values()].filter(r => r.status === 'pass').length;
-  const diagAllPassed = DIAGNOSTICS.every(d => progressMap.get(taskKey('diag', d.q))?.status === 'pass');
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(DIAGNOSTIC_STORAGE_KEY, JSON.stringify(diagnosticAnswers));
+  }, [diagnosticAnswers, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(PHASE_PROGRESS_STORAGE_KEY, JSON.stringify(phaseProgress));
+  }, [phaseProgress, hydrated]);
+
+  const onDiagnosticAnswerChange = (diagName: string, text: string) => {
+    setDiagnosticAnswers((prev) => ({
+      ...prev,
+      [diagName]: {
+        ...prev[diagName],
+        text,
+      },
+    }));
+  };
+
+  const onDiagnosticSubmit = (diagName: string) => {
+    setDiagnosticAnswers((prev) => {
+      const current = prev[diagName];
+      if (!current?.text.trim()) return prev;
+      return {
+        ...prev,
+        [diagName]: {
+          text: current.text.trim(),
+          submitted: true,
+        },
+      };
+    });
+  };
+
+  const onToggleTask = (phaseId: string, taskName: string, completed: boolean) => {
+    setPhaseProgress((prev) => ({
+      ...prev,
+      [phaseId]: {
+        ...prev[phaseId],
+        [taskName]: completed,
+      },
+    }));
+  };
+
+  const phaseTaskCounts = useMemo(() => {
+    return PHASES.reduce<Record<string, { total: number; completed: number }>>((acc, phase) => {
+      const allTasks = phase.tracks.flatMap((track) => track.tasks);
+      const completed = allTasks.filter((task) => Boolean(phaseProgress[phase.id]?.[task.name])).length;
+      acc[phase.id] = { total: allTasks.length, completed };
+      return acc;
+    }, {});
+  }, [phaseProgress]);
+
+  const phaseIsComplete = (phaseId: string) => {
+    const counts = phaseTaskCounts[phaseId];
+    return Boolean(counts && counts.total > 0 && counts.completed === counts.total);
+  };
+
+  const authTestSubmitted = diagnosticAnswers['Auth test']?.submitted ?? false;
+  const debugTestSubmitted = diagnosticAnswers['Debug test']?.submitted ?? false;
+  const schemaTestSubmitted = diagnosticAnswers['Schema test']?.submitted ?? false;
+  const diagAllPassed = authTestSubmitted && debugTestSubmitted && schemaTestSubmitted;
+
+  const phaseLockedById: Record<string, boolean> = {
+    p1: !diagAllPassed,
+    p2: !phaseIsComplete('p1'),
+    p3: !phaseIsComplete('p2'),
+    p4: !phaseIsComplete('p3'),
+  };
+
+  const totalTasks = Object.values(phaseTaskCounts).reduce((sum, v) => sum + v.total, 0);
+  const totalPassed = Object.values(phaseTaskCounts).reduce((sum, v) => sum + v.completed, 0);
 
   return (
     <div className="min-h-screen bg-white">
@@ -1089,39 +890,42 @@ const TechSkillsPage: React.FC = () => {
           </div>
           <p className="text-xs text-purple-500 mb-4">
             Complete all three before Phase 1 unlocks. Your answers reveal where to push hardest.
-            You must pass each one — the AI evaluator checks for genuine self-knowledge of your platform.
+            This step is local and immediate: once all three are submitted, Phase 1 unlocks.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {DIAGNOSTICS.map((d, i) => (
               <DiagCard
                 key={i}
                 item={d}
-                record={progressMap.get(taskKey('diag', d.q)) ?? null}
-                onEvaluated={handleEvaluated}
+                answer={diagnosticAnswers[d.q] ?? { text: '', submitted: false }}
+                onAnswerChange={onDiagnosticAnswerChange}
+                onSubmit={onDiagnosticSubmit}
               />
             ))}
           </div>
         </div>
 
         {/* Phase 1 gate notice */}
-        {!loadingProgress && !diagAllPassed && (
+        {hydrated && !diagAllPassed && (
           <div className="mb-6 rounded-xl border border-purple-200 bg-purple-50 p-4 flex items-center gap-3">
             <Lock size={16} className="text-purple-400 flex-shrink-0" />
             <p className="text-xs text-purple-600">
               <span className="font-semibold">Phase 1 is locked.</span>{' '}
-              Complete and pass all three diagnostics above to unlock the roadmap.
+              Submit all three diagnostics above to unlock the roadmap.
             </p>
           </div>
         )}
 
         {/* Phases */}
-        {!loadingProgress && PHASES.map(phase => (
+        {hydrated && PHASES.map(phase => (
           <PhaseSection
             key={phase.id}
             phase={phase}
-            progressMap={progressMap}
-            onEvaluated={handleEvaluated}
-            diagAllPassed={diagAllPassed}
+            locked={phaseLockedById[phase.id]}
+            completedCount={phaseTaskCounts[phase.id]?.completed ?? 0}
+            totalCount={phaseTaskCounts[phase.id]?.total ?? 0}
+            onToggleTask={onToggleTask}
+            phaseProgress={phaseProgress}
           />
         ))}
 
