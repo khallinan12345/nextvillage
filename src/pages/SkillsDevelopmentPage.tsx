@@ -536,6 +536,45 @@ const SKILLS_CATEGORY_METADATA: Record<string, { slug: string; focus: string; de
   },
 };
 
+// Helper: generate sophisticated system prompt for Skills Development activities
+function buildSkillsSystemPrompt(title: string, subCategory: string, style: string, deliverable: string): string {
+  const styleInstructions: Record<string, string> = {
+    'simulation/troubleshooting': 'Simulate a realistic technical or professional scenario where the learner must troubleshoot a problem or debug a failing system. Provide contextual clues and error messages. Guide them to identify root causes without giving away answers.',
+    'case study/analysis': 'Present a real-world case or decision scenario. Guide the learner to analyze evidence critically, identify key factors, and develop sound judgment. Ask questions that deepen reasoning.',
+    'interactive roleplay': 'Adopt a specific professional or community role relevant to this skill. Respond authentically as that person. Create a realistic dialogue or negotiation experience.',
+    'design hackathon': 'Facilitate rapid, iterative design thinking. Challenge the learner to explore multiple approaches, evaluate tradeoffs, and prototype solutions quickly. Encourage creative problem-solving grounded in technical reality.',
+  };
+
+  return `You are a brilliant, world-class senior technical professor specializing in African sustainable development, AI systems integration, and Nigerian solar infrastructure engineering.
+
+YOUR TEACHING STYLE:
+- Highly interactive, supportive, yet rigorous. Guide through probing questions rather than lecturing.
+- Provide rich local context (Nigerian energy systems, market dynamics, community realities, economic constraints).
+- Break complex topics into digestible, achievable steps.
+- Actively listen to student questions and provide profound, technically precise answers.
+- When a student asks a direct question, answer it fully before returning to the lesson flow.
+- Ground all guidance in real productive and economic context.
+
+SKILL CONTEXT:
+Skill: ${subCategory}
+Lesson: ${title}
+Learning Style: ${style}
+Expected Deliverable: ${deliverable}
+
+STYLE-SPECIFIC BEHAVIOR:
+${styleInstructions[style.toLowerCase()] || 'Guide the learner through thoughtful dialogue and iterative skill-building.'}
+
+EXPECTATIONS:
+- Provide step-by-step guidance as the student develops this skill.
+- After each student response, offer specific, constructive feedback and suggest the next logical step.
+- Reference Nigerian contexts, local industries, energy systems, or market realities where relevant.
+- Encourage independent thinking, problem-testing, and self-directed learning.
+- Assume no prior knowledge. Always check for understanding before advancing.
+- Help the learner produce the specified deliverable through guided practice and feedback.
+
+Start by warmly welcoming the student now that they have confirmed they are ready to begin.`;
+}
+
 function buildSkillsMockActivities(): DashboardActivity[] {
   const now = new Date().toISOString();
   const learningStyles = [
@@ -683,7 +722,7 @@ function buildSkillsMockActivities(): DashboardActivity[] {
       const id = `mock-${metadata.slug}-${index + 1}`;
       const description = `${style} activity based on ${title}. Learners must apply ${category.themeHint} while practicing ${metadata.deliverable}.`;
       const promptTemplate = `You are designing a ${style.toLowerCase()} experience for ${title}. Guide the learner through clear steps, practical checks, and local Nigerian context.`;
-      const systemPrompt = `You are a skills development coach for Nigerian learners. Support ${title} with ${style.toLowerCase()}, keeping instructions direct, culturally relevant, and focused on solar energy, AI, or local economic impact.`;
+      const systemPrompt = buildSkillsSystemPrompt(title, category.subCategory, style, metadata.deliverable);
 
       mockActivities.push({
         id,
@@ -694,8 +733,9 @@ function buildSkillsMockActivities(): DashboardActivity[] {
         progress: 'not started',
         learning_module_id: id,
         description,
-        promptTemplate,
         systemPrompt,
+        learningStyle: style,
+        topicTitle: category.subCategory,
         certification_evaluation_score: null,
         certification_evaluation_evidence: `Pending rubric review for ${title}.`,
         updated_at: now,
@@ -3101,10 +3141,13 @@ Provide assessment now:`;
       if (initialChatHistory.length > 0) {
         setChatHistory(initialChatHistory);
       } else {
+        const topicTitle = activity.sub_category || 'Skills Development';
+        const activityTitle = activity.title || 'this module';
+        const welcomeMessage = `Welcome to this deep dive into **${activityTitle}** under our **${topicTitle}** framework. I'm your technical professor, and I'm excited to guide you through this hands-on learning experience.\n\nBefore we dive into the technical work, I want to make sure you're ready and energized. Are you ready to begin this lesson today? Please respond with something like "Yes, I'm ready" or "Let's go!" when you're prepared to start.`;
         setChatHistory([
           {
             role: 'assistant',
-            content: `Hello! I'm your AI learning assistant. I'm here to guide you through "${activity.title}". What would you like to explore first?`,
+            content: welcomeMessage,
             timestamp: new Date()
           }
         ]);

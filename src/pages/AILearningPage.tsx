@@ -502,6 +502,43 @@ const AI_CATEGORY_METADATA: Record<string, { label: string; focus: string; outpu
   },
 };
 
+// Helper: generate sophisticated system prompt for AI Learning activities
+function buildAILearningSystemPrompt(title: string, subCategory: string, style: string): string {
+  const styleInstructions: Record<string, string> = {
+    'simulation/troubleshooting': 'You will simulate a broken or failing system environment. Present the learner with realistic error logs, performance metrics, or system alerts. Ask them to diagnose the issue step-by-step. Provide hints when they are stuck, but do not reveal the answer outright.',
+    'case study/analysis': 'You will present a real-world case scenario or decision point. Guide the learner to critically analyze evidence, identify assumptions, and develop reasoned judgments. Ask probing questions about tradeoffs, consequences, and alternatives.',
+    'interactive roleplay': 'You will adopt a specific professional role (investor, engineer, community leader, trader, etc.). Respond authentically to the learner as that person would, creating a realistic negotiation, pitch, or consultation experience.',
+    'design hackathon': 'You will facilitate rapid ideation and prototyping. Challenge the learner to brainstorm multiple approaches, evaluate constraints, and iterate quickly. Encourage creative thinking while grounding solutions in technical feasibility.',
+  };
+
+  return `You are a brilliant, world-class senior technical professor specializing in African sustainable development, AI systems integration, and Nigerian solar infrastructure engineering.
+
+YOUR TEACHING STYLE:
+- Highly interactive, supportive, yet rigorous. Do not give away answers instantly.
+- Ask probing questions that guide discovery. Provide rich local context (Nigerian grid configurations, market environments, technical constraints).
+- Break complex topics into digestible steps. Actively listen to student questions and give profound, technically precise explanations.
+- Guide learners organically toward mastering the lesson through dialogue, not lecture.
+- When a student asks a direct question, answer it fully and clearly before continuing the lesson flow.
+- Ground all guidance in real productive and economic context.
+
+ACTIVITY CONTEXT:
+Topic: ${subCategory}
+Lesson: ${title}
+Learning Style: ${style}
+
+STYLE-SPECIFIC BEHAVIOR:
+${styleInstructions[style.toLowerCase()] || 'Guide the learner through thoughtful questioning and iterative exploration of this topic.'}
+
+EXPECTATIONS:
+- Provide step-by-step guidance as the student progresses through this lesson.
+- After each student response, offer specific feedback, ask clarifying questions, and suggest next steps.
+- Reference Nigerian infrastructure, energy systems, market dynamics, or local economic realities where relevant.
+- Encourage the student to think independently, test assumptions, and build on their own reasoning.
+- Never skip steps or assume prior knowledge. Always check for understanding.
+
+Start by warmly welcoming the student now that they have acknowledged they are ready to begin.`;
+}
+
 function buildAILearningMockActivities(userId: string): DashboardActivity[] {
   const now = new Date().toISOString();
   const learningStyles = [
@@ -631,8 +668,7 @@ function buildAILearningMockActivities(userId: string): DashboardActivity[] {
       const style = learningStyles[index % learningStyles.length];
       const id = `mock-${metadata.label}-${index + 1}`;
       const description = `${style} challenge in Nigeria: ${title}. Learners explore ${category.themeHint} through a hands-on scenario.`;
-      const promptTemplate = `You are an AI learning coach guiding a learner through ${style.toLowerCase()} of ${title}. Focus on practical reasoning, local energy context, and clear steps to solve the challenge.`;
-      const systemPrompt = `You are a Nigerian-focused AI facilitator. Support the learner through ${title} with ${style.toLowerCase()}. Keep the guidance concrete, ask one question at a time, and ground every step in solar energy, AI integration, or local economic use.`;
+      const systemPrompt = buildAILearningSystemPrompt(title, category.subCategory, style);
 
       mockActivities.push({
         id,
@@ -643,8 +679,9 @@ function buildAILearningMockActivities(userId: string): DashboardActivity[] {
         title,
         activity: title,
         description,
-        promptTemplate,
         systemPrompt,
+        learningStyle: style,
+        topicTitle: category.subCategory,
         progress: 'not started',
         created_at: now,
         updated_at: now,
@@ -2586,10 +2623,13 @@ Respond ONLY with valid JSON:
         if (initialChatHistory.length > 0) {
           setChatHistory(initialChatHistory);
         } else {
+          const topicTitle = activity.sub_category || 'AI Learning';
+          const activityTitle = activity.title || 'this module';
+          const welcomeMessage = `Welcome to this deep dive into **${activityTitle}** under our **${topicTitle}** framework. I'm your technical professor, and I'm excited to guide you through this hands-on learning experience.\n\nBefore we dive into the technical work, I want to make sure you're ready and energized. Are you ready to begin this lesson today? Please respond with something like "Yes, I'm ready" or "Let's go!" when you're prepared to start.`;
           setChatHistory([
             {
               role: 'assistant',
-              content: `Hello, I'm your AI assistant. Are you ready to dive into ${details.title}?`,
+              content: welcomeMessage,
               timestamp: new Date()
             }
           ]);
