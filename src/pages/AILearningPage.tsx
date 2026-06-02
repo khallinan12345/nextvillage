@@ -465,6 +465,168 @@ const aiLearningCategories = [
   },
 ];
 
+const AI_ACTIVITY_TARGETS: Record<string, number> = {
+  'Understanding AI: Core Concepts & Capabilities': 48,
+  'Prompt Engineering: Effective AI Communication': 8,
+  'Evaluating AI Outputs: Critical Analysis': 8,
+  'AI Ethics & Responsible Use': 8,
+  Applications: 5,
+};
+
+const AI_CATEGORY_METADATA: Record<string, { label: string; focus: string; outputHint: string }> = {
+  'Understanding AI: Core Concepts & Capabilities': {
+    label: 'understanding-ai',
+    focus: 'core AI mechanisms, limits, and terminology',
+    outputHint: 'explain concepts using one practical scenario',
+  },
+  'Prompt Engineering: Effective AI Communication': {
+    label: 'prompt-engineering',
+    focus: 'prompt structure, constraints, and iterative refinement',
+    outputHint: 'submit baseline and revised prompts with comparison notes',
+  },
+  'Evaluating AI Outputs: Critical Analysis': {
+    label: 'evaluating-ai-outputs',
+    focus: 'verification workflows, bias detection, and trust decisions',
+    outputHint: 'validate outputs against two independent checks',
+  },
+  'AI Ethics & Responsible Use': {
+    label: 'ai-ethics-responsible-use',
+    focus: 'privacy, fairness, and mitigation planning',
+    outputHint: 'identify one ethical risk and one concrete mitigation',
+  },
+  Applications: {
+    label: 'ai-applications',
+    focus: 'real-world implementation and measurable outcomes',
+    outputHint: 'define a success metric and rollout plan',
+  },
+};
+
+function buildAILearningMockActivities(userId: string): DashboardActivity[] {
+  const now = new Date().toISOString();
+  const baseActivities: DashboardActivity[] = [
+    {
+      id: 'mock-ai-1',
+      user_id: userId,
+      category_activity: 'AI Learning',
+      sub_category: 'Understanding AI: Core Concepts & Capabilities',
+      learning_module_id: 'mock-ai-1',
+      title: 'What is Artificial Intelligence?',
+      description: 'Learn the fundamentals of AI and how it impacts the world',
+      activity: 'What is Artificial Intelligence?',
+      progress: 'not started',
+      created_at: now,
+      updated_at: now,
+      isPublic: true,
+    },
+    {
+      id: 'mock-ai-2',
+      user_id: userId,
+      category_activity: 'AI Learning',
+      sub_category: 'Prompt Engineering: Effective AI Communication',
+      learning_module_id: 'mock-ai-2',
+      title: 'Prompt Engineering: Effective AI Communication',
+      description: 'Practice crafting prompts that produce better AI results',
+      activity: 'Prompt Engineering: Effective AI Communication',
+      progress: 'not started',
+      created_at: now,
+      updated_at: now,
+      isPublic: false,
+    },
+    {
+      id: 'mock-ai-3',
+      user_id: userId,
+      category_activity: 'AI Learning',
+      sub_category: 'Prompt Engineering: Effective AI Communication',
+      learning_module_id: 'mock-ai-3',
+      title: 'Effective Communication with Claude & ChatGPT',
+      description: 'Learn how to communicate clearly with conversational AI tools',
+      activity: 'Effective Communication with Claude & ChatGPT',
+      progress: 'not started',
+      created_at: now,
+      updated_at: now,
+      isPublic: true,
+    },
+    {
+      id: 'mock-ai-4',
+      user_id: userId,
+      category_activity: 'AI Learning',
+      sub_category: 'AI Ethics & Responsible Use',
+      learning_module_id: 'mock-ai-4',
+      title: 'Ethics & Data Privacy in AI',
+      description: 'Understand the ethical questions and privacy considerations for AI',
+      activity: 'Ethics & Data Privacy in AI',
+      progress: 'not started',
+      created_at: now,
+      updated_at: now,
+      isPublic: true,
+    },
+    {
+      id: 'mock-ai-5',
+      user_id: userId,
+      category_activity: 'AI Learning',
+      sub_category: 'Applications',
+      learning_module_id: 'mock-ai-5',
+      title: 'AI Tools for Workplace Productivity',
+      description: 'Explore how AI can help you get work done faster and better',
+      activity: 'AI Tools for Workplace Productivity',
+      progress: 'not started',
+      created_at: now,
+      updated_at: now,
+      isPublic: false,
+    },
+    {
+      id: 'mock-ai-6',
+      user_id: userId,
+      category_activity: 'AI Learning',
+      sub_category: 'Evaluating AI Outputs: Critical Analysis',
+      learning_module_id: 'mock-ai-6',
+      title: 'Practical AI Problem Solving',
+      description: 'Use AI to break down real problems and find practical solutions',
+      activity: 'Practical AI Problem Solving',
+      progress: 'not started',
+      created_at: now,
+      updated_at: now,
+      isPublic: true,
+    },
+  ];
+
+  const generatedActivities: DashboardActivity[] = [];
+  Object.entries(AI_ACTIVITY_TARGETS).forEach(([subCategory, targetCount]) => {
+    const existingCount = baseActivities.filter((activity) => activity.sub_category === subCategory).length;
+    const metadata = AI_CATEGORY_METADATA[subCategory];
+
+    for (let i = existingCount + 1; i <= targetCount; i += 1) {
+      const id = `mock-${metadata.label}-${i}`;
+      generatedActivities.push({
+        id,
+        user_id: userId,
+        category_activity: 'AI Learning',
+        sub_category: subCategory,
+        learning_module_id: id,
+        title: `Deep Dive: ${subCategory.replace(/:.*$/, '')} Part ${i}`,
+        description: `Applied practice in ${metadata.focus}. This module asks the learner to ${metadata.outputHint}.`,
+        activity: `${subCategory} Practice ${i}`,
+        progress: 'not started',
+        certification_evaluation_score: null,
+        certification_evaluation_evidence: `Pending evaluation for ${subCategory} module ${i}.`,
+        certification_evaluation_UNESCO_1_score: null,
+        certification_evaluation_UNESCO_1_evidence: 'Not assessed yet.',
+        certification_evaluation_UNESCO_2_score: null,
+        certification_evaluation_UNESCO_2_evidence: 'Not assessed yet.',
+        certification_evaluation_UNESCO_3_score: null,
+        certification_evaluation_UNESCO_3_evidence: 'Not assessed yet.',
+        certification_evaluation_UNESCO_4_score: null,
+        certification_evaluation_UNESCO_4_evidence: 'Not assessed yet.',
+        created_at: now,
+        updated_at: now,
+        isPublic: true,
+      });
+    }
+  });
+
+  return [...baseActivities, ...generatedActivities];
+}
+
 // ── AI Learning Session Builder facilitator prompt ────────────────────────────
 const AI_SESSION_BUILDER_PROMPT = `AI Learning Session Builder + Constructivist Mastery Coach
 
@@ -1182,184 +1344,12 @@ go deeper immediately — do not praise and move on.`;
       });
       
       // Force full mock activity list regardless of DB results
-      const mockActivities: DashboardActivity[] = [
-        {
-          id: 'mock-ai-1',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Understanding AI: Core Concepts & Capabilities',
-          learning_module_id: 'mock-ai-1',
-          title: 'What is Artificial Intelligence?',
-          description: 'Learn the fundamentals of AI and how it impacts the world',
-          activity: 'What is Artificial Intelligence?',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-        {
-          id: 'mock-ai-2',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Prompt Engineering: Effective AI Communication',
-          learning_module_id: 'mock-ai-2',
-          title: 'Prompt Engineering: Effective AI Communication',
-          description: 'Practice crafting prompts that produce better AI results',
-          activity: 'Prompt Engineering: Effective AI Communication',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: false,
-        },
-        {
-          id: 'mock-ai-3',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Prompt Engineering: Effective AI Communication',
-          learning_module_id: 'mock-ai-3',
-          title: 'Effective Communication with Claude & ChatGPT',
-          description: 'Learn how to communicate clearly with conversational AI tools',
-          activity: 'Effective Communication with Claude & ChatGPT',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-        {
-          id: 'mock-ai-4',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'AI Ethics & Responsible Use',
-          learning_module_id: 'mock-ai-4',
-          title: 'Ethics & Data Privacy in AI',
-          description: 'Understand the ethical questions and privacy considerations for AI',
-          activity: 'Ethics & Data Privacy in AI',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-        {
-          id: 'mock-ai-5',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Applications',
-          learning_module_id: 'mock-ai-5',
-          title: 'AI Tools for Workplace Productivity',
-          description: 'Explore how AI can help you get work done faster and better',
-          activity: 'AI Tools for Workplace Productivity',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: false,
-        },
-        {
-          id: 'mock-ai-6',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Evaluating AI Outputs: Critical Analysis',
-          learning_module_id: 'mock-ai-6',
-          title: 'Practical AI Problem Solving',
-          description: 'Use AI to break down real problems and find practical solutions',
-          activity: 'Practical AI Problem Solving',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-      ];
-      setAllAIActivities(mockActivities);
+      setAllAIActivities(buildAILearningMockActivities(user.id));
     } catch (err) {
       console.error('Error fetching AI learning activities:', err);
       // Use full mock fallback on error
       console.log('[AI Activities] Error loading — using full mock fallback data.');
-      const mockActivities: DashboardActivity[] = [
-        {
-          id: 'mock-ai-1',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Understanding AI: Core Concepts & Capabilities',
-          learning_module_id: 'mock-ai-1',
-          title: 'What is Artificial Intelligence?',
-          description: 'Learn the fundamentals of AI and how it impacts the world',
-          activity: 'What is Artificial Intelligence?',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-        {
-          id: 'mock-ai-2',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Prompt Engineering: Effective AI Communication',
-          learning_module_id: 'mock-ai-2',
-          title: 'Prompt Engineering: Effective AI Communication',
-          description: 'Practice crafting prompts that produce better AI results',
-          activity: 'Prompt Engineering: Effective AI Communication',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: false,
-        },
-        {
-          id: 'mock-ai-3',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Prompt Engineering: Effective AI Communication',
-          learning_module_id: 'mock-ai-3',
-          title: 'Effective Communication with Claude & ChatGPT',
-          description: 'Learn how to communicate clearly with conversational AI tools',
-          activity: 'Effective Communication with Claude & ChatGPT',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-        {
-          id: 'mock-ai-4',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'AI Ethics & Responsible Use',
-          learning_module_id: 'mock-ai-4',
-          title: 'Ethics & Data Privacy in AI',
-          description: 'Understand the ethical questions and privacy considerations for AI',
-          activity: 'Ethics & Data Privacy in AI',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-        {
-          id: 'mock-ai-5',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Applications',
-          learning_module_id: 'mock-ai-5',
-          title: 'AI Tools for Workplace Productivity',
-          description: 'Explore how AI can help you get work done faster and better',
-          activity: 'AI Tools for Workplace Productivity',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: false,
-        },
-        {
-          id: 'mock-ai-6',
-          user_id: user.id,
-          category_activity: 'AI Learning',
-          sub_category: 'Evaluating AI Outputs: Critical Analysis',
-          learning_module_id: 'mock-ai-6',
-          title: 'Practical AI Problem Solving',
-          description: 'Use AI to break down real problems and find practical solutions',
-          activity: 'Practical AI Problem Solving',
-          progress: 'not started',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isPublic: true,
-        },
-      ];
-      setAllAIActivities(mockActivities);
+      setAllAIActivities(buildAILearningMockActivities(user.id));
     }
   };
 

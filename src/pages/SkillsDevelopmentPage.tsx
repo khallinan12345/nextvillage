@@ -500,6 +500,182 @@ interface CurrentEvaluationState {
   weakestDimension: string | null;
 }
 
+const SKILLS_ACTIVITY_TARGETS: Record<string, number> = {
+  'Digital Fluency': 18,
+  'Critical Thinking': 14,
+  'Problem-Solving': 20,
+  Creativity: 20,
+  Communication: 20,
+};
+
+const SKILLS_CATEGORY_METADATA: Record<string, { slug: string; focus: string; deliverable: string }> = {
+  'Digital Fluency': {
+    slug: 'digital-fluency',
+    focus: 'device control, navigation, and safe digital workflows',
+    deliverable: 'complete a practical workflow with files, browser tools, and safe practices',
+  },
+  'Critical Thinking': {
+    slug: 'critical-thinking',
+    focus: 'reasoning quality, evidence checks, and reflective judgment',
+    deliverable: 'state a claim, test supporting evidence, and refine conclusions',
+  },
+  'Problem-Solving': {
+    slug: 'problem-solving',
+    focus: 'problem framing, constraint analysis, and iteration',
+    deliverable: 'define a concrete problem and iterate at least two solution versions',
+  },
+  Creativity: {
+    slug: 'creativity',
+    focus: 'original idea generation and exploratory experimentation',
+    deliverable: 'produce and compare multiple novel approaches before selecting one',
+  },
+  Communication: {
+    slug: 'communication',
+    focus: 'clarity, listening, and audience-aware response quality',
+    deliverable: 'present an idea clearly and adapt based on peer or mentor feedback',
+  },
+};
+
+function buildSkillsMockActivities(): DashboardActivity[] {
+  const now = new Date().toISOString();
+  const baseActivities: DashboardActivity[] = [
+    {
+      id: 'mock-1',
+      activity: 'Basic Computer Skills & File Operations',
+      title: 'Basic Computer Skills & File Operations',
+      category_activity: 'Skills',
+      sub_category: 'Digital Fluency',
+      progress: 'not started',
+      learning_module_id: 'mock-1',
+      updated_at: now,
+      learning_modules: {
+        category: 'Skills',
+        sub_category: 'Digital Fluency',
+        learning_or_certification: 'learning',
+        public: 1,
+      },
+      isPublic: false,
+    },
+    {
+      id: 'mock-2',
+      activity: 'Safe Browsing & Online Research',
+      title: 'Safe Browsing & Online Research',
+      category_activity: 'Skills',
+      sub_category: 'Digital Fluency',
+      progress: 'not started',
+      learning_module_id: 'mock-2',
+      updated_at: now,
+      learning_modules: {
+        category: 'Skills',
+        sub_category: 'Digital Fluency',
+        learning_or_certification: 'learning',
+        public: 1,
+      },
+      isPublic: true,
+    },
+    {
+      id: 'mock-3',
+      activity: 'Spreadsheet Fundamentals & Data Entry',
+      title: 'Spreadsheet Fundamentals & Data Entry',
+      category_activity: 'Skills',
+      sub_category: 'Digital Fluency',
+      progress: 'not started',
+      learning_module_id: 'mock-3',
+      updated_at: now,
+      learning_modules: {
+        category: 'Skills',
+        sub_category: 'Digital Fluency',
+        learning_or_certification: 'learning',
+        public: 1,
+      },
+      isPublic: true,
+    },
+    {
+      id: 'mock-4',
+      activity: 'Professional Email Writing & Communication',
+      title: 'Professional Email Writing & Communication',
+      category_activity: 'Skills',
+      sub_category: 'Communication',
+      progress: 'not started',
+      learning_module_id: 'mock-4',
+      updated_at: now,
+      learning_modules: {
+        category: 'Skills',
+        sub_category: 'Communication',
+        learning_or_certification: 'learning',
+        public: 1,
+      },
+      isPublic: false,
+    },
+    {
+      id: 'mock-5',
+      activity: 'Word Processing & Document Formatting',
+      title: 'Word Processing & Document Formatting',
+      category_activity: 'Skills',
+      sub_category: 'Digital Fluency',
+      progress: 'not started',
+      learning_module_id: 'mock-5',
+      updated_at: now,
+      learning_modules: {
+        category: 'Skills',
+        sub_category: 'Digital Fluency',
+        learning_or_certification: 'learning',
+        public: 1,
+      },
+      isPublic: true,
+    },
+    {
+      id: 'mock-6',
+      activity: 'Introduction to Digital Safety & Security',
+      title: 'Introduction to Digital Safety & Security',
+      category_activity: 'Skills',
+      sub_category: 'Digital Fluency',
+      progress: 'not started',
+      learning_module_id: 'mock-6',
+      updated_at: now,
+      learning_modules: {
+        category: 'Skills',
+        sub_category: 'Digital Fluency',
+        learning_or_certification: 'learning',
+        public: 1,
+      },
+      isPublic: true,
+    },
+  ];
+
+  const generatedActivities: DashboardActivity[] = [];
+  Object.entries(SKILLS_ACTIVITY_TARGETS).forEach(([subCategory, targetCount]) => {
+    const existingCount = baseActivities.filter((activity) => activity.sub_category === subCategory).length;
+    const metadata = SKILLS_CATEGORY_METADATA[subCategory];
+
+    for (let i = existingCount + 1; i <= targetCount; i += 1) {
+      const id = `mock-${metadata.slug}-${i}`;
+      generatedActivities.push({
+        id,
+        activity: `${subCategory} Studio Challenge ${i}`,
+        title: `${subCategory} Deep Practice Part ${i}`,
+        category_activity: 'Skills',
+        sub_category: subCategory,
+        progress: 'not started',
+        learning_module_id: id,
+        certification_evaluation_score: null,
+        certification_evaluation_evidence: `Pending rubric review for ${subCategory} activity ${i}.`,
+        updated_at: now,
+        learning_modules: {
+          category: 'Skills',
+          sub_category: subCategory,
+          learning_or_certification: 'learning',
+          public: 1,
+        },
+        isPublic: true,
+        description: `Hands-on module focused on ${metadata.focus}. Learner deliverable: ${metadata.deliverable}.`,
+      });
+    }
+  });
+
+  return [...baseActivities, ...generatedActivities];
+}
+
 // Define rubric dimensions for each sub-category
 const RUBRIC_DEFINITIONS: Record<string, string[]> = {
   'Vibe Coding': [
@@ -1461,220 +1637,11 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
       console.log('[Skills Activities] Filtered to', skillsActivities.length, 'Skills activities');
       
       // Force full mock activity list regardless of DB results
-      const mockActivities: DashboardActivity[] = [
-        {
-          id: 'mock-1',
-          activity: 'Basic Computer Skills & File Operations',
-          title: 'Basic Computer Skills & File Operations',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-1',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: false,
-        },
-        {
-          id: 'mock-2',
-          activity: 'Safe Browsing & Online Research',
-          title: 'Safe Browsing & Online Research',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-2',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-        {
-          id: 'mock-3',
-          activity: 'Spreadsheet Fundamentals & Data Entry',
-          title: 'Spreadsheet Fundamentals & Data Entry',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-3',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-        {
-          id: 'mock-4',
-          activity: 'Professional Email Writing & Communication',
-          title: 'Professional Email Writing & Communication',
-          category_activity: 'Skills',
-          sub_category: 'Communication',
-          progress: 'not started',
-          learning_module_id: 'mock-4',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Communication',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: false,
-        },
-        {
-          id: 'mock-5',
-          activity: 'Word Processing & Document Formatting',
-          title: 'Word Processing & Document Formatting',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-5',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-        {
-          id: 'mock-6',
-          activity: 'Introduction to Digital Safety & Security',
-          title: 'Introduction to Digital Safety & Security',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-6',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-      ];
-      
-      setAllSkillsActivities(mockActivities);
+      setAllSkillsActivities(buildSkillsMockActivities());
     } catch (err) {
       console.error('[Skills Activities] Error loading:', err);
 
-      const mockActivities: DashboardActivity[] = [
-        {
-          id: 'mock-1',
-          activity: 'Basic Computer Skills & File Operations',
-          title: 'Basic Computer Skills & File Operations',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-1',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: false,
-        },
-        {
-          id: 'mock-2',
-          activity: 'Safe Browsing & Online Research',
-          title: 'Safe Browsing & Online Research',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-2',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-        {
-          id: 'mock-3',
-          activity: 'Spreadsheet Fundamentals & Data Entry',
-          title: 'Spreadsheet Fundamentals & Data Entry',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-3',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-        {
-          id: 'mock-4',
-          activity: 'Professional Email Writing & Communication',
-          title: 'Professional Email Writing & Communication',
-          category_activity: 'Skills',
-          sub_category: 'Communication',
-          progress: 'not started',
-          learning_module_id: 'mock-4',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Communication',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: false,
-        },
-        {
-          id: 'mock-5',
-          activity: 'Word Processing & Document Formatting',
-          title: 'Word Processing & Document Formatting',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-5',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-        {
-          id: 'mock-6',
-          activity: 'Introduction to Digital Safety & Security',
-          title: 'Introduction to Digital Safety & Security',
-          category_activity: 'Skills',
-          sub_category: 'Digital Fluency',
-          progress: 'not started',
-          learning_module_id: 'mock-6',
-          updated_at: new Date().toISOString(),
-          learning_modules: {
-            category: 'Skills',
-            sub_category: 'Digital Fluency',
-            learning_or_certification: 'learning',
-            public: 1,
-          },
-          isPublic: true,
-        },
-      ];
-      setAllSkillsActivities(mockActivities);
+      setAllSkillsActivities(buildSkillsMockActivities());
     } finally {
       setLoading(false);
     }
