@@ -59,39 +59,94 @@ export async function chatJSON({
   page,
   playgroundModel,
 }: BaseArgs): Promise<any> {
-  const r = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages, system, max_tokens, temperature,
-      page:            page            ?? '',
-      playgroundModel: playgroundModel ?? null,
-      userId:          _chatUserId,
-      city:            _chatCity,
-    }),
-  });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data?.error || `Chat proxy error ${r.status}`);
-
-  let raw = data?.choices?.[0]?.message?.content || '{}';
-  
-  // Strip markdown code fences if present (e.g., ```json ... ``` or ``` ... ```)
-  raw = raw.trim();
-  if (raw.startsWith('```')) {
-    // Remove opening fence (```json or ```)
-    raw = raw.replace(/^```(?:json)?\s*\n?/, '');
-    // Remove closing fence (```)
-    raw = raw.replace(/\n?```\s*$/, '');
-    raw = raw.trim();
-  }
-  
   try {
-    return JSON.parse(raw);
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages, system, max_tokens, temperature,
+        page:            page            ?? '',
+        playgroundModel: playgroundModel ?? null,
+        userId:          _chatUserId,
+        city:            _chatCity,
+      }),
+    });
+
+    // ── DEBUG: Log response status and headers ──
+    console.log('[chatJSON] Response status:', r.status);
+    console.log('[chatJSON] Content-type:', r.headers.get('content-type'));
+
+    const data = await r.json();
+
+    // ── DEBUG: Log full response structure ──
+    console.log('[chatJSON] Full API response:', {
+      ok: r.ok,
+      status: r.status,
+      dataStructure: Object.keys(data),
+      choices: data?.choices ? `${data.choices.length} choices` : 'none',
+      firstChoiceKeys: data?.choices?.[0] ? Object.keys(data.choices[0]) : 'N/A',
+    });
+
+    if (!r.ok) {
+      const errorMsg = data?.error || `Chat proxy error ${r.status}`;
+      console.error('[chatJSON] API error:', { errorMsg, data });
+      throw new Error(errorMsg);
+    }
+
+    // ── DEBUG: Log content extraction ──
+    const content = data?.choices?.[0]?.message?.content;
+    console.log('[chatJSON] Extracted content length:', content?.length || 0);
+    console.log('[chatJSON] Extracted content preview:', content?.substring(0, 200));
+
+    let raw = content || '{}';
+    
+    // Strip markdown code fences if present (e.g., ```json ... ``` or ``` ... ```)
+    raw = raw.trim();
+    
+    // ── DEBUG: Check for markdown fences ──
+    if (raw.startsWith('```')) {
+      console.log('[chatJSON] Detected markdown code fence, stripping...');
+      // Remove opening fence (```json or ```)
+      raw = raw.replace(/^```(?:json)?\s*\n?/, '');
+      // Remove closing fence (```)
+      raw = raw.replace(/\n?```\s*$/, '');
+      raw = raw.trim();
+      console.log('[chatJSON] After stripping fences:', raw.substring(0, 200));
+    }
+    
+    // ── DEBUG: Attempt parse ──
+    try {
+      const parsed = JSON.parse(raw);
+      console.log('[chatJSON] ✅ Successfully parsed JSON');
+      console.log('[chatJSON] Parsed keys:', Object.keys(parsed));
+      return parsed;
+    } catch (parseError) {
+      console.error('[chatJSON] ❌ JSON parse error:', {
+        error: parseError instanceof Error ? parseError.message : 'Unknown error',
+        rawContent: raw.substring(0, 500),
+        rawLength: raw.length,
+      });
+      
+      // ── FALLBACK: Try to extract JSON object if wrapped in text ──
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        console.log('[chatJSON] Found JSON object in response, attempting parse...');
+        try {
+          const extracted = JSON.parse(jsonMatch[0]);
+          console.log('[chatJSON] ✅ Successfully parsed extracted JSON');
+          return extracted;
+        } catch (e) {
+          console.error('[chatJSON] Failed to parse extracted JSON:', e);
+        }
+      }
+
+      // Return raw if all parsing attempts fail
+      console.error('[chatJSON] All parsing attempts failed, returning raw content as fallback');
+      return raw;
+    }
   } catch (error) {
-    console.error('[chatJSON] Failed to parse JSON:', error);
-    console.error('[chatJSON] Raw content:', raw);
-    // Fallback: return raw if model sent non-JSON
-    return raw;
+    console.error('[chatJSON] Network or other error:', error);
+    throw error;
   }
 }
 
