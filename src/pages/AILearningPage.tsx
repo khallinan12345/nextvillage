@@ -396,6 +396,7 @@ interface DashboardActivity {
   chat_history?: string;
   updated_at: string;
   isPublic?: boolean;   // false = user-created private, true = shared/canned
+  [key: string]: any;
 }
 
 interface DashboardEntryResult {
@@ -503,128 +504,156 @@ const AI_CATEGORY_METADATA: Record<string, { label: string; focus: string; outpu
 
 function buildAILearningMockActivities(userId: string): DashboardActivity[] {
   const now = new Date().toISOString();
-  const baseActivities: DashboardActivity[] = [
+  const learningStyles = [
+    'Simulation/Troubleshooting',
+    'Case Study/Analysis',
+    'Interactive Roleplay',
+    'Design Hackathon',
+  ];
+
+  const categoryDefinitions: Array<{
+    subCategory: string;
+    titles: string[];
+    themeHint: string;
+  }> = [
     {
-      id: 'mock-ai-1',
-      user_id: userId,
-      category_activity: 'AI Learning',
-      sub_category: 'Understanding AI: Core Concepts & Capabilities',
-      learning_module_id: 'mock-ai-1',
-      title: 'What is Artificial Intelligence?',
-      description: 'Learn the fundamentals of AI and how it impacts the world',
-      activity: 'What is Artificial Intelligence?',
-      progress: 'not started',
-      created_at: now,
-      updated_at: now,
-      isPublic: true,
+      subCategory: 'Understanding AI: Core Concepts & Capabilities',
+      themeHint: 'explore AI mechanisms, limits, and data use in Nigerian solar and market systems',
+      titles: [
+        'Evaluating Solar Inverter Data via AI Logs',
+        'Optimizing Mini-Grids in Ibadan with Predictive Models',
+        'AI-Powered Fault Detection in Residential Solar Arrays',
+        'Computer Vision for Monitoring Dust on Northern PV Panels',
+        'Predicting Harmattan Dust Impact on Solar Efficiency',
+        'Understanding Battery Degradation Patterns with Nigeria Heat Profiles',
+        'Using AI to Forecast NEPA Grid Drops in Lagos',
+        'Interpreting Solar Charge Controller Alerts with Expert Systems',
+        'Modeling Solar Irradiance for Kano and Abuja Microgrids',
+        'Teaching an AI to Recognize Faulty PV Strings',
+        'Assessing Local Energy Needs for a Solar Cold Hub',
+        'Explaining AI Confidence Levels in Load Predictions',
+        'Linking Sensor Data to Solar Performance in Rural Farms',
+        'Diagnosing DC/AC Inverter Alarms with Machine Learning',
+        'Comparing Rule-Based vs Data-Driven Solar Fault Detection',
+        'Translating Solar System Telemetry into Actionable Insights',
+        'Spotting Anomalies in Solar Irrigation Pump Data',
+        'Tracking Panel Output Loss from Dust and Heat',
+        'Understanding AI Recommendations for Grid-Connected Solar',
+        'Mapping User Behavior to Solar Charging Demand',
+        'Evaluating Predictive Maintenance on Hybrid Systems',
+        'Assessing Sensor Trustworthiness in Remote PV Sites',
+        'Explaining How AI Learns from Energy Consumption Patterns',
+        'Comparing Smart Meter Data with Field Inspections',
+        'Investigating Why a Solar Battery Bank Won’t Hold Charge',
+        'Analyzing AI Alerts During a Lagos Brownout',
+        'Reviewing Prediction Errors for a Community Microgrid',
+        'Understanding AI Decision Boundaries in Fault Detection',
+        'Observing Seasonal Changes in Solar Yield with Machine Learning',
+        'Exploring AI Models for Solar Irrigation Timing',
+        'Reading Grid Stability Predictions for Residential Estates',
+        'Assessing False Positives in Solar Alarm Systems',
+        'Interpreting AI Feedback from a Solar Service App',
+        'Explaining Data Bias in Solar Panel Performance Logs',
+        'Testing AI Assumptions in a Kano Solar Marketplace',
+        'Understanding AI-Driven Energy Efficiency Ratings',
+        'Explaining How AI Uses Weather and Load Data Together',
+        'Tracking Power Quality Issues with Machine Learning',
+        'Diagnosing Inverter Overheating Through Predictive Signals',
+        'Exploring How AI Groups Similar Solar Sites',
+        'Reviewing a Smart Grid Model for Urban Energy Use',
+        'Understanding AI Alerts for Battery Temperature Changes',
+        'Comparing Human and AI Solar Fault Triage Decisions',
+        'Explaining Why AI Might Miss a Panel Wiring Fault',
+        'Investigating AI Accuracy on Local Energy Data',
+        'Connecting Solar Site Details to AI Output Quality',
+      ],
     },
     {
-      id: 'mock-ai-2',
-      user_id: userId,
-      category_activity: 'AI Learning',
-      sub_category: 'Prompt Engineering: Effective AI Communication',
-      learning_module_id: 'mock-ai-2',
-      title: 'Prompt Engineering: Effective AI Communication',
-      description: 'Practice crafting prompts that produce better AI results',
-      activity: 'Prompt Engineering: Effective AI Communication',
-      progress: 'not started',
-      created_at: now,
-      updated_at: now,
-      isPublic: false,
+      subCategory: 'Prompt Engineering: Effective AI Communication',
+      themeHint: 'craft effective AI prompts for solar systems, outage predictions, and marketplace tools',
+      titles: [
+        'AI Prompt Lab for Solar Microgrid Status Reports in Lagos',
+        'Refining Commands for NEPA Outage Predictions',
+        'Writing Prompts for Battery Management Alerts',
+        'Clarifying Instructions for Agrivoltaics Irrigation Models',
+        'Tuning a Chatbot for Solar Installer Troubleshooting',
+        'Constructing Prompts for Local Market Pricing Simulations',
+        'Designing Prompts for Dust Impact Forecasts on PV Panels',
+        'Iterating Prompts for Smart Load Balancing Recommendations',
+      ],
     },
     {
-      id: 'mock-ai-3',
-      user_id: userId,
-      category_activity: 'AI Learning',
-      sub_category: 'Prompt Engineering: Effective AI Communication',
-      learning_module_id: 'mock-ai-3',
-      title: 'Effective Communication with Claude & ChatGPT',
-      description: 'Learn how to communicate clearly with conversational AI tools',
-      activity: 'Effective Communication with Claude & ChatGPT',
-      progress: 'not started',
-      created_at: now,
-      updated_at: now,
-      isPublic: true,
+      subCategory: 'Evaluating AI Outputs: Critical Analysis',
+      themeHint: 'judge and improve AI recommendations in energy and gig economies',
+      titles: [
+        'Assessing AI Recommendations for Kano Solar Water Pumps',
+        'Validating Smart Load Insights for Lagos Residential Users',
+        'Checking AI Pricing Advice for Yaba Tech Vendors',
+        'Reviewing AI Fault Diagnostics for Battery Banks',
+        'Evaluating Solar Irrigation Schedules Suggested by AI',
+        'Testing Model Outputs for Northern Cold Hub Temperature Control',
+        'Comparing AI Predictions to Field Measurements in a Farm',
+        'Assessing Output Quality from an Energy Demand Forecast',
+      ],
     },
     {
-      id: 'mock-ai-4',
-      user_id: userId,
-      category_activity: 'AI Learning',
-      sub_category: 'AI Ethics & Responsible Use',
-      learning_module_id: 'mock-ai-4',
-      title: 'Ethics & Data Privacy in AI',
-      description: 'Understand the ethical questions and privacy considerations for AI',
-      activity: 'Ethics & Data Privacy in AI',
-      progress: 'not started',
-      created_at: now,
-      updated_at: now,
-      isPublic: true,
+      subCategory: 'AI Ethics & Responsible Use',
+      themeHint: 'explore fairness, privacy, and community impact in Nigerian energy applications',
+      titles: [
+        'Ethical Review of Solar Metering in Lagos Tenements',
+        'Privacy Risks for Sensor Data in Rural Solar Farms',
+        'Bias in AI Pricing Models for Local Traders',
+        'Responsibility in Predicting Power Outages for Schools',
+        'Fairness in AI-Managed Load Shedding Decisions',
+        'Community Consent for Smart Solar Monitoring',
+        'Environmental Justice in Solar Battery Disposal Plans',
+        'Safety and Trust in AI-Powered Energy Advice',
+      ],
     },
     {
-      id: 'mock-ai-5',
-      user_id: userId,
-      category_activity: 'AI Learning',
-      sub_category: 'Applications',
-      learning_module_id: 'mock-ai-5',
-      title: 'AI Tools for Workplace Productivity',
-      description: 'Explore how AI can help you get work done faster and better',
-      activity: 'AI Tools for Workplace Productivity',
-      progress: 'not started',
-      created_at: now,
-      updated_at: now,
-      isPublic: false,
-    },
-    {
-      id: 'mock-ai-6',
-      user_id: userId,
-      category_activity: 'AI Learning',
-      sub_category: 'Evaluating AI Outputs: Critical Analysis',
-      learning_module_id: 'mock-ai-6',
-      title: 'Practical AI Problem Solving',
-      description: 'Use AI to break down real problems and find practical solutions',
-      activity: 'Practical AI Problem Solving',
-      progress: 'not started',
-      created_at: now,
-      updated_at: now,
-      isPublic: true,
+      subCategory: 'Applications',
+      themeHint: 'apply AI to real Nigerian energy, e-commerce, and solar entrepreneurship challenges',
+      titles: [
+        'Deploying AI-Based Load Shedding Alerts for Village Solar Hubs',
+        'Building a Solar Cold Storage Pricing Assistant',
+        'Designing an Agrivoltaic Crop Yield Prediction Workflow',
+        'Creating a Solar-Powered Gig Economy Service Tracker',
+        'Architecting a Smart Microgrid Rollout Plan for Northern Markets',
+      ],
     },
   ];
 
-  const generatedActivities: DashboardActivity[] = [];
-  Object.entries(AI_ACTIVITY_TARGETS).forEach(([subCategory, targetCount]) => {
-    const existingCount = baseActivities.filter((activity) => activity.sub_category === subCategory).length;
-    const metadata = AI_CATEGORY_METADATA[subCategory];
+  const mockActivities: DashboardActivity[] = [];
 
-    for (let i = existingCount + 1; i <= targetCount; i += 1) {
-      const id = `mock-${metadata.label}-${i}`;
-      generatedActivities.push({
+  categoryDefinitions.forEach((category) => {
+    const metadata = AI_CATEGORY_METADATA[category.subCategory];
+    category.titles.forEach((title, index) => {
+      const style = learningStyles[index % learningStyles.length];
+      const id = `mock-${metadata.label}-${index + 1}`;
+      const description = `${style} challenge in Nigeria: ${title}. Learners explore ${category.themeHint} through a hands-on scenario.`;
+      const promptTemplate = `You are an AI learning coach guiding a learner through ${style.toLowerCase()} of ${title}. Focus on practical reasoning, local energy context, and clear steps to solve the challenge.`;
+      const systemPrompt = `You are a Nigerian-focused AI facilitator. Support the learner through ${title} with ${style.toLowerCase()}. Keep the guidance concrete, ask one question at a time, and ground every step in solar energy, AI integration, or local economic use.`;
+
+      mockActivities.push({
         id,
         user_id: userId,
         category_activity: 'AI Learning',
-        sub_category: subCategory,
+        sub_category: category.subCategory,
         learning_module_id: id,
-        title: `Deep Dive: ${subCategory.replace(/:.*$/, '')} Part ${i}`,
-        description: `Applied practice in ${metadata.focus}. This module asks the learner to ${metadata.outputHint}.`,
-        activity: `${subCategory} Practice ${i}`,
+        title,
+        activity: title,
+        description,
+        promptTemplate,
+        systemPrompt,
         progress: 'not started',
-        certification_evaluation_score: null,
-        certification_evaluation_evidence: `Pending evaluation for ${subCategory} module ${i}.`,
-        certification_evaluation_UNESCO_1_score: null,
-        certification_evaluation_UNESCO_1_evidence: 'Not assessed yet.',
-        certification_evaluation_UNESCO_2_score: null,
-        certification_evaluation_UNESCO_2_evidence: 'Not assessed yet.',
-        certification_evaluation_UNESCO_3_score: null,
-        certification_evaluation_UNESCO_3_evidence: 'Not assessed yet.',
-        certification_evaluation_UNESCO_4_score: null,
-        certification_evaluation_UNESCO_4_evidence: 'Not assessed yet.',
         created_at: now,
         updated_at: now,
         isPublic: true,
       });
-    }
+    });
   });
 
-  return [...baseActivities, ...generatedActivities];
+  return mockActivities;
 }
 
 // ── AI Learning Session Builder facilitator prompt ────────────────────────────

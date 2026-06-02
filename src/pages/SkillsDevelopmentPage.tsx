@@ -538,142 +538,179 @@ const SKILLS_CATEGORY_METADATA: Record<string, { slug: string; focus: string; de
 
 function buildSkillsMockActivities(): DashboardActivity[] {
   const now = new Date().toISOString();
-  const baseActivities: DashboardActivity[] = [
+  const learningStyles = [
+    'Simulation/Troubleshooting',
+    'Case Study/Analysis',
+    'Interactive Roleplay',
+    'Design Hackathon',
+  ];
+
+  const categories: Array<{
+    subCategory: string;
+    titles: string[];
+    themeHint: string;
+  }> = [
     {
-      id: 'mock-1',
-      activity: 'Basic Computer Skills & File Operations',
-      title: 'Basic Computer Skills & File Operations',
-      category_activity: 'Skills',
-      sub_category: 'Digital Fluency',
-      progress: 'not started',
-      learning_module_id: 'mock-1',
-      updated_at: now,
-      learning_modules: {
-        category: 'Skills',
-        sub_category: 'Digital Fluency',
-        learning_or_certification: 'learning',
-        public: 1,
-      },
-      isPublic: false,
+      subCategory: 'Digital Fluency',
+      themeHint: 'operating digital tools and smart energy systems across Nigerian solar and market environments',
+      titles: [
+        'Navigating Solar Monitoring Dashboards in Lagos',
+        'Configuring PV Inverter Controls for Residential Systems',
+        'Managing Battery Bank Status with Smart Alerts',
+        'Using Mobile Apps to Track Solar Payback in Kano',
+        'Setting Up Cloud-Connected Load Sensors for Rural Mini-Grids',
+        'Operating a Solar Cold Storage Dashboard in Kaduna Market',
+        'Mapping PV Arrays with Smartphone Photographs',
+        'Troubleshooting Charge Controllers on a Northern Farm',
+        'Updating Firmware Securely on Solar Inverter Systems',
+        'Synchronizing Data from Solar Irrigation Sensors',
+        'Organizing Project Files for a Yaba Tech Hub Installation',
+        'Using Spreadsheets to Compare Solar Panel Yield',
+        'Staying Safe on Public Wi-Fi in a Lagos Co-working Space',
+        'Managing Digital Contacts for Local Solar Clients',
+        'Using Video Calls to Support Remote Solar Field Teams',
+        'Saving and Sharing System Logs for Maintenance Teams',
+        'Interpreting Performance Charts from a Solar Mini-Grid',
+        'Using Search Engines to Verify Solar Equipment Specs',
+      ],
     },
     {
-      id: 'mock-2',
-      activity: 'Safe Browsing & Online Research',
-      title: 'Safe Browsing & Online Research',
-      category_activity: 'Skills',
-      sub_category: 'Digital Fluency',
-      progress: 'not started',
-      learning_module_id: 'mock-2',
-      updated_at: now,
-      learning_modules: {
-        category: 'Skills',
-        sub_category: 'Digital Fluency',
-        learning_or_certification: 'learning',
-        public: 1,
-      },
-      isPublic: true,
+      subCategory: 'Critical Thinking',
+      themeHint: 'evaluating evidence, testing assumptions, and reasoning through local energy challenges',
+      titles: [
+        'Evaluating Inverter Failure Data for a Kano Marketplace',
+        'Comparing Solar Battery Options for Harmattan Heat',
+        'Assessing Tradeoffs in Smart Load Balancing Strategies',
+        'Reviewing AI Fault Predictions for a Police Station Solar System',
+        'Analyzing Data Quality from Solar Irrigation Sensors',
+        'Judging the Reliability of Demand Forecasts in Lagos',
+        'Critiquing a Solar Cold Hub Business Plan',
+        'Detecting Bias in AI Pricing Models for Market Traders',
+        'Questioning Assumptions in Off-Grid Panel Sizing',
+        'Reflecting on a Failed Solar Microgrid Commissioning',
+        'Inspecting Safety Procedures for DIY Solar Installers',
+        'Verifying Sensor Alerts in a Solar Poultry Farm',
+        'Weighing Environmental Impacts of Battery Disposal',
+        'Challenging a Proposal for AI-Driven Energy Subsidies',
+      ],
     },
     {
-      id: 'mock-3',
-      activity: 'Spreadsheet Fundamentals & Data Entry',
-      title: 'Spreadsheet Fundamentals & Data Entry',
-      category_activity: 'Skills',
-      sub_category: 'Digital Fluency',
-      progress: 'not started',
-      learning_module_id: 'mock-3',
-      updated_at: now,
-      learning_modules: {
-        category: 'Skills',
-        sub_category: 'Digital Fluency',
-        learning_or_certification: 'learning',
-        public: 1,
-      },
-      isPublic: true,
+      subCategory: 'Problem-Solving',
+      themeHint: 'fixing technical issues, iterating design choices, and solving energy access problems',
+      titles: [
+        'Designing a Backup Strategy for NEPA Outages',
+        'Fixing a Solar Pump Controller in a Village Garden',
+        'Resolving Data Dropouts from Remote PV Sensors',
+        'Optimizing Panel Orientation for a Voltaic Farm',
+        'Improving Battery Life on a Solar Home System',
+        'Reducing Load on a Mini-Grid During Peak Hours',
+        'Solving a Cold Hub Temperature Fluctuation Issue',
+        'Repairing a Faulty Charge Controller Circuit',
+        'Planning a Solar Streetlight Upgrade in Owerri',
+        'Addressing Irrigation Pump Delay with AI Scheduling',
+        'Calibrating Solar Output Predictions for Locust Season',
+        'Finding the Best Backup Generator Integration',
+        'Rebuilding a Solar Display App for Local Technicians',
+        'Adjusting System Settings for Dusty Harmattan Conditions',
+        'Mapping Customer Complaints to Service Improvements',
+        'Improving Mobile Payment Flow for Energy Credits',
+        'Managing a Shared Solar Kiosk in a Rural Market',
+        'Adapting a Solar Training Module for Beginners',
+        'Solving Connectivity Issues for a Remote Sensor Array',
+        'Creating a Maintenance Checklist for Solar Contractors',
+      ],
     },
     {
-      id: 'mock-4',
-      activity: 'Professional Email Writing & Communication',
-      title: 'Professional Email Writing & Communication',
-      category_activity: 'Skills',
-      sub_category: 'Communication',
-      progress: 'not started',
-      learning_module_id: 'mock-4',
-      updated_at: now,
-      learning_modules: {
-        category: 'Skills',
-        sub_category: 'Communication',
-        learning_or_certification: 'learning',
-        public: 1,
-      },
-      isPublic: false,
+      subCategory: 'Creativity',
+      themeHint: 'inventing new local solar and AI solutions with imaginative, practical design thinking',
+      titles: [
+        'Imagining a Solar-Powered E-Commerce Stall in Yaba',
+        'Designing a Community Solar Lab for Young Entrepreneurs',
+        'Inventing a Smart Market Stall with AI Pricing Signals',
+        'Creating an Agrivoltaic Teaching Game for Farmers',
+        'Sketching a Solar Charging Café with IoT Feedback',
+        'Proposing a Mobile Solar Repair Van for Lagos',
+        'Building a Storyboard for AI-Assisted Solar Education',
+        'Crafting a New Workflow for Battery Recycling',
+        'Brainstorming a Solar-Based Gig App for Delivery Riders',
+        'Designing a Solar-Powered Clinic Triage System',
+        'Imagining a Green Tech Incubator in Abuja',
+        'Developing a Local Language AI Prompt Guide',
+        'Creating a Visual Dashboard for Energy Equity',
+        'Designing a School Project Linking Solar and Food Security',
+        'Proposing a Solar Loan Model for Women Traders',
+        'Rethinking Market Lighting with Smart Solar Controls',
+        'Sketching an AI Coach for Solar Maintenance Students',
+        'Inventing a Solar Entrepreneur Pitch for Investors',
+        'Planning a Solar Festival to Promote Tech Adoption',
+        'Designing a Resource Plan for a Microgrid Startup',
+      ],
     },
     {
-      id: 'mock-5',
-      activity: 'Word Processing & Document Formatting',
-      title: 'Word Processing & Document Formatting',
-      category_activity: 'Skills',
-      sub_category: 'Digital Fluency',
-      progress: 'not started',
-      learning_module_id: 'mock-5',
-      updated_at: now,
-      learning_modules: {
-        category: 'Skills',
-        sub_category: 'Digital Fluency',
-        learning_or_certification: 'learning',
-        public: 1,
-      },
-      isPublic: true,
-    },
-    {
-      id: 'mock-6',
-      activity: 'Introduction to Digital Safety & Security',
-      title: 'Introduction to Digital Safety & Security',
-      category_activity: 'Skills',
-      sub_category: 'Digital Fluency',
-      progress: 'not started',
-      learning_module_id: 'mock-6',
-      updated_at: now,
-      learning_modules: {
-        category: 'Skills',
-        sub_category: 'Digital Fluency',
-        learning_or_certification: 'learning',
-        public: 1,
-      },
-      isPublic: true,
+      subCategory: 'Communication',
+      themeHint: 'sharing ideas clearly, negotiating with stakeholders, and reporting on technical solutions',
+      titles: [
+        'Pitching a Solar Microgrid Solution to a Village Council',
+        'Writing a Proposal for a Solar Irrigation Project',
+        'Explaining AI-Based Power Balancing to Traders',
+        'Preparing a Customer Guide for Charging Hub Users',
+        'Leading a Community Workshop on Solar Safety',
+        'Negotiating Terms with a Local Energy Partner',
+        'Clarifying Technical Risks to Non-technical Stakeholders',
+        'Drafting a Maintenance Report for a Solar NGO',
+        'Giving Feedback on a Smart Grid Prototype',
+        'Telling a Story About Solar Success in Northern Farms',
+        'Revising a Solar Deployment Plan after User Input',
+        'Summarizing a Fault Diagnosis to a Support Team',
+        'Coaching a Peer on Effective Solar Sales Language',
+        'Presenting a Smart Load AI Strategy to Executives',
+        'Communicating a New Solar Product Feature Clearly',
+        'Collecting User Needs for an Energy Access App',
+        'Facilitating a Group Decision on Battery Selection',
+        'Answering an Investor Question About Payback',
+        'Sharing a Workshop Recap in Simple Language',
+        'Describing Why Solar Adoption Matters for Local Jobs',
+      ],
     },
   ];
 
-  const generatedActivities: DashboardActivity[] = [];
-  Object.entries(SKILLS_ACTIVITY_TARGETS).forEach(([subCategory, targetCount]) => {
-    const existingCount = baseActivities.filter((activity) => activity.sub_category === subCategory).length;
-    const metadata = SKILLS_CATEGORY_METADATA[subCategory];
+  const mockActivities: DashboardActivity[] = [];
 
-    for (let i = existingCount + 1; i <= targetCount; i += 1) {
-      const id = `mock-${metadata.slug}-${i}`;
-      generatedActivities.push({
+  categories.forEach((category) => {
+    const metadata = SKILLS_CATEGORY_METADATA[category.subCategory];
+    category.titles.forEach((title, index) => {
+      const style = learningStyles[index % learningStyles.length];
+      const id = `mock-${metadata.slug}-${index + 1}`;
+      const description = `${style} activity based on ${title}. Learners must apply ${category.themeHint} while practicing ${metadata.deliverable}.`;
+      const promptTemplate = `You are designing a ${style.toLowerCase()} experience for ${title}. Guide the learner through clear steps, practical checks, and local Nigerian context.`;
+      const systemPrompt = `You are a skills development coach for Nigerian learners. Support ${title} with ${style.toLowerCase()}, keeping instructions direct, culturally relevant, and focused on solar energy, AI, or local economic impact.`;
+
+      mockActivities.push({
         id,
-        activity: `${subCategory} Studio Challenge ${i}`,
-        title: `${subCategory} Deep Practice Part ${i}`,
+        activity: title,
+        title,
         category_activity: 'Skills',
-        sub_category: subCategory,
+        sub_category: category.subCategory,
         progress: 'not started',
         learning_module_id: id,
+        description,
+        promptTemplate,
+        systemPrompt,
         certification_evaluation_score: null,
-        certification_evaluation_evidence: `Pending rubric review for ${subCategory} activity ${i}.`,
+        certification_evaluation_evidence: `Pending rubric review for ${title}.`,
         updated_at: now,
         learning_modules: {
           category: 'Skills',
-          sub_category: subCategory,
+          sub_category: category.subCategory,
           learning_or_certification: 'learning',
           public: 1,
         },
         isPublic: true,
-        description: `Hands-on module focused on ${metadata.focus}. Learner deliverable: ${metadata.deliverable}.`,
       });
-    }
+    });
   });
 
-  return [...baseActivities, ...generatedActivities];
+  return mockActivities;
 }
 
 // Define rubric dimensions for each sub-category
