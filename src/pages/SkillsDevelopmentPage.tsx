@@ -2469,6 +2469,46 @@ Provide assessment now:`;
     chatHistory: ChatMessage[],
     forceComplete: boolean = false
   ) => {
+    // Guard: Don't attempt database operations for mock activity IDs
+    if (String(activityId ?? '').startsWith('mock-')) {
+      console.log('[Skills Rubric Update] Skipping database update for mock activity:', activityId);
+      // Update local state only
+      const evaluationScore = Math.min(...rubricEvaluation.dimensions.map(dim => dim.score));
+      const shouldComplete = evaluationScore === 3;
+      const newProgress = shouldComplete ? 'completed' : 'started';
+
+      setAllSkillsActivities(prev =>
+        prev.map(activity =>
+          activity.id === activityId
+            ? {
+                ...activity,
+                certification_evaluation_score: evaluationScore,
+                progress: newProgress as 'not started' | 'started' | 'completed'
+              }
+            : activity
+        )
+      );
+
+      if (selectedActivity && selectedActivity.id === activityId) {
+        setSelectedActivity(prev => prev ? {
+          ...prev,
+          certification_evaluation_score: evaluationScore,
+          progress: newProgress as 'not started' | 'started' | 'completed'
+        } : null);
+      }
+
+      if (shouldComplete) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 4000);
+      }
+
+      return {
+        ...rubricEvaluation,
+        score: evaluationScore,
+        progress: newProgress
+      };
+    }
+
     try {
       console.log('[Skills Rubric Update] Updating database for:', subCategory);
       
@@ -2634,6 +2674,19 @@ Provide assessment now:`;
 
   // Update chat history in database
   const updateChatHistory = async (activityId: string, chatHistory: ChatMessage[]) => {
+    // Guard: Don't attempt database operations for mock activity IDs
+    if (String(activityId ?? '').startsWith('mock-')) {
+      console.log('[Chat History] Skipping database update for mock activity:', activityId);
+      // Use localStorage for mock activities
+      try {
+        const key = `SkillsDevelopmentPage_historyCache_${activityId}`;
+        localStorage.setItem(key, JSON.stringify(chatHistory));
+      } catch (err) {
+        console.warn('[Chat History] Failed to save mock activity to localStorage:', err);
+      }
+      return;
+    }
+
     try {
       // Quick session check (don't wait for refresh to avoid delays)
       const { data: { session } } = await supabase.auth.getSession();
@@ -2831,6 +2884,9 @@ Provide assessment now:`;
     try {
       const isSkillsLearning = currentModuleCategory === 'Skills' && currentModuleLearningOrCert === 'learning';
       
+      // Guard: Handle mock activities gracefully
+      const isMockActivity = String(selectedActivity.id ?? '').startsWith('mock-');
+
       if (isSkillsLearning && currentModuleSubCategory) {
         console.log('[Save Session] Performing full rubric assessment');
         
@@ -2841,13 +2897,23 @@ Provide assessment now:`;
           successMetrics
         );
         
-        await updateSkillsRubricEvaluation(
-          selectedActivity.id,
-          currentModuleSubCategory,
-          rubricEvaluation,
-          chatHistory,
-          false // Don't force completion
-        );
+        if (!isMockActivity) {
+          await updateSkillsRubricEvaluation(
+            selectedActivity.id,
+            currentModuleSubCategory,
+            rubricEvaluation,
+            chatHistory,
+            false // Don't force completion
+          );
+        } else {
+          console.log('[Save Session] Saving mock activity to localStorage only');
+          try {
+            const key = `SkillsDevelopmentPage_historyCache_${selectedActivity.id}`;
+            localStorage.setItem(key, JSON.stringify(chatHistory));
+          } catch (err) {
+            console.warn('[Save Session] Failed to save mock activity to localStorage:', err);
+          }
+        }
         
         alert('Session saved successfully!');
       } else {
@@ -2928,16 +2994,27 @@ Provide assessment now:`;
         }
       } else {
         // Just mark as completed for non-Skills activities
-        const { error } = await supabase
-          .from('dashboard')
-          .update({ 
-            progress: 'completed',
-            chat_history: JSON.stringify(chatHistory),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedActivity.id);
+        const isMockActivity = String(selectedActivity.id ?? '').startsWith('mock-');
+        if (isMockActivity) {
+          console.log('[Finish Module] Marking mock activity as completed (local only)');
+          try {
+            const key = `SkillsDevelopmentPage_historyCache_${selectedActivity.id}`;
+            localStorage.setItem(key, JSON.stringify(chatHistory));
+          } catch (err) {
+            console.warn('[Finish Module] Failed to save mock activity to localStorage:', err);
+          }
+        } else {
+          const { error } = await supabase
+            .from('dashboard')
+            .update({ 
+              progress: 'completed',
+              chat_history: JSON.stringify(chatHistory),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', selectedActivity.id);
 
-        if (error) throw error;
+          if (error) throw error;
+        }
         
         alert('Module completed successfully!');
         handleBackToOverview();
@@ -3024,6 +3101,19 @@ Provide assessment now:`;
 
   // Update activity status to 'started'
   const updateActivityStatus = async (activityId: string) => {
+    // Guard: Don't attempt database operations for mock activity IDs
+    if (String(activityId ?? '').startsWith('mock-')) {
+      console.log('[Update Status] Skipping database update for mock activity:', activityId);
+      setAllSkillsActivities(prev => 
+        prev.map(activity => 
+          activity.id === activityId 
+            ? { ...activity, progress: 'started' as const }
+            : activity
+        )
+      );
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('dashboard')

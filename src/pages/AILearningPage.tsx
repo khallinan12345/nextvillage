@@ -2083,6 +2083,42 @@ CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown.
     },
     forceComplete: boolean = false
   ) => {
+    // Guard: Don't attempt database operations for mock activity IDs
+    if (String(activityId ?? '').startsWith('mock-')) {
+      console.log('[Evaluation Update] Skipping database update for mock activity:', activityId);
+      // Update local state only
+      const shouldComplete = forceComplete || evaluationScore === 3;
+      const newProgress = shouldComplete ? 'completed' : 'started';
+      
+      setAllAIActivities(prev => 
+        prev.map(activity => 
+          activity.id === activityId 
+            ? { 
+                ...activity, 
+                certification_evaluation_score: evaluationScore, 
+                certification_evaluation_evidence: evaluationEvidence,
+                progress: newProgress as 'not started' | 'started' | 'completed'
+              }
+            : activity
+        )
+      );
+
+      if (selectedActivity && selectedActivity.id === activityId) {
+        setSelectedActivity(prev => prev ? {
+          ...prev,
+          certification_evaluation_score: evaluationScore,
+          certification_evaluation_evidence: evaluationEvidence,
+          progress: newProgress as 'not started' | 'started' | 'completed'
+        } : null);
+      }
+      
+      if (shouldComplete) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 4000);
+      }
+      return;
+    }
+
     try {
       // Complete when all 4 UNESCO competencies are at level 3, OR when explicitly forced
       const shouldComplete = forceComplete || evaluationScore === 3;
@@ -2150,6 +2186,19 @@ CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown.
 
   // Update chat history in database
   const updateChatHistory = async (activityId: string, chatHistory: ChatMessage[]) => {
+    // Guard: Don't attempt database operations for mock activity IDs
+    if (String(activityId ?? '').startsWith('mock-')) {
+      console.log('[Chat History] Skipping database update for mock activity:', activityId);
+      // Use localStorage for mock activities
+      try {
+        const key = `AILearningPage_historyCache_${activityId}`;
+        localStorage.setItem(key, JSON.stringify(chatHistory));
+      } catch (err) {
+        console.warn('[Chat History] Failed to save mock activity to localStorage:', err);
+      }
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('dashboard')
@@ -2446,8 +2495,20 @@ Respond ONLY with valid JSON:
     try {
       console.log('[Save Session] Saving chat history and running assessment...');
       
-      // Save chat history
-      await updateChatHistory(currentDashboardId, chatHistory);
+      // Guard: Handle mock activities gracefully with localStorage only
+      const isMockActivity = String(currentDashboardId ?? '').startsWith('mock-');
+      if (isMockActivity) {
+        console.log('[Save Session] Saving mock activity to localStorage only');
+        try {
+          const key = `AILearningPage_historyCache_${currentDashboardId}`;
+          localStorage.setItem(key, JSON.stringify(chatHistory));
+        } catch (err) {
+          console.warn('[Save Session] Failed to save mock activity to localStorage:', err);
+        }
+      } else {
+        // Save chat history for real activities
+        await updateChatHistory(currentDashboardId, chatHistory);
+      }
       
       // Run full evaluation (same as Update Evaluation button)
       const assessment = await callAssessmentAI(chatHistory, buildUNESCOAssessmentInstructions(), successMetrics);
@@ -2521,6 +2582,19 @@ Respond ONLY with valid JSON:
 
   // Update activity status to 'started'
   const updateActivityStatus = async (activityId: string) => {
+    // Guard: Don't attempt database operations for mock activity IDs
+    if (String(activityId ?? '').startsWith('mock-')) {
+      console.log('[Update Status] Skipping database update for mock activity:', activityId);
+      setAllAIActivities(prev => 
+        prev.map(activity => 
+          activity.id === activityId 
+            ? { ...activity, progress: 'started' as const }
+            : activity
+        )
+      );
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('dashboard')
