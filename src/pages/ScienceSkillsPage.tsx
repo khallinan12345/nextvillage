@@ -559,12 +559,10 @@ const isStrongLevel = (level: ProficiencyLevel) => level === 'Proficient' || lev
 const isWeakLevel = (level: ProficiencyLevel) => level === 'Emerging' || level === 'Developing';
 
 const normalizeEvaluation = (evaluation: SessionEvaluation): SessionEvaluation => {
-  const allSubStrong = evaluation.sub_categories.length > 0 &&
-    evaluation.sub_categories.every(s => isStrongLevel(s.level));
   const allSubAdvanced = evaluation.sub_categories.length > 0 &&
     evaluation.sub_categories.every(s => s.level === 'Advanced');
 
-  const canAdvance = !isWeakLevel(evaluation.overall_level) && (allSubStrong || allSubAdvanced);
+  const canAdvance = evaluation.overall_level === 'Proficient' || evaluation.overall_level === 'Advanced';
   const isComplete = allSubAdvanced;
 
   return {
@@ -773,12 +771,14 @@ const deriveProgress = (rows: DashboardSession[]): UserProgress => {
 
   for (const row of rows) {
     const ev = row.science_skills_evaluation;
-    if (!ev || ev.stage_id < 0 || ev.stage_id > 4) continue;
+    const stageId = Number(ev?.stage_id);
+    if (!ev || Number.isNaN(stageId) || stageId < 0 || stageId > 4) continue;
     const p = prog[ev.pathway as Pathway];
     if (!p) continue;
-    if (ev.is_complete) p.completedStages[ev.stage_id] = true;
-    if (ev.can_advance)
-      p.unlockedUpTo = Math.max(p.unlockedUpTo, Math.min(4, ev.stage_id + 1));
+    if (ev.is_complete) p.completedStages[stageId] = true;
+    if (ev.can_advance) {
+      p.unlockedUpTo = Math.max(p.unlockedUpTo, Math.min(4, stageId + 1));
+    }
   }
 
   // tier1Complete = all 5 reasoning stages have been completed at Advanced or explicitly unlocked by can_advance
