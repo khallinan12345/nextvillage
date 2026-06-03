@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#15803d">
+<title>vAI Offline Agriculture Advisor</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green-50: #f0fdf4; --green-100: #dcfce7; --green-200: #bbf7d0; --green-400: #4ade80; --green-500: #22c55e; --green-600: #16a34a; --green-700: #15803d; --green-800: #166534; --green-900: #14532d;
+  --red-50: #fef2f2; --red-100: #fee2e2; --red-400: #f87171; --red-500: #ef4444; --red-600: #dc2626; --red-700: #b91c1c; --red-800: #991b1b;
+  --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-400: #fbbf24; --amber-500: #f59e0b; --amber-600: #d97706; --amber-700: #b45309; --amber-800: #92400e;
+  --orange-50: #fff7ed; --orange-100: #ffedd5; --orange-400: #fb923c; --orange-500: #f97316; --orange-600: #ea580c; --orange-700: #c2410c; --orange-800: #9a3412;
+  --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-500: #3b82f6; --blue-600: #2563eb;
+  --teal-500: #14b8a6; --teal-600: #0d9488;
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--gray-50); color: var(--gray-900);
+  line-height: 1.5; font-size: 16px; -webkit-text-size-adjust: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+.header {
+  position: sticky; top: 0; z-index: 20;
+  background: #fff; border-bottom: 1px solid var(--gray-200);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.header-inner { max-width: 480px; margin: 0 auto; padding: 10px 12px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.header-brand { display: flex; align-items: center; gap: 8px; }
+.header-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--green-600), #065f46); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+.header-title { font-size: 13px; font-weight: 700; color: var(--gray-900); line-height: 1.2; }
+.header-sub { font-size: 10px; color: var(--gray-400); }
+.badge-offline { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--gray-500); background: var(--gray-100); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.badge-online { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--green-700); background: var(--green-50); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.badge-pending { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--amber-700); background: var(--amber-50); padding: 3px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+/* Step bar */
+.steps { display: flex; align-items: center; gap: 3px; }
+.step-pill { display: flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; }
+.step-pill.current { background: var(--green-100); color: var(--green-700); }
+.step-pill.done { background: var(--green-100); color: var(--green-700); }
+.step-pill.upcoming { background: var(--gray-100); color: var(--gray-400); }
+.step-pill:disabled { cursor: default; }
+.step-line { flex: 1; height: 2px; border-radius: 1px; background: var(--gray-200); }
+.step-line.done { background: var(--green-400); }
+
+/* Content */
+.content { max-width: 480px; margin: 0 auto; padding: 12px 12px 100px; }
+
+/* Card */
+.card { background: #fff; border-radius: 16px; border: 1px solid var(--gray-200); box-shadow: 0 1px 2px rgba(0,0,0,.04); padding: 16px; margin-bottom: 12px; }
+.card-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.card-subtitle { font-size: 12px; color: var(--gray-400); margin-bottom: 14px; }
+
+/* Forms */
+.label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 5px; }
+.label .req { color: var(--red-500); margin-left: 2px; }
+.label-hint { display: block; font-size: 11px; color: var(--gray-400); margin-top: 2px; font-weight: 400; }
+.input, .textarea, .select {
+  width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid var(--gray-300);
+  border-radius: 12px; background: #fff; color: var(--gray-900);
+  outline: none; transition: border-color .15s, box-shadow .15s;
+  -webkit-appearance: none; appearance: none;
+}
+.input:focus, .textarea:focus, .select:focus { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(22,163,74,.15); }
+.textarea { resize: none; line-height: 1.5; }
+.select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+.field { margin-bottom: 14px; }
+
+/* Buttons */
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-choice {
+  flex: 1; min-width: 0; padding: 10px 8px; border-radius: 12px; border: 2px solid var(--gray-200);
+  background: #fff; font-size: 13px; font-weight: 600; color: var(--gray-600);
+  cursor: pointer; transition: all .15s; text-align: center; -webkit-tap-highlight-color: transparent;
+}
+.btn-choice:active { transform: scale(.97); }
+.btn-choice.active { border-color: var(--green-500); background: var(--green-50); color: var(--green-800); }
+.btn-choice.active-red { border-color: var(--red-400); background: var(--red-50); color: var(--red-800); }
+.btn-choice.active-orange { border-color: var(--orange-400); background: var(--orange-50); color: var(--orange-800); }
+
+.btn-chip { display: inline-block; padding: 6px 12px; border-radius: 8px; border: none; background: var(--gray-100); color: var(--gray-600); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.btn-chip:active { transform: scale(.97); }
+.btn-chip.active { background: var(--green-600); color: #fff; }
+
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Toggle */
+.toggle {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 12px; border: 2px solid var(--gray-200); background: #fff;
+  cursor: pointer; transition: all .15s; text-align: left; -webkit-tap-highlight-color: transparent;
+}
+.toggle:active { transform: scale(.98); }
+.toggle.on { border-color: var(--green-500); background: var(--green-50); }
+.toggle-box {
+  width: 24px; height: 24px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+}
+.toggle-box.off { background: var(--gray-200); }
+.toggle-box.on { background: var(--green-500); }
+.toggle-label { font-size: 14px; font-weight: 500; color: var(--gray-700); }
+.toggle.on .toggle-label { color: var(--green-800); }
+.toggle-hint { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+/* Alert boxes */
+.alert { border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.alert-red { background: var(--red-50); border: 2px solid var(--red-400); }
+.alert-amber { background: var(--amber-50); border: 2px solid var(--amber-400); }
+.alert-green { background: var(--green-50); border: 2px solid var(--green-400); }
+.alert-blue { background: var(--blue-50); border: 2px solid var(--blue-500); }
+.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.alert-title { font-size: 13px; font-weight: 700; }
+.alert-text { font-size: 12px; margin-top: 2px; }
+.alert-red .alert-title { color: var(--red-800); }
+.alert-red .alert-text { color: var(--red-700); }
+.alert-green .alert-title { color: var(--green-800); }
+.alert-green .alert-text { color: var(--green-700); }
+
+/* Tooltip */
+.tooltip-btn { background: none; border: none; color: var(--green-600); font-size: 14px; cursor: pointer; padding: 0 4px; vertical-align: middle; }
+.tooltip-box { background: var(--green-900); color: var(--green-50); font-size: 11px; border-radius: 10px; padding: 8px 12px; margin-top: 4px; line-height: 1.5; font-weight: 400; }
+
+/* Section label */
+.section-label { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .5px; margin: 16px 0 8px; }
+
+/* Result sections */
+.result-banner { border-radius: 16px; border: 3px solid; padding: 16px; margin-bottom: 12px; }
+.result-banner.urgent { background: var(--red-50); border-color: var(--red-400); }
+.result-banner.high { background: var(--orange-50); border-color: var(--orange-400); }
+.result-banner.medium { background: var(--amber-50); border-color: var(--amber-400); }
+.result-banner.low { background: var(--green-50); border-color: var(--green-400); }
+.result-level { font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
+.result-banner.urgent .result-level { color: var(--red-800); }
+.result-banner.high .result-level { color: var(--orange-800); }
+.result-banner.medium .result-level { color: var(--amber-800); }
+.result-banner.low .result-level { color: var(--green-800); }
+.result-patient { font-size: 13px; color: var(--gray-600); margin-bottom: 10px; }
+.result-reason { font-size: 13px; font-weight: 500; margin: 3px 0; }
+
+.result-section-title { font-size: 13px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.result-item { font-size: 13px; color: var(--gray-800); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
+.result-item.action { background: var(--red-50); }
+.result-item.rec { background: var(--green-50); }
+.result-item.warning { background: var(--red-50); font-weight: 600; color: var(--red-800); }
+.result-item.referral { background: var(--blue-50); border-left: 3px solid var(--blue-500); }
+.result-item.home { background: var(--green-50); }
+
+.referral-note { font-family: 'Courier New', Courier, monospace; font-size: 12px; background: var(--gray-50); border-radius: 12px; padding: 14px; white-space: pre-wrap; line-height: 1.6; color: var(--gray-800); border: 1px solid var(--gray-200); }
+
+/* Footer nav */
+.footer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  background: #fff; border-top: 1px solid var(--gray-200);
+  box-shadow: 0 -2px 10px rgba(0,0,0,.05);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.footer-inner { max-width: 480px; margin: 0 auto; padding: 10px 12px; display: flex; gap: 10px; }
+.btn-nav {
+  flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all .15s; -webkit-tap-highlight-color: transparent;
+}
+.btn-nav:active { transform: scale(.97); }
+.btn-nav.primary { background: linear-gradient(135deg, var(--green-600), #065f46); color: #fff; }
+.btn-nav.secondary { background: #fff; color: var(--gray-600); border: 2px solid var(--gray-300); }
+.btn-nav:disabled { opacity: .4; cursor: default; transform: none; }
+
+.btn-save { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, var(--green-600), #065f46); color: #fff; margin-bottom: 8px; }
+.btn-save:active { transform: scale(.98); }
+.btn-reset { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gray-300); background: #fff; font-size: 13px; font-weight: 700; color: var(--gray-600); cursor: pointer; }
+.btn-reset:active { transform: scale(.98); }
+
+.disclaimer { font-size: 11px; color: var(--gray-400); text-align: center; padding: 8px 16px 20px; line-height: 1.5; }
+
+/* Sync panel */
+.sync-overlay { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.5); display:flex; align-items:flex-end; justify-content:center; }
+.sync-panel { background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; padding:20px 16px env(safe-area-inset-bottom,16px); }
+.sync-title { font-size:17px; font-weight:700; margin-bottom:4px; }
+.sync-sub { font-size:12px; color:var(--gray-400); margin-bottom:16px; }
+.sync-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:10px; background:var(--gray-50); margin-bottom:6px; font-size:13px; }
+.sync-item .name { font-weight:600; color:var(--gray-800); }
+.sync-item .meta { font-size:11px; color:var(--gray-400); }
+.sync-item .status { font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; }
+.sync-item .status.pending { background:var(--amber-50); color:var(--amber-700); }
+.sync-item .status.synced { background:var(--green-50); color:var(--green-700); }
+.btn-sync { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; }
+.btn-sync.go { background:linear-gradient(135deg,var(--green-600),#065f46); color:#fff; }
+.btn-sync.go:disabled { opacity:.5; cursor:default; }
+.btn-sync.close { background:var(--gray-100); color:var(--gray-600); margin-top:8px; }
+
+/* Utility */
+.gap-sm > * + * { margin-top: 8px; }
+.gap-md > * + * { margin-top: 14px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-row">
+      <div class="header-brand">
+        <div class="header-icon">🌿</div>
+        <div>
+          <div class="header-title">Offline Agriculture Advisor</div>
+          <div class="header-sub">Rule-Based Crop & Farm Triage · No Internet Required</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="hidden" id="btn-sync-header" onclick="openSyncPanel()" title="Sync consultations">
+          <span class="badge-pending" id="badge-pending">⬆ <span id="pending-count">0</span></span>
+        </button>
+        <span class="badge-offline" id="badge-connectivity">📡 Offline</span>
+      </div>
+    </div>
+    <div class="steps" id="step-bar"></div>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<div class="footer" id="footer">
+  <div class="footer-inner" id="footer-inner"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE & CONFIG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STEPS = [
+  { key:'farmer', label:'Farmer' },
+  { key:'type', label:'Type' },
+  { key:'intake', label:'Intake' },
+  { key:'result', label:'Result' },
+];
+
+const CONSULT_TYPES = {
+  'crop-disease':  { label:'Crop Disease',   emoji:'🦠', desc:'Identify disease, virus, or nutrient deficiency' },
+  'pest-damage':   { label:'Pest Damage',    emoji:'🐛', desc:'Diagnose pests — Fall Armyworm, mealybug, mites' },
+  'soil-water':    { label:'Soil & Water',   emoji:'💧', desc:'Drainage, waterlogging, soil health, flooding' },
+  'post-harvest':  { label:'Post-Harvest',   emoji:'🌾', desc:'Storage, spoilage, processing, aflatoxin safety' },
+  'market-input':  { label:'Market & Inputs', emoji:'💰', desc:'Buyers, pricing, input sourcing, credit' },
+};
+
+const CROP_OPTIONS = [
+  { value:'cassava', label:'Cassava', emoji:'🌿' },
+  { value:'maize', label:'Maize', emoji:'🌽' },
+  { value:'yam', label:'Yam', emoji:'🍠' },
+  { value:'plantain', label:'Plantain/Banana', emoji:'🍌' },
+  { value:'vegetables', label:'Vegetables', emoji:'🥬' },
+  { value:'cowpea', label:'Cowpea', emoji:'🫘' },
+  { value:'rice', label:'Rice', emoji:'🌾' },
+  { value:'cocoa', label:'Cocoa', emoji:'🍫' },
+  { value:'oil-palm', label:'Oil Palm', emoji:'🌴' },
+  { value:'other', label:'Other', emoji:'🌱' },
+];
+
+const VILLAGES = ['Oloibiri','Ibiade','Otuabagi','Nembe','Ogbia','Yenagoa','Sagamu','Abeokuta','Other'];
+
+// ── Intake fields per consultation type ────────────────────────────────────
+
+const INTAKE_FIELDS = {
+  'crop-disease': [
+    { key:'crop_and_stage', label:'Crop and growth stage', placeholder:'e.g. cassava 4 months, maize at tasselling', hint:'Disease treatment differs dramatically by crop and growth stage.', required:true },
+    { key:'symptoms_description', label:'Exact symptoms seen', placeholder:'e.g. yellow mosaic on cassava leaves, brown spots with yellow halos', hint:'Mosaic/mottling = virus. Circular spots = fungal. Sudden wilting = root problem.', required:true },
+    { key:'spread_pattern', label:'Spread pattern', placeholder:'e.g. random scattered, patches near low ground, spreading from one edge', hint:'Soilborne = patches. Airborne fungal = spreading front. Insect-vectored virus = scattered.' },
+    { key:'onset_speed', label:'When started and speed of progression', placeholder:'e.g. noticed 1 week ago, getting worse daily', hint:'Sudden wilt in 1-2 days = soilborne. Gradual yellowing over weeks = nutrient/virus.' },
+    { key:'recent_inputs', label:'Recent fertiliser/pesticide/herbicide', placeholder:'e.g. NPK two weeks ago, glyphosate nearby, none', hint:'Chemical burn mimics disease. Herbicide drift causes leaf distortion like virus.' },
+    { key:'variety_source', label:'Variety and source of planting material', placeholder:'e.g. cassava cuttings from neighbour, TMS from ADP', hint:'Planting material from infected fields is #1 source of cassava mosaic, yam mosaic.' },
+  ],
+  'pest-damage': [
+    { key:'crop_and_stage', label:'Crop and growth stage', placeholder:'e.g. maize at 4 weeks (whorl stage), okra fruiting', hint:'Pest management depends on crop and stage.', required:true },
+    { key:'damage_description', label:'What damage looks like', placeholder:'e.g. ragged holes in maize whorl with sawdust droppings', hint:'Irregular holes + frass in whorl = FAW. Silvery stippling = thrips. White cottony mass = mealybug.', required:true },
+    { key:'pest_seen', label:'Pest seen? Describe it', placeholder:'e.g. green caterpillar with stripes, tiny white insects under leaves', hint:'Check under leaves, in soil, in stem tunnels, at night for nocturnal pests.' },
+    { key:'affected_proportion', label:'% of crop showing damage', placeholder:'e.g. about 30%, only edges, almost every plant', hint:'>20-30% affected usually requires action. Minor pressure often does not justify chemicals.' },
+    { key:'previous_treatment', label:'Anything applied to control it', placeholder:'e.g. wood ash, neem spray, nothing tried yet', hint:'Failed treatment tells us about resistance or wrong product/timing.' },
+    { key:'neighbours_affected', label:'Are neighbouring farms affected?', placeholder:'e.g. whole village has it, only this farm, not sure', hint:'Outbreak across farms = migratory pest or weather-driven epidemic.' },
+  ],
+  'soil-water': [
+    { key:'soil_appearance', label:'Soil appearance and feel', placeholder:'e.g. dark sticky clay, sandy dries quickly, cracks when dry', hint:'Waterlogging dominates in Bayelsa; erosion and hardpan more common in Ogun.' },
+    { key:'crop_symptoms', label:'Crop symptoms from soil problems', placeholder:'e.g. yellow leaves from bottom, purple tinge on maize, wilting despite rain', hint:'Bottom-up yellowing = N deficiency. Purple = P deficiency. Wilting despite moisture = waterlogging.' },
+    { key:'drainage_situation', label:'Does water sit on the field?', placeholder:'e.g. water stands 24+ hours after rain, completely flooded last week', hint:'Standing water >24hrs causes root oxygen deprivation. >48hrs permanently damages most crops.', required:true },
+    { key:'fertiliser_history', label:'Fertiliser in past 2 seasons', placeholder:'e.g. half bag NPK per acre, only chicken manure, nothing for 3 years', hint:'Two seasons without organic matter return causes predictable deficiency.' },
+    { key:'plot_history', label:'What was grown here before', placeholder:'e.g. cassava 5 years continuous, rotated maize and cowpea', hint:'Continuous monocropping exhausts specific nutrients and builds soilborne pathogens.' },
+    { key:'flood_exposure', label:'Flood exposure and active flooding now?', placeholder:'e.g. flooded badly in 2022, currently flooded with standing crop', hint:'Active flooding with standing crop is EMERGENCY — crops lost in 24-72 hours.' },
+  ],
+  'post-harvest': [
+    { key:'crop_and_quantity', label:'Crop and quantity harvested', placeholder:'e.g. 200kg cassava roots, 5 bags maize, 50kg tomatoes', hint:'Scale determines which post-harvest options are realistic.', required:true },
+    { key:'storage_method', label:'Current storage method and duration', placeholder:'e.g. cassava heaped on ground 3 days, maize in jute sacks 2 weeks', hint:'Damp sacks cause mould, unsealed containers allow weevils, ground contact causes rot.' },
+    { key:'loss_signs', label:'Signs of deterioration', placeholder:'e.g. mould on maize with musty smell, weevil holes in cowpea', hint:'Mould + smell = moisture/fungal (potential aflatoxin). Insect damage = weevil/borer.' },
+    { key:'time_to_market', label:'Time before sale or processing', placeholder:'e.g. sell within 3 days, hoping to store 3 months for better price', hint:'3 days = immediate sale or emergency drying. 3 months = full processing or hermetic storage.' },
+    { key:'processing_access', label:'Processing equipment available', placeholder:'e.g. shared garri press, own grater, hammer mill at next village', hint:'Processing converts perishable produce into shelf-stable products worth 40-100% more.' },
+  ],
+  'market-input': [
+    { key:'crop_ready', label:'Crop and volume ready to sell', placeholder:'e.g. 10 bags garri ready, cassava harvest in 6 weeks', hint:'Timing and volume determine which market channels are realistic.', required:true },
+    { key:'current_price', label:'Price getting or expecting', placeholder:'e.g. ₦25,000/bag garri from village trader, not sure of price', hint:'Compare to market reference to see if farmer is underpaid. Middlemen pay 40-60% of final value.' },
+    { key:'selling_to', label:'Who they sell to', placeholder:'e.g. middleman at farm gate, local market Wednesdays', hint:'Farm gate sale to single trader is most common and least profitable channel.' },
+    { key:'input_needed', label:'Inputs needed next season', placeholder:'e.g. improved cassava cuttings, 2 bags NPK, no money for inputs', hint:'Input availability is often the binding constraint on yield.' },
+    { key:'transport_access', label:'Transport to reach markets', placeholder:'e.g. motorcycle only, pickup hire ₦5,000 to Yenagoa', hint:'Transport cost constrains which markets are accessible. In Bayelsa, boat access limits options.' },
+  ],
+};
+
+let state = {
+  step: 0,
+  farmer: { name:'', village:'Oloibiri', phone:'', crops:[], notes:'' },
+  consultType: null,
+  intake: {},
+  result: null,
+  saved: false,
+  saveMode: null,
+  savingToDb: false,
+  saveError: null,
+  openTooltip: null,
+  _lastStep: -1,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RULE-BASED ADVISORY ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function computeAdvisory() {
+  const f = state.farmer, ct = state.consultType, intake = state.intake;
+  const r = { urgency:'low', reasons:[], immediateActions:[], mediumTermActions:[], referrals:[], warnings:[], homeCare:[], doNot:[] };
+  const allText = Object.values(intake).join(' ').toLowerCase();
+
+  function esc(to) {
+    const levels = ['low','medium','high','urgent'];
+    if (levels.indexOf(to) > levels.indexOf(r.urgency)) r.urgency = to;
+  }
+
+  const isBayelsa = !['Ibiade','Sagamu','Abeokuta'].includes(f.village);
+  const region = isBayelsa ? 'Bayelsa (Niger Delta)' : 'Ogun State';
+  const cropList = f.crops.map(c => CROP_OPTIONS.find(o=>o.value===c)?.label||c).join(', ') || 'mixed crops';
+
+  // ── CROP DISEASE ─────────────────────────────────────────────────────────
+  if (ct === 'crop-disease') {
+    // Cassava mosaic
+    if (allText.includes('mosaic') || allText.includes('mottl') || (allText.includes('yellow') && allText.includes('cassava') && allText.includes('pattern'))) {
+      esc('high'); r.reasons.push('CASSAVA MOSAIC DISEASE (CMD) suspected — virus, whitefly-transmitted');
+      r.immediateActions.push('ROGUE immediately: uproot ALL plants showing mosaic symptoms and BURN them. Do NOT compost. Do NOT take cuttings from this field.');
+      r.immediateActions.push('Check neighbouring plants — mark any with even slight mosaic pattern for removal.');
+      r.mediumTermActions.push('Replace with CMD-resistant varieties: TMS 30572, TME 419, TMS 98/0505, TMS 96/1632. Get certified cuttings from ADP or IITA.');
+      r.mediumTermActions.push('Control whitefly vectors: neem extract spray on remaining healthy plants.');
+      r.referrals.push({ who:'ADP (Agricultural Development Programme)', why:'Source CMD-resistant cassava cuttings. Office in Yenagoa or your LGA.', urgency:'This week' });
+      r.doNot.push('Do NOT plant cuttings from infected field — this is the #1 way CMD spreads.');
+      r.doNot.push('Do NOT wait to see if infected plants recover — they will not. Roguing NOW prevents further spread.');
+    }
+    // Brown streak
+    if (allText.includes('brown streak') || allText.includes('root rot') && allText.includes('cassava')) {
+      esc('high'); r.reasons.push('Possible Cassava Brown Streak Disease (CBSD) — brown streaks on stems, root rot');
+      r.immediateActions.push('Check roots of symptomatic plants — cut open and look for brown/yellow necrotic areas inside the root.');
+      r.immediateActions.push('If root necrosis confirmed: harvest unaffected plants early for processing before disease reaches them.');
+      r.mediumTermActions.push('Source certified disease-free cuttings for next season. Do NOT replant from this field.');
+      r.referrals.push({ who:'IITA (International Institute of Tropical Agriculture, Ibadan)', why:'CBSD diagnostic confirmation and variety recommendation. iita.org/contact', urgency:'Urgent' });
+    }
+    // General fungal
+    if (allText.includes('spot') && (allText.includes('yellow halo') || allText.includes('brown') || allText.includes('circular'))) {
+      esc('medium'); r.reasons.push('Fungal leaf spot disease suspected — circular spots with halos');
+      r.immediateActions.push('Remove and burn severely affected leaves. Improve air circulation by wider spacing if possible.');
+      r.immediateActions.push('If available: apply copper-based fungicide (Ridomil or mancozeb) as foliar spray. Follow label rates exactly.');
+      r.mediumTermActions.push('Improve spacing next season. Avoid overhead watering. Rotate crops.');
+      r.doNot.push('Do NOT over-apply fungicide — follow label rates. More is not better and damages the crop.');
+    }
+    // Wilting
+    if (allText.includes('wilt') && !allText.includes('mosaic')) {
+      esc('medium'); r.reasons.push('Wilting detected — possible soilborne fungal or bacterial infection');
+      if (allText.includes('sudden') || allText.includes('rapid') || allText.includes('1 day') || allText.includes('2 day')) {
+        esc('high'); r.reasons.push('RAPID wilt (1-2 days) = likely Fusarium or bacterial wilt');
+      }
+      r.immediateActions.push('Pull up one wilted plant and examine roots — brown/black roots = soilborne fungal. Slimy stem base = bacterial.');
+      r.immediateActions.push('If plantain/banana and yellowing from lower leaves: suspect Panama disease (Fusarium wilt) — NO CURE. Do NOT replant in this soil for 3+ years.');
+      r.mediumTermActions.push('For next season: improve drainage, rotate to non-host crops, plant resistant varieties.');
+    }
+    // Nutrient deficiency mimics
+    if (allText.includes('npk') || allText.includes('fertiliser') || allText.includes('fertilizer') || allText.includes('urea')) {
+      if (allText.includes('burn') || allText.includes('too much') || allText.includes('wilted after')) {
+        r.reasons.push('Possible fertiliser burn — chemical damage mimicking disease');
+        r.immediateActions.push('If recent over-application: flush soil with clean water if possible. Stop all fertiliser for 2-3 weeks.');
+      }
+    }
+    // Herbicide drift
+    if (allText.includes('glyphosate') || allText.includes('herbicide') || allText.includes('nearby spray')) {
+      r.reasons.push('Possible herbicide drift damage — leaf distortion can mimic virus symptoms');
+      r.immediateActions.push('Observe for 7-10 days. Herbicide damage usually stops progressing; virus continues spreading to new plants.');
+    }
+    // Striga
+    if (allText.includes('striga') || allText.includes('witchweed') || allText.includes('purple flower') && allText.includes('maize')) {
+      esc('high'); r.reasons.push('Striga (witchweed) infestation — parasitic weed causing devastating yield loss');
+      r.immediateActions.push('Hand-pull Striga plants BEFORE they flower and set seed. Burn pulled plants — do NOT leave on field.');
+      r.mediumTermActions.push('Next season: plant Striga-resistant maize varieties. Consider push-pull method (intercrop with Desmodium, border with Napier grass).');
+      r.mediumTermActions.push('Apply nitrogen fertiliser — Striga thrives in low-nitrogen soils.');
+    }
+  }
+
+  // ── PEST DAMAGE ──────────────────────────────────────────────────────────
+  if (ct === 'pest-damage') {
+    // Fall Armyworm
+    if (allText.includes('armyworm') || allText.includes('faw') || (allText.includes('caterpillar') && allText.includes('maize')) || (allText.includes('whorl') && (allText.includes('hole') || allText.includes('frass') || allText.includes('sawdust')))) {
+      esc('high'); r.reasons.push('FALL ARMYWORM (FAW) suspected — most serious current pest threat to maize');
+      r.immediateActions.push('Check maize whorls early morning — look for caterpillars, frass (sawdust-like droppings), ragged holes.');
+      r.immediateActions.push('IMMEDIATE: Apply wood ash or sand directly into affected whorls — this suffocates larvae. Free, available now.');
+      r.immediateActions.push('Prepare neem extract: crush 500g neem leaves in 5L water, strain, spray into whorls. Effective biological control.');
+      r.mediumTermActions.push('If >20% plants affected and neem/ash not controlling: Bt-based pesticide (e.g. Bacillus thuringiensis) is effective and safe.');
+      r.mediumTermActions.push('Next season: plant early to avoid peak FAW pressure. Early maturing varieties suffer less damage.');
+      if (allText.includes('whole village') || allText.includes('every farm') || allText.includes('all neighbour')) {
+        esc('urgent'); r.reasons.push('REGIONAL FAW OUTBREAK — spreading across multiple farms');
+        r.referrals.push({ who:'ADP Extension Officer', why:'Report FAW outbreak for regional coordination and possible emergency pesticide supply.', urgency:'TODAY' });
+      }
+      r.doNot.push('Do NOT spray broad-spectrum insecticide on the whole field — it kills natural enemies (parasitoid wasps, predatory beetles) that help control FAW.');
+      r.doNot.push('Do NOT apply pesticide at midday — spray in early morning or late evening when larvae are active in whorls.');
+    }
+    // Mealybug
+    if (allText.includes('mealybug') || allText.includes('cottony') || allText.includes('white cluster')) {
+      esc('medium'); r.reasons.push('Mealybug infestation suspected — white cottony clusters');
+      r.immediateActions.push('Remove mealybug colonies by hand (wear gloves). Wash off with strong soap-water spray.');
+      r.immediateActions.push('Apply neem oil spray to affected stems and leaf joints.');
+      r.mediumTermActions.push('Encourage natural enemies — lady beetles and parasitoid wasps feed on mealybugs. Avoid broad-spectrum pesticides.');
+    }
+    // Cassava green mite
+    if (allText.includes('mite') || (allText.includes('cassava') && allText.includes('angular') && allText.includes('distort'))) {
+      esc('medium'); r.reasons.push('Cassava Green Mite suspected — angular leaf distortion');
+      r.immediateActions.push('Spray neem-based solution on affected plants.');
+      r.mediumTermActions.push('Plant resistant cassava varieties. Ensure adequate soil moisture — drought stress worsens mite damage.');
+    }
+    // Aphids
+    if (allText.includes('aphid') || (allText.includes('curl') && allText.includes('yellow') && allText.includes('leaf'))) {
+      esc('medium'); r.reasons.push('Aphid infestation suspected — curling yellow leaves');
+      r.immediateActions.push('Spray with soap solution: 2 tablespoons liquid soap in 5L water. Spray undersides of leaves.');
+      r.immediateActions.push('Neem extract spray is also effective. Repeat every 5-7 days for 2-3 applications.');
+    }
+    // Banana weevil
+    if ((allText.includes('plantain') || allText.includes('banana')) && (allText.includes('weevil') || allText.includes('bore') || allText.includes('corm'))) {
+      esc('medium'); r.reasons.push('Banana/plantain weevil suspected — bores into corm');
+      r.immediateActions.push('Cut and destroy affected corms. Set weevil traps: split pseudostem pieces laid flat near base of plants.');
+      r.mediumTermActions.push('Use clean planting material. Pare and treat suckers with hot water (52°C for 20 min) before replanting.');
+    }
+  }
+
+  // ── SOIL & WATER ─────────────────────────────────────────────────────────
+  if (ct === 'soil-water') {
+    // Active flooding emergency
+    if (allText.includes('currently flooded') || allText.includes('actively flood') || (allText.includes('standing crop') && allText.includes('flood')) || allText.includes('water on field now')) {
+      esc('urgent'); r.reasons.push('ACTIVE FLOODING — standing crop at immediate risk of total loss');
+      r.immediateActions.push('EMERGENCY: If water level is still rising, harvest whatever can be salvaged NOW — even immature cassava roots can be processed.');
+      r.immediateActions.push('Dig emergency drainage channels to direct water away from the highest-value crop area.');
+      r.immediateActions.push('For yam: pile soil/mud around yam mounds to keep tubers above water line if possible.');
+      r.immediateActions.push('For vegetables on raised beds: reinforce bed walls with available material (boards, sacks, mud).');
+      r.mediumTermActions.push('After flood recedes: wait 3-5 days before replanting. Flush field with clean water if creek-flood brought contamination.');
+      r.mediumTermActions.push('Next season: build permanent raised beds 30-50cm high. Consider flood-tolerant varieties (SWARNA-SUB1 rice, IITA flood-tolerant cassava).');
+      r.referrals.push({ who:'ADP and Local Government Emergency', why:'Report flood damage for emergency seed/cutting distribution and possible relief assistance.', urgency:'IMMEDIATELY' });
+    }
+    // Waterlogging (chronic)
+    else if (allText.includes('water stand') || allText.includes('waterlog') || allText.includes('water sits') || allText.includes('24 hour') || allText.includes('48 hour')) {
+      esc('high'); r.reasons.push('Chronic waterlogging — root suffocation and crop stress');
+      r.immediateActions.push('Dig drainage channels (30cm deep, 30cm wide) to direct water off the field.');
+      if (isBayelsa) r.immediateActions.push('RAISED BEDS are essential in Bayelsa. Build beds 30-50cm high, 1-1.2m wide, with drainage furrows between.');
+      r.mediumTermActions.push('Consider cassava varieties tolerant to brief waterlogging. Switch from yam (very flood-sensitive) to cassava or rice on lowest ground.');
+      r.mediumTermActions.push('Add organic matter (compost, crop residues) to improve soil structure and drainage.');
+    }
+    // Nutrient deficiency
+    if (allText.includes('yellow') && allText.includes('bottom') && !allText.includes('flood')) {
+      r.reasons.push('Bottom-up yellowing suggests nitrogen (N) deficiency');
+      r.immediateActions.push('Side-dress with urea: 1 tablespoon per plant in a ring 15cm from stem. Apply to moist soil. DO NOT let urea touch stem or leaves.');
+      r.mediumTermActions.push('Next season: apply NPK 15:15:15 at planting, then urea top-dress at 3-4 weeks.');
+    }
+    if (allText.includes('purple') && allText.includes('maize')) {
+      r.reasons.push('Purple tinge on maize leaves suggests phosphorus (P) deficiency');
+      r.mediumTermActions.push('Apply Single Super Phosphate (SSP) or DAP at planting next season. Phosphorus is immobile — must be placed near roots.');
+    }
+    // Soil acidity
+    if (allText.includes('acid') || (isBayelsa && (allText.includes('poor growth') || allText.includes('stunted')))) {
+      r.reasons.push(isBayelsa ? 'Niger Delta soils are typically acidic (pH 4.5-5.5) — this limits nutrient availability' : 'Possible soil acidity issue');
+      r.mediumTermActions.push('Apply wood ash liberally — free, locally available, raises pH, adds calcium and potassium. 2-3 handfuls per square metre.');
+      r.mediumTermActions.push('If available: agricultural lime at 2-3 tons per hectare. Apply 2-4 weeks before planting.');
+    }
+    // Continuous cropping
+    if (allText.includes('5 year') || allText.includes('continuous') || allText.includes('same crop')) {
+      r.reasons.push('Continuous monocropping exhausts soil and builds soilborne disease');
+      r.mediumTermActions.push('ROTATE: cassava → cowpea/groundnut (fixes nitrogen) → maize → vegetables. Even one season of legume rotation helps.');
+      r.mediumTermActions.push('Intercrop with cowpea or Desmodium to restore soil nitrogen while growing main crop.');
+    }
+  }
+
+  // ── POST-HARVEST ─────────────────────────────────────────────────────────
+  if (ct === 'post-harvest') {
+    // AFLATOXIN EMERGENCY
+    if (allText.includes('mould') || allText.includes('mold') || allText.includes('musty') || allText.includes('aflatoxin') || (allText.includes('damp') && allText.includes('maize'))) {
+      esc('urgent'); r.reasons.push('🚨 AFLATOXIN RISK — food safety emergency');
+      r.immediateActions.push('⚠️ STOP: Mouldy maize/grain must NOT be eaten or sold for human consumption. Aflatoxin causes liver cancer and is invisible even after mould is removed.');
+      r.immediateActions.push('Separate visibly mouldy grain from clean grain immediately. Store in different containers.');
+      r.immediateActions.push('Clean grain can still be saved: spread on clean surface in direct sun for 2-3 days, turn regularly, dry to <13% moisture.');
+      r.immediateActions.push('Mouldy grain: may be suitable only for industrial use (biofuel, animal feed with limitations). Contact ADP for disposal guidance.');
+      r.warnings.push('NEVER mix mouldy and clean grain — aflatoxin contamination spreads');
+      r.warnings.push('Children and pregnant women are most vulnerable to aflatoxin — keep them away from contaminated grain');
+      r.referrals.push({ who:'ADP Extension and Local Health Officer', why:'Report aflatoxin risk. May need community awareness if multiple farmers affected.', urgency:'TODAY — food safety emergency' });
+      r.doNot.push('Do NOT wash mouldy grain and assume it is safe — aflatoxin is not removed by washing, cooking, or roasting.');
+      r.doNot.push('Do NOT feed contaminated grain to poultry or livestock without specific guidance — aflatoxin passes through eggs and milk.');
+    }
+    // Weevil damage
+    if (allText.includes('weevil') || allText.includes('holes in') && (allText.includes('cowpea') || allText.includes('maize') || allText.includes('bean'))) {
+      esc('medium'); r.reasons.push('Weevil/insect storage damage detected');
+      r.immediateActions.push('Transfer grain to hermetic (airtight) bags — PICS bags are best. Seal completely. Weevils die within 2-3 weeks without oxygen.');
+      r.immediateActions.push('If PICS bags not available: mix grain with small amount of neem leaf powder or wood ash before sealing in any airtight container.');
+      r.mediumTermActions.push('Source PICS bags: available from ADP, some agro-dealers. Cost ₦500-800 per bag but saves thousands in grain loss.');
+      r.doNot.push('Do NOT store grain in open jute bags — weevils enter freely and moisture fluctuates.');
+    }
+    // Cassava deterioration
+    if (allText.includes('cassava') && (allText.includes('black') || allText.includes('rot') || allText.includes('soft') || allText.includes('3 day') || allText.includes('ground'))) {
+      esc('high'); r.reasons.push('Cassava post-harvest deterioration — roots spoil within 24-48 hours');
+      r.immediateActions.push('PROCESS IMMEDIATELY: Peel, grate, press, and fry into garri. Or peel, ferment, and sieve for fufu.');
+      r.immediateActions.push('If cannot process today: coat unpeeled roots in wet mud/clay to extend life by 2-3 days.');
+      r.immediateActions.push('Alternative: peel, slice into chips, sun-dry for 2-3 days. Dried cassava chips store for months.');
+      r.mediumTermActions.push('Harvest only what can be processed or sold within 24 hours. Cassava stores best IN THE GROUND — leave unharvested until needed.');
+      r.doNot.push('Do NOT store harvested cassava roots unprocessed for more than 48 hours — vascular streaking makes them bitter and toxic.');
+    }
+    // Tomato / vegetable perishables
+    if (allText.includes('tomato') || allText.includes('vegetable') || allText.includes('okra') || allText.includes('pepper')) {
+      esc('medium'); r.reasons.push('Perishable vegetables — very short shelf life without cooling');
+      r.immediateActions.push('Build a zero-energy cool chamber: nested clay pots with wet sand between them. Extends vegetable life by 2-3 days.');
+      r.immediateActions.push('Sort and grade: remove bruised/damaged produce immediately — one rotten tomato accelerates decay of neighbours.');
+      r.immediateActions.push('Sell today if possible. For tomatoes: sun-dry into tomato paste/flakes if surplus exceeds market demand.');
+      r.mediumTermActions.push('Consider solar drying: simple mesh frame with black polythene cover. Dried vegetables store for months and sell well.');
+    }
+    // General storage
+    r.homeCare.push('Store all grain in clean, dry, airtight containers off the ground (minimum 10cm elevation on wooden pallets or bricks).');
+    r.homeCare.push('Check stored produce every 1-2 weeks for signs of mould, insects, or moisture.');
+  }
+
+  // ── MARKET & INPUTS ──────────────────────────────────────────────────────
+  if (ct === 'market-input') {
+    esc('low');
+    // Farm gate exploitation
+    if (allText.includes('middleman') || allText.includes('farm gate') || allText.includes('trader comes')) {
+      r.reasons.push('Selling at farm gate to middlemen — likely receiving 40-60% of market value');
+      r.immediateActions.push('Find out the current Yenagoa/Lagos market price for your product before negotiating. Knowledge is power.');
+      r.immediateActions.push('Consider collective selling: pool produce with 3-5 neighbouring farmers to attract better buyers and share transport cost.');
+      r.mediumTermActions.push('Form or join a farmer cooperative — cooperatives negotiate 20-40% higher prices than individual farm-gate sales.');
+      if (!isBayelsa) r.mediumTermActions.push('Ibiade advantage: Lagos markets via Sagamu road. Explore direct supply to Lagos retailers for premium prices.');
+    }
+    // Input sourcing
+    if (allText.includes('no money') || allText.includes('cannot afford') || allText.includes('credit')) {
+      r.reasons.push('Input affordability is the binding constraint');
+      r.referrals.push({ who:'NIRSAL Microfinance Bank', why:'Agricultural credit for smallholders. Low-interest loans for inputs.', urgency:'Before next planting season' });
+      r.referrals.push({ who:'ADP Input Subsidy Programme', why:'Subsidised fertiliser and improved seed. Register at your LGA ADP office.', urgency:'Registration period' });
+      r.mediumTermActions.push('Produce your own organic fertiliser: compost from kitchen waste + crop residues + animal manure. 4-6 weeks to maturity. Free and effective.');
+    }
+    // Improved varieties
+    if (allText.includes('improved') || allText.includes('tms') || allText.includes('cutting') || allText.includes('seed')) {
+      r.referrals.push({ who:'NASC (National Agricultural Seed Council)', why:'Source certified, disease-free seed and planting material.', urgency:'Before next planting' });
+      r.mediumTermActions.push('Improved cassava varieties (TMS 30572, TME 419) yield 2-3× more than local varieties. Worth the investment.');
+    }
+    // Processing value add
+    if (allText.includes('garri') || allText.includes('process') || allText.includes('flour')) {
+      r.reasons.push('Processing adds significant value — garri sells for 40-100% more than raw cassava');
+      r.mediumTermActions.push('If you have access to a garri press: process cassava into garri rather than selling raw roots. Much higher margin.');
+      r.mediumTermActions.push('Cassava flour (High Quality Cassava Flour — HQCF) has growing urban market demand. Explore through ADP.');
+    }
+    r.homeCare.push('Keep records of every sale: date, buyer, quantity, price per unit. This data helps negotiate better prices and track your income.');
+  }
+
+  // ── UNIVERSAL DEFAULTS ───────────────────────────────────────────────────
+  if (r.reasons.length === 0) {
+    r.reasons.push('General agricultural consultation — no specific danger indicators detected');
+    r.immediateActions.push('Review the intake notes above for the specific issue. If it is unclear, arrange a follow-up visit to see the problem in person.');
+  }
+  if (r.homeCare.length === 0) {
+    r.homeCare.push('Continue regular weeding and field maintenance.');
+  }
+  if (isBayelsa) {
+    r.homeCare.push('Bayelsa tip: Always maintain raised beds and drainage channels — waterlogging is the #1 yield killer here.');
+  }
+  r.homeCare.push('Return for follow-up in 7-14 days to check if the recommended actions are working.');
+  r.warnings.push('If the situation worsens rapidly or spreads to the whole field — return immediately or contact ADP.');
+
+  // General referral for all medium+ urgency
+  if (r.urgency !== 'low' && r.referrals.length === 0) {
+    r.referrals.push({ who:'ADP Extension Officer', why:'Professional assessment and access to subsidised inputs.', urgency:'Within 1-2 weeks' });
+  }
+
+  return r;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REFERRAL NOTE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function makeReferralNote() {
+  const f=state.farmer, ct=state.consultType, intake=state.intake, res=state.result;
+  const now=new Date(), d=now.toLocaleDateString('en-NG',{day:'numeric',month:'long',year:'numeric'}), tm=now.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+  const ctLabel = CONSULT_TYPES[ct]?.label || ct;
+  const intakeStr = Object.entries(intake).filter(([,v])=>v?.trim()).map(([k,v])=>`${k}: ${v.trim().slice(0,100)}`).join('\n  ');
+  return `──────────────────────────────
+COMMUNITY AGRICULTURE ADVISOR
+CONSULTATION RECORD
+──────────────────────────────
+Date: ${d}   Time: ${tm}
+
+FARMER: ${f.name}
+Village: ${f.village}
+Phone: ${f.phone||'none'}
+Crops: ${f.crops.map(c=>CROP_OPTIONS.find(o=>o.value===c)?.label||c).join(', ')}
+
+CONSULTATION: ${ctLabel}
+
+INTAKE:
+  ${intakeStr}
+
+URGENCY: ${res.urgency.toUpperCase()}
+${res.reasons[0]||''}
+
+REFERRALS: ${res.referrals.map(r=>r.who).join('; ')||'None'}
+
+Advisor: Community Agriculture Ambassador
+Programme: vAI Community Impact, ${f.village}
+──────────────────────────────`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'vai_offline_agri_consultations';
+function loadSaved() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]; } catch{ return []; } }
+
+function saveCurrent() {
+  const list = loadSaved();
+  list.unshift({
+    id:'agri_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    ts:new Date().toISOString(),
+    farmer:state.farmer, consultType:state.consultType,
+    intake:state.intake, result:state.result, synced:false
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  state.saved = true;
+  state.saveMode = 'offline';
+  updatePendingBadge();
+  render();
+}
+
+function getPending() { return loadSaved().filter(a=>!a.synced).length; }
+function updatePendingBadge() {
+  const n = getPending();
+  const el = document.getElementById('badge-pending');
+  const ct = document.getElementById('pending-count');
+  const btn = document.getElementById('btn-sync-header');
+  if (n>0) { btn.classList.remove('hidden'); ct.textContent=n; } else { btn.classList.add('hidden'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYNC ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── CONFIGURATION — Kevin: fill these in before deploying ─────────────────
+const SYNC_CONFIG = {
+  // Supabase Edge Function URL (deploy sync-offline-agri-consultations):
+  functionUrl: 'https://wohmsbeygxrbwogrggkq.supabase.co/functions/v1/sync-offline-agri-consultations',
+  // Shared sync key — must match AGRI_OFFLINE_SYNC_KEY secret in Supabase:
+  syncKey: 'vai-agri-offline-2024-oloibiri',
+  // Generic — no user-specific ID needed for offline tool:
+  navigatorUserId: 'offline-agri-advisor',
+};
+
+let syncPanelOpen = false;
+let syncing = false;
+
+function openSyncPanel() { syncPanelOpen = true; renderSyncPanel(); }
+function closeSyncPanel() { syncPanelOpen = false; const el = document.getElementById('sync-overlay'); if (el) el.remove(); }
+
+function renderSyncPanel() {
+  let overlay = document.getElementById('sync-overlay');
+  if (overlay) overlay.remove();
+  if (!syncPanelOpen) return;
+
+  const saved = loadSaved();
+  const pending = saved.filter(a => !a.synced);
+  const synced = saved.filter(a => a.synced);
+  const isOnline = navigator.onLine;
+  const notConfigured = SYNC_CONFIG.syncKey === 'CHANGE_ME_BEFORE_DEPLOY';
+
+  overlay = h('div', { className:'sync-overlay', id:'sync-overlay', onClick: e => { if (e.target === overlay) closeSyncPanel(); } },
+    h('div', { className:'sync-panel', onClick: e => e.stopPropagation() },
+      h('div', { className:'sync-title' }, '📡 Sync Agriculture Consultations'),
+      h('div', { className:'sync-sub' },
+        isOnline
+          ? `You are ONLINE. ${pending.length} consultation${pending.length!==1?'s':''} ready to sync.`
+          : `You are OFFLINE. Connect to cellular or WiFi to sync.`
+      ),
+
+      ...(pending.length > 0 ? [
+        h('div', { className:'section-label', style:'margin-top:8px;' }, 'Pending Upload'),
+        ...pending.map(a => h('div', { className:'sync-item' },
+          h('div', null,
+            h('div', { className:'name' }, a.farmer?.name || 'Unknown'),
+            h('div', { className:'meta' },
+              (CONSULT_TYPES[a.consultType]?.emoji || '🌿') + ' ' +
+              (a.result?.urgency || '').toUpperCase() + ' · ' +
+              (a.farmer?.village || '') + ' · ' +
+              new Date(a.ts).toLocaleDateString()
+            )
+          ),
+          h('span', { className:'status ' + (a._syncError ? 'error' : 'pending') },
+            a._syncError ? '✗ Error' : '⏳ Pending'
+          )
+        ))
+      ] : [h('div', { style:'text-align:center;padding:20px;color:var(--gray-400);font-size:13px;' }, '✅ All consultations synced!')]),
+
+      ...(synced.length > 0 ? [
+        h('div', { className:'section-label', style:'margin-top:12px;' }, 'Recently Synced'),
+        ...synced.slice(0, 5).map(a => h('div', { className:'sync-item' },
+          h('div', null,
+            h('div', { className:'name' }, a.farmer?.name || 'Unknown'),
+            h('div', { className:'meta' }, new Date(a.ts).toLocaleDateString())
+          ),
+          h('span', { className:'status synced' }, '✓ Synced')
+        ))
+      ] : []),
+
+      isOnline && pending.length > 0 && !notConfigured
+        ? h('button', { className:'btn-sync go', id:'btn-do-sync', disabled: syncing, onClick: doSync },
+            syncing ? '⏳ Syncing…' : `⬆ Sync ${pending.length} Consultation${pending.length!==1?'s':''}`)
+        : !isOnline && pending.length > 0
+          ? h('div', { style:'text-align:center;padding:12px;color:var(--amber-700);font-size:13px;font-weight:600;' },
+              '📡 No internet connection. Consultations are safe on your device.')
+          : null,
+
+      h('button', { className:'btn-sync close', onClick: closeSyncPanel }, 'Close'),
+
+      notConfigured
+        ? h('div', { style:'margin-top:12px;padding:10px;background:var(--amber-50);border-radius:8px;font-size:11px;color:var(--amber-800);' },
+            '⚠️ Sync not configured yet. Kevin needs to set AGRI_OFFLINE_SYNC_KEY in Supabase secrets and update SYNC_CONFIG before this will work.')
+        : null
+    )
+  );
+  document.body.appendChild(overlay);
+}
+
+async function doSync() {
+  if (syncing) return;
+  syncing = true;
+  renderSyncPanel();
+
+  const saved = loadSaved();
+  const pending = saved.filter(a => !a.synced);
+
+  try {
+    const response = await fetch(SYNC_CONFIG.functionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sync_key: SYNC_CONFIG.syncKey,
+        navigator_user_id: SYNC_CONFIG.navigatorUserId,
+        consultations: pending,
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`Server error ${response.status}: ${errBody}`);
+    }
+
+    const result = await response.json();
+
+    if (result.results) {
+      const updated = loadSaved();
+      result.results.forEach(r => {
+        const idx = updated.findIndex(a => a.id === r.offline_id);
+        if (idx !== -1) {
+          if (r.status === 'synced') {
+            updated[idx].synced = true;
+            delete updated[idx]._syncError;
+          } else {
+            updated[idx]._syncError = r.error || 'Unknown error';
+          }
+        }
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+
+    updatePendingBadge();
+    updateConnectivity();
+    syncing = false;
+    renderSyncPanel();
+
+  } catch (err) {
+    console.error('Sync failed:', err);
+    const updated = loadSaved();
+    pending.forEach(p => {
+      const idx = updated.findIndex(a => a.id === p.id);
+      if (idx !== -1) updated[idx]._syncError = err.message || 'Network error';
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    syncing = false;
+    renderSyncPanel();
+  }
+}
+
+async function saveToDatabase() {
+  if (state.savingToDb) return;
+  state.savingToDb = true;
+  render();
+
+  const consultation = {
+    id: 'agri_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    ts: new Date().toISOString(),
+    farmer: state.farmer,
+    consultType: state.consultType,
+    intake: state.intake,
+    result: state.result,
+    synced: false,
+  };
+
+  try {
+    const response = await fetch(SYNC_CONFIG.functionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sync_key: SYNC_CONFIG.syncKey,
+        navigator_user_id: SYNC_CONFIG.navigatorUserId,
+        consultations: [consultation],
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || result.failed > 0) {
+      throw new Error(result.results?.[0]?.error || result.error || 'Save failed');
+    }
+
+    consultation.synced = true;
+    const list = loadSaved();
+    list.unshift(consultation);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    updatePendingBadge();
+
+    state.saved = true;
+    state.saveMode = 'database';
+    state.savingToDb = false;
+    state.saveError = null;
+    render();
+
+  } catch (err) {
+    state.savingToDb = false;
+    state.saveError = err.message || 'Connection error — try saving offline instead.';
+    render();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => {
+    if (k==='className') el.className=v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k==='value') el.value=v;
+    else if (typeof v==='boolean') { if(v) el.setAttribute(k,''); }
+    else if (v!=null) el.setAttribute(k,String(v));
+  });
+  children.flat(Infinity).forEach(c => { if(c==null) return; el.append(typeof c==='string'||typeof c==='number'?document.createTextNode(c):c); });
+  return el;
+}
+
+// ── STEP: FARMER ───────────────────────────────────────────────────────────
+
+function renderFarmer() {
+  const f = state.farmer;
+  return h('div',{className:'card'},
+    h('div',{className:'card-title'},'👨🏿‍🌾 Farmer Information'),
+    h('div',{className:'card-subtitle'},'Register the farmer before starting consultation.'),
+    h('div',{className:'gap-md'},
+      h('div',{className:'field'}, h('label',{className:'label'},'Farmer Name',h('span',{className:'req'},'*')), h('input',{className:'input',placeholder:'e.g. Mama Ebiere Okoro',value:f.name,onInput:e=>{f.name=e.target.value;}})),
+      h('div',{className:'field'}, h('label',{className:'label'},'Village',h('span',{className:'req'},'*')),
+        h('div',{style:'display:flex;flex-wrap:wrap;gap:6px;'}, ...VILLAGES.map(v=>h('button',{type:'button',className:'btn-chip'+(f.village===v?' active':''),onClick:()=>{f.village=v;render();}},v)))
+      ),
+      h('div',{className:'field'}, h('label',{className:'label'},'Phone',h('span',{className:'label-hint'},'Optional')), h('input',{className:'input',type:'tel',inputMode:'tel',placeholder:'+234…',value:f.phone,onInput:e=>{f.phone=e.target.value;}})),
+      h('div',{className:'field'}, h('label',{className:'label'},'Crops Grown',h('span',{className:'label-hint'},'Select all that apply')),
+        h('div',{className:'btn-grid'}, ...CROP_OPTIONS.map(opt=>
+          h('button',{type:'button',className:'btn-choice'+(f.crops.includes(opt.value)?' active':''),onClick:()=>{
+            f.crops = f.crops.includes(opt.value)?f.crops.filter(c=>c!==opt.value):[...f.crops,opt.value]; render();
+          }}, opt.emoji+' '+opt.label)
+        ))
+      ),
+      h('div',{className:'field'}, h('label',{className:'label'},'Notes',h('span',{className:'label-hint'},'Soil type, flooding history, etc.')),
+        h('textarea',{className:'textarea',rows:'2',placeholder:'Past problems, special concerns…',value:f.notes,onInput:e=>{f.notes=e.target.value;}})),
+    )
+  );
+}
+
+// ── STEP: CONSULTATION TYPE ────────────────────────────────────────────────
+
+function renderType() {
+  return h('div',{className:'card'},
+    h('div',{className:'card-title'},'📋 Consultation Type'),
+    h('div',{className:'card-subtitle'},'What problem is the farmer experiencing?'),
+    h('div',{className:'gap-sm'}, ...Object.entries(CONSULT_TYPES).map(([key,ct])=>
+      h('button',{type:'button',className:'toggle'+(state.consultType===key?' on':''),onClick:()=>{state.consultType=key;state.intake={};render();}},
+        h('div',{style:'font-size:24px;flex-shrink:0;'},ct.emoji),
+        h('div',null,
+          h('div',{className:'toggle-label'},ct.label),
+          h('div',{className:'toggle-hint'},ct.desc)
+        )
+      )
+    ))
+  );
+}
+
+// ── STEP: INTAKE ───────────────────────────────────────────────────────────
+
+function renderIntake() {
+  const ct = state.consultType;
+  const ctInfo = CONSULT_TYPES[ct];
+  const fields = INTAKE_FIELDS[ct];
+  const allText = Object.values(state.intake).join(' ').toLowerCase();
+
+  // Danger banners
+  const alerts = [];
+  if (ct==='post-harvest' && (allText.includes('mould')||allText.includes('mold')||allText.includes('musty'))) {
+    alerts.push(h('div',{className:'alert alert-red'}, h('span',{className:'alert-icon'},'🚨'), h('div',null, h('div',{className:'alert-title'},'AFLATOXIN RISK — FOOD SAFETY EMERGENCY'), h('div',{className:'alert-text'},'Mouldy maize/grain may contain aflatoxin. Do NOT sell or eat. Continue intake to get full guidance.'))));
+  }
+  if (ct==='soil-water' && (allText.includes('currently flooded')||allText.includes('actively flood')||(allText.includes('standing crop')&&allText.includes('flood')))) {
+    alerts.push(h('div',{className:'alert alert-red'}, h('span',{className:'alert-icon'},'🚨'), h('div',null, h('div',{className:'alert-title'},'ACTIVE FLOODING — CROP AT RISK'), h('div',{className:'alert-text'},'Crops can be lost in 24-72 hours. Complete intake quickly for emergency guidance.'))));
+  }
+  if (ct==='pest-damage' && (allText.includes('whole village')||allText.includes('every farm')||allText.includes('all neighbour'))) {
+    alerts.push(h('div',{className:'alert alert-amber'}, h('span',{className:'alert-icon'},'⚠️'), h('div',null, h('div',{className:'alert-title'},'APPARENT REGIONAL OUTBREAK'), h('div',{className:'alert-text'},'Pest spreading across multiple farms. ADP notification will be recommended.'))));
+  }
+
+  const fieldEls = fields.map(field => {
+    const tooltipOpen = state.openTooltip === field.key;
+    return h('div',{className:'field'},
+      h('label',{className:'label'},
+        field.label, field.required?h('span',{className:'req'},'*'):null,
+        h('button',{type:'button',className:'tooltip-btn',onClick:()=>{state.openTooltip=tooltipOpen?null:field.key;render();}},'💡')
+      ),
+      tooltipOpen ? h('div',{className:'tooltip-box'},field.hint) : null,
+      h('textarea',{className:'textarea',rows:'3',placeholder:field.placeholder,value:state.intake[field.key]||'',onInput:e=>{state.intake[field.key]=e.target.value;}})
+    );
+  });
+
+  return h('div',null,
+    ...alerts,
+    h('div',{className:'card'},
+      h('div',{className:'card-title'},ctInfo.emoji+' '+ctInfo.label+' — Intake'),
+      h('div',{className:'card-subtitle'},'Fill in each field with what the farmer tells you. Tap 💡 for clinical guidance on each question.'),
+      h('div',{className:'gap-md'}, ...fieldEls)
+    ),
+    h('div',{style:'background:#fff;border-radius:12px;padding:12px;border:1px solid var(--gray-200);margin-bottom:12px;'},
+      h('div',{style:'display:flex;align-items:center;gap:8px;'},
+        h('span',{style:'font-size:14px;'},'💡'),
+        h('div',{style:'font-size:12px;color:var(--gray-600);'},'Tap 💡 next to each field for expert guidance on what to ask and why the information matters for diagnosis.')
+      )
+    )
+  );
+}
+
+// ── STEP: RESULT ───────────────────────────────────────────────────────────
+
+function renderResult() {
+  const res = state.result;
+  if (!res) return h('div',null,'Error: no result');
+  const f = state.farmer;
+  const ctInfo = CONSULT_TYPES[state.consultType];
+  const urgLabels = { urgent:'🔴 URGENT — Act Immediately', high:'🟠 HIGH — Act Today', medium:'🟡 MEDIUM — Act This Week', low:'🟢 LOW — Plan & Monitor' };
+
+  const els = [];
+
+  // Banner
+  els.push(h('div',{className:'result-banner '+res.urgency},
+    h('div',{className:'result-level'},urgLabels[res.urgency]),
+    h('div',{className:'result-patient'},ctInfo.emoji+' '+ctInfo.label+' — '+f.name+', '+f.village),
+    ...res.reasons.map(r=>h('div',{className:'result-reason',style:'color:inherit;'},'• '+r))
+  ));
+
+  // Immediate actions
+  if (res.immediateActions.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title'},'⚡ Immediate Actions — Today'),
+      ...res.immediateActions.map((a,i)=>h('div',{className:'result-item action'},(i+1)+'. '+a))
+    ));
+  }
+
+  // Medium-term
+  if (res.mediumTermActions.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title'},'📅 Medium-Term Plan (1-4 Weeks)'),
+      ...res.mediumTermActions.map(a=>h('div',{className:'result-item rec'},'→ '+a))
+    ));
+  }
+
+  // Referrals
+  if (res.referrals.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title'},'📞 Referral Contacts'),
+      ...res.referrals.map(ref=>h('div',{className:'result-item referral'},
+        h('div',{style:'font-weight:700;color:var(--blue-800);'},ref.who),
+        h('div',{style:'font-size:12px;margin-top:2px;'},ref.why),
+        h('div',{style:'font-size:11px;color:var(--blue-600);font-weight:600;margin-top:2px;'},'Urgency: '+ref.urgency)
+      ))
+    ));
+  }
+
+  // What NOT to do
+  if (res.doNot.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title',style:'color:var(--red-700);'},'🚫 What NOT To Do'),
+      ...res.doNot.map(d=>h('div',{className:'result-item warning'},'✗ '+d))
+    ));
+  }
+
+  // Home care / general advice
+  if (res.homeCare.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title'},'🏠 General Advice for Farmer'),
+      h('div',{style:'font-size:11px;color:var(--gray-400);margin-bottom:8px;'},'Read these to the farmer:'),
+      ...res.homeCare.map(hc=>h('div',{className:'result-item home'},'✓ '+hc))
+    ));
+  }
+
+  // Warning signs
+  if (res.warnings.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title',style:'color:var(--red-700);'},'⚠️ Warning Signs — Return If:'),
+      ...res.warnings.map(w=>h('div',{className:'result-item warning'},'🚨 '+w))
+    ));
+  }
+
+  // Referral note (collapsible)
+  const noteCard = h('div',{className:'card'});
+  noteCard.append(h('button',{type:'button',style:'width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;padding:0;',onClick:()=>{state.showReferral=!state.showReferral;render();}},
+    h('div',{className:'result-section-title',style:'margin:0;'},'📄 Consultation Record'),
+    h('span',{style:'color:var(--gray-400);'},state.showReferral?'▾':'▸')
+  ));
+  if (state.showReferral) noteCard.append(h('pre',{className:'referral-note',style:'margin-top:10px;'},makeReferralNote()));
+  els.push(noteCard);
+
+  // Save
+  const saveCard = h('div',{className:'card'});
+  const isOnline = navigator.onLine;
+  const notConfigured = SYNC_CONFIG.syncKey === 'CHANGE_ME_BEFORE_DEPLOY';
+
+  if (!state.saved) {
+    if (isOnline && !notConfigured) {
+      // Online: primary = save to database
+      const dbBtn = h('button',{type:'button',className:'btn-save',onClick:saveToDatabase},
+        state.savingToDb ? '⏳ Saving to vAI Database…' : '☁️ Save to vAI Database');
+      dbBtn.disabled = state.savingToDb;
+      saveCard.append(dbBtn);
+
+      if (state.saveError) {
+        saveCard.append(h('div',{style:'margin:8px 0;padding:10px;background:var(--red-50);border-radius:8px;font-size:12px;color:var(--red-700);'},
+          '⚠️ ' + state.saveError));
+      }
+
+      saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:saveCurrent},'💾 Save Offline Instead'));
+    } else {
+      // Offline: save to device
+      saveCard.append(h('button',{type:'button',className:'btn-save',onClick:saveCurrent},'💾 Save Offline'));
+      saveCard.append(h('div',{style:'font-size:12px;color:var(--amber-700);text-align:center;margin-top:8px;'},
+        '📡 No connection — consultation will sync to vAI database when back online.'));
+    }
+  } else {
+    if (state.saveMode === 'database') {
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'✅'),
+        h('div',null,
+          h('div',{className:'alert-title'},'Saved to vAI Database'),
+          h('div',{className:'alert-text'},'Consultation is in the NextVillage platform and available for follow-up.')
+        )
+      ));
+    } else {
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'💾'),
+        h('div',null,
+          h('div',{className:'alert-title'},'Saved to device'),
+          h('div',{className:'alert-text'},getPending()+' consultation'+(getPending()!==1?'s':'')+' pending sync. Tap ⬆ when online to upload.')
+        )
+      ));
+    }
+  }
+  saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:resetAll},'Start New Consultation'));
+  els.push(saveCard);
+
+  els.push(h('div',{className:'disclaimer'},'⚠️ AGRICULTURAL ADVISORY SUPPORT ONLY — Rule-based recommendations. For crop disease outbreaks or food safety emergencies (aflatoxin), contact ADP or IITA immediately. The advisor must use their own judgement and training.\nBuilt for vAI Community Impact Programme, Oloibiri & Ibiade.'));
+
+  return h('div',null,...els);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function render() {
+  // Step bar
+  const bar = document.getElementById('step-bar');
+  bar.innerHTML = '';
+  STEPS.forEach((s,i) => {
+    const cls = i===state.step?'step-pill current':i<state.step?'step-pill done':'step-pill upcoming';
+    bar.append(h('button',{className:cls,type:'button',disabled:i>state.step+1,onClick:()=>{if(i<state.step)goStep(i);}},(i<state.step?'✓ ':'')+s.label));
+    if (i<STEPS.length-1) bar.append(h('div',{className:'step-line'+(i<state.step?' done':'')}));
+  });
+
+  // Content
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const renderers = [renderFarmer, renderType, renderIntake, renderResult];
+  content.append(renderers[state.step]());
+
+  // Footer
+  const footer = document.getElementById('footer');
+  const inner = document.getElementById('footer-inner');
+  if (state.step===3) { footer.style.display='none'; } else {
+    footer.style.display='';
+    inner.innerHTML='';
+    if (state.step>0) inner.append(h('button',{type:'button',className:'btn-nav secondary',onClick:goBack},'← Back'));
+    const labels = ['Next ▶','Next ▶','Run Advisory ▶'];
+    const disabled = (state.step===0 && !state.farmer.name.trim()) || (state.step===1 && !state.consultType) ||
+      (state.step===2 && !INTAKE_FIELDS[state.consultType]?.filter(f=>f.required).every(f=>state.intake[f.key]?.trim()));
+    inner.append(h('button',{type:'button',className:'btn-nav primary',disabled,onClick:goNext},labels[state.step]));
+  }
+
+  if (state._lastStep !== state.step) { window.scrollTo({top:0,behavior:'smooth'}); state._lastStep = state.step; }
+}
+
+function goStep(i) { state.step=i; render(); }
+function goNext() {
+  if (state.step===2) { state.result = computeAdvisory(); state.step=3; }
+  else if (state.step<3) { state.step++; }
+  render();
+}
+function goBack() { if (state.step>0) { state.step--; render(); } }
+
+function resetAll() {
+  state = {
+    step:0, farmer:{name:'',village:'Oloibiri',phone:'',crops:[],notes:''},
+    consultType:null, intake:{}, result:null, saved:false, saveMode:null,
+    savingToDb:false, saveError:null, openTooltip:null, showReferral:false, _lastStep:-1
+  };
+  render();
+}
+
+// ── Connectivity ───────────────────────────────────────────────────────────
+
+function updateConnectivity() {
+  const badge = document.getElementById('badge-connectivity');
+  if (navigator.onLine) { badge.className='badge-online'; badge.innerHTML='🟢 Online'; }
+  else { badge.className='badge-offline'; badge.innerHTML='📡 Offline'; }
+}
+window.addEventListener('online', updateConnectivity);
+window.addEventListener('offline', updateConnectivity);
+
+// Boot
+updatePendingBadge();
+updateConnectivity();
+render();
+</script>
+</body>
+</html>
