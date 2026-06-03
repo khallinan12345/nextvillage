@@ -555,6 +555,25 @@ const LEVEL_CONFIG: Record<ProficiencyLevel, { color: string; bg: string; border
   Advanced:   { color: 'text-yellow-300', bg: 'bg-yellow-900/40', border: 'border-yellow-500',emoji: '🏆' },
 };
 
+const isStrongLevel = (level: ProficiencyLevel) => level === 'Proficient' || level === 'Advanced';
+const isWeakLevel = (level: ProficiencyLevel) => level === 'Emerging' || level === 'Developing';
+
+const normalizeEvaluation = (evaluation: SessionEvaluation): SessionEvaluation => {
+  const allSubStrong = evaluation.sub_categories.length > 0 &&
+    evaluation.sub_categories.every(s => isStrongLevel(s.level));
+  const allSubAdvanced = evaluation.sub_categories.length > 0 &&
+    evaluation.sub_categories.every(s => s.level === 'Advanced');
+
+  const canAdvance = !isWeakLevel(evaluation.overall_level) && (allSubStrong || allSubAdvanced);
+  const isComplete = allSubAdvanced;
+
+  return {
+    ...evaluation,
+    can_advance: canAdvance,
+    is_complete: isComplete,
+  };
+};
+
 // ─── Evaluation ───────────────────────────────────────────────────────────────
 
 const evaluateSession = async (
@@ -617,7 +636,7 @@ Respond ONLY with valid JSON:
   });
 
   if (!result?.sub_categories) throw new Error('Invalid evaluation response');
-  return result as SessionEvaluation;
+  return normalizeEvaluation(result as SessionEvaluation);
 };
 
 // ─── Spoken evaluation ────────────────────────────────────────────────────────
@@ -758,11 +777,11 @@ const deriveProgress = (rows: DashboardSession[]): UserProgress => {
     const p = prog[ev.pathway as Pathway];
     if (!p) continue;
     if (ev.is_complete) p.completedStages[ev.stage_id] = true;
-    if (ev.can_advance || ev.is_complete)
+    if (ev.can_advance)
       p.unlockedUpTo = Math.max(p.unlockedUpTo, Math.min(4, ev.stage_id + 1));
   }
 
-  // tier1Complete = all 5 reasoning stages have been can_advance at least once
+  // tier1Complete = all 5 reasoning stages have been completed at Advanced or explicitly unlocked by can_advance
   prog.tier1Complete = prog.reasoning.completedStages.every(Boolean) ||
     prog.reasoning.unlockedUpTo >= 5;
 
