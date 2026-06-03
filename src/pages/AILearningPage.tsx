@@ -2989,8 +2989,8 @@ Respond ONLY with valid JSON:
   const getActivitiesForCategory = (categoryId: string): DashboardActivity[] => {
     const category = aiLearningCategories.find(cat => cat.id === categoryId);
     if (!category) return [];
-    
-    return allAIActivities.filter(activity => 
+
+    return (allAIActivities ?? []).filter(activity =>
       activity.sub_category === category.subCategory
     );
   };
@@ -3141,7 +3141,7 @@ Respond ONLY with valid JSON:
   }, [user?.id]);
 
   const currentCategory = aiLearningCategories.find(cat => cat.id === activeCategory);
-  const currentActivities = getActivitiesForCategory(activeCategory);
+  const currentActivities = getActivitiesForCategory(activeCategory) ?? [];
   const currentStats = getCategoryStats(activeCategory);
 
   // ── UI text tiers based on communication_level ────────────────────────────
@@ -4045,7 +4045,7 @@ Respond ONLY with valid JSON:
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-            {aiLearningCategories.map(category => {
+            {(aiLearningCategories || []).map(category => {
               const stats = getCategoryStats(category.id);
               return (
                 <button
@@ -4186,8 +4186,8 @@ Respond ONLY with valid JSON:
             </div>
 
             {(() => {
-              const myActivities = currentActivities.filter(a => a.isPublic === false);
-              const otherActivities = currentActivities.filter(a => a.isPublic !== false);
+              const myActivities = (currentActivities ?? []).filter(a => a.isPublic === false);
+              const otherActivities = (currentActivities ?? []).filter(a => a.isPublic !== false);
 
               const renderRow = (activity: DashboardActivity) => {
                 const overallLevel = certificationScoreToOverallLevel(activity.certification_evaluation_score);
@@ -4276,7 +4276,7 @@ Respond ONLY with valid JSON:
                           </span>
                         )}
                         {/* 4 UNESCO competency score pills */}
-                        {scoreCompetencies.map(({ label, score }) => (
+                        {(scoreCompetencies ?? []).map(({ label, score }) => (
                           <span
                             key={label}
                             className={classNames('px-2 py-0.5 rounded-full text-xs font-medium border', unescoScoreColor(score!))}
@@ -4330,7 +4330,7 @@ Respond ONLY with valid JSON:
                         </h4>
                       </div>
                       <div className="divide-y divide-gray-100">
-                        {myActivities.map(renderRow)}
+                        {(myActivities ?? []).map(renderRow)}
                       </div>
                     </div>
                   )}
@@ -4345,7 +4345,7 @@ Respond ONLY with valid JSON:
                         <span className="text-xs text-gray-500 italic">…good for practice</span>
                       </div>
                       <div className="divide-y divide-gray-200">
-                        {otherActivities.map(renderRow)}
+                        {(otherActivities ?? []).map(renderRow)}
                       </div>
                     </div>
                   )}

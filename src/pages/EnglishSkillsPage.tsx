@@ -555,6 +555,14 @@ const deriveProgress = (rows: DashboardSession[], communicationLevel: number = 1
   return { unlockedUpTo, completedStages, stageLevels };
 };
 
+const ENGLISH_STAGE_COUNT = 5;
+
+const EMPTY_USER_PROGRESS: UserProgress = {
+  unlockedUpTo: 0,
+  completedStages: Array(ENGLISH_STAGE_COUNT).fill(false) as boolean[],
+  stageLevels: Array(ENGLISH_STAGE_COUNT).fill(null) as (ProficiencyLevel | null)[],
+};
+
 // ─── Evaluation Modal ─────────────────────────────────────────────────────────
 
 const EvaluationModal: React.FC<{
@@ -593,7 +601,7 @@ const EvaluationModal: React.FC<{
         {/* Sub-categories */}
         <div className="px-6 py-5 space-y-3">
           <h3 className="text-slate-400 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
-          {evaluation.sub_categories.map((sub, i) => {
+          {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
             return (
               <div key={i} className={`rounded-xl border ${lc.border} ${lc.bg} p-4`}>
@@ -718,7 +726,7 @@ const EnglishSkillsPage: React.FC = () => {
   const [topic, setTopic] = useState('');
   const [topicInput, setTopicInput] = useState('');
 
-  const [progress, setProgress] = useState<UserProgress>({ unlockedUpTo: 0, completedStages: [false, false, false, false, false] });
+  const [progress, setProgress] = useState<UserProgress>(EMPTY_USER_PROGRESS);
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [stageSessions, setStageSessions] = useState<DashboardSession[]>([]);
 
@@ -1295,15 +1303,17 @@ Respond ONLY with valid JSON:
               </div>
             ) : (
               <div className="max-w-3xl mx-auto space-y-4">
-                {STAGES.map((stage, idx) => {
-                  const stageLevel = progress.stageLevels[idx];
-                  const isCompleted = stageLevel === 'Advanced';
-                  const isLocked = idx > progress.unlockedUpTo;
-                  const isActive = idx === progress.unlockedUpTo && !isCompleted;
-                  const isUnlocked = idx <= progress.unlockedUpTo;
+                {(STAGES || []).map((stage, idx) => {
+                  const stageLevels = progress?.stageLevels ?? [];
+                  const unlockedUpTo = progress?.unlockedUpTo ?? 0;
+                  const currentLevel = (stageLevels && stageLevels[idx]) || null;
+                  const isCompleted = currentLevel === 'Advanced';
+                  const isLocked = idx > unlockedUpTo;
+                  const isActive = idx === unlockedUpTo && !isCompleted;
+                  const isUnlocked = idx <= unlockedUpTo;
                   const scoreBadge =
-                    !isCompleted && (stageLevel === 'Proficient' || stageLevel === 'Emerging')
-                      ? `Current Score: ${stageLevel}`
+                    !isCompleted && (currentLevel === 'Proficient' || currentLevel === 'Emerging')
+                      ? `Current Score: ${currentLevel}`
                       : null;
                   const Icon = stage.icon;
                   return (
@@ -1345,7 +1355,7 @@ Respond ONLY with valid JSON:
                           <h3 className={`text-2xl font-bold ${isUnlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
                           <p className={`text-base font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
                           <p className={`text-base mt-1 ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
-                          <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>{STAGE_RUBRICS[idx].join(' · ')}</p>
+                          <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>{(STAGE_RUBRICS[idx] ?? []).join(' · ')}</p>
                         </div>
                         {isActive && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
                       </div>
@@ -1385,7 +1395,7 @@ Respond ONLY with valid JSON:
                   <h2 className="text-4xl font-bold text-white">{selectedStage.name}</h2>
                   <p className="text-lg font-medium mt-1 text-slate-200">{selectedStage.subtitle}</p>
                   <p className="text-slate-200 text-lg mt-3">{selectedStage.description || 'Description could not be loaded.'}</p>
-                  <p className="text-slate-400 text-base mt-2">{STAGE_RUBRICS[selectedStage.id].join(' · ')}</p>
+                  <p className="text-slate-400 text-base mt-2">{(STAGE_RUBRICS[selectedStage.id] ?? []).join(' · ')}</p>
                   <button
                     onClick={() => speak(selectedStage.voiceIntro)}
                     className="mt-4 inline-flex items-center gap-2 text-base text-teal-300 hover:text-teal-200 border border-teal-500/40 hover:border-teal-400/60 bg-teal-500/10 px-4 py-2 rounded-full transition-all"
@@ -1457,7 +1467,7 @@ Respond ONLY with valid JSON:
                     <Clock size={18} className="text-teal-300" /> Active Sessions
                   </h3>
                   <div className="space-y-2">
-                    {activeSessions.map(s => {
+                    {(activeSessions ?? []).map(s => {
                       const ev = s.english_skills_evaluation;
                       const lc = ev ? LEVEL_CONFIG[ev.overall_level] : null;
                       return (
@@ -1486,7 +1496,7 @@ Respond ONLY with valid JSON:
                     <span className="text-slate-400 text-base font-normal">(all sub-categories Advanced)</span>
                   </h3>
                   <div className="space-y-2">
-                    {finishedSessions.map(s => (
+                    {(finishedSessions ?? []).map(s => (
                       <div key={s.id} className="bg-green-900/60 border border-green-500/40 rounded-xl p-4 flex items-center justify-between">
                         <div>
                           <p className="text-white font-medium text-lg">{s.sub_category}</p>

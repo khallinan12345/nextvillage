@@ -750,6 +750,21 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
 
 // ─── Derive progress from dashboard rows ──────────────────────────────────────
 
+const STAGE_COUNT = 5;
+
+const createEmptyStageProgress = (): StageProgress => ({
+  unlockedUpTo: 0,
+  completedStages: Array(STAGE_COUNT).fill(false) as boolean[],
+  stageLevels: Array(STAGE_COUNT).fill(null) as (ProficiencyLevel | null)[],
+});
+
+const EMPTY_USER_PROGRESS: UserProgress = {
+  reasoning: createEmptyStageProgress(),
+  life: createEmptyStageProgress(),
+  physical: createEmptyStageProgress(),
+  tier1Complete: false,
+};
+
 const deriveProgress = (rows: DashboardSession[]): UserProgress => {
   const makeStageProgress = (): StageProgress => ({
     unlockedUpTo: 0,
@@ -830,7 +845,7 @@ const EvaluationModal: React.FC<{
 
         <div className="px-6 py-5 space-y-3">
           <h3 className="text-slate-400 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
-          {evaluation.sub_categories.map((sub, i) => {
+          {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
             return (
               <div key={i} className={`rounded-xl border ${lc.border} ${lc.bg} p-4`}>
@@ -941,12 +956,7 @@ const ScienceSkillsPage: React.FC = () => {
   const [lifeOpen, setLifeOpen] = useState(false);
   const [physicalOpen, setPhysicalOpen] = useState(false);
 
-  const [progress, setProgress] = useState<UserProgress>({
-    reasoning: { unlockedUpTo: 0, completedStages: Array(5).fill(false) },
-    life: { unlockedUpTo: 0, completedStages: Array(5).fill(false) },
-    physical: { unlockedUpTo: 0, completedStages: Array(5).fill(false) },
-    tier1Complete: false,
-  });
+  const [progress, setProgress] = useState<UserProgress>(EMPTY_USER_PROGRESS);
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [stageSessions, setStageSessions] = useState<DashboardSession[]>([]);
 
@@ -1293,18 +1303,20 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
   const renderStageCard = (
     stage: typeof REASONING_STAGES[0],
     idx: number,
-    stageProgress: StageProgress,
+    stageProgress: StageProgress | null | undefined,
     locked: boolean,
     lockReason?: string,
   ) => {
-    const stageLevel = stageProgress.stageLevels[idx];
-    const isCompleted = stageLevel === 'Advanced';
-    const isLocked = locked || idx > stageProgress.unlockedUpTo;
-    const isActive = idx === stageProgress.unlockedUpTo && !isCompleted && !locked;
-    const isUnlocked = idx <= stageProgress.unlockedUpTo;
+    const stageLevels = stageProgress?.stageLevels ?? [];
+    const unlockedUpTo = stageProgress?.unlockedUpTo ?? 0;
+    const currentLevel = (stageLevels && stageLevels[idx]) || null;
+    const isCompleted = currentLevel === 'Advanced';
+    const isLocked = locked || idx > unlockedUpTo;
+    const isActive = idx === unlockedUpTo && !isCompleted && !locked;
+    const isUnlocked = idx <= unlockedUpTo;
     const scoreBadge =
-      !isCompleted && (stageLevel === 'Proficient' || stageLevel === 'Emerging')
-        ? `Current Score: ${stageLevel}`
+      !isCompleted && (currentLevel === 'Proficient' || currentLevel === 'Emerging')
+        ? `Current Score: ${currentLevel}`
         : null;
     const Icon = stage.icon;
     return (
@@ -1350,7 +1362,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
             <p className={`text-sm font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
             <p className={`text-sm mt-1 ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
             <p className={`text-xs mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>
-              {STAGE_RUBRICS[stage.pathway][idx].join(' · ')}
+              {(STAGE_RUBRICS[stage.pathway]?.[idx] ?? []).join(' · ')}
             </p>
           </div>
           {isActive && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
@@ -1444,7 +1456,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     <span className="text-sky-300 font-bold text-sm uppercase tracking-wider">
                       Tier 1 · Scientific Reasoning
                     </span>
-                    {progress.tier1Complete && <CheckCircle className="h-4 w-4 text-green-400" />}
+                    {progress?.tier1Complete && <CheckCircle className="h-4 w-4 text-green-400" />}
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-l from-sky-500/60 to-transparent" />
                 </div>
@@ -1452,8 +1464,8 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   Complete all 5 stages to unlock the Science Pathways below.
                 </p>
                 <div className="space-y-4">
-                  {REASONING_STAGES.map((stage, idx) =>
-                    renderStageCard(stage, idx, progress.reasoning, false)
+                  {(REASONING_STAGES || []).map((stage, idx) =>
+                    renderStageCard(stage, idx, progress?.reasoning, false)
                   )}
                 </div>
               </div>
@@ -1467,20 +1479,20 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     <span className="text-emerald-300 font-bold text-sm uppercase tracking-wider">
                       Tier 2 · Science Pathways
                     </span>
-                    {!progress.tier1Complete && <Lock className="h-4 w-4 text-slate-400" />}
+                    {!progress?.tier1Complete && <Lock className="h-4 w-4 text-slate-400" />}
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-l from-emerald-500/60 to-transparent" />
                 </div>
 
-                {!progress.tier1Complete && (
+                {!progress?.tier1Complete && (
                   <div className="bg-slate-800/70 border border-slate-600 rounded-xl p-4 text-center mb-5">
                     <Lock className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                     <p className="text-slate-300 text-sm font-medium">
                       Complete all 5 Scientific Reasoning stages to unlock the pathways below.
                     </p>
                     <p className="text-slate-500 text-xs mt-1">
-                      {5 - REASONING_STAGES.filter((_, i) => progress.reasoning.completedStages[i]).length} stage{
-                        5 - REASONING_STAGES.filter((_, i) => progress.reasoning.completedStages[i]).length !== 1 ? 's' : ''
+                      {5 - (REASONING_STAGES || []).filter((_, i) => progress?.reasoning?.completedStages?.[i] === true).length} stage{
+                        5 - (REASONING_STAGES || []).filter((_, i) => progress?.reasoning?.completedStages?.[i] === true).length !== 1 ? 's' : ''
                       } remaining
                     </p>
                   </div>
@@ -1489,12 +1501,12 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <div className="space-y-4">
 
                   {/* Life Sciences accordion */}
-                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress.tier1Complete ? 'border-green-500/50' : 'border-slate-600/50 opacity-60'}`}>
+                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress?.tier1Complete ? 'border-green-500/50' : 'border-slate-600/50 opacity-60'}`}>
                     <button
-                      disabled={!progress.tier1Complete}
+                      disabled={!progress?.tier1Complete}
                       onClick={() => setLifeOpen(o => !o)}
                       className={`w-full flex items-center justify-between px-6 py-5 transition-all
-                        ${progress.tier1Complete
+                        ${progress?.tier1Complete
                           ? 'bg-green-900/30 hover:bg-green-900/40 cursor-pointer'
                           : 'bg-slate-800/50 cursor-not-allowed'}`}
                     >
@@ -1505,35 +1517,35 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                         <div className="text-left">
                           <div className="flex items-center gap-2">
                             <h3 className="text-xl font-bold text-white">Life Sciences</h3>
-                            {progress.tier1Complete && (
+                            {progress?.tier1Complete && (
                               <span className="text-xs bg-green-500/30 text-green-300 px-2 py-0.5 rounded-full border border-green-500/40">
-                                {progress.life.completedStages.filter(Boolean).length}/5 complete
+                                {(progress?.life?.completedStages ?? []).filter(Boolean).length}/5 complete
                               </span>
                             )}
                           </div>
                           <p className="text-green-300 text-sm mt-0.5">Cells · Organisms · Ecosystems · Genetics · Evolution</p>
                         </div>
                       </div>
-                      {progress.tier1Complete
+                      {progress?.tier1Complete
                         ? (lifeOpen ? <ChevronUp className="h-5 w-5 text-green-300" /> : <ChevronDown className="h-5 w-5 text-green-300" />)
                         : <Lock className="h-5 w-5 text-slate-400" />}
                     </button>
-                    {lifeOpen && progress.tier1Complete && (
+                    {lifeOpen && progress?.tier1Complete && (
                       <div className="px-4 pb-4 pt-2 space-y-3 bg-green-900/10">
-                        {LIFE_STAGES.map((stage, idx) =>
-                          renderStageCard(stage, idx, progress.life, false)
+                        {(LIFE_STAGES || []).map((stage, idx) =>
+                          renderStageCard(stage, idx, progress?.life, false)
                         )}
                       </div>
                     )}
                   </div>
 
                   {/* Physical Sciences accordion */}
-                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress.tier1Complete ? 'border-orange-500/50' : 'border-slate-600/50 opacity-60'}`}>
+                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress?.tier1Complete ? 'border-orange-500/50' : 'border-slate-600/50 opacity-60'}`}>
                     <button
-                      disabled={!progress.tier1Complete}
+                      disabled={!progress?.tier1Complete}
                       onClick={() => setPhysicalOpen(o => !o)}
                       className={`w-full flex items-center justify-between px-6 py-5 transition-all
-                        ${progress.tier1Complete
+                        ${progress?.tier1Complete
                           ? 'bg-orange-900/30 hover:bg-orange-900/40 cursor-pointer'
                           : 'bg-slate-800/50 cursor-not-allowed'}`}
                     >
@@ -1544,23 +1556,23 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                         <div className="text-left">
                           <div className="flex items-center gap-2">
                             <h3 className="text-xl font-bold text-white">Physical Sciences</h3>
-                            {progress.tier1Complete && (
+                            {progress?.tier1Complete && (
                               <span className="text-xs bg-orange-500/30 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/40">
-                                {progress.physical.completedStages.filter(Boolean).length}/5 complete
+                                {(progress?.physical?.completedStages ?? []).filter(Boolean).length}/5 complete
                               </span>
                             )}
                           </div>
                           <p className="text-orange-300 text-sm mt-0.5">Matter · Forces · Energy & Waves · Electricity · Earth & Space</p>
                         </div>
                       </div>
-                      {progress.tier1Complete
+                      {progress?.tier1Complete
                         ? (physicalOpen ? <ChevronUp className="h-5 w-5 text-orange-300" /> : <ChevronDown className="h-5 w-5 text-orange-300" />)
                         : <Lock className="h-5 w-5 text-slate-400" />}
                     </button>
-                    {physicalOpen && progress.tier1Complete && (
+                    {physicalOpen && progress?.tier1Complete && (
                       <div className="px-4 pb-4 pt-2 space-y-3 bg-orange-900/10">
-                        {PHYSICAL_STAGES.map((stage, idx) =>
-                          renderStageCard(stage, idx, progress.physical, false)
+                        {(PHYSICAL_STAGES || []).map((stage, idx) =>
+                          renderStageCard(stage, idx, progress?.physical, false)
                         )}
                       </div>
                     )}
@@ -1604,7 +1616,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <h2 className="text-4xl font-bold text-white">{selectedStage.name}</h2>
                 <p className={`text-lg font-medium mt-1 ${selectedStage.textColor}`}>{selectedStage.subtitle}</p>
                 <p className="text-slate-200 text-lg mt-3">{selectedStage.description?.trim() || 'Description could not be loaded.'}</p>
-                <p className="text-slate-400 text-sm mt-2">{STAGE_RUBRICS[selectedStage.pathway][selectedStage.id].join(' · ')}</p>
+                <p className="text-slate-400 text-sm mt-2">{(STAGE_RUBRICS[selectedStage.pathway]?.[selectedStage.id] ?? []).join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}
                   className={`mt-4 inline-flex items-center gap-2 text-base ${selectedStage.textColor} border ${selectedStage.border} bg-white/5 px-4 py-2 rounded-full hover:bg-white/10 transition-all`}
@@ -1666,7 +1678,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   <MessageSquare size={18} /> Continue a Session
                 </h3>
                 <div className="space-y-3">
-                  {activeSessions.map(session => (
+                  {(activeSessions ?? []).map(session => (
                     <div key={session.id} onClick={() => resumeSession(session)}
                       className={`bg-slate-900 border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-slate-800 transition-all`}>
                       <div className="flex items-start justify-between gap-3">
@@ -1696,7 +1708,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   <CheckCircle size={18} className="text-green-400" /> Completed Sessions
                 </h3>
                 <div className="space-y-2">
-                  {finishedSessions.map(session => (
+                  {(finishedSessions ?? []).map(session => (
                     <div key={session.id} onClick={() => resumeSession(session)}
                       className="bg-green-900/20 border border-green-500/40 rounded-xl p-4 cursor-pointer hover:bg-green-900/30 transition-all">
                       <div className="flex items-center justify-between gap-3">
