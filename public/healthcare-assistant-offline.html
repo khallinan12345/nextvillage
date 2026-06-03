@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d9488">
+<title>vAI Offline Clinical Assessment</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal-50: #f0fdfa; --teal-100: #ccfbf1; --teal-500: #14b8a6; --teal-600: #0d9488; --teal-700: #0f766e; --teal-800: #115e59;
+  --red-50: #fef2f2; --red-100: #fee2e2; --red-400: #f87171; --red-500: #ef4444; --red-600: #dc2626; --red-700: #b91c1c; --red-800: #991b1b; --red-900: #7f1d1d;
+  --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-400: #fbbf24; --amber-500: #f59e0b; --amber-600: #d97706; --amber-700: #b45309; --amber-800: #92400e;
+  --green-50: #f0fdf4; --green-100: #dcfce7; --green-400: #4ade80; --green-500: #22c55e; --green-600: #16a34a; --green-700: #15803d; --green-800: #166534;
+  --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-500: #3b82f6; --blue-600: #2563eb;
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--gray-50); color: var(--gray-900);
+  line-height: 1.5; font-size: 16px; -webkit-text-size-adjust: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+.header {
+  position: sticky; top: 0; z-index: 20;
+  background: #fff; border-bottom: 1px solid var(--gray-200);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.header-inner { max-width: 480px; margin: 0 auto; padding: 10px 12px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.header-brand { display: flex; align-items: center; gap: 8px; }
+.header-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--teal-500), var(--blue-600)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+.header-title { font-size: 13px; font-weight: 700; color: var(--gray-900); line-height: 1.2; }
+.header-sub { font-size: 10px; color: var(--gray-400); }
+.badge-offline { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--gray-500); background: var(--gray-100); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.badge-pending { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--amber-700); background: var(--amber-50); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+
+/* Step bar */
+.steps { display: flex; align-items: center; gap: 3px; }
+.step-pill { display: flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; }
+.step-pill.current { background: var(--teal-100); color: var(--teal-700); }
+.step-pill.done { background: var(--green-100); color: var(--green-700); }
+.step-pill.upcoming { background: var(--gray-100); color: var(--gray-400); }
+.step-pill:disabled { cursor: default; }
+.step-line { flex: 1; height: 2px; border-radius: 1px; background: var(--gray-200); }
+.step-line.done { background: var(--green-400); }
+
+/* Content */
+.content { max-width: 480px; margin: 0 auto; padding: 12px 12px 100px; }
+
+/* Card */
+.card { background: #fff; border-radius: 16px; border: 1px solid var(--gray-200); box-shadow: 0 1px 2px rgba(0,0,0,.04); padding: 16px; margin-bottom: 12px; }
+.card-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.card-subtitle { font-size: 12px; color: var(--gray-400); margin-bottom: 14px; }
+
+/* Forms */
+.label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 5px; }
+.label .req { color: var(--red-500); margin-left: 2px; }
+.label-hint { display: block; font-size: 11px; color: var(--gray-400); margin-top: 2px; font-weight: 400; }
+.input, .textarea, .select {
+  width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid var(--gray-300);
+  border-radius: 12px; background: #fff; color: var(--gray-900);
+  outline: none; transition: border-color .15s, box-shadow .15s;
+  -webkit-appearance: none; appearance: none;
+}
+.input:focus, .textarea:focus, .select:focus { border-color: var(--teal-500); box-shadow: 0 0 0 3px rgba(20,184,166,.15); }
+.textarea { resize: none; line-height: 1.5; }
+.select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+.input-row { display: flex; gap: 8px; align-items: center; }
+.input-half { flex: 1; }
+.field { margin-bottom: 14px; }
+
+/* Buttons */
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-choice {
+  flex: 1; min-width: 0; padding: 10px 8px; border-radius: 12px; border: 2px solid var(--gray-200);
+  background: #fff; font-size: 13px; font-weight: 600; color: var(--gray-600);
+  cursor: pointer; transition: all .15s; text-align: center; -webkit-tap-highlight-color: transparent;
+}
+.btn-choice:active { transform: scale(.97); }
+.btn-choice.active { border-color: var(--teal-500); background: var(--teal-50); color: var(--teal-800); }
+.btn-choice.active-red { border-color: var(--red-400); background: var(--red-50); color: var(--red-800); }
+.btn-choice.active-green { border-color: var(--green-400); background: var(--green-50); color: var(--green-800); }
+
+.btn-chip { display: inline-block; padding: 6px 12px; border-radius: 8px; border: none; background: var(--gray-100); color: var(--gray-600); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.btn-chip:active { transform: scale(.97); }
+.btn-chip.active { background: var(--teal-600); color: #fff; }
+
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Toggle */
+.toggle {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 12px; border: 2px solid var(--gray-200); background: #fff;
+  cursor: pointer; transition: all .15s; text-align: left; -webkit-tap-highlight-color: transparent;
+}
+.toggle:active { transform: scale(.98); }
+.toggle.on { border-color: var(--teal-500); background: var(--teal-50); }
+.toggle.on-danger { border-color: var(--red-400); background: var(--red-50); }
+.toggle-box {
+  width: 24px; height: 24px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+}
+.toggle-box.off { background: var(--gray-200); }
+.toggle-box.on { background: var(--teal-500); }
+.toggle-box.on-danger { background: var(--red-500); }
+.toggle-label { font-size: 14px; font-weight: 500; color: var(--gray-700); }
+.toggle.on .toggle-label { color: var(--teal-800); }
+.toggle.on-danger .toggle-label { color: var(--red-800); }
+.toggle-hint { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+/* Alert boxes */
+.alert { border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.alert-red { background: var(--red-50); border: 2px solid var(--red-400); }
+.alert-amber { background: var(--amber-50); border: 2px solid var(--amber-400); }
+.alert-green { background: var(--green-50); border: 2px solid var(--green-400); }
+.alert-blue { background: var(--blue-50); border: 2px solid var(--blue-500); }
+.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.alert-title { font-size: 13px; font-weight: 700; }
+.alert-text { font-size: 12px; margin-top: 2px; }
+.alert-red .alert-title { color: var(--red-800); }
+.alert-red .alert-text { color: var(--red-700); }
+.alert-green .alert-title { color: var(--green-800); }
+.alert-green .alert-text { color: var(--green-700); }
+
+/* Interview panel */
+.interview { margin-top: 10px; margin-left: 8px; padding-left: 12px; border-left: 3px solid var(--teal-400); }
+.interview-title { font-size: 11px; font-weight: 700; color: var(--teal-700); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.interview-q { border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+.interview-q.current { background: var(--teal-50); border: 1px solid var(--teal-200); }
+.interview-q.answered { background: var(--gray-50); }
+.interview-q-text { font-size: 14px; font-weight: 500; color: var(--gray-800); margin-bottom: 6px; }
+.interview-q.current .interview-q-text { color: var(--teal-900); }
+.interview-clinical { font-size: 11px; color: var(--gray-400); font-style: italic; margin-bottom: 8px; display: flex; gap: 4px; }
+.interview-complete { display: flex; align-items: center; gap: 6px; color: var(--green-700); background: var(--green-50); border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; }
+
+/* Expand/collapse */
+.expand-btn { background: none; border: none; color: var(--teal-600); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; margin-top: 6px; margin-left: 8px; padding: 4px 0; }
+
+/* Section label */
+.section-label { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .5px; margin: 16px 0 8px; }
+
+/* Result sections */
+.result-banner { border-radius: 16px; border: 3px solid; padding: 16px; margin-bottom: 12px; }
+.result-banner.red { background: var(--red-50); border-color: var(--red-400); }
+.result-banner.yellow { background: var(--amber-50); border-color: var(--amber-400); }
+.result-banner.green { background: var(--green-50); border-color: var(--green-400); }
+.result-level { font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
+.result-banner.red .result-level { color: var(--red-800); }
+.result-banner.yellow .result-level { color: var(--amber-800); }
+.result-banner.green .result-level { color: var(--green-800); }
+.result-patient { font-size: 13px; color: var(--gray-600); margin-bottom: 10px; }
+.result-reason { font-size: 13px; font-weight: 500; margin: 3px 0; }
+.result-banner.red .result-reason { color: var(--red-800); }
+.result-banner.yellow .result-reason { color: var(--amber-800); }
+.result-banner.green .result-reason { color: var(--green-800); }
+
+.result-section-title { font-size: 13px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.result-item { font-size: 13px; color: var(--gray-800); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
+.result-item.action { background: var(--red-50); }
+.result-item.kit { background: var(--blue-50); border-left: 3px solid var(--blue-500); }
+.result-item.home { background: var(--green-50); }
+.result-item.warning { background: var(--red-50); font-weight: 600; color: var(--red-800); }
+.kit-label { font-size: 10px; font-weight: 700; color: var(--blue-600); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.kit-name { font-weight: 700; color: var(--blue-800); }
+
+.referral-note { font-family: 'Courier New', Courier, monospace; font-size: 12px; background: var(--gray-50); border-radius: 12px; padding: 14px; white-space: pre-wrap; line-height: 1.6; color: var(--gray-800); border: 1px solid var(--gray-200); }
+
+/* Footer nav */
+.footer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  background: #fff; border-top: 1px solid var(--gray-200);
+  box-shadow: 0 -2px 10px rgba(0,0,0,.05);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.footer-inner { max-width: 480px; margin: 0 auto; padding: 10px 12px; display: flex; gap: 10px; }
+.btn-nav {
+  flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all .15s; -webkit-tap-highlight-color: transparent;
+}
+.btn-nav:active { transform: scale(.97); }
+.btn-nav.primary { background: linear-gradient(135deg, var(--teal-600), var(--blue-600)); color: #fff; }
+.btn-nav.secondary { background: #fff; color: var(--gray-600); border: 2px solid var(--gray-300); }
+.btn-nav:disabled { opacity: .4; cursor: default; transform: none; }
+
+.btn-save { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, var(--teal-600), var(--blue-600)); color: #fff; margin-bottom: 8px; }
+.btn-save:active { transform: scale(.98); }
+.btn-reset { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gray-300); background: #fff; font-size: 13px; font-weight: 700; color: var(--gray-600); cursor: pointer; }
+.btn-reset:active { transform: scale(.98); }
+
+.disclaimer { font-size: 11px; color: var(--gray-400); text-align: center; padding: 8px 16px 20px; line-height: 1.5; }
+
+/* Sync panel */
+.sync-overlay { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.5); display:flex; align-items:flex-end; justify-content:center; }
+.sync-panel { background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; padding:20px 16px env(safe-area-inset-bottom,16px); }
+.sync-title { font-size:17px; font-weight:700; margin-bottom:4px; }
+.sync-sub { font-size:12px; color:var(--gray-400); margin-bottom:16px; }
+.sync-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:10px; background:var(--gray-50); margin-bottom:6px; font-size:13px; }
+.sync-item .name { font-weight:600; color:var(--gray-800); }
+.sync-item .meta { font-size:11px; color:var(--gray-400); }
+.sync-item .status { font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; }
+.sync-item .status.pending { background:var(--amber-50); color:var(--amber-700); }
+.sync-item .status.synced { background:var(--green-50); color:var(--green-700); }
+.sync-item .status.error { background:var(--red-50); color:var(--red-700); }
+.btn-sync { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; }
+.btn-sync.go { background:linear-gradient(135deg,var(--teal-600),var(--blue-600)); color:#fff; }
+.btn-sync.go:disabled { opacity:.5; cursor:default; }
+.btn-sync.close { background:var(--gray-100); color:var(--gray-600); margin-top:8px; }
+.badge-online { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--green-700); background:var(--green-50); padding:3px 8px; border-radius:6px; font-weight:600; }
+.btn-sync-header { background:none; border:none; cursor:pointer; padding:0; }
+
+/* Utility */
+.gap-sm > * + * { margin-top: 8px; }
+.gap-md > * + * { margin-top: 14px; }
+.hidden { display: none !important; }
+.mt-sm { margin-top: 8px; }
+.mb-sm { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-row">
+      <div class="header-brand">
+        <div class="header-icon">♥</div>
+        <div>
+          <div class="header-title">Offline Clinical Assessment</div>
+          <div class="header-sub">Rule-Based IMCI Triage · No Internet Required</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn-sync-header hidden" id="btn-sync-header" onclick="openSyncPanel()" title="Sync assessments">
+          <span class="badge-pending" id="badge-pending" style="display:inline-flex;cursor:pointer;">⬆ <span id="pending-count">0</span></span>
+        </button>
+        <span class="badge-offline" id="badge-connectivity">📡 Offline</span>
+      </div>
+    </div>
+    <div class="steps" id="step-bar"></div>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<div class="footer" id="footer">
+  <div class="footer-inner" id="footer-inner"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STEPS = [
+  { key: 'patient', label: 'Patient' },
+  { key: 'vitals', label: 'Vitals' },
+  { key: 'danger', label: 'Danger' },
+  { key: 'symptoms', label: 'Symptoms' },
+  { key: 'observe', label: 'Observe' },
+  { key: 'result', label: 'Result' },
+];
+
+let state = {
+  step: 0,
+  patient: { name:'', village:'Oloibiri', ageYears:'', ageMonths:'', sex:'', group:'adult', phone:'' },
+  vitals: { tempC:'', tempMethod:'axillary', rr:'', pulse:'', bpSys:'', bpDia:'', weight:'', height:'', muac:'', spo2:'' },
+  danger: { convulsions:false, unconscious:false, unableToFeed:false, vomitsEverything:false },
+  symptoms: {
+    chief:'',
+    fever:{ on:false, iv:{} }, cough:{ on:false, iv:{} }, diarrhoea:{ on:false, iv:{} }, vomiting:{ on:false, iv:{} },
+    chestIndrawing:false, bloodInStool:false, palmarPallor:false, stiffNeck:false,
+    eyeJaundice:false, oedema:false, malariaSuspected:false, rdt:'not_done', bednet:false,
+  },
+  obs: { appearance:'', breathing:'', skin:'', hydration:'', notes:'' },
+  triage: null,
+  saved: false,
+  expandedIv: null,   // which symptom interview is expanded
+  showReferral: false,
+};
+
+const PATIENT_GROUPS = {
+  'child-under-5': { label:'Child under 5', emoji:'👶🏿' },
+  'child-5-14': { label:'Child 5–14', emoji:'👧🏿' },
+  'adult': { label:'Adult', emoji:'🧑🏿' },
+  'pregnant': { label:'Pregnant woman', emoji:'🤰🏿' },
+  'elderly': { label:'Elderly (60+)', emoji:'👴🏿' },
+};
+
+const VILLAGES = ['Oloibiri','Ibiade','Otuabagi','Nembe','Ogbia','Yenagoa','Ikebiri','Other'];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NAVIGATOR KIT INVENTORY
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const KIT = {
+  instruments: {
+    stethoscope: { name:'Eko CORE 500 Digital Stethoscope', note:'EKG + Bluetooth, AI-assisted murmur detection' },
+    bpMonitor: { name:'Omron Gold BP Monitor', note:'Upper arm, Bluetooth, AFib detection' },
+    thermometer: { name:'iHealth No-Touch Infrared Thermometer', note:'Point at forehead, 1-2 inches away' },
+    pulseOx: { name:'Zacurate Pro 500DL Pulse Oximeter', note:'SpO2 + pulse rate. Normal SpO2 ≥95%' },
+    glucometer: { name:'Contour Next ONE Glucometer', note:'Bluetooth. Normal fasting: 70-100 mg/dL' },
+    muacTape: { name:'MUAC Tape', note:'Mid-upper arm circumference. Left arm, midpoint.' },
+  },
+  diagnostics: {
+    malariaRDT: { name:'Malaria RDT (SD Bioline Ag P.f)', qty:50, note:'WHO-approved. Result in 15-20 minutes.' },
+    typhoidRDT: { name:'Typhoid RDT (SD Bioline IgG/IgM)', qty:25, note:'Supports clinical suspicion; not definitive.' },
+    urineStrips: { name:'Urine Dipstick Strips (10-parameter)', qty:100, note:'Glucose, protein, ketones, blood, UTI, pH.' },
+    pregnancyTest: { name:'Pregnancy Test Strips', qty:25, note:'First morning urine is most accurate.' },
+    glucoseStrips: { name:'Contour Next Glucometer Strips', qty:150, note:'Use with Contour Next ONE glucometer.' },
+  },
+  treatment: {
+    actAdult: { name:'Artemether-Lumefantrine (AL) — Adult', qty:'20 courses',
+      dosing:'4 tablets at hours 0, 8, 24, 36, 48, 60 (total 24 tablets over 3 days). Give with food or milk. Complete full course even if feeling better.',
+      warning:'⚠ NAFDAC Alert 08/2025: counterfeit AL circulating under brand Aflotin 20/120 (batch PA2128L). Use VERIFIED brands only.' },
+    actPaed: { name:'Artemether-Lumefantrine (AL) — Paediatric', qty:'10 courses',
+      dosing:'Weight-based dosing. 5-14kg: 1 tab per dose. 15-24kg: 2 tabs per dose. 25-34kg: 3 tabs per dose. Same schedule: hours 0, 8, 24, 36, 48, 60.' },
+    ors: { name:'ORS Sachets', qty:40,
+      dosing:'Dissolve 1 sachet in 1 litre of clean water. Give small frequent sips. After each loose stool: children 50-100ml, adults 200-400ml. Make fresh solution every 24 hours.' },
+    zinc: { name:'Zinc Sulfate Tablets — Paediatric', qty:'30 courses',
+      dosing:'Children >6 months: 20mg (1 tablet) daily for 10-14 days. Infants <6 months: 10mg (½ tablet) daily for 10-14 days. Always pair with ORS per WHO protocol.' },
+    paracetamol: { name:'Paracetamol 500mg', qty:'200 tabs',
+      dosing:'Adults: 500mg–1g (1-2 tablets) every 6-8 hours. Max 4g/day. Children: 10-15mg/kg every 6 hours. Do NOT give aspirin to children.' },
+    ibuprofen: { name:'Ibuprofen 400mg', qty:'100 tabs',
+      dosing:'Adults: 400mg (1 tablet) every 6-8 hours with food. Max 1200mg/day. NOT for children under 6 months. NOT in pregnancy. NOT if dehydrated.' },
+    amoxAdult: { name:'Amoxicillin 500mg — Adult', qty:'10 courses',
+      dosing:'Adults: 500mg (1 capsule) 3 times daily for 5-7 days. Take with or without food. Complete full course.' },
+    amoxPaed: { name:'Amoxicillin Suspension — Paediatric', qty:'5 courses',
+      dosing:'Weight-based: 25-50mg/kg/day divided into 3 doses for 5-7 days. Shake well before each dose. Complete full course.' },
+    mebendazole: { name:'Mebendazole 500mg', qty:'20 single doses',
+      dosing:'Single dose of 500mg (1 tablet). Chew or swallow whole. For intestinal worms. Can repeat in 2-4 weeks if needed. Safe from age 1 year.' },
+    metronidazole: { name:'Metronidazole 400mg', qty:'10 courses',
+      dosing:'Adults: 400mg 3 times daily for 5-7 days. Children: 7.5mg/kg 3 times daily. Take with food. NO ALCOHOL during treatment and 48hrs after.' },
+    clotrimazole: { name:'Clotrimazole Antifungal Cream', qty:'5 tubes',
+      dosing:'Apply thin layer to affected area 2-3 times daily. Continue for 2 weeks after symptoms resolve. Keep area clean and dry.' },
+    gentianViolet: { name:'Gentian Violet Solution', qty:'2 bottles',
+      dosing:'Oral thrush: Apply to mouth lesions with cotton swab 2-3 times daily for 5-7 days. Wounds: Apply to clean wound edges. Stains skin/clothes purple.' },
+    cetirizine: { name:'Cetirizine 10mg (Antihistamine)', qty:'50 tabs',
+      dosing:'Adults and children >6 years: 10mg (1 tablet) once daily. Children 2-6 years: 5mg (½ tablet) once daily. For allergic reactions, rashes, itching.' },
+    petrolJelly: { name:'Petroleum Jelly', qty:'2 tubs',
+      dosing:'Apply to dry/cracked skin, as wound dressing base, or lip care. Not sterile — do not use inside deep wounds.' },
+    woundPack: { name:'Wound Care Pack (gauze, bandages, tape, antiseptic)', qty:'1 pack',
+      dosing:'Clean wound with clean water or antiseptic. Apply gauze, secure with tape or bandage. Change dressing daily or when soiled.' },
+    gloves: { name:'Nitrile Examination Gloves', qty:'2 boxes', dosing:'Wear for any procedure involving body fluids. Single use — discard after each patient.' },
+    alcoholSwabs: { name:'Alcohol Swabs', qty:200, dosing:'Clean skin before injections, finger pricks, or wound assessment.' },
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STRUCTURED INTERVIEW SCRIPTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const INTERVIEWS = {
+  fever: { label:'Fever', questions:[
+    { key:'days', q:'How many days has the patient had the fever?', type:'number', note:'Fever >7 days: consider typhoid. >3 days in child under 5: always needs RDT.' },
+    { key:'pattern', q:'Is the fever constant, or does it come and go?', type:'choice', choices:['Constant','Comes and goes','Only at night','Not sure'], note:'Intermittent + chills = classic malaria. Constant = consider typhoid/bacterial.' },
+    { key:'chills', q:'Does the patient have chills or shivering with the fever?', type:'yn', note:'Rigors (violent shivering) strongly suggest malaria in Bayelsa.' },
+    { key:'sweating', q:'Does the patient have heavy sweating, especially at night?', type:'yn', note:'Night sweats + fever: malaria, TB, or lymphoma if prolonged.' },
+    { key:'headache', q:'Does the patient have a headache with the fever?', type:'yn', note:'Headache + fever + stiff neck = meningitis suspicion. Check neck stiffness.' },
+    { key:'treatment', q:'Has the patient taken any medicine for this fever? If yes, what?', type:'text', note:'Prior antimalarial use affects treatment choice. Recent ACT failure may indicate resistance.' },
+    { key:'lastMalaria', q:'When did the patient last have malaria treatment?', type:'text', note:'Recurrent fever <1 month after treatment = possible treatment failure or re-infection.' },
+    { key:'rdt', q:'🧪 Perform Malaria RDT now using kit. What is the result?', type:'choice', choices:['Positive','Negative','Not available'], note:'Use SD Bioline Malaria Ag P.f from your kit. Wait 15-20 minutes for result. Do not read after 30 minutes.' },
+  ]},
+  cough: { label:'Cough', questions:[
+    { key:'days', q:'How many days has the patient had the cough?', type:'number', note:'Cough >14 days in adults: consider TB. >3 days in child under 5 with fast breathing: pneumonia.' },
+    { key:'sputum', q:'When the patient coughs, does anything come up? What colour?', type:'choice', choices:['Dry cough','White/clear','Yellow/green','Brown/rusty','Blood'], note:'Yellow/green = bacterial. Rusty = pneumonia. Blood = TB/pneumonia — refer.' },
+    { key:'worseNight', q:'Is the cough worse at night or when lying down?', type:'yn', note:'Nocturnal cough: consider asthma, post-nasal drip, heart failure in elderly.' },
+    { key:'chestPain', q:'Does the patient have pain in the chest when coughing or breathing deeply?', type:'yn', note:'Pleuritic pain (sharp, worse on breathing) with fever = pneumonia or pleural effusion.' },
+    { key:'breathDiff', q:'Is the patient having difficulty breathing or feeling short of breath?', type:'yn', note:'Dyspnoea + cough + fever = likely lower respiratory infection. Use pulse oximeter from kit.' },
+    { key:'spo2', q:'📟 Use pulse oximeter from kit. What is the SpO2 reading?', type:'number', note:'Normal ≥95%. 91-94% = concerning. ≤90% = severe hypoxia = RED. Record exact number.' },
+    { key:'tbContact', q:'Has anyone in the patient\'s household had TB or a long cough?', type:'yn', note:'Known TB contact + chronic cough = high suspicion.', showIf: a => parseInt(a.days)>=14 || a.sputum==='Blood' },
+    { key:'asthma', q:'Has the patient ever been told they have asthma, or used an inhaler?', type:'yn', note:'Asthma is underdiagnosed in this community. Wheezing + nocturnal cough = likely asthma.' },
+    { key:'listen', q:'🩺 Use Eko CORE 500 to listen to the chest. Describe what you hear.', type:'text', note:'Listen to both sides, front and back. Note: wheezing, crackles, reduced breath sounds, or normal.' },
+  ]},
+  diarrhoea: { label:'Diarrhoea', questions:[
+    { key:'days', q:'How many days has the patient had diarrhoea?', type:'number', note:'Acute (<14 days) = likely infectious. Persistent (>14 days) needs investigation.' },
+    { key:'frequency', q:'How many times did the patient pass stool today or yesterday?', type:'number', note:'>6 watery stools/day in a child = high dehydration risk. >10 in anyone = severe.' },
+    { key:'consistency', q:'What does the stool look like?', type:'choice', choices:['Watery (like water)','Loose/mushy','Mucus (slimy)','Blood mixed in','Rice-water (white watery)'], note:'Rice-water stool = suspect CHOLERA — immediate ORS and referral. Blood = dysentery.' },
+    { key:'sunkenEyes', q:'Look at the patient: are their eyes sunken?', type:'yn', note:'Sunken eyes = dehydration. Combine with skin turgor and thirst.' },
+    { key:'skinTurgor', q:'Pinch the skin on the patient\'s belly. Does it go back quickly or slowly?', type:'choice', choices:['Immediately (normal)','Slowly (1-2 seconds)','Stays pinched/tented'], note:'Slow = some dehydration (YELLOW). Tented = severe (RED). Test on abdomen.' },
+    { key:'drinking', q:'Can the patient drink? Are they thirsty?', type:'choice', choices:['Drinks normally','Drinks eagerly (very thirsty)','Unable to drink'], note:'Unable to drink = danger sign = RED. Drinks eagerly = some dehydration.' },
+    { key:'alertness', q:'Is the patient alert, restless, or lethargic?', type:'choice', choices:['Alert and active','Restless or irritable','Lethargic / hard to wake'], note:'Lethargic = danger sign = RED. Restless = some dehydration.' },
+  ]},
+  vomiting: { label:'Vomiting', questions:[
+    { key:'frequency', q:'How many times has the patient vomited today?', type:'number', note:'>5/day with no fluid retention = high dehydration risk.' },
+    { key:'keepFluids', q:'Can the patient keep any water or ORS down between episodes?', type:'yn', note:'If some fluids stay down: give 5ml every 1-2 minutes. If nothing stays down = danger sign.' },
+    { key:'blood', q:'Is there any blood in the vomit, or does it look like coffee grounds?', type:'yn', note:'Haematemesis = urgent referral. Coffee-ground = upper GI bleeding.' },
+    { key:'abPain', q:'Does the patient have stomach or belly pain?', type:'yn', note:'Vomiting + severe abdominal pain = possible surgical abdomen. Refer if severe/constant.' },
+    { key:'lastAte', q:'When did the patient last eat or drink successfully?', type:'text', note:'No intake >12hrs (child) or >24hrs (adult) increases dehydration urgency.' },
+  ]},
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRIAGE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function computeTriage() {
+  const p = state.patient, v = state.vitals, d = state.danger, s = state.symptoms, o = state.obs;
+  const r = { level:'green', reasons:[], actions:[], kitActions:[], homeCare:[], warnings:[], meds:[], referralNeeded:false, referralFacility:'', referralUrgency:'' };
+
+  const ageY = parseInt(p.ageYears)||0, ageM = parseInt(p.ageMonths)||0, totalM = ageY*12+ageM;
+  const temp = parseFloat(v.tempC)||0, rr = parseInt(v.rr)||0, pulse = parseInt(v.pulse)||0;
+  const bpS = parseInt(v.bpSys)||0, bpD = parseInt(v.bpDia)||0, muac = parseFloat(v.muac)||0;
+  const spo2 = parseInt(v.spo2)||0;
+  const isChild = p.group==='child-under-5'||p.group==='child-5-14';
+  const isU5 = p.group==='child-under-5';
+  const isPregn = p.group==='pregnant';
+
+  function esc(to) { if (to==='red') r.level='red'; else if (to==='yellow'&&r.level!=='red') r.level='yellow'; }
+
+  // ── DANGER SIGNS ─────────────────────────────────────────────────────────
+  if (d.convulsions) { esc('red'); r.reasons.push('DANGER SIGN: Convulsions present'); r.actions.push('Place on side (recovery position). Clear airway. Do NOT put anything in mouth. Refer IMMEDIATELY.'); }
+  if (d.unconscious) { esc('red'); r.reasons.push('DANGER SIGN: Unconscious or cannot be woken'); r.actions.push('Check airway. Recovery position. Do NOT give oral fluids. Refer IMMEDIATELY.'); }
+  if (d.unableToFeed) { esc('red'); r.reasons.push('DANGER SIGN: Unable to drink or breastfeed'); r.actions.push('Try small sips of ORS by spoon. If unable to swallow safely, refer immediately.'); r.kitActions.push({ item:KIT.treatment.ors, instruction:'Attempt ORS — small sips by spoon while arranging transport.' }); }
+  if (d.vomitsEverything) { esc('red'); r.reasons.push('DANGER SIGN: Vomits everything'); r.actions.push('Try 5ml ORS every 2 minutes. If still vomiting after 30 min, refer.'); r.kitActions.push({ item:KIT.treatment.ors, instruction:'5ml by spoon every 2 minutes. If nothing stays down after 30 min → referral.' }); }
+
+  // ── VITALS ───────────────────────────────────────────────────────────────
+  // Temperature
+  if (temp>=39.5 && (d.convulsions||d.unconscious||s.stiffNeck)) { esc('red'); r.reasons.push(`Very high fever (${v.tempC}°C) WITH danger signs`); }
+  else if (temp>=39.0) { esc('yellow'); r.reasons.push(`High fever: ${v.tempC}°C`); r.kitActions.push({ item:KIT.treatment.paracetamol, instruction:isChild?'Children: 10-15mg/kg every 6 hours. Tepid sponging.':'Adults: 500mg-1g (1-2 tablets) every 6-8 hours. Max 4g/day. Tepid sponging.' }); }
+  else if (temp>=38.0) { esc('yellow'); r.reasons.push(`Fever: ${v.tempC}°C`); r.kitActions.push({ item:KIT.treatment.paracetamol, instruction:isChild?'Children: 10-15mg/kg every 6 hours.':'Adults: 500mg-1g every 6-8 hours.' }); }
+
+  // SpO2
+  if (spo2>0 && spo2<=90) { esc('red'); r.reasons.push(`SEVERE HYPOXIA: SpO2 ${v.spo2}% (≤90%)`); r.actions.push('Refer urgently. Position patient sitting upright. If available, provide supplemental oxygen.'); }
+  else if (spo2>0 && spo2<=94) { esc('yellow'); r.reasons.push(`Low oxygen: SpO2 ${v.spo2}% (91-94%)`); r.actions.push('Monitor closely. Reassess in 30 minutes. Refer if dropping.'); }
+
+  // Respiratory rate
+  if (rr>0) {
+    if (totalM<=2 && rr>=60) { esc('red'); r.reasons.push(`Very fast breathing in young infant: ${v.rr}/min (≥60 at 0-2mo)`); r.actions.push('Refer urgently — possible serious infection.'); }
+    else if (totalM>2&&totalM<=12&&rr>=50) { if (s.chestIndrawing){esc('red');r.reasons.push(`Fast breathing (${v.rr}/min) + chest indrawing = SEVERE PNEUMONIA`);}else{esc('yellow');r.reasons.push(`Fast breathing: ${v.rr}/min (≥50 at 2-12mo)`);} }
+    else if (totalM>12&&totalM<=60&&rr>=40) { if (s.chestIndrawing){esc('red');r.reasons.push(`Fast breathing (${v.rr}/min) + chest indrawing = SEVERE PNEUMONIA`);}else{esc('yellow');r.reasons.push(`Fast breathing: ${v.rr}/min (≥40 at 1-5yr)`);} }
+    else if (totalM>60&&rr>=30) { esc('yellow'); r.reasons.push(`Elevated respiratory rate: ${v.rr}/min`); }
+  }
+
+  // BP
+  if (bpS>0&&bpD>0) {
+    if (bpS>=180||bpD>=120) { esc('red'); r.reasons.push(`HYPERTENSIVE CRISIS: BP ${v.bpSys}/${v.bpDia}`); r.actions.push('Keep calm and seated. Refer IMMEDIATELY. Do NOT give medication without doctor.'); r.referralNeeded=true; r.referralFacility='FMC Yenagoa or nearest hospital'; r.referralUrgency='IMMEDIATE — hypertensive emergency'; }
+    else if (isPregn&&(bpS>=140||bpD>=90)) { esc('red'); r.reasons.push(`HIGH BP IN PREGNANCY: ${v.bpSys}/${v.bpDia} — pre-eclampsia risk`); r.actions.push('Ask about headache, visual changes, upper abdominal pain, swelling of hands/face.'); r.actions.push('Refer URGENTLY to FMC Yenagoa maternity.'); r.referralNeeded=true; r.referralFacility='FMC Yenagoa — Maternity/Obstetric Emergency'; r.referralUrgency='URGENT — possible pre-eclampsia'; }
+    else if (bpS>=140||bpD>=90) { esc('yellow'); r.reasons.push(`Hypertension: BP ${v.bpSys}/${v.bpDia}`); r.actions.push('Refer to clinic for BP management. Advise reduced salt.'); }
+  }
+
+  // Pulse
+  if (pulse>0&&!isChild&&pulse>120) { esc('yellow'); r.reasons.push(`Tachycardia: ${v.pulse} bpm at rest`); }
+
+  // MUAC
+  if (muac>0&&totalM>=6&&totalM<=59) {
+    if (muac<11.5) { esc('red'); r.reasons.push(`SEVERE ACUTE MALNUTRITION: MUAC ${v.muac}cm (<11.5)`); r.actions.push('Begin therapeutic feeding if available. Refer to nutrition rehab.'); r.referralNeeded=true; r.referralFacility='Ogbia LGA Hospital or FMC Yenagoa — Nutrition/Paediatrics'; r.referralUrgency='URGENT — SAM'; }
+    else if (muac<12.5) { esc('yellow'); r.reasons.push(`Moderate Acute Malnutrition: MUAC ${v.muac}cm`); r.homeCare.push('Ensure 3 meals + 2 snacks daily. Add oil/groundnut paste to porridge for energy.'); }
+  }
+  if (muac>0&&isPregn&&muac<23) { esc('yellow'); r.reasons.push(`Nutritional risk in pregnancy: MUAC ${v.muac}cm (<23)`); r.homeCare.push('Increase food intake. Iron-folate supplementation.'); }
+
+  // ── SYMPTOM RULES ────────────────────────────────────────────────────────
+
+  // Stiff neck + fever
+  if (s.stiffNeck&&(temp>=38||s.fever.on)) { esc('red'); r.reasons.push('MENINGITIS SUSPECTED: Stiff neck + fever'); r.actions.push('Do NOT delay. Refer to hospital with emergency capacity.'); r.referralNeeded=true; r.referralFacility='FMC Yenagoa or NDUTH Amassoma'; r.referralUrgency='IMMEDIATE — suspected meningitis'; }
+
+  // Chest indrawing
+  if (s.chestIndrawing&&r.level!=='red') { esc('red'); r.reasons.push('Chest indrawing — severe respiratory distress'); r.kitActions.push({ item:KIT.treatment.amoxAdult, instruction:'Give first dose of amoxicillin before referral if pneumonia suspected.' }); }
+
+  // Fever + malaria
+  const rdtResult = s.fever.iv.rdt || s.rdt; // check both interview and checkbox
+  const rdtPos = rdtResult==='Positive' || s.rdt==='positive';
+  const rdtNeg = rdtResult==='Negative' || s.rdt==='negative';
+  const rdtNotDone = !rdtPos && !rdtNeg;
+
+  if (s.fever.on && rdtPos) {
+    esc('yellow');
+    r.reasons.push('MALARIA CONFIRMED: Fever + positive RDT');
+    if (isPregn) {
+      esc('red'); r.reasons.push('MALARIA IN PREGNANCY — higher complication risk');
+      r.actions.push('Refer for supervised antimalarial treatment.');
+      r.referralNeeded=true; r.referralFacility='FMC Yenagoa — Maternity'; r.referralUrgency='URGENT — malaria in pregnancy';
+    }
+    if (isU5) { r.kitActions.push({ item:KIT.treatment.actPaed, instruction:KIT.treatment.actPaed.dosing }); }
+    else if (!isPregn) { r.kitActions.push({ item:KIT.treatment.actAdult, instruction:KIT.treatment.actAdult.dosing+'\n'+KIT.treatment.actAdult.warning }); }
+    r.homeCare.push('Complete FULL course of ACT even if feeling better.'); r.homeCare.push('Sleep under insecticide-treated bednet.'); r.homeCare.push('Plenty of fluids. Return if fever persists after 3 days of treatment.');
+    r.warnings.push('Fever still present after 3 days of ACT — return immediately');
+    r.warnings.push('Convulsions, unconsciousness, unable to eat/drink — go to hospital immediately');
+  } else if (s.fever.on && rdtNotDone) {
+    esc('yellow'); r.reasons.push('Fever present but RDT NOT done — in Bayelsa, fever = malaria until proven otherwise');
+    r.kitActions.push({ item:KIT.diagnostics.malariaRDT, instruction:'Perform RDT now. If not available and fever >38°C, consider empiric ACT.' });
+  } else if (s.fever.on && rdtNeg) {
+    esc('yellow'); r.reasons.push('Fever with NEGATIVE malaria RDT — consider typhoid, UTI, or other infection');
+    r.kitActions.push({ item:KIT.diagnostics.typhoidRDT, instruction:'Consider typhoid RDT if sustained fever + headache + abdominal pain.' });
+    r.kitActions.push({ item:KIT.diagnostics.urineStrips, instruction:'Perform urine dipstick to check for UTI (nitrites, leukocytes).' });
+    r.actions.push('If fever >3 days, refer for lab investigation.');
+  }
+
+  // Diarrhoea + dehydration
+  if (s.diarrhoea.on) {
+    const di = s.diarrhoea.iv;
+    const sevDehy = di.skinTurgor==='Stays pinched/tented'||di.drinking==='Unable to drink'||di.alertness==='Lethargic / hard to wake';
+    const someDehy = di.skinTurgor==='Slowly (1-2 seconds)'||di.drinking==='Drinks eagerly (very thirsty)'||di.alertness==='Restless or irritable'||di.sunkenEyes==='Yes';
+    const cholera = di.consistency==='Rice-water (white watery)';
+
+    if (sevDehy) { esc('red'); r.reasons.push('SEVERE DEHYDRATION detected'); r.actions.push('Begin ORS immediately. Refer urgently for IV fluids.'); r.kitActions.push({ item:KIT.treatment.ors, instruction:'Begin ORS NOW while arranging transport. '+KIT.treatment.ors.dosing }); r.referralNeeded=true; r.referralFacility='Ogbia LGA Hospital or FMC Yenagoa'; r.referralUrgency='URGENT — severe dehydration, may need IV fluids'; }
+    else if (someDehy) { esc('yellow'); r.reasons.push('SOME DEHYDRATION detected'); r.kitActions.push({ item:KIT.treatment.ors, instruction:KIT.treatment.ors.dosing }); if (isU5) { r.kitActions.push({ item:KIT.treatment.zinc, instruction:KIT.treatment.zinc.dosing }); } }
+    if (cholera) { esc('red'); r.reasons.push('CHOLERA SUSPECTED: Rice-water stool'); r.actions.push('Aggressive ORS. Refer immediately. Report to health authorities.'); r.referralNeeded=true; r.referralFacility='FMC Yenagoa'; r.referralUrgency='IMMEDIATE — suspected cholera'; }
+    if (s.bloodInStool) { esc('yellow'); r.reasons.push('Blood in stool — possible dysentery'); r.kitActions.push({ item:KIT.treatment.metronidazole, instruction:'If dysentery suspected: '+KIT.treatment.metronidazole.dosing }); }
+    if (!sevDehy) { r.kitActions.push({ item:KIT.treatment.ors, instruction:KIT.treatment.ors.dosing }); if (isU5) r.kitActions.push({ item:KIT.treatment.zinc, instruction:KIT.treatment.zinc.dosing }); r.homeCare.push('Continue feeding. Breastfed infants: increase frequency.'); r.warnings.push('Unable to drink, vomiting everything, blood in stool, very drowsy — hospital immediately'); }
+  }
+
+  // Cough + pneumonia indicators
+  if (s.cough.on) {
+    const ci = s.cough.iv;
+    if (ci.sputum==='Blood'||(ci.spo2&&parseInt(ci.spo2)<=90)) { esc('red'); if(ci.sputum==='Blood') r.reasons.push('Blood in sputum (haemoptysis) — urgent referral needed'); }
+    if (ci.spo2&&parseInt(ci.spo2)>90&&parseInt(ci.spo2)<=94) { esc('yellow'); r.reasons.push(`Low SpO2 from cough interview: ${ci.spo2}%`); }
+    if (parseInt(ci.days)>=14||ci.tbContact==='Yes') {
+      r.actions.push('TB suspected — refer for sputum test and chest X-ray. Do NOT start antibiotics for TB without diagnosis.');
+    }
+    // Pneumonia treatment if fast breathing + cough
+    if (rr>=40&&isU5 || rr>=50&&totalM<=12 || (ci.breathDiff==='Yes'&&temp>=38)) {
+      r.kitActions.push({ item:isChild?KIT.treatment.amoxPaed:KIT.treatment.amoxAdult, instruction:'Suspected pneumonia. '+(isChild?KIT.treatment.amoxPaed.dosing:KIT.treatment.amoxAdult.dosing) });
+    }
+  }
+
+  // Eye jaundice
+  if (s.eyeJaundice) { esc('yellow'); r.reasons.push('Jaundice (yellow eyes) — possible severe malaria, hepatitis, sickle cell'); r.actions.push('Refer for liver function and blood tests.'); }
+  // Oedema
+  if (s.oedema) { if (isU5) { esc('red'); r.reasons.push('Bilateral oedema in child under 5 — suspected kwashiorkor'); r.referralNeeded=true; r.referralFacility='Ogbia LGA Hospital — Nutrition/Paediatrics'; r.referralUrgency='URGENT — suspected kwashiorkor'; } else { esc('yellow'); r.reasons.push('Oedema present — needs investigation'); } }
+  // Palmar pallor
+  if (s.palmarPallor) { esc('yellow'); r.reasons.push('Palmar pallor — likely anaemia (malaria, malnutrition, hookworm)'); r.actions.push('Refer for haemoglobin test.'); if (isPregn) r.actions.push('Anaemia in pregnancy is dangerous. Ensure iron-folate. Refer if pallor is severe.'); }
+
+  // Skin infections / worms / allergic rashes (common community presentations)
+  // These are treatment-ready items from the kit not triggered by the above
+  // They'll be available as optional treatments on the result screen
+
+  // ── GREEN DEFAULTS ───────────────────────────────────────────────────────
+  if (r.level==='green') {
+    r.reasons.push('No danger signs. Vital signs within normal range. Symptoms manageable at home.');
+    r.homeCare.push('Continue regular meals and fluids. Rest as needed.');
+    r.homeCare.push('Return in 2 days for follow-up, or immediately if condition worsens.');
+    if (s.fever.on) { r.homeCare.push('Paracetamol for fever. Tepid sponging. Plenty of fluids.'); }
+    if (s.cough.on) { r.homeCare.push('Warm fluids for comfort. Honey + lemon (not children under 1). Monitor breathing.'); }
+  }
+
+  // ── UNIVERSAL ────────────────────────────────────────────────────────────
+  if (r.level==='red'&&!r.referralNeeded) { r.referralNeeded=true; r.referralFacility=r.referralFacility||'Ogbia LGA Hospital (~20 min drive)'; r.referralUrgency=r.referralUrgency||'URGENT — danger signs present'; }
+  if (r.level==='yellow'&&!r.referralNeeded) { r.referralFacility='Oloibiri PHC or Ogbia LGA Hospital'; r.referralUrgency='Refer if no improvement in 2 days'; }
+  if (r.level!=='green') {
+    r.homeCare.push('While waiting: keep comfortable, offer small sips of clean water or ORS.');
+    if (temp>=38) { r.homeCare.push('Paracetamol for fever. Do NOT give aspirin to children.'); }
+    r.warnings.push('Any new danger sign: convulsions, unconsciousness, unable to drink — hospital IMMEDIATELY');
+  }
+  r.homeCare.push('Sleep under insecticide-treated bednet every night — this is Bayelsa, malaria is the #1 killer.');
+  r.warnings.push('Condition worsening or new symptoms — return immediately or go to hospital');
+
+  return r;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REFERRAL NOTE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function makeReferralNote() {
+  const p=state.patient, v=state.vitals, s=state.symptoms, t=state.triage;
+  const now=new Date(), d=now.toLocaleDateString('en-NG',{day:'numeric',month:'long',year:'numeric'}), tm=now.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+  const age=p.ageYears?p.ageYears+' years':p.ageMonths?p.ageMonths+' months':'age unknown';
+  const vitStr=[v.tempC&&`Temp: ${v.tempC}°C (${v.tempMethod})`,v.rr&&`RR: ${v.rr}/min`,v.pulse&&`Pulse: ${v.pulse} bpm`,v.bpSys&&v.bpDia&&`BP: ${v.bpSys}/${v.bpDia}`,v.spo2&&`SpO2: ${v.spo2}%`,v.muac&&`MUAC: ${v.muac}cm`].filter(Boolean).join(' | ');
+  const sympStr=[s.chief&&`Chief complaint: ${s.chief}`,s.fever.on&&'Fever',s.cough.on&&'Cough',s.diarrhoea.on&&'Diarrhoea',s.chestIndrawing&&'Chest indrawing',s.bloodInStool&&'Blood in stool',s.stiffNeck&&'Stiff neck'].filter(Boolean).join('; ');
+  const meds=t.kitActions.map(k=>k.item.name).join('; ');
+  return `──────────────────────────────
+COMMUNITY HEALTH NAVIGATOR
+REFERRAL NOTE
+──────────────────────────────
+Date: ${d}   Time: ${tm}
+
+PATIENT: ${p.name}
+Age: ${age}   Sex: ${p.sex||'not recorded'}
+Village: ${p.village}
+Phone: ${p.phone||'none'}
+
+VITALS: ${vitStr||'Not all recorded'}
+
+FINDINGS: ${sympStr}
+
+TRIAGE: ${t.level.toUpperCase()}
+${t.reasons[0]||''}
+
+TREATMENT GIVEN: ${meds||'None prior to referral'}
+
+REFERRING TO: ${t.referralFacility}
+URGENCY: ${t.referralUrgency}
+
+Navigator: Solomon Matthias Solomon
+Programme: vAI Community Health, Oloibiri
+──────────────────────────────`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'vai_offline_assessments';
+function loadSaved() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]; } catch{ return []; } }
+function saveCurrent() {
+  const list = loadSaved();
+  list.unshift({ id:'off_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), ts:new Date().toISOString(), patient:state.patient, vitals:state.vitals, danger:state.danger, symptoms:state.symptoms, obs:state.obs, triage:state.triage, synced:false });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  state.saved = true;
+  state.saveMode = 'offline';
+  updatePendingBadge();
+  render();
+}
+
+async function saveToDatabase() {
+  if (state.savingToDb) return;
+  state.savingToDb = true;
+  render();
+
+  const assessment = {
+    id: 'off_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    ts: new Date().toISOString(),
+    patient: state.patient, vitals: state.vitals, danger: state.danger,
+    symptoms: state.symptoms, obs: state.obs, triage: state.triage, synced: false,
+  };
+
+  try {
+    const response = await fetch(SYNC_CONFIG.functionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sync_key: SYNC_CONFIG.syncKey,
+        navigator_user_id: SYNC_CONFIG.navigatorUserId,
+        assessments: [assessment],
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || result.failed > 0) {
+      throw new Error(result.results?.[0]?.error || result.error || 'Save failed');
+    }
+
+    // Mark synced in localStorage too for the record
+    assessment.synced = true;
+    const list = loadSaved();
+    list.unshift(assessment);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    updatePendingBadge();
+
+    state.saved = true;
+    state.saveMode = 'database';
+    state.savingToDb = false;
+    state.saveError = null;
+    render();
+
+  } catch (err) {
+    state.savingToDb = false;
+    state.saveError = err.message || 'Connection error — try saving offline instead.';
+    render();
+  }
+}
+function getPending() { return loadSaved().filter(a=>!a.synced).length; }
+function updatePendingBadge() {
+  const n = getPending();
+  const el = document.getElementById('badge-pending');
+  const ct = document.getElementById('pending-count');
+  if (n>0) { el.classList.remove('hidden'); ct.textContent=n; } else { el.classList.add('hidden'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => {
+    if (k==='className') el.className=v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k==='htmlFor') el.setAttribute('for',v);
+    else if (k === 'value') { el.value = v; }
+    else if (typeof v === 'boolean') { if (v) el.setAttribute(k,''); else el.removeAttribute(k); }
+    else el.setAttribute(k,v);
+  });
+  children.flat(Infinity).forEach(c => { if (c==null) return; el.append(typeof c==='string'||typeof c==='number' ? document.createTextNode(c) : c); });
+  return el;
+}
+
+function renderToggle(label, checked, onChange, opts={}) {
+  const cls = checked ? (opts.danger ? 'toggle on-danger' : 'toggle on') : 'toggle';
+  const boxCls = checked ? (opts.danger ? 'toggle-box on-danger' : 'toggle-box on') : 'toggle-box off';
+  return h('button', { className:cls, type:'button', onClick:onChange },
+    h('div', { className:boxCls }, checked?'✓':''),
+    h('div', null,
+      h('div', { className:'toggle-label' }, label),
+      opts.hint ? h('div', { className:'toggle-hint' }, opts.hint) : null
+    )
+  );
+}
+
+function renderInterview(symptomKey) {
+  const config = INTERVIEWS[symptomKey];
+  const answers = state.symptoms[symptomKey].iv;
+  const visible = config.questions.filter(q => !q.showIf || q.showIf(answers));
+  const firstUnanswered = visible.findIndex(q => !answers[q.key]);
+  const toShow = firstUnanswered===-1 ? visible : visible.slice(0, firstUnanswered+1);
+
+  const els = [h('div', { className:'interview-title' }, '📋 '+config.label+' — Clinical Interview')];
+  toShow.forEach((q, idx) => {
+    const answered = !!answers[q.key];
+    const current = idx===toShow.length-1 && !answered;
+    const qEl = h('div', { className:'interview-q '+(current?'current':'answered') });
+    qEl.append(h('div', { className:'interview-q-text' }, (current?'👉 ':'')+q.q));
+    if (q.note) qEl.append(h('div', { className:'interview-clinical' }, h('span',null,'💡'), ' '+q.note));
+
+    if (q.type==='yn') {
+      const row = h('div', { className:'btn-group' });
+      ['Yes','No'].forEach(opt => {
+        row.append(h('button', { type:'button', className:'btn-choice'+(answers[q.key]===opt?' active':''), onClick:()=>{ state.symptoms[symptomKey].iv[q.key]=opt; render(); } }, opt));
+      });
+      qEl.append(row);
+    } else if (q.type==='choice') {
+      const col = h('div', { className:'gap-sm' });
+      q.choices.forEach(opt => {
+        col.append(h('button', { type:'button', className:'btn-choice'+(answers[q.key]===opt?' active':''), style:'text-align:left;', onClick:()=>{ state.symptoms[symptomKey].iv[q.key]=opt; render(); } }, opt));
+      });
+      qEl.append(col);
+    } else if (q.type==='number') {
+      const inp = h('input', { type:'number', inputMode:'numeric', className:'input', placeholder:'Enter number', value:answers[q.key]||'' });
+      inp.addEventListener('change', e=>{ state.symptoms[symptomKey].iv[q.key]=e.target.value; render(); });
+      inp.addEventListener('blur', e=>{ state.symptoms[symptomKey].iv[q.key]=e.target.value; });
+      qEl.append(inp);
+    } else {
+      const inp = h('input', { type:'text', className:'input', placeholder:'Type answer…', value:answers[q.key]||'' });
+      inp.addEventListener('change', e=>{ state.symptoms[symptomKey].iv[q.key]=e.target.value; });
+      inp.addEventListener('blur', e=>{ state.symptoms[symptomKey].iv[q.key]=e.target.value; });
+      qEl.append(inp);
+    }
+    els.push(qEl);
+  });
+  if (firstUnanswered===-1) els.push(h('div',{className:'interview-complete'},'✅ Interview complete for '+config.label));
+  return h('div', { className:'interview' }, ...els);
+}
+
+// ── STEP RENDERERS ─────────────────────────────────────────────────────────
+
+function renderPatient() {
+  const p = state.patient;
+  return h('div',{className:'card'},
+    h('div',{className:'card-title'},'👤 Patient Information'),
+    h('div',{className:'card-subtitle'},'Record patient details before starting assessment.'),
+    h('div',{className:'gap-md'},
+      h('div',{className:'field'}, h('label',{className:'label'},'Patient Full Name',h('span',{className:'req'},'*'),h('span',{className:'label-hint'},'First and last name required')), h('input',{className:'input',placeholder:'First and last name',value:p.name,onInput:e=>{p.name=e.target.value; const btn=document.getElementById('btn-next'); if(btn) btn.disabled=p.name.trim().split(/\s+/).length<2;}})),
+      h('div',{className:'field',style:'display:flex;gap:8px;'},
+        h('div',{style:'flex:1;'}, h('label',{className:'label'},'Age (years)'), h('input',{className:'input',type:'number',inputMode:'numeric',placeholder:'Years',value:p.ageYears,onInput:e=>{p.ageYears=e.target.value;}})),
+        h('div',{style:'flex:1;'}, h('label',{className:'label'},'Age (months)'), h('input',{className:'input',type:'number',inputMode:'numeric',placeholder:'Months',value:p.ageMonths,onInput:e=>{p.ageMonths=e.target.value;}})),
+      ),
+      h('div',{className:'field'}, h('label',{className:'label'},'Sex',h('span',{className:'req'},'*')),
+        h('div',{className:'btn-group'}, ...['male','female'].map(s=>h('button',{type:'button',className:'btn-choice'+(p.sex===s?' active':''),onClick:()=>{p.sex=s;render();}},s==='male'?'♂ Male':'♀ Female')))
+      ),
+      h('div',{className:'field'}, h('label',{className:'label'},'Patient Group',h('span',{className:'req'},'*')),
+        h('div',{className:'btn-grid'}, ...Object.entries(PATIENT_GROUPS).map(([k,pg])=>h('button',{type:'button',className:'btn-choice'+(p.group===k?' active':''),onClick:()=>{p.group=k;render();}},pg.emoji+' '+pg.label)))
+      ),
+      h('div',{className:'field'}, h('label',{className:'label'},'Village',h('span',{className:'req'},'*')),
+        h('div',{style:'display:flex;flex-wrap:wrap;gap:6px;'}, ...VILLAGES.map(v=>h('button',{type:'button',className:'btn-chip'+(p.village===v?' active':''),onClick:()=>{p.village=v;render();}},v)))
+      ),
+      h('div',{className:'field'}, h('label',{className:'label'},'Phone',h('span',{className:'label-hint'},'Optional')), h('input',{className:'input',type:'tel',inputMode:'tel',placeholder:'+234…',value:p.phone,onInput:e=>{p.phone=e.target.value;}})),
+    )
+  );
+}
+
+function renderVitals() {
+  const v = state.vitals;
+  function vfield(label,hint,key,extra) {
+    return h('div',{className:'field'},
+      h('label',{className:'label'},label, hint?h('span',{className:'label-hint'},hint):null),
+      extra||h('input',{className:'input',type:'number',inputMode:'decimal',step:'any',placeholder:label,value:v[key],onInput:e=>{v[key]=e.target.value;}})
+    );
+  }
+  return h('div',{className:'card'},
+    h('div',{className:'card-title'},'📊 Vital Signs'),
+    h('div',{className:'card-subtitle'},'Use your kit instruments. Record what you can — leave blank if unavailable.'),
+    h('div',{className:'gap-md'},
+      vfield('Temperature (°C)','🌡 Use iHealth Infrared Thermometer. Normal axillary: 36.0–37.4°C. Fever ≥38°C.','tempC',
+        h('div',{className:'input-row'},
+          h('input',{className:'input',type:'number',inputMode:'decimal',step:'0.1',placeholder:'e.g. 37.5',value:v.tempC,onInput:e=>{v.tempC=e.target.value;}}),
+          h('select',{className:'select',style:'width:auto;min-width:100px;',value:v.tempMethod,onChange:e=>{v.tempMethod=e.target.value;render();}},
+            h('option',{value:'axillary'},'Axillary'), h('option',{value:'oral'},'Oral'), h('option',{value:'rectal'},'Rectal'))
+        )
+      ),
+      vfield('Respiratory Rate (/min)','Count chest rises for 60 full seconds.','rr'),
+      vfield('Pulse Rate (bpm)','Normal adult: 60–100. >120 at rest = investigate.','pulse'),
+      h('div',{className:'field'},
+        h('label',{className:'label'},'Blood Pressure (mmHg)', h('span',{className:'label-hint'},'📟 Use Omron Gold BP Monitor. ≥140/90 = hypertension. In pregnancy: ≥140/90 = URGENT.')),
+        h('div',{className:'input-row'},
+          h('input',{className:'input',type:'number',inputMode:'numeric',placeholder:'Systolic',value:v.bpSys,onInput:e=>{v.bpSys=e.target.value;}}),
+          h('span',{style:'font-weight:700;color:var(--gray-400);'},'/'),
+          h('input',{className:'input',type:'number',inputMode:'numeric',placeholder:'Diastolic',value:v.bpDia,onInput:e=>{v.bpDia=e.target.value;}}),
+        )
+      ),
+      vfield('SpO2 (%)','📟 Use Zacurate Pulse Oximeter. Normal ≥95%. ≤90% = severe.','spo2'),
+      h('div',{style:'display:flex;gap:8px;'},
+        h('div',{style:'flex:1;'}, h('label',{className:'label'},'Weight (kg)',h('span',{className:'label-hint'},'For drug dosing')), h('input',{className:'input',type:'number',inputMode:'decimal',placeholder:'kg',value:v.weight,onInput:e=>{v.weight=e.target.value;}})),
+        h('div',{style:'flex:1;'}, h('label',{className:'label'},'Height (cm)'), h('input',{className:'input',type:'number',inputMode:'numeric',placeholder:'cm',value:v.height,onInput:e=>{v.height=e.target.value;}})),
+      ),
+      vfield('MUAC (cm)','📏 Use MUAC Tape on left arm. Children 6–59mo: <11.5 = SEVERE. Pregnant: <23 = risk.','muac'),
+      h('div',{className:'field'},
+        h('label',{className:'label'},'Blood Glucose (mg/dL)',h('span',{className:'label-hint'},'📟 Use Contour Next ONE Glucometer if diabetes suspected or known. Fasting normal: 70-100.')),
+        h('input',{className:'input',type:'number',inputMode:'numeric',placeholder:'mg/dL (if tested)',value:v.glucose||'',onInput:e=>{v.glucose=e.target.value;}})
+      ),
+    )
+  );
+}
+
+function renderDanger() {
+  const d = state.danger;
+  const any = Object.values(d).some(Boolean);
+  const els = [
+    h('div',{className:'card-title'},'⚠️ General Danger Signs'),
+    h('div',{className:'card-subtitle'},'Any ONE of these = RED — Urgent Referral. Check each carefully.'),
+  ];
+  if (any) els.push(h('div',{className:'alert alert-red'}, h('span',{className:'alert-icon'},'🚨'), h('div',null, h('div',{className:'alert-title'},'DANGER SIGN DETECTED'), h('div',{className:'alert-text'},'This patient will be classified RED. Continue to gather full picture for referral.'))));
+  els.push(h('div',{className:'gap-sm'},
+    renderToggle('Convulsions (seizures) — now or recently', d.convulsions, ()=>{d.convulsions=!d.convulsions;render();}, {danger:true, hint:'Has the patient been shaking or jerking uncontrollably?'}),
+    renderToggle('Unconscious or cannot be woken', d.unconscious, ()=>{d.unconscious=!d.unconscious;render();}, {danger:true, hint:'Try to wake. Can they respond to voice or touch?'}),
+    renderToggle('Unable to drink or breastfeed', d.unableToFeed, ()=>{d.unableToFeed=!d.unableToFeed;render();}, {danger:true, hint:'Offer water or breast. Cannot swallow or refuses completely?'}),
+    renderToggle('Vomits everything', d.vomitsEverything, ()=>{d.vomitsEverything=!d.vomitsEverything;render();}, {danger:true, hint:'Cannot keep ANY fluid down. Different from occasional vomiting.'}),
+  ));
+  return h('div',{className:'card'},...els);
+}
+
+function renderSymptoms() {
+  const s = state.symptoms;
+  const mainSymptoms = ['fever','cough','diarrhoea','vomiting'];
+  const els = [
+    h('div',{className:'card-title'},'🩺 Symptoms & Signs'),
+    h('div',{className:'card-subtitle'},'Tick symptoms present. For key symptoms, complete the clinical interview.'),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Chief Complaint',h('span',{className:'req'},'*')),
+      h('textarea',{className:'textarea',rows:'2',placeholder:"In the patient's own words, what is the main problem?",value:s.chief,onInput:e=>{s.chief=e.target.value;}})
+    ),
+    h('div',{className:'section-label'},'Main Symptoms — with clinical interview'),
+  ];
+
+  mainSymptoms.forEach(key => {
+    const config = INTERVIEWS[key];
+    const data = s[key];
+    const toggleEl = renderToggle(config.label, data.on, ()=>{data.on=!data.on; if(!data.on){data.iv={}; if(state.expandedIv===key)state.expandedIv=null;} else{state.expandedIv=key;} render();});
+    els.push(toggleEl);
+    if (data.on) {
+      const answered = Object.keys(data.iv).length;
+      els.push(h('button',{className:'expand-btn',type:'button',onClick:()=>{state.expandedIv=state.expandedIv===key?null:key;render();}},
+        (state.expandedIv===key?'▾':'▸')+' '+(answered>0?answered+' questions answered':'Start clinical interview')
+      ));
+      if (state.expandedIv===key) els.push(renderInterview(key));
+    }
+  });
+
+  els.push(h('div',{className:'section-label'},'Additional Signs'));
+  els.push(h('div',{className:'gap-sm'},
+    renderToggle('Chest indrawing', s.chestIndrawing, ()=>{s.chestIndrawing=!s.chestIndrawing;render();}, {danger:s.chestIndrawing, hint:'Lower chest pulls INWARD on inspiration = danger sign.'}),
+    renderToggle('Blood in stool', s.bloodInStool, ()=>{s.bloodInStool=!s.bloodInStool;render();}),
+    renderToggle('Palmar pallor (pale palms)', s.palmarPallor, ()=>{s.palmarPallor=!s.palmarPallor;render();}, {hint:'Compare palms to your own in good light.'}),
+    renderToggle('Stiff neck', s.stiffNeck, ()=>{s.stiffNeck=!s.stiffNeck;render();}, {danger:s.stiffNeck, hint:'Ask patient to touch chin to chest. Pain or inability = danger.'}),
+    renderToggle('Yellow eyes (jaundice)', s.eyeJaundice, ()=>{s.eyeJaundice=!s.eyeJaundice;render();}, {hint:'Whites of eyes in natural light.'}),
+    renderToggle('Oedema (swelling)', s.oedema, ()=>{s.oedema=!s.oedema;render();}, {hint:'Press top of foot 3 sec. Pit remaining = oedema.'}),
+  ));
+
+  els.push(h('div',{className:'section-label'},'Malaria Assessment'));
+  els.push(h('div',{className:'gap-sm'},
+    renderToggle('Malaria suspected', s.malariaSuspected, ()=>{s.malariaSuspected=!s.malariaSuspected;render();}),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'RDT Result', h('span',{className:'label-hint'},'🧪 Use SD Bioline Malaria Ag P.f from your kit.')),
+      h('div',{className:'btn-group'}, ...['not_done','positive','negative'].map(r=>
+        h('button',{type:'button',className:'btn-choice'+(s.rdt===r?(r==='positive'?' active-red':r==='negative'?' active-green':' active'):''),onClick:()=>{s.rdt=r;render();}},
+          r==='not_done'?'Not Done':r==='positive'?'⊕ Positive':'⊖ Negative')
+      ))
+    ),
+    renderToggle('Using insecticide-treated bednet', s.bednet, ()=>{s.bednet=!s.bednet;render();}),
+  ));
+
+  return h('div',{className:'card'},...els);
+}
+
+function renderObserve() {
+  const o = state.obs;
+  const fields = [
+    { key:'appearance', label:'General Appearance', ph:'Alert? Lethargic? Distressed? Well-nourished?' },
+    { key:'breathing', label:'Breathing Pattern', ph:'Normal? Fast? Laboured? Wheezing? Grunting? Use Eko CORE 500 to listen.' },
+    { key:'skin', label:'Skin & Eyes', ph:'Colour, rashes, wounds, jaundice, pallor, dehydration signs?' },
+    { key:'hydration', label:'Hydration Signs', ph:'Moist mouth? Dry lips? Sunken fontanelle (infant)? Tears when crying?' },
+    { key:'notes', label:'Additional Notes', ph:'Medications, recent travel, sick contacts, other observations…' },
+  ];
+  return h('div',{className:'card'},
+    h('div',{className:'card-title'},'📝 Physical Observations'),
+    h('div',{className:'card-subtitle'},'Describe what you SEE. Use your own words.'),
+    h('div',{className:'gap-md'}, ...fields.map(f=>
+      h('div',{className:'field'},
+        h('label',{className:'label'},f.label),
+        h('textarea',{className:'textarea',rows:f.key==='notes'?'3':'2',placeholder:f.ph,value:o[f.key],onInput:e=>{o[f.key]=e.target.value;}})
+      )
+    ))
+  );
+}
+
+function renderResult() {
+  const t = state.triage;
+  if (!t) return h('div',null,'Error: no triage result');
+  const p = state.patient;
+  const pg = PATIENT_GROUPS[p.group];
+
+  const els = [];
+
+  // Banner
+  const bannerCls = 'result-banner '+t.level;
+  const levelText = { red:'🔴 RED — Urgent Referral', yellow:'🟡 YELLOW — Treat & Monitor', green:'🟢 GREEN — Home Care' }[t.level];
+  const banner = h('div',{className:bannerCls},
+    h('div',{className:'result-level'},levelText),
+    h('div',{className:'result-patient'},p.name+' — '+pg.emoji+' '+pg.label+', '+p.village),
+    ...t.reasons.map(r=>h('div',{className:'result-reason'},'• '+r))
+  );
+  els.push(banner);
+
+  // Actions
+  if (t.actions.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title'},'⚡ Immediate Actions'),
+      ...t.actions.map((a,i)=>h('div',{className:'result-item action'},(i+1)+'. '+a))
+    ));
+  }
+
+  // Kit treatments
+  if (t.kitActions.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title'},'🧰 From Your Kit — Treatment & Diagnostics'),
+      ...t.kitActions.map(k=>h('div',{className:'result-item kit'},
+        h('div',{className:'kit-label'},'YOUR KIT'),
+        h('div',{className:'kit-name'},k.item.name),
+        h('div',{style:'font-size:13px;margin-top:4px;color:var(--gray-700);'},k.instruction)
+      ))
+    ));
+  }
+
+  // Home care
+  if (t.homeCare.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title'},'🏠 Home Care Instructions'),
+      h('div',{style:'font-size:11px;color:var(--gray-400);margin-bottom:8px;'},'Read these to the patient or caregiver:'),
+      ...t.homeCare.map(hc=>h('div',{className:'result-item home'},'✓ '+hc))
+    ));
+  }
+
+  // Warnings
+  if (t.warnings.length) {
+    els.push(h('div',{className:'card'},
+      h('div',{className:'result-section-title',style:'color:var(--red-700);'},'⚠️ Warning Signs — Return Immediately If:'),
+      ...t.warnings.map(w=>h('div',{className:'result-item warning'},'🚨 '+w))
+    ));
+  }
+
+  // Additional kit items (for common presentations not triggered by rules)
+  const extraKitSection = h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'💊 Additional Treatments Available in Kit'),
+    h('div',{style:'font-size:12px;color:var(--gray-400);margin-bottom:8px;'},'Use clinical judgment. These are in your bag if needed:'),
+    ...[KIT.treatment.mebendazole, KIT.treatment.clotrimazole, KIT.treatment.gentianViolet, KIT.treatment.cetirizine, KIT.treatment.woundPack, KIT.treatment.petrolJelly].map(item=>
+      h('details',{style:'margin-bottom:6px;'},
+        h('summary',{style:'font-size:13px;font-weight:600;color:var(--blue-600);cursor:pointer;padding:4px 0;'},item.name),
+        h('div',{style:'font-size:12px;color:var(--gray-700);padding:6px 12px;background:var(--gray-50);border-radius:8px;margin-top:4px;'},item.dosing)
+      )
+    )
+  );
+  els.push(extraKitSection);
+
+  // Referral note
+  if (t.referralNeeded) {
+    const noteCard = h('div',{className:'card'});
+    const noteBtn = h('button',{type:'button',style:'width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;padding:0;',onClick:()=>{state.showReferral=!state.showReferral;render();}},
+      h('div',{className:'result-section-title',style:'margin:0;'},'📄 Referral Note'),
+      h('span',{style:'color:var(--gray-400);'},state.showReferral?'▾':'▸')
+    );
+    noteCard.append(noteBtn);
+    if (state.showReferral) noteCard.append(h('pre',{className:'referral-note',style:'margin-top:10px;'},makeReferralNote()));
+    els.push(noteCard);
+  }
+
+  // Save card
+  const saveCard = h('div',{className:'card'});
+  const isOnline = navigator.onLine;
+  const notConfigured = SYNC_CONFIG.syncKey === 'CHANGE_ME_BEFORE_DEPLOY';
+
+  if (!state.saved) {
+    // Online: show Save to Database as primary
+    if (isOnline && !notConfigured) {
+      const dbBtn = h('button',{type:'button',className:'btn-save',onClick:saveToDatabase},
+        state.savingToDb ? '⏳ Saving to vAI Database…' : '☁️ Save to vAI Database');
+      dbBtn.disabled = state.savingToDb;
+      saveCard.append(dbBtn);
+
+      if (state.saveError) {
+        saveCard.append(h('div',{style:'margin:8px 0;padding:10px;background:var(--red-50);border-radius:8px;font-size:12px;color:var(--red-700);'},
+          '⚠️ '+state.saveError));
+      }
+
+      saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:saveCurrent},
+        '💾 Save Offline Instead'));
+
+    } else {
+      // Offline: save to device
+      saveCard.append(h('button',{type:'button',className:'btn-save',onClick:saveCurrent},'💾 Save Offline'));
+      saveCard.append(h('div',{style:'font-size:12px;color:var(--amber-700);text-align:center;margin-top:8px;'},
+        '📡 No connection — assessment will sync to vAI database when you are back online.'));
+    }
+
+  } else {
+    // Saved confirmation
+    if (state.saveMode === 'database') {
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'✅'),
+        h('div',null,
+          h('div',{className:'alert-title'},'Saved to vAI Database'),
+          h('div',{className:'alert-text'},'Assessment is in the NextVillage platform and available for follow-up.')
+        )
+      ));
+    } else {
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'💾'),
+        h('div',null,
+          h('div',{className:'alert-title'},'Saved to device'),
+          h('div',{className:'alert-text'},getPending()+' assessment'+(getPending()!==1?'s':'')+' pending sync. Tap the ⬆ badge when online to upload.')
+        )
+      ));
+    }
+  }
+
+  saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:resetAll},'Start New Assessment'));
+  els.push(saveCard);
+
+  els.push(h('div',{className:'disclaimer'},'⚠️ CLINICAL DECISION SUPPORT ONLY — Rule-based WHO IMCI classification. Follow your training and supervision protocols. This does not replace a doctor\'s assessment.\nBuilt for vAI Community Health Programme, Oloibiri. Clinical review: Dr. O\'Connell.'));
+
+  return h('div',null,...els);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function render() {
+  // Step bar
+  const bar = document.getElementById('step-bar');
+  bar.innerHTML = '';
+  STEPS.forEach((s,i) => {
+    const cls = i===state.step?'step-pill current':i<state.step?'step-pill done':'step-pill upcoming';
+    const pill = h('button',{className:cls,type:'button',disabled:i>state.step+1,onClick:()=>{if(i<state.step)goStep(i);else if(i===state.step+1)goNext();}},
+      (i<state.step?'✓ ':'')+s.label
+    );
+    bar.append(pill);
+    if (i<STEPS.length-1) bar.append(h('div',{className:'step-line'+(i<state.step?' done':'')}));
+  });
+
+  // Content
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const renderers = [renderPatient, renderVitals, renderDanger, renderSymptoms, renderObserve, renderResult];
+  content.append(renderers[state.step]());
+
+  // Footer
+  const footer = document.getElementById('footer');
+  const inner = document.getElementById('footer-inner');
+  if (state.step===5) { footer.style.display='none'; } else {
+    footer.style.display='';
+    inner.innerHTML='';
+    if (state.step>0) inner.append(h('button',{type:'button',className:'btn-nav secondary',onClick:goBack},'← Back'));
+    const nextLabel = state.step===4?'Run Triage ▶':'Next ▶';
+    const disabled = state.step===0&&state.patient.name.trim().split(/\s+/).length<2;
+    inner.append(h('button',{type:'button',className:'btn-nav primary',id:'btn-next',disabled,onClick:goNext},nextLabel));
+  }
+
+  // Scroll top
+  if (state._lastStep !== state.step) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    state._lastStep = state.step;
+  }
+}
+
+function goStep(i) { state.step=i; render(); }
+function goNext() {
+  if (state.step===4) { state.triage = computeTriage(); state.step=5; }
+  else if (state.step<5) { state.step++; }
+  render();
+}
+function goBack() { if (state.step>0) { state.step--; render(); } }
+
+function resetAll() {
+  state = {
+    step:0,
+    patient:{name:'',village:'Oloibiri',ageYears:'',ageMonths:'',sex:'',group:'adult',phone:''},
+    vitals:{tempC:'',tempMethod:'axillary',rr:'',pulse:'',bpSys:'',bpDia:'',weight:'',height:'',muac:'',spo2:''},
+    danger:{convulsions:false,unconscious:false,unableToFeed:false,vomitsEverything:false},
+    symptoms:{chief:'',fever:{on:false,iv:{}},cough:{on:false,iv:{}},diarrhoea:{on:false,iv:{}},vomiting:{on:false,iv:{}},chestIndrawing:false,bloodInStool:false,palmarPallor:false,stiffNeck:false,eyeJaundice:false,oedema:false,malariaSuspected:false,rdt:'not_done',bednet:false},
+    obs:{appearance:'',breathing:'',skin:'',hydration:'',notes:''},
+    triage:null, saved:false, saveMode:null, savingToDb:false, saveError:null, expandedIv:null, showReferral:false,
+  };
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYNC ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── CONFIGURATION ─────────────────────────────────────────────────────────
+// Update these values before deploying to Solomon:
+const SYNC_CONFIG = {
+  // Your Supabase Edge Function URL:
+  functionUrl: 'https://wohmsbeygxrbwogrggkq.supabase.co/functions/v1/sync-offline-assessments',
+  // Shared sync key (set matching value in Supabase Edge Function secrets):
+  syncKey: 'CHANGE_ME_BEFORE_DEPLOY',
+  // Solomon's Supabase user ID:
+  navigatorUserId: '6905c799-a499-44c7-9b43-991aa2bba9fa',
+};
+
+let syncPanelOpen = false;
+let syncing = false;
+
+function openSyncPanel() {
+  syncPanelOpen = true;
+  renderSyncPanel();
+}
+
+function closeSyncPanel() {
+  syncPanelOpen = false;
+  const el = document.getElementById('sync-overlay');
+  if (el) el.remove();
+}
+
+function renderSyncPanel() {
+  // Remove existing
+  let overlay = document.getElementById('sync-overlay');
+  if (overlay) overlay.remove();
+  if (!syncPanelOpen) return;
+
+  const saved = loadSaved();
+  const pending = saved.filter(a => !a.synced);
+  const synced = saved.filter(a => a.synced);
+  const isOnline = navigator.onLine;
+
+  overlay = h('div', { className:'sync-overlay', id:'sync-overlay', onClick: e => { if (e.target === overlay) closeSyncPanel(); } },
+    h('div', { className:'sync-panel', onClick: e => e.stopPropagation() },
+      h('div', { className:'sync-title' }, '📡 Sync Offline Assessments'),
+      h('div', { className:'sync-sub' },
+        isOnline
+          ? `You are ONLINE. ${pending.length} assessment${pending.length!==1?'s':''} ready to sync.`
+          : `You are OFFLINE. Connect to cellular or WiFi to sync.`
+      ),
+
+      // Pending assessments
+      ...(pending.length > 0 ? [
+        h('div', { className:'section-label', style:'margin-top:8px;' }, 'Pending Upload'),
+        ...pending.map(a => h('div', { className:'sync-item' },
+          h('div', null,
+            h('div', { className:'name' }, a.patient?.name || 'Unknown'),
+            h('div', { className:'meta' }, (a.triage?.level||'').toUpperCase() + ' · ' + a.patient?.village + ' · ' + new Date(a.ts).toLocaleDateString())
+          ),
+          h('span', { className:'status ' + (a._syncError ? 'error' : 'pending') }, a._syncError ? '✗ Error' : '⏳ Pending')
+        ))
+      ] : [h('div', { style:'text-align:center;padding:20px;color:var(--gray-400);font-size:13px;' }, '✅ All assessments synced!')]),
+
+      // Recently synced
+      ...(synced.length > 0 ? [
+        h('div', { className:'section-label', style:'margin-top:12px;' }, 'Recently Synced'),
+        ...synced.slice(0, 5).map(a => h('div', { className:'sync-item' },
+          h('div', null,
+            h('div', { className:'name' }, a.patient?.name || 'Unknown'),
+            h('div', { className:'meta' }, new Date(a.ts).toLocaleDateString())
+          ),
+          h('span', { className:'status synced' }, '✓ Synced')
+        ))
+      ] : []),
+
+      // Sync button
+      isOnline && pending.length > 0
+        ? h('button', { className:'btn-sync go', id:'btn-do-sync', disabled: syncing, onClick: doSync },
+            syncing ? '⏳ Syncing…' : `⬆ Sync ${pending.length} Assessment${pending.length!==1?'s':''}`)
+        : !isOnline && pending.length > 0
+          ? h('div', { style:'text-align:center;padding:12px;color:var(--amber-700);font-size:13px;font-weight:600;' }, '📡 No internet connection. Assessments are safe on your device.')
+          : null,
+
+      // Close
+      h('button', { className:'btn-sync close', onClick: closeSyncPanel }, 'Close'),
+
+      // Config warning
+      (SYNC_CONFIG.syncKey === 'CHANGE_ME_BEFORE_DEPLOY')
+        ? h('div', { style:'margin-top:12px;padding:10px;background:var(--amber-50);border-radius:8px;font-size:11px;color:var(--amber-800);' },
+            '⚠️ Sync not configured yet. Kevin needs to set the sync key and Solomon\'s user ID before this will work.')
+        : null
+    )
+  );
+  document.body.appendChild(overlay);
+}
+
+async function doSync() {
+  if (syncing) return;
+  syncing = true;
+  renderSyncPanel();
+
+  const saved = loadSaved();
+  const pending = saved.filter(a => !a.synced);
+
+  try {
+    const response = await fetch(SYNC_CONFIG.functionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sync_key: SYNC_CONFIG.syncKey,
+        navigator_user_id: SYNC_CONFIG.navigatorUserId,
+        assessments: pending,
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`Server error ${response.status}: ${errBody}`);
+    }
+
+    const result = await response.json();
+
+    // Mark synced items in localStorage
+    if (result.results) {
+      const updated = loadSaved();
+      result.results.forEach(r => {
+        const idx = updated.findIndex(a => a.id === r.offline_id);
+        if (idx !== -1) {
+          if (r.status === 'synced') {
+            updated[idx].synced = true;
+            delete updated[idx]._syncError;
+          } else {
+            updated[idx]._syncError = r.error || 'Unknown error';
+          }
+        }
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+
+    updatePendingBadge();
+    updateConnectivity();
+    syncing = false;
+    renderSyncPanel();
+
+  } catch (err) {
+    console.error('Sync failed:', err);
+    // Mark all pending with error
+    const updated = loadSaved();
+    pending.forEach(p => {
+      const idx = updated.findIndex(a => a.id === p.id);
+      if (idx !== -1) updated[idx]._syncError = err.message || 'Network error';
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    syncing = false;
+    renderSyncPanel();
+  }
+}
+
+// ─── Connectivity detection ────────────────────────────────────────────────
+
+function updateConnectivity() {
+  const badge = document.getElementById('badge-connectivity');
+  const syncBtn = document.getElementById('btn-sync-header');
+  const pending = getPending();
+
+  if (navigator.onLine) {
+    badge.className = 'badge-online';
+    badge.innerHTML = '🟢 Online';
+  } else {
+    badge.className = 'badge-offline';
+    badge.innerHTML = '📡 Offline';
+  }
+
+  // Show sync button when there are pending assessments
+  if (pending > 0) {
+    syncBtn.classList.remove('hidden');
+  } else {
+    syncBtn.classList.add('hidden');
+  }
+}
+
+window.addEventListener('online', updateConnectivity);
+window.addEventListener('offline', updateConnectivity);
+
+// Boot
+updatePendingBadge();
+updateConnectivity();
+render();
+</script>
+</body>
+</html>
