@@ -755,7 +755,8 @@ const deriveProgress = (rows: DashboardSession[]): UserProgress => {
   for (const row of rows) {
     const ev = row.science_skills_evaluation;
     if (!ev || ev.stage_id < 0 || ev.stage_id > 4) continue;
-    const p = prog[ev.pathway];
+    const p = prog[ev.pathway as Pathway];
+    if (!p) continue;
     if (ev.is_complete) p.completedStages[ev.stage_id] = true;
     if (ev.can_advance || ev.is_complete)
       p.unlockedUpTo = Math.max(p.unlockedUpTo, Math.min(4, ev.stage_id + 1));
@@ -1062,13 +1063,39 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
   // ── Persist to dashboard ───────────────────────────────────────────────
   const persistToDashboard = useCallback(async (msgs: ChatMessage[], eval_: SessionEvaluation | null = null) => {
-    if (!dashboardRowId.current) return;
-    await supabase.from('dashboard').update({
+    const currentId = dashboardRowId.current ?? `mock-science-${crypto.randomUUID()}`;
+    if (!dashboardRowId.current) dashboardRowId.current = currentId;
+    const cacheKey = `ScienceSkillsPage_historyCache_${currentId}`;
+    const payload = {
       chat_history: JSON.stringify(msgs),
       ...(eval_ !== null && { science_skills_evaluation: eval_ }),
       progress: eval_?.is_complete ? 'completed' : 'started',
       updated_at: new Date().toISOString(),
-    }).eq('id', dashboardRowId.current);
+    };
+
+    const saveLocal = () => {
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ chat_history: msgs, evaluation: eval_, updated_at: payload.updated_at }));
+      } catch (err) {
+        console.warn('[ScienceSkillsPage] Failed to save session to localStorage:', err);
+      }
+    };
+
+    if (String(currentId).startsWith('mock-')) {
+      saveLocal();
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('dashboard').update(payload).eq('id', currentId);
+      if (error) {
+        console.warn('[ScienceSkillsPage] Supabase update failed, saving local fallback:', error);
+        saveLocal();
+      }
+    } catch (err) {
+      console.warn('[ScienceSkillsPage] Supabase update exception, saving local fallback:', err);
+      saveLocal();
+    }
   }, []);
 
   // ── Start session ──────────────────────────────────────────────────────
@@ -1078,10 +1105,11 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     setTopic(t); setMessages([]); setEvaluation(null);
     dashboardRowId.current = null; setIsSending(true); cancel();
 
+    let newId: string | null = null;
     if (user?.id) {
-      const newId = crypto.randomUUID();
+      const candidateId = crypto.randomUUID();
       const { error } = await supabase.from('dashboard').insert({
-        id: newId, user_id: user.id,
+        id: candidateId, user_id: user.id,
         activity: 'science_skills',
         category_activity: selectedStage.name,
         sub_category: t,
@@ -1093,29 +1121,22 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
-      if (!error) dashboardRowId.current = newId;
+      if (!error) newId = candidateId;
     }
+
+    if (!newId) newId = `mock-science-${crypto.randomUUID()}`;
+    dashboardRowId.current = newId;
     setView('chat');
 
-    try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildScienceLevelBlock(scienceLevel);
-      const welcome = await chatText({
-        page: 'ScienceSkillsPage',
-        messages: [{ role: 'user', content: `The student has chosen to explore "${selectedStage.name}" through the context of: "${t}". Give a warm 2-sentence welcome and pose your very first question or observation challenge. Be curious and encouraging.` }],
-        system: sysPrompt,
-        max_tokens: 400,
-      });
-      const welcomeMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: welcome, timestamp: new Date().toISOString() };
-      setMessages([welcomeMsg]);
-      await persistToDashboard([welcomeMsg]);
-    } catch {
-      const fallback: ChatMessage = {
-        id: crypto.randomUUID(), role: 'assistant',
-        content: `Welcome! I am so excited to explore ${selectedStage.name} with you through the lens of "${t}". Let's start with a question: what have you already noticed or wondered about this topic from a scientific perspective?`,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages([fallback]);
-    } finally { setIsSending(false); }
+    const greetingMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: `Welcome to this deep dive into ${selectedStage.name} exploring "${t}". Are you ready to dive in today?`,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages([greetingMsg]);
+    await persistToDashboard([greetingMsg]);
+    setIsSending(false);
   };
 
   // ── Resume session ─────────────────────────────────────────────────────
