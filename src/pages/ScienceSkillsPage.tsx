@@ -572,8 +572,6 @@ const normalizeEvaluation = (evaluation: SessionEvaluation): SessionEvaluation =
   };
 };
 
-// ─── Evaluation ───────────────────────────────────────────────────────────────
-
 const evaluateSession = async (
   messages: ChatMessage[],
   pathway: Pathway,
@@ -587,57 +585,40 @@ const evaluateSession = async (
     .map(m => `${m.role === 'user' ? 'Student' : 'Coach'}: ${m.content}`)
     .join('\n\n');
 
-  const prompt = `You are an expert science education assessor evaluating a student's science session.
+  const prompt = `You are an expert science education assessor evaluating a student's science session.\n\nPathway: ${pathway}\nStage: ${stage.name} (Stage ${stageId + 1})\nStudent level: ${mathLevel}\n\nRubric dimensions:\n${rubrics.map((r, i) => `${i + 1}. ${r}`).join('\n')}\n\nConversation:\n${conversation}\n\nRespond with JSON containing: pathway, stage_id, stage_name, overall_level (Emerging|Developing|Proficient|Advanced), can_advance (boolean), is_complete (boolean), sub_categories (array of {name, level, score, evidence}), encouragement.`;
 
-Pathway: "${pathway === 'reasoning' ? 'Scientific Reasoning' : pathway === 'life' ? 'Life Sciences' : 'Physical Sciences'}"
-Stage: "${stage.name}" (Stage ${stageId + 1})
-Student level: ${mathLevel} (0=emerging, 1=developing, 2=proficient, 3=advanced)
+  try {
+    const result = await chatJSON({
+      page: 'ScienceSkillsPage',
+      messages: [{ role: 'user', content: prompt }],
+      system: 'You are a science education assessment expert. Return only valid JSON with no preamble.',
+      max_tokens: 900,
+      temperature: 0.15,
+    });
 
-Rubric dimensions:
-${rubrics.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+    if (!result || !result.sub_categories) throw new Error('Invalid evaluation response');
 
-Conversation:
-${conversation}
+    const parsed = result as SessionEvaluation;
+    // Enforce can_advance based solely on overall_level
+    parsed.can_advance = parsed.overall_level === 'Proficient' || parsed.overall_level === 'Advanced';
+    parsed.is_complete = Array.isArray(parsed.sub_categories) && parsed.sub_categories.length > 0 && parsed.sub_categories.every(s => s.level === 'Advanced');
 
-Scoring:
-- Emerging (0–49): little evidence; misconceptions; needs foundational support
-- Developing (50–69): partial understanding; progress visible but errors present
-- Proficient (70–84): solid understanding; minor errors; ready to advance
-- Advanced (85–100): deep, flexible understanding; can explain reasoning; extends thinking
-
-Rules:
-- can_advance = true only if ALL sub_categories are Proficient or Advanced
-- is_complete = true only if ALL sub_categories are Advanced
-- Insufficient conversation → mark Emerging, low score, note "Insufficient evidence"
-- encouragement must reference something specific from the session
-
-Respond ONLY with valid JSON:
-{
-  "pathway": "${pathway}",
-  "stage_id": ${stageId},
-  "stage_name": "${stage.name}",
-  "overall_level": "Emerging|Developing|Proficient|Advanced",
-  "can_advance": false,
-  "is_complete": false,
-  "sub_categories": [
-    { "name": "...", "level": "Emerging|Developing|Proficient|Advanced", "score": 0, "evidence": "..." }
-  ],
-  "encouragement": "..."
-}`;
-
-  const result = await chatJSON({
-    page: 'ScienceSkillsPage',
-    messages: [{ role: 'user', content: prompt }],
-    system: 'You are a science education assessment expert. Return only valid JSON with no preamble.',
-    max_tokens: 900,
-    temperature: 0.15,
-  });
-
-  if (!result?.sub_categories) throw new Error('Invalid evaluation response');
-  return normalizeEvaluation(result as SessionEvaluation);
+    return parsed;
+  } catch (err) {
+    console.error('[ScienceSkillsPage] evaluateSession error:', err);
+    const fallback: SessionEvaluation = {
+      pathway,
+      stage_id: stageId,
+      stage_name: stage.name,
+      overall_level: 'Emerging',
+      can_advance: false,
+      is_complete: false,
+      sub_categories: rubrics.map(r => ({ name: r, level: 'Emerging', score: 0, evidence: 'Insufficient evidence' })),
+      encouragement: 'Insufficient evidence to generate an evaluation. Please try another session.',
+    };
+    return fallback;
+  }
 };
-
-// ─── Spoken evaluation ────────────────────────────────────────────────────────
 
 const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
   const pathwayLabel = evaluation.pathway === 'reasoning'
@@ -771,19 +752,20 @@ const deriveProgress = (rows: DashboardSession[]): UserProgress => {
 
   for (const row of rows) {
     const ev = row.science_skills_evaluation;
+    const pathway = ev?.pathway as Pathway;
     const stageId = Number(ev?.stage_id);
-    if (!ev || Number.isNaN(stageId) || stageId < 0 || stageId > 4) continue;
-    const p = prog[ev.pathway as Pathway];
-    if (!p) continue;
-    if (ev.is_complete) p.completedStages[stageId] = true;
+    if (!ev || !pathway || Number.isNaN(stageId) || stageId < 0 || stageId > 4) continue;
+    if (!prog[pathway]) continue;
+    // mark stage as achieved if evaluation indicates can_advance or is_complete
+    if (ev.can_advance || ev.is_complete) prog[pathway].completedStages[stageId] = true;
     if (ev.can_advance) {
-      p.unlockedUpTo = Math.max(p.unlockedUpTo, Math.min(4, stageId + 1));
+      const currentStageId = Number(ev.stage_id);
+      prog[pathway].unlockedUpTo = Math.max(prog[pathway].unlockedUpTo, Math.min(4, currentStageId + 1));
     }
   }
 
-  // tier1Complete = all 5 reasoning stages have been completed at Advanced or explicitly unlocked by can_advance
-  prog.tier1Complete = prog.reasoning.completedStages.every(Boolean) ||
-    prog.reasoning.unlockedUpTo >= 5;
+  // tier1Complete = all 5 reasoning stages have been marked achieved (Proficient/Advanced)
+  prog.tier1Complete = prog.reasoning.completedStages.every(Boolean);
 
   return prog;
 };
@@ -1095,6 +1077,12 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     const saveLocal = () => {
       try {
         localStorage.setItem(cacheKey, JSON.stringify({ chat_history: msgs, evaluation: eval_, updated_at: payload.updated_at }));
+        try {
+          // global backup of latest progress
+          if (eval_) localStorage.setItem('ScienceSkillsPage_progress', JSON.stringify({ updated_at: payload.updated_at, evaluation: eval_, chat_history: msgs }));
+        } catch (e) {
+          /* ignore */
+        }
       } catch (err) {
         console.warn('[ScienceSkillsPage] Failed to save session to localStorage:', err);
       }
@@ -1110,6 +1098,11 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
       if (error) {
         console.warn('[ScienceSkillsPage] Supabase update failed, saving local fallback:', error);
         saveLocal();
+      } else {
+        // also write a safe global backup when update succeeds
+        try {
+          if (eval_) localStorage.setItem('ScienceSkillsPage_progress', JSON.stringify({ updated_at: payload.updated_at, evaluation: eval_, chat_history: msgs }));
+        } catch (e) { /* ignore */ }
       }
     } catch (err) {
       console.warn('[ScienceSkillsPage] Supabase update exception, saving local fallback:', err);
