@@ -72,6 +72,7 @@ interface DashboardSession {
 interface UserProgress {
   unlockedUpTo: number;
   completedStages: boolean[];
+  stageLevels: (ProficiencyLevel | null)[];
 }
 
 // ─── Distorted Background ───────────────────────────────────────────────────
@@ -538,19 +539,47 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
 
 // ─── Derive progress from saved sessions ─────────────────────────────────────
 
+const isStrongLevel = (level: ProficiencyLevel) => level === 'Proficient' || level === 'Advanced';
+
 const deriveProgress = (rows: DashboardSession[]): UserProgress => {
   const completedStages = Array(STAGES.length).fill(false) as boolean[];
-  let earnedUpTo = 0;
+  const stageLevels = Array(STAGES.length).fill(null) as (ProficiencyLevel | null)[];
+
+  const levelPriority: Record<ProficiencyLevel, number> = {
+    Emerging: 1,
+    Developing: 2,
+    Proficient: 3,
+    Advanced: 4,
+  };
+
+  const strongestLevel = (current: ProficiencyLevel | null, candidate: ProficiencyLevel) =>
+    !current || levelPriority[candidate] > levelPriority[current] ? candidate : current;
+
   for (const row of rows) {
     const ev = row.math_skills_evaluation;
     if (!ev || ev.stage_id < 0 || ev.stage_id >= STAGES.length) continue;
-    if (ev.is_complete) completedStages[ev.stage_id] = true;
-    if (ev.can_advance || ev.is_complete) {
-      earnedUpTo = Math.max(earnedUpTo, Math.min(STAGES.length - 1, ev.stage_id + 1));
-    }
+    stageLevels[ev.stage_id] = strongestLevel(stageLevels[ev.stage_id], ev.overall_level);
+    completedStages[ev.stage_id] = ev.overall_level === 'Advanced';
   }
-  return { unlockedUpTo: earnedUpTo, completedStages };
+
+  let unlockedUpTo = 0;
+  while (unlockedUpTo < completedStages.length && completedStages[unlockedUpTo]) {
+    unlockedUpTo += 1;
+  }
+
+  return { unlockedUpTo, completedStages, stageLevels };
 };
+
+const EXTENSIVE_INTERACTIVE_INSTRUCTIONS = `
+Always respond as a deeply thoughtful tutor. Your answers must:
+- be expansive, detailed, and fully unpack the learner's question or prompt;
+- explain reasoning step by step, not just give a short summary;
+- connect ideas clearly to the current stage objective and the student's context;
+- avoid superficial or brief responses unless the learner explicitly asks for a short summary;
+- conclude with multiple highly relevant follow-up questions tied strictly to the current stage's math learning objective.
+
+The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
+The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.`;
 
 // ─── Evaluation Modal ─────────────────────────────────────────────────────────
 
@@ -968,7 +997,7 @@ LANGUAGE RULES:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel);
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const welcome = await chatText({
         page: 'MathSkillsPage',
         messages: [{ role: 'user', content: `The student has chosen to practice "${selectedStage.name}" using the context of: "${t}". Give a warm 2-sentence welcome and pose your very first math question or challenge, grounded in their context. Be encouraging and make it feel like an adventure.` }],
@@ -1017,7 +1046,7 @@ LANGUAGE RULES:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel);
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'MathSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
@@ -1181,47 +1210,61 @@ LANGUAGE RULES:
           ) : (
             <div className="max-w-3xl mx-auto space-y-4">
               {STAGES.map((stage, idx) => {
-                const unlocked = idx <= progress.unlockedUpTo;
-                const completed = progress.completedStages[idx];
+                const stageLevel = progress.stageLevels[idx];
+                const isCompleted = stageLevel === 'Advanced';
+                const isLocked = idx > progress.unlockedUpTo;
+                const isActive = idx === progress.unlockedUpTo && !isCompleted;
+                const isUnlocked = idx <= progress.unlockedUpTo;
+                const scoreBadge =
+                  !isCompleted && (stageLevel === 'Proficient' || stageLevel === 'Emerging')
+                    ? `Current Score: ${stageLevel}`
+                    : null;
                 const Icon = stage.icon;
                 return (
                   <div
                     key={stage.id}
                     onClick={() => {
-                      if (!unlocked) return;
+                      if (isLocked || isCompleted) return;
                       setSelectedStage(stage); setTopicInput('');
                       loadStageSessions(stage.name); setView('topic');
                     }}
                     className={`relative rounded-2xl border-2 p-5 transition-all duration-200
-                      ${unlocked
-                        ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-                        : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed'}`}
+                      ${isCompleted
+                        ? 'bg-emerald-950/80 border-emerald-500/40 cursor-not-allowed opacity-50 backdrop-blur-sm pointer-events-none'
+                        : isActive
+                          ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+                          : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed opacity-70'}`}
                   >
                     <div className="flex items-start gap-5">
-                      <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${unlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
-                        {completed
+                      <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
+                        {isCompleted
                           ? <CheckCircle className="h-7 w-7 text-white" />
-                          : unlocked
+                          : isUnlocked
                             ? <Icon className="h-7 w-7 text-white" />
                             : <Lock className="h-6 w-6 text-slate-300" />
                         }
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap mb-1">
-                          <span className={`text-sm font-semibold uppercase tracking-wider ${unlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
-                          {completed && <span className="text-sm bg-green-500/30 text-green-300 px-2 py-0.5 rounded-full border border-green-500/40">🏆 Complete</span>}
-                          {!unlocked && (
+                          <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
+                          {isCompleted && <span className="font-bold text-green-400">Completed</span>}
+                          {!isCompleted && scoreBadge && (
+                            <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
+                              {scoreBadge}
+                            </span>
+                          )}
+                          {!isActive && isLocked && (
                             <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
                               🔒 Complete Stage {idx} to unlock
                             </span>
                           )}
                         </div>
-                        <h3 className={`text-2xl font-bold ${unlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
-                        <p className={`text-base font-medium mt-0.5 ${unlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
-                        <p className={`text-base mt-1 ${unlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description}</p>
-                        <p className={`text-sm mt-2 ${unlocked ? 'text-slate-400' : 'text-slate-500'}`}>{STAGE_RUBRICS[idx].join(' · ')}</p>
+                        <h3 className={`text-2xl font-bold ${isUnlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
+                        <p className={`text-base font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
+                        <p className={`text-base mt-1 ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
+                        <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>{STAGE_RUBRICS[idx].join(' · ')}</p>
                       </div>
-                      {unlocked && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
+                      {isActive && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
                     </div>
                   </div>
                 );
@@ -1261,7 +1304,7 @@ LANGUAGE RULES:
                 <div className="text-base font-semibold text-slate-300 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
                 <h2 className="text-4xl font-bold text-white">{selectedStage.name}</h2>
                 <p className="text-lg font-medium mt-1 text-slate-200">{selectedStage.subtitle}</p>
-                <p className="text-slate-200 text-lg mt-3">{selectedStage.description}</p>
+                <p className="text-slate-200 text-lg mt-3">{selectedStage.description || 'Description could not be loaded.'}</p>
                 <p className="text-slate-400 text-base mt-2">{STAGE_RUBRICS[selectedStage.id].join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}

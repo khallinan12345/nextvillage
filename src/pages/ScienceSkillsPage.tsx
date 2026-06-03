@@ -69,6 +69,7 @@ interface DashboardSession {
 interface StageProgress {
   unlockedUpTo: number;
   completedStages: boolean[];
+  stageLevels: (ProficiencyLevel | null)[];
 }
 
 interface UserProgress {
@@ -77,6 +78,18 @@ interface UserProgress {
   physical: StageProgress;
   tier1Complete: boolean; // all 5 reasoning stages Proficient+
 }
+
+const EXTENSIVE_INTERACTIVE_INSTRUCTIONS = `
+
+Always respond as a deeply thoughtful tutor. Your answers must:
+- be expansive, detailed, and fully unpack the learner's question or prompt;
+- explain the reasoning step by step, not just give a short summary;
+- connect ideas clearly to the current stage objective and the student's context;
+- avoid introducing content beyond the current stage unless the student specifically requests a broader explanation;
+- finish by asking several targeted, context-specific follow-up questions that guide the learner deeper into the stage goal.
+
+The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
+The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.`;
 
 // ─── Distorted Background ─────────────────────────────────────────────────────
 
@@ -741,6 +754,7 @@ const deriveProgress = (rows: DashboardSession[]): UserProgress => {
   const makeStageProgress = (): StageProgress => ({
     unlockedUpTo: 0,
     completedStages: Array(5).fill(false) as boolean[],
+    stageLevels: Array(5).fill(null) as (ProficiencyLevel | null)[],
   });
 
   const prog: UserProgress = {
@@ -750,21 +764,35 @@ const deriveProgress = (rows: DashboardSession[]): UserProgress => {
     tier1Complete: false,
   };
 
+  const levelPriority: Record<ProficiencyLevel, number> = {
+    Emerging: 1,
+    Developing: 2,
+    Proficient: 3,
+    Advanced: 4,
+  };
+
+  const strongestLevel = (current: ProficiencyLevel | null, candidate: ProficiencyLevel) =>
+    !current || levelPriority[candidate] > levelPriority[current] ? candidate : current;
+
   for (const row of rows) {
     const ev = row.science_skills_evaluation;
     const pathway = ev?.pathway as Pathway;
     const stageId = Number(ev?.stage_id);
     if (!ev || !pathway || Number.isNaN(stageId) || stageId < 0 || stageId > 4) continue;
     if (!prog[pathway]) continue;
-    // mark stage as achieved if evaluation indicates can_advance or is_complete
-    if (ev.can_advance || ev.is_complete) prog[pathway].completedStages[stageId] = true;
-    if (ev.can_advance) {
-      const currentStageId = Number(ev.stage_id);
-      prog[pathway].unlockedUpTo = Math.max(prog[pathway].unlockedUpTo, Math.min(4, currentStageId + 1));
-    }
+    prog[pathway].stageLevels[stageId] = strongestLevel(prog[pathway].stageLevels[stageId], ev.overall_level);
+    prog[pathway].completedStages[stageId] = ev.overall_level === 'Advanced';
   }
 
-  // tier1Complete = all 5 reasoning stages have been marked achieved (Proficient/Advanced)
+  for (const pathway of ['reasoning', 'life', 'physical'] as const) {
+    const data = prog[pathway];
+    let frontier = 0;
+    while (frontier < data.completedStages.length && data.completedStages[frontier]) {
+      frontier += 1;
+    }
+    data.unlockedUpTo = frontier;
+  }
+
   prog.tier1Complete = prog.reasoning.completedStages.every(Boolean);
 
   return prog;
@@ -1186,7 +1214,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     const withUser = [...messages, userMsg];
     setMessages(withUser);
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel);
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'ScienceSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
@@ -1269,49 +1297,63 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     locked: boolean,
     lockReason?: string,
   ) => {
-    const unlocked = !locked && idx <= stageProgress.unlockedUpTo;
-    const completed = stageProgress.completedStages[idx];
+    const stageLevel = stageProgress.stageLevels[idx];
+    const isCompleted = stageLevel === 'Advanced';
+    const isLocked = locked || idx > stageProgress.unlockedUpTo;
+    const isActive = idx === stageProgress.unlockedUpTo && !isCompleted && !locked;
+    const isUnlocked = idx <= stageProgress.unlockedUpTo;
+    const scoreBadge =
+      !isCompleted && (stageLevel === 'Proficient' || stageLevel === 'Emerging')
+        ? `Current Score: ${stageLevel}`
+        : null;
     const Icon = stage.icon;
     return (
       <div
         key={`${stage.pathway}-${stage.id}`}
         onClick={() => {
-          if (!unlocked) return;
+          if (isLocked || isCompleted) return;
           setSelectedStage(stage); setTopicInput(''); setStageSessions([]);
           loadStageSessions(stage.name); setView('topic');
         }}
         className={`relative rounded-2xl border-2 p-5 transition-all duration-200
-          ${unlocked
-            ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-            : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed opacity-70'}`}
+          ${isCompleted
+            ? 'bg-emerald-950/80 border-emerald-500/40 cursor-not-allowed opacity-50 backdrop-blur-sm pointer-events-none'
+            : isActive
+              ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+              : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed opacity-70'}`}
       >
         <div className="flex items-start gap-5">
-          <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${unlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
-            {completed ? <CheckCircle className="h-7 w-7 text-white" /> : unlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-slate-300" />}
+          <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
+            {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-slate-300" />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <span className={`text-sm font-semibold uppercase tracking-wider ${unlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
-              {completed && <span className="text-sm bg-green-500/30 text-green-300 px-2 py-0.5 rounded-full border border-green-500/40">🏆 Complete</span>}
-              {!unlocked && lockReason && (
+              <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
+              {isCompleted && <span className="font-bold text-green-400">Completed</span>}
+              {!isCompleted && scoreBadge && (
+                <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
+                  {scoreBadge}
+                </span>
+              )}
+              {!isActive && isLocked && lockReason && (
                 <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
                   🔒 {lockReason}
                 </span>
               )}
-              {!unlocked && !lockReason && idx > stageProgress.unlockedUpTo && (
+              {!isActive && isLocked && !lockReason && (
                 <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
                   🔒 Complete Stage {idx} to unlock
                 </span>
               )}
             </div>
-            <h3 className={`text-xl font-bold ${unlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
-            <p className={`text-sm font-medium mt-0.5 ${unlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
-            <p className={`text-sm mt-1 ${unlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description}</p>
-            <p className={`text-xs mt-2 ${unlocked ? 'text-slate-400' : 'text-slate-500'}`}>
+            <h3 className={`text-xl font-bold ${isUnlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
+            <p className={`text-sm font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
+            <p className={`text-sm mt-1 ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
+            <p className={`text-xs mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>
               {STAGE_RUBRICS[stage.pathway][idx].join(' · ')}
             </p>
           </div>
-          {unlocked && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
+          {isActive && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
         </div>
       </div>
     );
@@ -1561,7 +1603,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <div className="text-base font-semibold text-slate-300 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
                 <h2 className="text-4xl font-bold text-white">{selectedStage.name}</h2>
                 <p className={`text-lg font-medium mt-1 ${selectedStage.textColor}`}>{selectedStage.subtitle}</p>
-                <p className="text-slate-200 text-lg mt-3">{selectedStage.description}</p>
+                <p className="text-slate-200 text-lg mt-3">{selectedStage.description?.trim() || 'Description could not be loaded.'}</p>
                 <p className="text-slate-400 text-sm mt-2">{STAGE_RUBRICS[selectedStage.pathway][selectedStage.id].join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}

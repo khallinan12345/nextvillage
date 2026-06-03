@@ -72,6 +72,7 @@ interface DashboardSession {
 interface UserProgress {
   unlockedUpTo: number;
   completedStages: boolean[];
+  stageLevels: (ProficiencyLevel | null)[];
 }
 
 // ─── Correction block for every system prompt ────────────────────────────────
@@ -86,6 +87,17 @@ When the student makes a grammar or expression error, ALWAYS do all three steps:
   3. Then continue the conversation naturally with your next question or prompt.
 IMPORTANT FORMATTING RULE: The correction line MUST start with ✅ and appear on its own line, with a blank line before it and after it.
 Never skip a correction, no matter how small. Use simple, kind language — the goal is to teach, not embarrass.`;
+
+const EXTENSIVE_INTERACTIVE_INSTRUCTIONS = `
+Always respond as a deeply thoughtful tutor. Your answers must:
+- be expansive, detailed, and fully unpack the learner's question or prompt;
+- explain reasoning step by step, not just give a short summary;
+- connect ideas clearly to the current stage objective and the student's context;
+- avoid superficial or brief responses unless the learner explicitly asks for a short summary;
+- conclude with multiple highly relevant follow-up questions tied strictly to the current stage's English learning objective.
+
+The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
+The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.`;
 
 // ─── Distorted Background with hover-whirl ───────────────────────────────────
 // Mirrors the SkillsPage DistortedBackground — unique filter ID avoids conflicts.
@@ -509,24 +521,38 @@ const levelFloor = (communicationLevel: number): number => {
 
 const deriveProgress = (rows: DashboardSession[], communicationLevel: number = 1): UserProgress => {
   const completedStages = [false, false, false, false, false];
-  let earnedUpTo = 0;
+  const stageLevels = [null, null, null, null, null] as (ProficiencyLevel | null)[];
+
+  const levelPriority: Record<ProficiencyLevel, number> = {
+    Emerging: 1,
+    Developing: 2,
+    Proficient: 3,
+    Advanced: 4,
+  };
+
+  const strongestLevel = (current: ProficiencyLevel | null, candidate: ProficiencyLevel) =>
+    !current || levelPriority[candidate] > levelPriority[current] ? candidate : current;
+
   for (const row of rows) {
     const ev = row.english_skills_evaluation;
     if (!ev || ev.stage_id < 0 || ev.stage_id > 4) continue;
-    if (ev.is_complete) completedStages[ev.stage_id] = true;
-    if (ev.can_advance || ev.is_complete) {
-      earnedUpTo = Math.max(earnedUpTo, Math.min(4, ev.stage_id + 1));
-    }
+    stageLevels[ev.stage_id] = strongestLevel(stageLevels[ev.stage_id], ev.overall_level);
+    completedStages[ev.stage_id] = ev.overall_level === 'Advanced';
+  }
+
+  let earnedUpTo = 0;
+  while (earnedUpTo < completedStages.length && completedStages[earnedUpTo]) {
+    earnedUpTo += 1;
   }
 
   // For level 2: Stage 5 (index 4) only unlocks once Stages 3 & 4 (indices 2 & 3) are complete.
   const floor = levelFloor(communicationLevel);
   const adjustedFloor = (communicationLevel === 2 && !(completedStages[2] && completedStages[3]))
-    ? Math.min(floor, 3)  // cap at index 3 (Stage 4) until 3+4 complete
+    ? Math.min(floor, 3)
     : floor;
 
   const unlockedUpTo = Math.max(earnedUpTo, adjustedFloor);
-  return { unlockedUpTo, completedStages };
+  return { unlockedUpTo, completedStages, stageLevels };
 };
 
 // ─── Evaluation Modal ─────────────────────────────────────────────────────────
@@ -1041,7 +1067,7 @@ Respond ONLY with valid JSON:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel);
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const welcome = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: [{ role: 'user', content: `The student has chosen the topic: "${t}". Give a warm 2-sentence welcome and ask your very first question or prompt. Be friendly and encouraging.` }],
@@ -1084,7 +1110,7 @@ Respond ONLY with valid JSON:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel);
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
@@ -1270,31 +1296,45 @@ Respond ONLY with valid JSON:
             ) : (
               <div className="max-w-3xl mx-auto space-y-4">
                 {STAGES.map((stage, idx) => {
-                  const unlocked = idx <= progress.unlockedUpTo;
-                  const completed = progress.completedStages[idx];
+                  const stageLevel = progress.stageLevels[idx];
+                  const isCompleted = stageLevel === 'Advanced';
+                  const isLocked = idx > progress.unlockedUpTo;
+                  const isActive = idx === progress.unlockedUpTo && !isCompleted;
+                  const isUnlocked = idx <= progress.unlockedUpTo;
+                  const scoreBadge =
+                    !isCompleted && (stageLevel === 'Proficient' || stageLevel === 'Emerging')
+                      ? `Current Score: ${stageLevel}`
+                      : null;
                   const Icon = stage.icon;
                   return (
                     <div
                       key={stage.id}
                       onClick={() => {
-                        if (!unlocked) return;
+                        if (isLocked || isCompleted) return;
                         setSelectedStage(stage); setTopicInput('');
                         loadStageSessions(stage.name); setView('topic');
                       }}
                       className={`relative rounded-2xl border-2 p-5 transition-all duration-200
-                        ${unlocked
-                          ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-                          : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed'}`}
+                        ${isCompleted
+                          ? 'bg-emerald-950/80 border-emerald-500/40 cursor-not-allowed opacity-50 backdrop-blur-sm pointer-events-none'
+                          : isActive
+                            ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+                            : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed opacity-70'}`}
                     >
                       <div className="flex items-start gap-5">
-                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${unlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
-                          {completed ? <CheckCircle className="h-7 w-7 text-white" /> : unlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-slate-300" />}
+                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
+                          {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-slate-300" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 flex-wrap mb-1">
-                            <span className={`text-sm font-semibold uppercase tracking-wider ${unlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
-                            {completed && <span className="text-sm bg-green-500/30 text-green-300 px-2 py-0.5 rounded-full border border-green-500/40">🏆 Complete</span>}
-                            {!unlocked && (
+                            <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
+                            {isCompleted && <span className="font-bold text-green-400">Completed</span>}
+                            {!isCompleted && scoreBadge && (
+                              <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
+                                {scoreBadge}
+                              </span>
+                            )}
+                            {!isActive && isLocked && (
                               <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
                                 {idx === 4 && communicationLevel === 2
                                   ? '🔒 Complete Stages 3 & 4 to unlock'
@@ -1302,12 +1342,12 @@ Respond ONLY with valid JSON:
                               </span>
                             )}
                           </div>
-                          <h3 className={`text-2xl font-bold ${unlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
-                          <p className={`text-base font-medium mt-0.5 ${unlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
-                          <p className={`text-base mt-1 ${unlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description}</p>
-                          <p className={`text-sm mt-2 ${unlocked ? 'text-slate-400' : 'text-slate-500'}`}>{STAGE_RUBRICS[idx].join(' · ')}</p>
+                          <h3 className={`text-2xl font-bold ${isUnlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
+                          <p className={`text-base font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
+                          <p className={`text-base mt-1 ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
+                          <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>{STAGE_RUBRICS[idx].join(' · ')}</p>
                         </div>
-                        {unlocked && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
+                        {isActive && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
                       </div>
                     </div>
                   );
@@ -1344,7 +1384,7 @@ Respond ONLY with valid JSON:
                   <div className="text-base font-semibold text-slate-300 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
                   <h2 className="text-4xl font-bold text-white">{selectedStage.name}</h2>
                   <p className="text-lg font-medium mt-1 text-slate-200">{selectedStage.subtitle}</p>
-                  <p className="text-slate-200 text-lg mt-3">{selectedStage.description}</p>
+                  <p className="text-slate-200 text-lg mt-3">{selectedStage.description || 'Description could not be loaded.'}</p>
                   <p className="text-slate-400 text-base mt-2">{STAGE_RUBRICS[selectedStage.id].join(' · ')}</p>
                   <button
                     onClick={() => speak(selectedStage.voiceIntro)}

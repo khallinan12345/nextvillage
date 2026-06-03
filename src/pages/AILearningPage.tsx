@@ -104,6 +104,25 @@ const unescoScoreLabel = (s: number) =>
   s === 2 ? 'Developing' :
   s === 1 ? 'Emerging' : '?';
 
+const TUTOR_BEHAVIOR_RULES = `
+The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
+The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.`;
+
+function certificationScoreToOverallLevel(score: number | null | undefined): 'Emerging' | 'Proficient' | 'Advanced' | null {
+  if (score == null) return null;
+  let normalized = score;
+  if (normalized > 3) {
+    if (normalized <= 25) normalized = 0;
+    else if (normalized <= 50) normalized = 1;
+    else if (normalized <= 75) normalized = 2;
+    else normalized = 3;
+  }
+  if (normalized === 3) return 'Advanced';
+  if (normalized === 2) return 'Proficient';
+  if (normalized === 1) return 'Emerging';
+  return null;
+}
+
 const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const renderParagraph = (paragraph: string, pIndex: number) => {
     const lines = paragraph.split('\n').filter(l => l.trim());
@@ -535,6 +554,7 @@ EXPECTATIONS:
 - Reference Nigerian infrastructure, energy systems, market dynamics, or local economic realities where relevant.
 - Encourage the student to think independently, test assumptions, and build on their own reasoning.
 - Never skip steps or assume prior knowledge. Always check for understanding.
+${TUTOR_BEHAVIOR_RULES}
 
 Start by warmly welcoming the student now that they have acknowledged they are ready to begin.`;
 }
@@ -706,6 +726,7 @@ Non-negotiable operating rules:
 - No doing the work for them: you may model structure but do not write their full solution.
 - Tone: Clear, motivating, direct.
 - ANSWER DIRECT QUESTIONS FIRST: If the learner asks a genuine question (e.g. "What does X mean?", "Can you explain Y?", "I don't understand Z"), answer it clearly and concisely before returning to the guiding flow. Never respond to a direct question with another question. A learner who doesn't get answers will disengage.
+${TUTOR_BEHAVIOR_RULES}
 
 IMPORTANT: The session context (title, description, location, constraints, stakeholders, entrepreneurial angle, and chosen category) is already embedded in the MODULE DESCRIPTION below. Proceed directly to Step 3 — Run category mastery loop. Do NOT ask the learner to re-enter context.
 
@@ -1071,6 +1092,9 @@ const AILearningPage: React.FC = () => {
   };
 
   const isActivitySelectable = (activity: DashboardActivity): boolean => {
+    if (certificationScoreToOverallLevel(activity.certification_evaluation_score) === 'Advanced') {
+      return false;
+    }
     return activity.progress === 'not started' || activity.progress === 'started';
   };
 
@@ -1784,7 +1808,7 @@ USE THIS TO:
         sessionCount,
         userProfile.communicationLevel ?? communicationLevel
       );
-      const moduleDescription = data?.description || 'No description available.';
+      const moduleDescription = data?.description?.trim() || 'Description could not be loaded.';
       const subCategory = data?.sub_category || activity.sub_category || '';
 
       // Build UNESCO Framework guidance (with sessionCount for PUE bridge)
@@ -1799,7 +1823,8 @@ LEARNING MODULE: "${data?.title || activity.title}"
 MODULE DESCRIPTION: ${moduleDescription}
 SUB-CATEGORY: ${subCategory}
 
-FACILITATOR INSTRUCTIONS: ${data.ai_facilitator_instructions}`
+FACILITATOR INSTRUCTIONS: ${data.ai_facilitator_instructions}
+${TUTOR_BEHAVIOR_RULES}`
         : `${gradeInstructions}
 
 ${unescoGuidance}
@@ -1808,7 +1833,8 @@ LEARNING MODULE: "${data?.title || activity.title}"
 MODULE DESCRIPTION: ${moduleDescription}
 SUB-CATEGORY: ${subCategory}
 
-You are a helpful AI learning assistant guiding a student through this learning activity. Be encouraging, patient, and provide step-by-step guidance. Ask questions to check understanding and provide hints when needed.`;
+You are a helpful AI learning assistant guiding a student through this learning activity. Be encouraging, patient, and provide step-by-step guidance. Ask questions to check understanding and provide hints when needed.
+${TUTOR_BEHAVIOR_RULES}`;
 
       return {
         title: data?.title || 'this learning activity',
@@ -1826,7 +1852,7 @@ You are a helpful AI learning assistant guiding a student through this learning 
       return {
         title: 'this learning activity',
         description: 'Description could not be loaded.',
-        aiInstructions: `${gradeInstructions}\n\nYou are a helpful AI learning assistant. Guide the student through this learning activity with patience and encouragement.`,
+        aiInstructions: `${gradeInstructions}\n\nYou are a helpful AI learning assistant. Guide the student through this learning activity with patience and encouragement.\n${TUTOR_BEHAVIOR_RULES}`,
         assessmentInstructions: "Based on the conversation history, evaluate the student's performance. Consider engagement, effort, and understanding.",
         successMetrics: "Evaluate based on student engagement, understanding of concepts, quality of responses, and overall learning progress.",
         outcomes: ''
@@ -3392,7 +3418,9 @@ Respond ONLY with valid JSON:
                 )}
                 <div className="pt-2">
                   <strong>Description:</strong>
-                  <p className="mt-1 text-gray-700 text-base">{activityDescription}</p>
+                  <p className="mt-1 text-gray-700 text-base">
+                    {activityDescription || selectedActivity.description || 'Description could not be loaded.'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -4162,6 +4190,13 @@ Respond ONLY with valid JSON:
               const otherActivities = currentActivities.filter(a => a.isPublic !== false);
 
               const renderRow = (activity: DashboardActivity) => {
+                const overallLevel = certificationScoreToOverallLevel(activity.certification_evaluation_score);
+                const isAdvancedComplete = overallLevel === 'Advanced';
+                const scoreBadge =
+                  overallLevel === 'Proficient' || overallLevel === 'Emerging'
+                    ? `Current Score: ${overallLevel}`
+                    : null;
+
                 const hasScores = activity.progress !== 'not started' &&
                   (activity.certification_evaluation_score != null ||
                    activity.certification_evaluation_UNESCO_1_score != null);
@@ -4178,8 +4213,8 @@ Respond ONLY with valid JSON:
                     key={activity.id}
                     className={classNames(
                       'p-6 transition-colors',
-                      activity.progress === 'completed'
-                        ? 'bg-gray-50 opacity-60 cursor-not-allowed'
+                      isAdvancedComplete
+                        ? 'bg-gray-50 opacity-50 backdrop-blur-sm pointer-events-none cursor-not-allowed'
                         : isActivitySelectable(activity)
                         ? 'hover:bg-purple-50 cursor-pointer'
                         : 'cursor-default'
@@ -4192,17 +4227,22 @@ Respond ONLY with valid JSON:
                         <div className="flex-shrink-0">{getProgressIcon(activity.progress)}</div>
                         <div className="flex-1 min-w-0">
                           <h4 className={classNames('text-lg font-medium',
-                            activity.progress === 'completed'
-                              ? 'text-gray-400 line-through'
+                            isAdvancedComplete
+                              ? 'text-gray-400'
                               : isActivitySelectable(activity)
                               ? 'text-purple-900'
                               : 'text-gray-900')}>
                             {activity.title}
+                            {isAdvancedComplete && (
+                              <span className="ml-2 font-bold text-green-600">Completed</span>
+                            )}
+                            {!isAdvancedComplete && scoreBadge && (
+                              <span className="ml-2 text-sm font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                                {scoreBadge}
+                              </span>
+                            )}
                             {isActivitySelectable(activity) && (
                               <span className="ml-2 text-sm text-purple-600">(Click to start)</span>
-                            )}
-                            {activity.progress === 'completed' && (
-                              <span className="ml-2 text-sm text-gray-400 no-underline font-normal">✓ Completed</span>
                             )}
                           </h4>
                           <div className="flex items-center space-x-2 text-base text-gray-500 mt-1">
