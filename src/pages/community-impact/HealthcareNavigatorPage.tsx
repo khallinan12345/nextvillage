@@ -23,7 +23,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
@@ -32,7 +32,7 @@ import {
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
   ClipboardList, RefreshCw, Calendar, Mic, MicOff,
   Volume2, VolumeX, X, Lightbulb, Thermometer, Activity,
-  Baby, Stethoscope, ShieldCheck, AlertCircle, XCircle, Award, WifiOff,
+  Baby, Stethoscope, ShieldCheck, AlertCircle, XCircle, Award,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -271,6 +271,52 @@ REFERRAL NOTE — ALWAYS INCLUDE:
   Treatment given before referral | Navigator name + contact | Date and time
 `;
 
+// ─── Navigator Kit Inventory ──────────────────────────────────────────────────
+// Solomon Matthias Solomon's full kit — vAI / Davidson AI Innovation Centre
+// ALL treatment and diagnostic recommendations MUST reference this kit first.
+
+const KIT_CONTEXT = `
+NAVIGATOR KIT — SOLOMON MATTHIAS SOLOMON (vAI, Oloibiri):
+The navigator has the following equipment. Always reference these specifically in your guidance.
+
+INSTRUMENTS (durable — always available):
+- iHealth No-Touch Infrared Thermometer → use for ALL patients; point at forehead 1-2 inches away
+- Omron Gold BP Monitor (upper arm, Bluetooth) → use for adults, elderly, pregnant, any headache/dizziness
+- Zacurate Pro 500DL Pulse Oximeter (SpO2 + pulse rate) → use for cough, breathing difficulty, any respiratory concern. Normal SpO2 ≥95%; ≤90% = severe hypoxia = RED
+- Eko CORE 500 Digital Stethoscope (EKG + Bluetooth, AI-assisted) → use for chest auscultation on any respiratory or cardiac concern. Listen for wheezing, crackles, reduced breath sounds, murmurs
+- Contour Next ONE Glucometer (Bluetooth) → use when diabetes suspected, elderly patient, known diabetic
+- MUAC Tape → measure ALL children 6-59 months and ALL pregnant women
+
+DIAGNOSTIC CONSUMABLES:
+- Malaria RDTs (SD Bioline Ag P.f) — 50 available → ALWAYS perform before treating for malaria; result in 15-20 min; do not read after 30 min
+- Typhoid RDTs (SD Bioline IgG/IgM) — 25 available → sustained fever + headache + abdominal pain + negative malaria RDT
+- Urine Dipstick Strips (10-parameter) — 100 available → UTI suspected, or glucose/protein screening in diabetics and pregnant women
+- Pregnancy Test Strips — 25 available → uncertain pregnancy status in women of reproductive age
+- Glucometer Strips — 150 available → paired with Contour Next ONE glucometer
+
+TREATMENT CONSUMABLES — recommend from this kit before suggesting hospital for treatable conditions:
+⚠️ NAFDAC Alert 08/2025: counterfeit AL circulating as "Aflotin 20/120" (batch PA2128L) — use VERIFIED brands only.
+
+- Artemether-Lumefantrine (AL) ADULT — 20 courses: 4 tablets at hours 0, 8, 24, 36, 48, 60. Give with food. Complete full course. NOT in 1st trimester pregnancy.
+- Artemether-Lumefantrine (AL) PAEDIATRIC — 10 courses: weight-based (5-14kg: 1 tab; 15-24kg: 2 tabs; 25-34kg: 3 tabs per dose) × same 6-dose schedule.
+- ORS Sachets — 40: dissolve 1 sachet in 1 litre clean water. Children 50-100ml per stool; adults 200-400ml. Fresh every 24 hours.
+- Zinc Sulfate (paediatric) — 30 courses: ALWAYS with ORS for child diarrhoea. >6mo: 20mg daily × 14 days; <6mo: 10mg daily × 14 days.
+- Paracetamol 500mg — 200 tabs: adults 500mg-1g every 6-8h (max 4g/day); children 10-15mg/kg every 6h. NO aspirin for children.
+- Ibuprofen 400mg — 100 tabs: adults 400mg every 6-8h with food. NOT in pregnancy. NOT if dehydrated. NOT under 6 months.
+- Amoxicillin 500mg ADULT — 10 courses: 500mg 3× daily × 5-7 days. Complete full course.
+- Amoxicillin Suspension PAEDIATRIC — 5 courses: 25-50mg/kg/day in 3 divided doses × 5-7 days.
+- Mebendazole 500mg — 20 doses: single 500mg dose for intestinal worms. Safe from age 1. Repeat in 2-4 weeks if needed.
+- Metronidazole 400mg — 10 courses: 400mg 3× daily × 5-7 days. NO alcohol during and 48h after.
+- Clotrimazole Antifungal Cream — 5 tubes: apply 2-3× daily, continue 2 weeks after resolution.
+- Gentian Violet Solution — 2 bottles: oral thrush or wound care; stains purple.
+- Cetirizine 10mg — 50 tabs: adults/children >6yr: 10mg once daily. Children 2-6yr: 5mg once daily.
+- Petroleum Jelly — 2 tubs: dry skin, wound dressing base.
+- Wound Care Pack (gauze, bandages, antiseptic) — 1 pack: clean, apply gauze, change daily.
+- Nitrile Gloves — 2 boxes: wear for all procedures involving body fluids.
+- Alcohol Swabs — 200: clean skin before finger pricks and wound assessment.
+`;
+
+
 // ─── Clinical tooltips for navigator education ───────────────────────────────
 
 const VITAL_TOOLTIPS: Record<string, string> = {
@@ -304,6 +350,8 @@ function buildProbePrompt(symptom: string, patient: Patient, currentAssessment: 
   const ageStr = patient.age_years != null ? `${patient.age_years} years` : patient.age_months != null ? `${patient.age_months} months` : 'age unknown';
   return `You are coaching a Community Health Navigator in Oloibiri, Bayelsa State, Nigeria, during a live patient assessment. The navigator is sitting with the patient RIGHT NOW and needs you to guide the clinical interview.
 
+${KIT_CONTEXT}
+
 PATIENT: ${patient.patient_name}, ${pg.label} (${ageStr}), ${patient.sex || 'sex unknown'}, ${patient.village}
 CHIEF COMPLAINT: ${currentAssessment.chiefComplaint || 'not yet recorded'}
 SYMPTOM BEING PROBED: ${symptom}
@@ -321,13 +369,20 @@ OTHER SYMPTOMS NOTED SO FAR: ${[
 YOUR ROLE:
 - Ask ONE focused clinical question at a time that the navigator can read directly to the patient or caregiver
 - Keep language very simple — the navigator may translate to Ijaw or Yoruba
+- When relevant, instruct the navigator to USE A SPECIFIC KIT INSTRUMENT — for example:
+  → For fever: "Use the iHealth thermometer to record temperature if not already done"
+  → For cough/breathing: "Use the Zacurate pulse oximeter — clip to finger and read SpO2 and pulse rate"
+  → For chest symptoms: "Use the Eko CORE 500 stethoscope — listen to front and back of chest on both sides"
+  → For BP/headache/dizziness: "Use the Omron BP monitor on the upper arm"
+  → For fever where malaria suspected: "Perform the SD Bioline Malaria RDT from your kit — result in 15-20 minutes"
+  → For suspected UTI/diabetes/pregnancy: use the relevant dipstick or test strip
 - After each answer, decide: do you need more information, or is this symptom fully characterised?
 - When the symptom is FULLY and THOROUGHLY characterised — including all clinically relevant follow-up threads — end your message with the exact phrase: "✅ This symptom is well characterised. You can move on."
 - NEVER mark a symptom as well characterised if there is a clinically significant finding that hasn't been fully explored (e.g. blood in sputum, blood in stool, high fever with neurological signs, chest pain with dyspnoea). Keep probing those threads until you have a complete clinical picture.
 - There is NO limit on probing questions — follow the clinical evidence wherever it leads
 - Draw on Bayelsa disease context: malaria, typhoid, pneumonia, cholera, malnutrition, oil-related illness
 
-FORMAT: One short question. After the navigator gives you the patient's answer, probe deeper or confirm characterisation. Be direct, be brief, speak as if coaching the navigator in real time.
+FORMAT: One short question or instrument instruction. After the navigator gives you the patient's answer or reading, probe deeper or confirm characterisation. Be direct, be brief, speak as if coaching the navigator in real time.
 
 Start now with your FIRST question about: ${symptom}`;
 }
@@ -368,6 +423,8 @@ function buildTriagePrompt(patient: Patient, assessment: AssessmentData, probeNo
   return `You are a clinical decision support system for a trained Community Health Navigator in Oloibiri, Bayelsa State, Nigeria. The navigator has completed a structured patient assessment and needs your AI-assisted triage classification.
 
 ${CLINICAL_CONTEXT}
+
+${KIT_CONTEXT}
 
 PATIENT: ${patient.patient_name}, ${pg.label} (${ageStr}), ${patient.sex || 'sex not recorded'}, ${patient.village}
 
@@ -428,23 +485,32 @@ YOUR TASK — provide a structured triage response:
 
 1. **TRIAGE CLASSIFICATION**: State clearly — RED / YELLOW / GREEN — and the single most important reason
 2. **KEY FINDINGS**: List the 2–4 most clinically significant findings from this assessment
-3. **IMMEDIATE ACTIONS**: What the navigator must do RIGHT NOW (step by step)
+3. **IMMEDIATE ACTIONS**: What the navigator must do RIGHT NOW (step by step). Reference specific kit instruments where applicable (e.g. "Use the Omron BP monitor to recheck BP in 10 minutes", "Perform the SD Bioline Malaria RDT now")
 4. **REFERRAL GUIDANCE** (if RED or YELLOW): Where to go, what to say, what pre-referral actions to take
 5. **REFERRAL NOTE DRAFT**: Write a ready-to-use referral note the navigator can copy or read aloud
-6. **HOME CARE PLAN** (ALWAYS include this section even for RED cases — for what to do while waiting or if referral is not possible):
+6. **TREATMENT FROM NAVIGATOR KIT** (CRITICAL — always include this section):
+   - Specify EXACTLY which items from the navigator's kit should be used, with precise dosing
+   - For confirmed malaria: specify AL adult or paediatric with exact tablet count and timing schedule
+   - For fever: paracetamol dose by weight/age from kit
+   - For diarrhoea/dehydration: ORS preparation + zinc for children
+   - For suspected bacterial infection: amoxicillin adult or paediatric with full course duration
+   - For any other treatable condition: specify the exact kit item, dose, frequency, and duration
+   - State clearly if a condition CANNOT be safely treated from the kit and requires hospital
+   - Include the NAFDAC counterfeit AL warning if prescribing Artemether-Lumefantrine
+7. **HOME CARE PLAN** (ALWAYS include even for RED cases — for what to do while waiting or if referral not possible):
    - Safe, specific actions the patient/caregiver can take at home
-   - ORS preparation if dehydration risk; paracetamol for fever (state adult dose: 500mg–1g every 6–8 hours)
    - Positioning, fluids, rest, nutrition advice appropriate to this case
    - Clear warning signs: "Go to hospital immediately if…" (list 2–3 specific signs)
    - What NOT to do (e.g. do not give aspirin to children, do not stop ORS if vomiting)
-7. **FOLLOW-UP**: When to reassess and what warning signs to watch for
+8. **MISSING MEASUREMENTS**: Note any kit instruments that were NOT used but should have been for this patient type (e.g. "SpO2 not recorded — use Zacurate pulse oximeter for any respiratory concern")
+9. **FOLLOW-UP**: When to reassess and what warning signs to watch for
 
 IMPORTANT CONSTRAINTS:
 - You are supporting a trained navigator, NOT replacing clinical judgement
 - Use clear, plain language — the navigator may read this aloud to a supervisor
 - If any danger sign is present: classify RED regardless of other findings
 - Always err on the side of caution in this resource-limited high-risk context
-- Note any measurements that were NOT taken that should have been for this patient type
+- ALWAYS recommend treatment from the navigator's kit before suggesting hospital for conditions that can be safely managed at home
 - End with one sentence the navigator can say directly to the patient/caregiver
 
 ⚠️ DISCLAIMER: This is clinical decision SUPPORT only. The navigator must follow their training and supervision protocols. This does not replace a doctor's assessment.${priorHistoryContext}`;
@@ -460,6 +526,8 @@ function buildFollowupPrompt(patient: Patient, assessment: Assessment): string {
   return `You are a clinical supervision coach for a Community Health Navigator in Oloibiri, Bayelsa State, Nigeria. The navigator wants to reflect on the quality of their own assessment and identify where they could improve.
 
 ${CLINICAL_CONTEXT}
+
+${KIT_CONTEXT}
 
 CASE UNDER REVIEW:
 Patient: ${patient.patient_name}, ${pg.label}, ${patient.village}
@@ -509,6 +577,8 @@ Follow-up notes on file: ${a.follow_up_notes || 'none'}`;
   return `You are a clinical follow-up guide for a Community Health Navigator in Oloibiri, Bayelsa State, Nigeria. The navigator is conducting a follow-up visit for a patient whose previous case(s) are on file. Your job is to guide the navigator through asking the RIGHT follow-up questions — ONE at a time — based on the trajectory of this patient's condition.
 
 ${CLINICAL_CONTEXT}
+
+${KIT_CONTEXT}
 
 PATIENT: ${patient.patient_name}, ${pg.label}, ${patient.village}
 
@@ -1344,19 +1414,6 @@ const HealthcareNavigatorPage: React.FC = () => {
               </button>
             </div>
           </div>
-
-          {/* Offline Mode Link */}
-          <Link to="/community-impact/healthcare-offline"
-            className="flex items-center justify-between gap-3 bg-gray-800/60 backdrop-blur-sm rounded-xl px-4 py-3 mb-4 border border-gray-600/30 hover:bg-gray-700/60 transition-colors group">
-            <div className="flex items-center gap-2.5">
-              <WifiOff size={16} className="text-gray-400 group-hover:text-teal-400 transition-colors" />
-              <div>
-                <p className="text-sm font-semibold text-gray-200">No signal? Use Offline Mode</p>
-                <p className="text-xs text-gray-400">Rule-based IMCI triage — works without internet</p>
-              </div>
-            </div>
-            <ChevronRight size={16} className="text-gray-500 group-hover:text-gray-300 transition-colors" />
-          </Link>
 
           {/* Stats */}
           {patients.length > 0 && (
@@ -2454,5 +2511,13 @@ const HealthcareNavigatorPage: React.FC = () => {
 
   return null;
 };
+
+// RefreshCw alias (was inline in original)
+const RefreshCw: React.FC<{ size?: number; className?: string }> = ({ size = 16, className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </svg>
+);
 
 export default HealthcareNavigatorPage;
