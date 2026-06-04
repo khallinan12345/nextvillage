@@ -1606,7 +1606,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                       The offline version works without internet. It runs the full WHO IMCI triage — assessing danger signs, vital signs, and generating referral notes — and saves consultations to your device for later sync.
                     </p>
                     <a
-                      href="/vai-offline-health-navigator.html"
+                      href="/offline-health-navigator.html"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"

@@ -1360,7 +1360,7 @@ const AgricultureConsultantPage: React.FC = () => {
                       The offline version works without internet. It runs the full crop and farm triage — disease, pest damage, soil and water, post-harvest, and market access — and saves consultations to your device for later sync.
                     </p>
                     <a
-                      href="/vai-offline-agriculture-advisor.html"
+                      href="/offline-agriculture-advisor.html"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"

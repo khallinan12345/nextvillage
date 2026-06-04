@@ -1256,7 +1256,7 @@ const AnimalHusbandryPage: React.FC = () => {
                       The offline version works without internet. It runs the full animal health triage — poultry, goats/sheep, cattle, and pigs — and saves consultations to your device for later sync.
                     </p>
                     <a
-                      href="/animal-advisor-offline.html"
+                      href="/offline-animal-advisor.html"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"
