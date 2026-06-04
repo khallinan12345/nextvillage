@@ -475,6 +475,7 @@ const DashboardPage: React.FC = () => {
   const [grandDraftSlug, setGrandDraftSlug]           = useState('agriculture');
   const [grandJournalCount, setGrandJournalCount]     = useState(0);
   const [grandWeeksActive, setGrandWeeksActive]       = useState(0);
+  const [grandShowInstructions, setGrandShowInstructions] = useState(false);
   const [priorSubmissions, setPriorSubmissions]       = useState<GrandSubmission[]>([]);
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
@@ -1848,6 +1849,13 @@ ${prior.impact_arc}
                     <div className="px-4 py-3 border-b border-black/5 flex items-center gap-2">
                       <Trophy size={15} className="text-amber-600 flex-shrink-0" />
                       <span className="text-xs font-bold uppercase tracking-wide text-amber-700">Grand Challenge · {grandChallenge.quarter}</span>
+                      <button
+                        onClick={() => setGrandShowInstructions(v => !v)}
+                        className="ml-1 w-5 h-5 rounded-full bg-amber-200 hover:bg-amber-300 flex items-center justify-center flex-shrink-0 transition-colors"
+                        title="How the Grand Challenge works"
+                      >
+                        <span className="text-amber-800 font-bold" style={{fontSize:'11px'}}>?</span>
+                      </button>
                       {(() => {
                         const daysLeft = Math.ceil((new Date(grandChallenge.submission_deadline).getTime() - Date.now()) / 86400000);
                         return daysLeft > 0
@@ -1855,6 +1863,39 @@ ${prior.impact_arc}
                           : <span className="ml-auto text-xs text-red-500 font-bold">Deadline passed</span>;
                       })()}
                     </div>
+
+                    {/* Instructions panel */}
+                    {grandShowInstructions && (
+                      <div className="px-4 py-4 bg-amber-50 border-b border-amber-200 text-xs text-gray-700 leading-relaxed space-y-3">
+                        <div>
+                          <p className="font-bold text-amber-800 mb-1">What is the Grand Challenge?</p>
+                          <p>A 3-month community impact project. You pick a real person in your community — a farmer, fisher, trader, family member — and work with them over multiple visits to solve a real problem using AI. You document everything in your field journal and write your impact story at the end.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-amber-800 mb-1">Field notes</p>
+                          <p>Each time you visit your community member, add a field note. Describe what the situation was when you arrived, what you did with AI to help, and what changed after. You can add field notes from any Community Impact page — Agriculture, Healthcare, Fishing, and others.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-amber-800 mb-1">The impact arc</p>
+                          <p>Your impact arc is your story in your own words — the full picture of what you did over the quarter. Start with the problem, describe your visits and what you did with AI, and end with what changed for the person or community you helped. Be specific and honest.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-amber-800 mb-1">How you are evaluated</p>
+                          <p>An AI agent reads your field notes and impact arc and evaluates your submission on four dimensions: real documented change, sustained engagement over time, quality of evidence, and how well AI was used as a tool. You earn an impact tier — Seed, Scout, Bridge, Builder, or Village Leader — based on what you actually did.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-amber-800 mb-1">The winner</p>
+                          <p>On the deadline date, the AI agent compares all submissions and selects the Grand Challenge winner — the learner whose work shows the deepest, most documented, most honest community impact. The winner is announced on {new Date(grandChallenge.winner_announced_date).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})}.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-amber-800 mb-1">Carry over</p>
+                          <p>If you worked on a community problem in a previous quarter, you can carry that work forward. Your prior arc becomes the foundation and you add new developments on top. Expanding real impact over multiple quarters is recognised and rewarded.</p>
+                        </div>
+                        <div className="pt-1">
+                          <p className="text-amber-700 font-bold">Deadline: {new Date(grandChallenge.submission_deadline).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})} · Winner announced: {new Date(grandChallenge.winner_announced_date).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="px-4 py-4">
 
                       {/* Winner state */}
@@ -1901,8 +1942,8 @@ ${prior.impact_arc}
                                 <p className="text-xs text-gray-500">weeks active</p>
                               </div>
                               <div className="bg-white/70 rounded-lg p-2 text-center col-span-1">
-                                <p className="text-base font-bold text-amber-700">{grandJournalCount >= 4 ? '✓' : `${4 - grandJournalCount}`}</p>
-                                <p className="text-xs text-gray-500">{grandJournalCount >= 4 ? 'ready' : 'more needed'}</p>
+                                <p className="text-base font-bold text-amber-700">{grandJournalCount > 0 ? '✓' : '—'}</p>
+                                <p className="text-xs text-gray-500">{grandJournalCount > 0 ? 'started' : 'not yet'}</p>
                               </div>
                             </div>
                           </div>
@@ -1957,15 +1998,13 @@ ${prior.impact_arc}
                             </button>
                             <button
                               onClick={handleSubmitGrandChallenge}
-                              disabled={grandSaving || grandJournalCount < 4 || !grandDraftArc.trim() || !grandDraftTitle.trim()}
+                              disabled={grandSaving || !grandDraftArc.trim() || !grandDraftTitle.trim()}
                               className="flex-1 py-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg disabled:opacity-40 transition-colors flex items-center justify-center gap-1"
                             >
                               <Trophy size={11} /> Submit
                             </button>
                           </div>
-                          {grandJournalCount < 4 && (
-                            <p className="text-xs text-center text-gray-400">add {4 - grandJournalCount} more field note{4 - grandJournalCount !== 1 ? 's' : ''} to unlock submission</p>
-                          )}
+                          
                         </div>
                       )}
                     </div>
