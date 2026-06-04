@@ -7,25 +7,27 @@ const VisitorTracker = () => {
       const page_path = window.location.pathname;
       const user_agent = navigator.userAgent;
 
-      let country_code = 'Unknown';
+      let data: { country_code?: string; country?: string } | null = null;
       try {
         const res = await fetch('https://ipapi.co/json/');
         if (res.ok) {
-          const data = await res.json();
-          country_code = data.country_code ?? data.country ?? 'Unknown';
+          data = await res.json();
         }
       } catch {
-        country_code = 'Unknown';
+        data = null;
       }
+
+      const { data: authData } = await supabase.auth.getUser();
 
       try {
         await supabase.from('visitor_logs').insert({
           page_path,
-          country_code,
+          country_code: data?.country_code || 'Unknown',
           user_agent,
+          user_email: authData?.user?.email || 'Anonymous',
         });
       } catch {
-        // Anonymous analytics — fail silently
+        // Analytics — fail silently
       }
     };
 
