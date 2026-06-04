@@ -2,3 +2,6 @@
 .env.local
 .env*.local
 node_modules
+api/assess-monthly.ts
+api/daily-report.ts
+api/playground-context-cleanup.ts

@@ -513,6 +513,16 @@ const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
 // Level 0-1 → only Stage 1 accessible (floor = 0)
 // Level 2   → Stages 3 & 4 accessible (floor = 3), Stage 5 still earned
 // Level 3   → Stages 2-5 accessible  (floor = 4)
+// ─── Strict Progression: Stage N only unlocks if Stage N-1 is Proficient+ ───────────────
+const canAccessStage = (stageIndex: number, stageLevels: (string | null)[]): boolean => {
+  // Stage 0 always accessible
+  if (stageIndex === 0) return true;
+  // Stage N requires Stage N-1 to be 'Proficient' or 'Advanced'
+  const previousStageLevel = stageLevels[stageIndex - 1];
+  if (!previousStageLevel) return false;
+  return previousStageLevel === 'Proficient' || previousStageLevel === 'Advanced';
+};
+
 const levelFloor = (communicationLevel: number): number => {
   if (communicationLevel >= 3) return 4; // all stages open
   if (communicationLevel === 2) return 3; // stages 1–4 open (indices 0–3)
@@ -1308,9 +1318,11 @@ Respond ONLY with valid JSON:
                   const unlockedUpTo = progress?.unlockedUpTo ?? 0;
                   const currentLevel = (stageLevels && stageLevels[idx]) || null;
                   const isCompleted = currentLevel === 'Advanced';
-                  const isLocked = idx > unlockedUpTo;
-                  const isActive = idx === unlockedUpTo && !isCompleted;
-                  const isUnlocked = idx <= unlockedUpTo;
+                  // STRICT PROGRESSION: Use canAccessStage for enforcement
+                  const canAccess = canAccessStage(idx, stageLevels);
+                  const isLocked = !canAccess || isCompleted;
+                  const isActive = canAccess && !isCompleted;
+                  const isUnlocked = canAccess;
                   const scoreBadge =
                     !isCompleted && (currentLevel === 'Proficient' || currentLevel === 'Emerging')
                       ? `Current Score: ${currentLevel}`
@@ -1319,8 +1331,14 @@ Respond ONLY with valid JSON:
                   return (
                     <div
                       key={stage.id}
-                      onClick={() => {
-                        if (isLocked || isCompleted) return;
+                      onClick={(e) => {
+                        // EXPLICIT CLICK BLOCKER: Prevent locked or completed stages
+                        if (isLocked || isCompleted) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.warn(`[ProgressionLock] Stage ${idx + 1} is locked or completed. Access denied.`);
+                          return;
+                        }
                         setSelectedStage(stage); setTopicInput('');
                         loadStageSessions(stage.name); setView('topic');
                       }}
@@ -1344,10 +1362,10 @@ Respond ONLY with valid JSON:
                                 {scoreBadge}
                               </span>
                             )}
-                            {!isActive && isLocked && (
+                            {!isActive && isLocked && !isCompleted && (
                               <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
-                                {idx === 4 && communicationLevel === 2
-                                  ? '🔒 Complete Stages 3 & 4 to unlock'
+                                {idx === 0
+                                  ? '🔒 Not yet unlocked'
                                   : `🔒 Complete Stage ${idx} to unlock`}
                               </span>
                             )}

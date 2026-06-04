@@ -539,6 +539,16 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
 
 // ─── Derive progress from saved sessions ─────────────────────────────────────
 
+// ─── Strict Progression: Stage N only unlocks if Stage N-1 is Proficient+ ───────────────
+const canAccessStage = (stageIndex: number, stageLevels: (string | null)[]): boolean => {
+  // Stage 0 always accessible
+  if (stageIndex === 0) return true;
+  // Stage N requires Stage N-1 to be 'Proficient' or 'Advanced'
+  const previousStageLevel = stageLevels[stageIndex - 1];
+  if (!previousStageLevel) return false;
+  return previousStageLevel === 'Proficient' || previousStageLevel === 'Advanced';
+};
+
 const isStrongLevel = (level: ProficiencyLevel) => level === 'Proficient' || level === 'Advanced';
 
 const deriveProgress = (rows: DashboardSession[]): UserProgress => {
@@ -1217,9 +1227,11 @@ LANGUAGE RULES:
                 const unlockedUpTo = progress?.unlockedUpTo ?? 0;
                 const currentLevel = (stageLevels && stageLevels[idx]) || null;
                 const isCompleted = currentLevel === 'Advanced';
-                const isLocked = idx > unlockedUpTo;
-                const isActive = idx === unlockedUpTo && !isCompleted;
-                const isUnlocked = idx <= unlockedUpTo;
+                // STRICT PROGRESSION: Use canAccessStage for enforcement
+                const canAccess = canAccessStage(idx, stageLevels);
+                const isLocked = !canAccess || isCompleted;
+                const isActive = canAccess && !isCompleted;
+                const isUnlocked = canAccess;
                 const scoreBadge =
                   !isCompleted && (currentLevel === 'Proficient' || currentLevel === 'Emerging')
                     ? `Current Score: ${currentLevel}`
@@ -1228,8 +1240,14 @@ LANGUAGE RULES:
                 return (
                   <div
                     key={stage.id}
-                    onClick={() => {
-                      if (isLocked || isCompleted) return;
+                    onClick={(e) => {
+                      // EXPLICIT CLICK BLOCKER: Prevent locked or completed stages
+                      if (isLocked || isCompleted) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.warn(`[ProgressionLock] Stage ${idx + 1} is locked or completed. Access denied.`);
+                        return;
+                      }
                       setSelectedStage(stage); setTopicInput('');
                       loadStageSessions(stage.name); setView('topic');
                     }}
@@ -1258,9 +1276,11 @@ LANGUAGE RULES:
                               {scoreBadge}
                             </span>
                           )}
-                          {!isActive && isLocked && (
+                          {!isActive && isLocked && !isCompleted && (
                             <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
-                              🔒 Complete Stage {idx} to unlock
+                              {idx === 0
+                                ? '🔒 Not yet unlocked'
+                                : `🔒 Complete Stage ${idx} to unlock`}
                             </span>
                           )}
                         </div>

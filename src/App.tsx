@@ -17,6 +17,7 @@ import { setChatIdentity } from './lib/chatClient';
 import { supabase } from './lib/supabaseClient';
 import { ImpersonationProvider, ImpersonationBanner } from './contexts/ImpersonationContext';
 import ProfileCompletionPopup from './components/profile/ProfileCompletionPopup';
+import VisitorTracker from './components/VisitorTracker';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -71,6 +72,7 @@ import TechSkillsPage from './pages/tech-skills/TechSkillsPage';
 // Legacy pages - kept for backwards compatibility
 import CodeAssistantPage from './pages/CodeAssistantPage';
 import AdminStudentDashboard from './pages/admin/AdminStudentDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Community Impact Pages
 import AIAmbassadorsPage from './pages/community-impact/AIAmbassadorsPage';
@@ -269,6 +271,7 @@ const AppContent: React.FC = () => {
         <Route path="/admin/projects" element={<DashboardPage />} />
         <Route path="/admin/education" element={<DashboardPage />} />
         <Route path="/admin/student-dashboard" element={<AdminStudentDashboard />} />
+        <Route path="/teacher-dashboard" element={<AdminDashboard />} />
 
         {/* Fallback */}
         <Route path="/" element={<PublicLandingPage />} />
@@ -297,6 +300,7 @@ function App() {
   return (
     <ImpersonationProvider>
       <BrowserRouter>
+        <VisitorTracker />
         <ImpersonationBanner />
         <AppContent />
       </BrowserRouter>
