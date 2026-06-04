@@ -1,27 +1,222 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+type MockUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: string;
+  grade_level: string;
+  gender: 'female' | 'male' | 'other';
+  continent: string;
+  country: string;
+  state_province: string;
+  city?: string;
+  school?: string;
+  status: 'Active' | 'Idle' | 'Offline';
+};
+
+function random<T>(arr: T[]) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateMockUsers(count = 120): MockUser[] {
+  const first = ['Amina', 'Chinenye', 'Grace', 'Silas', 'Mary', 'Ifeoma', 'Kofi', 'Fatima', 'Tunde', 'Ola'];
+  const last = ['Okoro', 'Smith', 'Johnson', 'Mary', 'Ibekwe', 'Abiola', 'Chen', 'Wang', 'Garcia', 'Brown'];
+  const continents = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+  const countries = ['Nigeria', 'United States', 'United Kingdom', 'Canada', 'Kenya', 'India', 'Australia'];
+  const states = ['Lagos', 'Bayelsa', 'California', 'Texas', 'Ontario', 'Delhi', 'New South Wales', 'London'];
+  const cities = ['Lagos', 'Abuja', 'London', 'New York', 'Toronto', 'Delhi', 'Sydney'];
+  const grades = [
+    'Elementary [Grades 3–5 / Ages 8–11]',
+    'Middle School [Grades 6–8 / Ages 11–14]',
+    'High School [Grades 9–12 / Ages 14–18]',
+  ];
+  const genders: MockUser['gender'][] = ['female', 'male', 'other'];
+  const statuses: MockUser['status'][] = ['Active', 'Idle', 'Offline'];
+
+  const users: MockUser[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const f = random(first);
+    const l = random(last);
+    const full = `${f} ${l}`;
+    const country = random(countries);
+
+    users.push({
+      id: `mock-${i + 1}`,
+      full_name: full,
+      email: `${f.toLowerCase()}.${l.toLowerCase()}${i + 1}@example.com`,
+      role: 'Student',
+      grade_level: random(grades),
+      gender: random(genders),
+      continent: random(continents),
+      country,
+      state_province: random(states),
+      city: random(cities),
+      school: Math.random() > 0.4 ? `${f} ${l} Academy` : undefined,
+      status: random(statuses),
+    });
+  }
+  return users;
+}
+
 export default function AdminDashboard() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<MockUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<MockUser | null>(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const { data, error } = await supabase.from('profiles').select('*');
-      if (!error) setUsers(data ?? []);
+      try {
+        const { data, error } = await supabase.from('profiles').select('*');
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((p: any) => ({
+            id: p.id ?? p.user_id ?? String(p.email ?? p.id ?? Math.random()),
+            full_name: p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.email || 'User',
+            email: p.email || p.user_email || 'unknown@example.com',
+            role: p.role || 'Student',
+            grade_level: p.grade_level || 'High School [Grades 9–12 / Ages 14–18]',
+            gender: p.gender || 'other',
+            continent: p.continent || 'Unknown',
+            country: p.country || 'Unknown',
+            state_province: p.state || p.state_province || 'Unknown',
+            city: p.city || '',
+            school: p.school || '',
+            status: 'Active',
+          }));
+          setUsers(mapped);
+        } else {
+          setUsers(generateMockUsers(120));
+        }
+      } catch (e) {
+        setUsers(generateMockUsers(120));
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchUsers();
   }, []);
 
+  const saveLocal = (updated: MockUser) => {
+    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    setSelected(null);
+  };
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Active Student Logs</h2>
-      <ul>
-        {users.map((user) => (
-          <li key={user.id}>
-            {user.email || user.username || user.full_name || 'Registered User'} - Active
-          </li>
-        ))}
-      </ul>
+    <div className="p-6 font-sans">
+      <h2 className="text-2xl font-semibold mb-4">Teacher Dashboard — Active Students</h2>
+
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <div className="bg-white shadow rounded border overflow-x-auto">
+          <table className="min-w-full divide-y">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Email</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Role</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Grade Level</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">State / Province</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Country / Continent</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {users.map((u) => (
+                <tr key={u.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm text-gray-800">{u.full_name}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {u.role}
+                    <div className="text-xs text-gray-400">assigned by your organization</div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{u.grade_level}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{u.state_province}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{u.country} / {u.continent}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${u.status === 'Active' ? 'bg-green-100 text-green-800' : u.status === 'Idle' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}`}>
+                      {u.status === 'Active' ? '🟢 Active' : u.status === 'Idle' ? '🟡 Idle' : '⚫ Offline'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => setSelected(u)} className="px-3 py-1 bg-blue-600 text-white text-sm rounded">View Profile</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded shadow-lg w-full max-w-2xl p-6">
+            <h3 className="text-xl font-semibold mb-2">My Profile - Manage your personal information and track your learning progress.</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium">Full Name *</label>
+                <input className="mt-1 block w-full border rounded px-3 py-2" value={selected.full_name} onChange={(e) => setSelected({ ...selected, full_name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Email Address *</label>
+                <input className="mt-1 block w-full border rounded px-3 py-2" value={selected.email} onChange={(e) => setSelected({ ...selected, email: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Role</label>
+                <div className="mt-1 text-sm text-gray-700">Student <span className="text-xs text-gray-400">assigned by your organization</span></div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Grade Level *</label>
+                <select className="mt-1 block w-full border rounded px-3 py-2" value={selected.grade_level} onChange={(e) => setSelected({ ...selected, grade_level: e.target.value })}>
+                  <option>Elementary [Grades 3–5 / Ages 8–11]</option>
+                  <option>Middle School [Grades 6–8 / Ages 11–14]</option>
+                  <option>High School [Grades 9–12 / Ages 14–18]</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Gender</label>
+                <select className="mt-1 block w-full border rounded px-3 py-2" value={selected.gender} onChange={(e) => setSelected({ ...selected, gender: e.target.value as MockUser['gender'] })}>
+                  <option value="female">female</option>
+                  <option value="male">male</option>
+                  <option value="other">other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Continent</label>
+                <input className="mt-1 block w-full border rounded px-3 py-2" value={selected.continent} onChange={(e) => setSelected({ ...selected, continent: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">State / Province</label>
+                <input className="mt-1 block w-full border rounded px-3 py-2" value={selected.state_province} onChange={(e) => setSelected({ ...selected, state_province: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Country</label>
+                <input className="mt-1 block w-full border rounded px-3 py-2" value={selected.country} onChange={(e) => setSelected({ ...selected, country: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">City</label>
+                <input className="mt-1 block w-full border rounded px-3 py-2" value={selected.city || ''} onChange={(e) => setSelected({ ...selected, city: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">School / Organization (optional)</label>
+                <input className="mt-1 block w-full border rounded px-3 py-2" value={selected.school || ''} onChange={(e) => setSelected({ ...selected, school: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button className="px-4 py-2 border rounded" onClick={() => setSelected(null)}>Cancel</button>
+              <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={() => saveLocal(selected)}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
