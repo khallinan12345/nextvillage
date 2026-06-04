@@ -1,17 +1,9 @@
 {
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
-  "functions": {
-    "api/chat.js": {
-      "maxDuration": 300
-    },
-    "api/playground-context.ts": {
-       "maxDuration": 30 
-    }
-  }
+  "excludeFiles": "api/**"
 }
