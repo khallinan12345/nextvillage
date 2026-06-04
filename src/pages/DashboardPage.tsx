@@ -67,6 +67,20 @@ interface CommunityLeaderEntry {
   multiplier_count: number;
 }
 
+interface WeeklyChampion {
+  id: string;
+  org_id: string;
+  week_start: string;
+  week_end: string;
+  champion_user_id: string;
+  champion_name: string;
+  winning_tier: string;
+  winning_tier_label: string;
+  was_tiebreak: boolean;
+  tiebreak_reasoning: string | null;
+  champion_story: string | null;
+}
+
 const TIER_COLOURS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
   seed:       { bg: 'bg-green-50',   text: 'text-green-700',   border: 'border-green-300',  dot: 'bg-green-500'   },
   scout:      { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-300',   dot: 'bg-blue-500'    },
@@ -429,6 +443,9 @@ const DashboardPage: React.FC = () => {
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
+  const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
+  const [lastWeekLeaderboard, setLastWeekLeaderboard] = useState<CommunityLeaderEntry[]>([]);
+  const [lastWeekLbLoading, setLastWeekLbLoading]     = useState(false);
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
@@ -789,9 +806,40 @@ const DashboardPage: React.FC = () => {
           .limit(10);
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
+
+        // Fetch last week's champion
+        setLastWeekLbLoading(true);
+        const lastWeekEnd = new Date();
+        lastWeekEnd.setUTCDate(lastWeekEnd.getUTCDate() - lastWeekEnd.getUTCDay()); // last Sunday
+        lastWeekEnd.setUTCHours(0, 0, 0, 0);
+        const lastWeekStart = new Date(lastWeekEnd);
+        lastWeekStart.setUTCDate(lastWeekEnd.getUTCDate() - 6);
+
+        const { data: champion } = await supabase
+          .from('weekly_champions')
+          .select('*')
+          .eq('org_id', orgSlug)
+          .gte('week_start', lastWeekStart.toISOString().split('T')[0])
+          .order('week_start', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (champion) setLastWeekChampion(champion as WeeklyChampion);
+
+        // Fetch last week's community leaderboard snapshot
+        // (all enrollments awarded in the last 7–14 days)
+        const { data: lastLb } = await supabase
+          .from('community_leaderboard')
+          .select('*')
+          .order('rank', { ascending: true })
+          .limit(10);
+
+        if (lastLb) setLastWeekLeaderboard(lastLb as CommunityLeaderEntry[]);
+
       } finally {
         setChallengeLoading(false);
         setCommunityLbLoading(false);
+        setLastWeekLbLoading(false);
       }
     })();
   }, [user?.id]);
@@ -1708,6 +1756,60 @@ const DashboardPage: React.FC = () => {
                     })}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── Last Week's Champion ────────────────────────────────────── */}
+            {lastWeekChampion && (
+              <div className="rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 shadow-sm overflow-hidden">
+                <div className="px-5 py-4">
+                  <div className="flex items-start gap-4 flex-wrap">
+                    <div className="w-14 h-14 rounded-xl bg-amber-100 flex items-center justify-center text-3xl flex-shrink-0">
+                      🏆
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wide text-amber-600 mb-1">
+                        Last Week's Community Champion
+                        {lastWeekChampion.was_tiebreak && (
+                          <span className="ml-2 text-amber-400 font-normal normal-case">· decided by tiebreak</span>
+                        )}
+                      </p>
+                      <p className="text-xl font-bold text-gray-900 leading-tight">
+                        {lastWeekChampion.champion_name}
+                      </p>
+                      <span className={classNames(
+                        'inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border mt-1',
+                        TIER_COLOURS[lastWeekChampion.winning_tier]?.bg ?? 'bg-gray-50',
+                        TIER_COLOURS[lastWeekChampion.winning_tier]?.text ?? 'text-gray-700',
+                        TIER_COLOURS[lastWeekChampion.winning_tier]?.border ?? 'border-gray-200',
+                      )}>
+                        <span className={classNames('w-2 h-2 rounded-full', TIER_COLOURS[lastWeekChampion.winning_tier]?.dot ?? 'bg-gray-400')} />
+                        {lastWeekChampion.winning_tier_label}
+                      </span>
+                      {lastWeekChampion.champion_story && (
+                        <div className="mt-3 bg-white/70 rounded-lg p-3 border border-amber-200">
+                          <p className="text-xs font-bold text-amber-700 mb-1">What they did:</p>
+                          <p className="text-sm text-gray-700 leading-relaxed line-clamp-4">
+                            {lastWeekChampion.champion_story}
+                          </p>
+                        </div>
+                      )}
+                      {lastWeekChampion.tiebreak_reasoning && (
+                        <div className="mt-2 bg-white/70 rounded-lg p-3 border border-amber-200">
+                          <p className="text-xs font-bold text-amber-700 mb-1">Why they won:</p>
+                          <p className="text-sm text-gray-600 italic leading-relaxed">
+                            {lastWeekChampion.tiebreak_reasoning}
+                          </p>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">
+                        Week of {new Date(lastWeekChampion.week_start).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        {' – '}
+                        {new Date(lastWeekChampion.week_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
