@@ -1,9 +1,39 @@
 {
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "crons": [
+    {
+      "path": "/api/assess-monthly",
+      "schedule": "0 2 1 * *"
+    },
+    {
+      "path": "/api/daily-report",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/playground-context-cleanup",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "functions": {
+    "api/assess-monthly.ts": {
+      "maxDuration": 300
+    },
+    "api/daily-report.ts": {
+      "maxDuration": 60
+    },
+    "api/chat.js": {
+      "maxDuration": 300
+    },
+    "api/playground-context-cleanup.ts": {
+      "maxDuration": 30
+    },
+    "api/playground-context.ts": {
+       "maxDuration": 30 
+    }
+  }
 }

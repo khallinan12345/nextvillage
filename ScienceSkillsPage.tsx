@@ -1151,6 +1151,15 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
   const busy = isSending || isImproving || isEvaluating || isSaving;
 
   // ── Stage card renderer (shared by all three pathway grids) ────────────
+  // STRICT PROGRESSION: Stage N only unlocks if Stage N-1 is Proficient or Advanced
+  const canAccessStageScience = (stageIndex: number, stageProgress: StageProgress): boolean => {
+    // Stage 0 always accessible
+    if (stageIndex === 0) return true;
+    // Get the strongest level from the previous stage's evaluations
+    // stageProgress.unlockedUpTo tracks the highest stage accessible based on completion
+    return stageIndex <= stageProgress.unlockedUpTo;
+  };
+
   const renderStageCard = (
     stage: typeof REASONING_STAGES[0],
     idx: number,
@@ -1158,14 +1167,21 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     locked: boolean,
     lockReason?: string,
   ) => {
-    const unlocked = !locked && idx <= stageProgress.unlockedUpTo;
+    const canAccess = canAccessStageScience(idx, stageProgress) && !locked;
+    const unlocked = canAccess;
     const completed = stageProgress.completedStages[idx];
     const Icon = stage.icon;
     return (
       <div
         key={`${stage.pathway}-${stage.id}`}
-        onClick={() => {
-          if (!unlocked) return;
+        onClick={(e) => {
+          // EXPLICIT CLICK BLOCKER: Prevent locked or completed stages
+          if (!unlocked || completed) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.warn(`[ProgressionLock] Stage ${idx + 1} (${stage.pathway}) is locked or completed. Access denied.`);
+            return;
+          }
           setSelectedStage(stage); setTopicInput('');
           loadStageSessions(stage.name); setView('topic');
         }}
