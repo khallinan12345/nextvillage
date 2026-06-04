@@ -4,17 +4,14 @@ import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/ui/Button';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import SpellCheckTextarea from '../components/ui/SpellCheckTextarea';
 import {
   Brain,
-  Music,
   Wand2,
   Shield,
   Edit,
   Eye,
   BookOpen,
-  Palette,
   CheckCircle,
   Clock,
   Circle,
@@ -284,21 +281,8 @@ const ConfettiAnimation: React.FC = () => {
 // plus cursor-driven ripple distortion "spotlight".
 const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
   const [mousePixels, setMousePixels] = useState({ x: 0, y: 0 });
-  const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
   const [isMouseMoving, setIsMouseMoving] = useState(false);
   const mouseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-
-    if (typeof window !== 'undefined') {
-      handleResize();
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -429,18 +413,6 @@ const isValidUuid = (value?: string): boolean => {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 };
 
-interface LearningModule {
-  learning_module_id: string;
-  title: string;
-  description: string;
-  category: string;
-  sub_category: string;
-  ai_facilitator_instructions?: string;
-  ai_assessment_instructions?: string;
-  metrics_for_success?: string;
-  outcomes: string;
-}
-
 interface ChatMessage {
   role: 'assistant' | 'user';
   content: string;
@@ -448,6 +420,8 @@ interface ChatMessage {
 }
 
 const aiLearningCategories = [
+  
+  
   {
     id: 'understanding-ai',
     title: 'Understanding AI',
@@ -484,14 +458,6 @@ const aiLearningCategories = [
     description: 'Apply AI to solve real-world problems'
   },
 ];
-
-const AI_ACTIVITY_TARGETS: Record<string, number> = {
-  'Understanding AI: Core Concepts & Capabilities': 48,
-  'Prompt Engineering: Effective AI Communication': 8,
-  'Evaluating AI Outputs: Critical Analysis': 8,
-  'AI Ethics & Responsible Use': 8,
-  Applications: 5,
-};
 
 const AI_CATEGORY_METADATA: Record<string, { label: string; focus: string; outputHint: string }> = {
   'Understanding AI: Core Concepts & Capabilities': {
@@ -834,6 +800,8 @@ Biggest improvement lever: <single sentence>
 Next question (one only): <one guiding question — must connect to entrepreneurial/PUE dimension if the learner has not yet addressed it>`;
 
 // Maps category letter → sub_category in learning_modules
+const NA_SESSION_BUILDER_PROMPT = AI_SESSION_BUILDER_PROMPT;
+
 const SESSION_CATEGORIES = [
   { id: 'A', label: 'Understanding AI: Core Concepts & Capabilities',
     subCategory: 'Understanding AI: Core Concepts & Capabilities' },
@@ -862,7 +830,6 @@ const AILearningPage: React.FC = () => {
   const [activityDescription, setActivityDescription] = useState<string>('');
   const [moduleTitle, setModuleTitle] = useState<string>('');
   const [aiFacilitatorInstructions, setAiFacilitatorInstructions] = useState<string>('');
-  const [aiAssessmentInstructions, setAiAssessmentInstructions] = useState<string>('');
   const [successMetrics, setSuccessMetrics] = useState<string>('');
   const [userGradeLevel, setUserGradeLevel] = useState<number | null>(null);
   const [userContinent, setUserContinent] = useState<string | null>(null);
@@ -870,7 +837,6 @@ const AILearningPage: React.FC = () => {
   const [communicationStrategy, setCommunicationStrategy] = useState<any>(null);
   const [learningStrategy, setLearningStrategy] = useState<any>(null);
   const [communicationLevel, setCommunicationLevel] = useState<number>(1);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]); // kept for UI compat — hook manages actual selection
   const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [historyCache, setHistoryCache] = useState<Record<string, ChatMessage[]>>({});
@@ -900,9 +866,7 @@ const AILearningPage: React.FC = () => {
 
   // ── Reflection gate state ────────────────────────────────────────────────
   const [hasReflection, setHasReflection] = useState(false);
-  const [reflectionValidating, setReflectionValidating] = useState(false);
   const [reflectionText, setReflectionText] = useState('');
-  const [reflectionAttempts, setReflectionAttempts] = useState(0);
   const [awaitingReflection, setAwaitingReflection] = useState(false);
   const [userSessionCount, setUserSessionCount] = useState(0);
 
@@ -924,7 +888,6 @@ const AILearningPage: React.FC = () => {
   // voiceMode === 'english' → en-GB priority
   const {
     speak: hookSpeak,
-    cancel: cancelSpeech,
     speaking: isSpeaking,
     fallbackText,
     clearFallback,
@@ -1433,8 +1396,7 @@ go deeper immediately — do not praise and move on.`;
         };
       });
       
-      // Force full mock activity list regardless of DB results
-      setAllAIActivities(buildAILearningMockActivities(user.id));
+      setAllAIActivities(activities);
     } catch (err) {
       console.error('Error fetching AI learning activities:', err);
       // Use full mock fallback on error
@@ -1867,7 +1829,6 @@ ${TUTOR_BEHAVIOR_RULES}`;
     nudge?: string;
   }> => {
     try {
-      setReflectionValidating(true);
       const result = await chatJSON({
         page: 'AILearningPage',   // → routes to Groq Llama 3.3 70B
         messages: [{
@@ -1900,8 +1861,6 @@ Respond ONLY with valid JSON:
     } catch {
       // Fail open — never block a learner due to a validation error
       return { isGenuine: true, qualityFlag: 'substantive' };
-    } finally {
-      setReflectionValidating(false);
     }
   };
 
@@ -2556,7 +2515,8 @@ Respond ONLY with valid JSON:
         unescoScores: assessment.unesco_scores
       });
       setShowEvaluationModal(true);
-      
+      handleBackToOverview();
+
     } catch (error) {
       console.error('Error saving session:', error);
       alert('Failed to save session. Please try again.');
@@ -2565,48 +2525,7 @@ Respond ONLY with valid JSON:
     }
   };
 
-  // Handle evaluation button click
-  const handleUpdateEvaluation = async () => {
-    if (!selectedActivity || !currentDashboardId || chatHistory.length <= 1) {
-      alert('No conversation history available for evaluation.');
-      return;
-    }
-
-    setEvaluating(true);
-    
-    try {
-      // Always use the standardized UNESCO instructions so scores map consistently to the 4 DB columns
-      const assessment = await callAssessmentAI(chatHistory, buildUNESCOAssessmentInstructions(), successMetrics);
-      
-      // Update activity with both overall score and UNESCO competency scores
-      await updateActivityEvaluation(
-        currentDashboardId, 
-        assessment.evaluation_score, 
-        assessment.evaluation_evidence,
-        chatHistory,
-        assessment.unesco_scores
-      );
-      
-      // Generate personalized improvement advice
-      const improvementAdvice = await generateImprovementAdvice(assessment.unesco_scores);
-      
-      setEvaluationResult({
-        score: assessment.evaluation_score,
-        evidence: assessment.evaluation_evidence,
-        improvementAdvice: improvementAdvice,
-        unescoScores: assessment.unesco_scores
-      });
-      setShowEvaluationModal(true);
-      
-    } catch (error) {
-      console.error('Error during evaluation:', error);
-      alert('Failed to complete evaluation. Please try again.');
-    } finally {
-      setEvaluating(false);
-    }
-  };
-
-  // Update activity status to 'started'
+    // Update activity status to 'started'
   const updateActivityStatus = async (activityId: string) => {
     // Guard: Don't attempt database operations for mock activity IDs
     if (String(activityId ?? '').startsWith('mock-')) {
@@ -2717,7 +2636,6 @@ Respond ONLY with valid JSON:
         setActivityDescription(details.description);
         setModuleTitle(details.title);
         setAiFacilitatorInstructions(details.aiInstructions);
-        setAiAssessmentInstructions(details.assessmentInstructions);
         setSuccessMetrics(details.successMetrics);
         
         if (initialChatHistory.length > 0) {
@@ -2752,16 +2670,13 @@ Respond ONLY with valid JSON:
     setActivityDescription('');
     setModuleTitle('');
     setAiFacilitatorInstructions('');
-    setAiAssessmentInstructions('');
     setSuccessMetrics('');
     setChatHistory([]);
     setUserInput('');
     // Reset reflection gate
     setHasReflection(false);
     setReflectionText('');
-    setReflectionAttempts(0);
     setAwaitingReflection(false);
-    setReflectionValidating(false);
   };
 
   // Assess user response against UNESCO standards
@@ -2908,7 +2823,6 @@ Respond ONLY with valid JSON:
           setReflectionText(currentInput.trim());
           setAwaitingReflection(false);
         } else {
-          setReflectionAttempts(prev => prev + 1);
           if (validation.nudge) {
             const nudgeMessage: ChatMessage = {
               role: 'assistant',
@@ -4191,9 +4105,10 @@ Respond ONLY with valid JSON:
 
               const renderRow = (activity: DashboardActivity) => {
                 const overallLevel = certificationScoreToOverallLevel(activity.certification_evaluation_score);
-                const isAdvancedComplete = overallLevel === 'Advanced';
+                const isAdvancedLocked = overallLevel === 'Advanced' ||
+                  (activity.progress === 'completed' && activity.certification_evaluation_score === 3);
                 const scoreBadge =
-                  overallLevel === 'Proficient' || overallLevel === 'Emerging'
+                  !isAdvancedLocked && (overallLevel === 'Proficient' || overallLevel === 'Emerging')
                     ? `Current Score: ${overallLevel}`
                     : null;
 
@@ -4212,9 +4127,9 @@ Respond ONLY with valid JSON:
                   <div
                     key={activity.id}
                     className={classNames(
-                      'p-6 transition-colors',
-                      isAdvancedComplete
-                        ? 'bg-gray-50 opacity-50 backdrop-blur-sm pointer-events-none cursor-not-allowed'
+                      'relative p-6 transition-colors rounded-3xl overflow-hidden',
+                      isAdvancedLocked
+                        ? 'bg-green-50/80 border border-green-200 shadow-sm text-green-900 opacity-90 backdrop-blur-sm pointer-events-none cursor-not-allowed'
                         : isActivitySelectable(activity)
                         ? 'hover:bg-purple-50 cursor-pointer'
                         : 'cursor-default'
@@ -4227,20 +4142,21 @@ Respond ONLY with valid JSON:
                         <div className="flex-shrink-0">{getProgressIcon(activity.progress)}</div>
                         <div className="flex-1 min-w-0">
                           <h4 className={classNames('text-lg font-medium',
-                            isAdvancedComplete
-                              ? 'text-gray-400'
+                            isAdvancedLocked
+                              ? 'text-green-900'
                               : isActivitySelectable(activity)
                               ? 'text-purple-900'
                               : 'text-gray-900')}>
                             {activity.title}
-                            {isAdvancedComplete && (
-                              <span className="ml-2 font-bold text-green-600">Completed</span>
-                            )}
-                            {!isAdvancedComplete && scoreBadge && (
+                            {isAdvancedLocked ? (
+                              <span className="ml-2 text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full border border-green-200">
+                                {activity.progress === 'completed' ? 'Completed. Go to the next activity.' : 'Advanced • Locked'}
+                              </span>
+                            ) : scoreBadge ? (
                               <span className="ml-2 text-sm font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                                 {scoreBadge}
                               </span>
-                            )}
+                            ) : null}
                             {isActivitySelectable(activity) && (
                               <span className="ml-2 text-sm text-purple-600">(Click to start)</span>
                             )}
