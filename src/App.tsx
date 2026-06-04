@@ -72,6 +72,7 @@ import TechSkillsPage from './pages/tech-skills/TechSkillsPage';
 // Legacy pages - kept for backwards compatibility
 import CodeAssistantPage from './pages/CodeAssistantPage';
 import AdminStudentDashboard from './pages/admin/AdminStudentDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Community Impact Pages
 import AIAmbassadorsPage from './pages/community-impact/AIAmbassadorsPage';
@@ -270,6 +271,7 @@ const AppContent: React.FC = () => {
         <Route path="/admin/projects" element={<DashboardPage />} />
         <Route path="/admin/education" element={<DashboardPage />} />
         <Route path="/admin/student-dashboard" element={<AdminStudentDashboard />} />
+        <Route path="/teacher-dashboard" element={<AdminDashboard />} />
 
         {/* Fallback */}
         <Route path="/" element={<PublicLandingPage />} />
