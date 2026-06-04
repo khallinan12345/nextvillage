@@ -593,6 +593,7 @@ const AnimalHusbandryPage: React.FC = () => {
   const [challengeSubmitting, setChallengeSubmitting]   = useState(false);
   const [challengeResult, setChallengeResult]           = useState<ChallengeEvalResult | null>(null);
   const [enrolling, setEnrolling]                       = useState(false);
+  const [showOfflineModal, setShowOfflineModal]         = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -1059,10 +1060,19 @@ const AnimalHusbandryPage: React.FC = () => {
                   <p className="text-sm text-green-200">Your farmer casebook · Oloibiri & Ibiade</p>
                 </div>
               </div>
-              <button onClick={() => { resetAddFarmer(); setMode('add-farmer'); }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-semibold text-sm hover:opacity-90">
-                <Plus size={16}/> Add Farmer
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowOfflineModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                  title="Use offline version"
+                >
+                  📴 Offline
+                </button>
+                <button onClick={() => { resetAddFarmer(); setMode('add-farmer'); }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-semibold text-sm hover:opacity-90">
+                  <Plus size={16}/> Add Farmer
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1220,6 +1230,98 @@ const AnimalHusbandryPage: React.FC = () => {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Offline Mode Modal ────────────────────────────────────────── */}
+          {showOfflineModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div className="flex items-center justify-between px-5 py-4 border-b bg-green-50 rounded-t-2xl">
+                  <div>
+                    <p className="text-xs font-bold text-green-500 uppercase tracking-wide">Offline Mode</p>
+                    <h2 className="text-lg font-bold text-gray-900">Animal Husbandry Advisor — Offline</h2>
+                  </div>
+                  <button onClick={() => setShowOfflineModal(false)} className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                    <X size={18}/>
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4">
+                  {/* Open offline tool */}
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-green-800 mb-2">📴 Use the offline advisor now</p>
+                    <p className="text-sm text-green-700 mb-3 leading-relaxed">
+                      The offline version works without internet. It runs the full animal health triage — poultry, goats/sheep, cattle, and pigs — and saves consultations to your device for later sync.
+                    </p>
+                    <a
+                      href="/animal-advisor-offline.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      <span>📴</span> Open Offline Advisor
+                    </a>
+                  </div>
+
+                  {/* Install on phone */}
+                  <div className="border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-gray-800 mb-3">📱 Install on your phone (works without internet)</p>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Open in your browser</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Tap "Open Offline Advisor" above. It will open in a new tab in your phone's browser (Chrome or Safari).</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Add to Home Screen</p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            <strong>Android (Chrome):</strong> Tap the ⋮ menu → "Add to Home Screen" → "Add".<br/>
+                            <strong>iPhone (Safari):</strong> Tap the Share button (□↑) → "Add to Home Screen" → "Add".
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Use it anywhere — no internet needed</p>
+                          <p className="text-xs text-gray-500 mt-0.5">It will appear as an app icon. Open it in the field, complete the triage, and save the consultation to your device.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Sync when back online</p>
+                          <p className="text-xs text-gray-500 mt-0.5">When you have internet again, open the app, tap the ⬆ sync button in the top right, and your saved consultations will upload to the vAI database automatically.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Operating offline tips */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-amber-800 mb-2">💡 Tips for field use</p>
+                    <ul className="space-y-1.5 text-xs text-amber-700">
+                      <li>• Complete required fields (marked *) — especially species, scale, and main symptoms</li>
+                      <li>• Use the 💡 tip buttons to understand what each field is looking for</li>
+                      <li>• For <strong>pigs</strong>: read the ASF warning before starting — rapid deaths in pigs are an emergency</li>
+                      <li>• The Consultation Record at the end can be read aloud to the farmer as a referral note</li>
+                      <li>• Emergency cases (ASF, PPR, FMD, Newcastle, CBPP) must be reported to the LGA Veterinary Officer — the advisor will tell you</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => setShowOfflineModal(false)}
+                    className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           )}
