@@ -53,12 +53,9 @@ import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/cha
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/ui/Button';
 import {
-  Code,
-  Monitor, 
-  Keyboard,
+  Monitor,
   Lightbulb,
   Wand2,
-  Palette,
   MessageSquare,
   Puzzle,
   Brain,
@@ -76,10 +73,6 @@ import {
   Save,
   Plus,
   PlusCircle,
-  Play,
-  Terminal,
-  Copy,
-  Code2,
   BookOpen,
   X
 } from 'lucide-react';
@@ -315,21 +308,9 @@ const ConfettiAnimation: React.FC = () => {
 // plus cursor-driven ripple distortion "spotlight".
 const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
   const [mousePixels, setMousePixels] = useState({ x: 0, y: 0 });
-  const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
   const [isMouseMoving, setIsMouseMoving] = useState(false);
   const mouseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-
-    if (typeof window !== 'undefined') {
-      handleResize();
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -1104,11 +1085,12 @@ class CodeExecutionService {
       };
     } catch (error) {
       console.error('Code execution error:', error);
+      const message = error instanceof Error ? error.message : String(error);
       return {
         id: executionId,
         code,
         language,
-        error: `Execution failed: ${error.message}`,
+        error: `Execution failed: ${message}`,
         timestamp: new Date(),
       };
     }
@@ -2467,7 +2449,7 @@ Provide assessment now:`;
     subCategory: string,
     rubricEvaluation: SkillsRubricEvaluation,
     chatHistory: ChatMessage[],
-    forceComplete: boolean = false
+    _forceComplete: boolean = false
   ) => {
     // Guard: Don't attempt database operations for mock activity IDs
     if (String(activityId ?? '').startsWith('mock-')) {
@@ -4564,6 +4546,7 @@ Provide assessment now:`;
 
               const renderRow = (activity: DashboardActivity) => {
                 // Collect per-dimension scores for display
+                const isAdvancedComplete = activity.progress === 'completed' && activity.certification_evaluation_score === 3;
                 const subCat = activity.sub_category || '';
                 const colMap = RUBRIC_COLUMN_MAP[subCat] || {};
                 const dimensions = RUBRIC_DEFINITIONS[subCat] || [];
@@ -4584,8 +4567,10 @@ Provide assessment now:`;
                   <div
                     key={activity.id}
                     className={classNames(
-                      'p-6 transition-colors',
-                      activity.progress === 'completed'
+                      'relative p-6 transition-colors rounded-3xl overflow-hidden',
+                      isAdvancedComplete
+                        ? 'bg-green-50/80 border border-green-200 shadow-sm text-green-900 opacity-90 backdrop-blur-sm pointer-events-none cursor-not-allowed'
+                        : activity.progress === 'completed'
                         ? 'bg-gray-50 opacity-60 cursor-not-allowed'
                         : isActivitySelectable(activity)
                         ? 'hover:bg-blue-50 cursor-pointer'
@@ -4599,7 +4584,9 @@ Provide assessment now:`;
                         <div className="flex-shrink-0">{getProgressIcon(activity.progress)}</div>
                         <div className="flex-1 min-w-0">
                           <h4 className={classNames('text-lg font-medium',
-                            activity.progress === 'completed'
+                            isAdvancedComplete
+                              ? 'text-green-900'
+                              : activity.progress === 'completed'
                               ? 'text-gray-400 line-through'
                               : isActivitySelectable(activity)
                               ? 'text-blue-900'
@@ -4608,9 +4595,13 @@ Provide assessment now:`;
                             {isActivitySelectable(activity) && (
                               <span className="ml-2 text-sm text-blue-600">(Click to start)</span>
                             )}
-                            {activity.progress === 'completed' && (
+                            {isAdvancedComplete ? (
+                              <span className="ml-2 text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full border border-green-200">
+                                Completed. Go to the next activity.
+                              </span>
+                            ) : activity.progress === 'completed' ? (
                               <span className="ml-2 text-sm text-gray-400 no-underline font-normal">✓ Completed</span>
-                            )}
+                            ) : null}
                           </h4>
                           <div className="flex items-center space-x-2 text-base text-gray-500 mt-1">
                             <span>{activity.category_activity}</span>

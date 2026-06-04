@@ -2236,7 +2236,10 @@ const DashboardPage: React.FC = () => {
                     }
                     
                     const content = (
-                      <div className="p-6">
+                      <div className={classNames(
+                        'p-6 transition-colors rounded-3xl',
+                        isAdvancedComplete ? 'bg-green-50/80 border border-green-200 shadow-sm text-green-900 opacity-90' : 'bg-white'
+                      )}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4 flex-1">
                             <div className="p-2 bg-gray-100 rounded-lg">{getCategoryIcon(activity.category_activity)}</div>
@@ -2252,6 +2255,11 @@ const DashboardPage: React.FC = () => {
                             <span className={classNames('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getProgressColor(activity.progress))}>
                               {activity.progress}
                             </span>
+                            {isAdvancedComplete && (
+                              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 border border-green-200">
+                                Advanced • Completed
+                              </span>
+                            )}
                             {(activity.evaluation_score != null || activity.certification_evaluation_score != null) && (
                               <div className="text-lg font-semibold text-green-600">
                                 {activity.certification_evaluation_score ?? activity.evaluation_score}%

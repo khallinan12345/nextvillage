@@ -2728,6 +2728,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
               {dynamicCategories.map((category) => {
                 const activity = category.activity;
+                const isAdvancedComplete = activity && activity.progress === 'completed' && activity.certification_evaluation_score === 3;
                 const isSelectable = activity && isActivitySelectable(activity);
                 
                 return (
@@ -2737,17 +2738,19 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     disabled={!isSelectable}
                     className={classNames(
                       'flex flex-col items-start space-y-4 p-4 rounded-lg border transition-all duration-200 text-left',
-                      isSelectable
+                      isAdvancedComplete
+                        ? 'bg-green-50/80 border border-green-200 text-green-900 opacity-90 cursor-not-allowed'
+                        : isSelectable
                         ? 'bg-white hover:shadow-lg hover:border-pink-300 cursor-pointer transform hover:-translate-y-1'
                         : 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-75'
                     )}
                   >
                     <div className={classNames(
                       'p-3 rounded-lg',
-                      isSelectable ? 'bg-pink-100' : 'bg-gray-100'
+                      isAdvancedComplete ? 'bg-green-100' : isSelectable ? 'bg-pink-100' : 'bg-gray-100'
                     )}>
                       <div className={classNames(
-                        isSelectable ? 'text-pink-600' : 'text-gray-400'
+                        isAdvancedComplete ? 'text-green-600' : isSelectable ? 'text-pink-600' : 'text-gray-400'
                       )}>
                         {category.icon}
                       </div>
@@ -2783,6 +2786,14 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                               </span>
                               <span className="text-sm font-bold text-green-600">
                                 {activity.evaluation_score}%
+                              </span>
+                            </div>
+                          )}
+
+                          {isAdvancedComplete && (
+                            <div className="mt-3">
+                              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 border border-green-200">
+                                Advanced • Completed
                               </span>
                             </div>
                           )}

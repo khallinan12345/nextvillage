@@ -64,6 +64,9 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<MockUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<MockUser | null>(null);
+  const [filterType, setFilterType] = useState<'location' | 'name' | 'email'>('location');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -103,9 +106,71 @@ export default function AdminDashboard() {
     setSelected(null);
   };
 
+  const filteredUsers = users.filter((u) => {
+    const query = activeSearch.trim().toLowerCase();
+    if (!query) return true;
+
+    if (filterType === 'name') {
+      return u.full_name.toLowerCase().includes(query);
+    }
+
+    if (filterType === 'email') {
+      return u.email.toLowerCase().includes(query);
+    }
+
+    const locationString = [u.city, u.state_province, u.country, u.continent].filter(Boolean).join(' ').toLowerCase();
+    return locationString.includes(query);
+  });
+
   return (
     <div className="p-6 font-sans">
       <h2 className="text-2xl font-semibold mb-4">Teacher Dashboard — Active Students</h2>
+
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Filter By</span>
+          <select
+            className="mt-1 block w-full border rounded px-3 py-2"
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as 'location' | 'name' | 'email')}
+          >
+            <option value="location">Location</option>
+            <option value="name">Name</option>
+            <option value="email">Email</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Search</span>
+          <input
+            type="text"
+            className="mt-1 block w-full border rounded px-3 py-2"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={filterType === 'location' ? 'Search by city, state, country, continent' : filterType === 'name' ? 'Search by name' : 'Search by email'}
+          />
+        </label>
+
+        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            className="inline-flex justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            onClick={() => setActiveSearch(searchQuery)}
+          >
+            Search
+          </button>
+          <button
+            type="button"
+            className="inline-flex justify-center rounded border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+            onClick={() => {
+              setSearchQuery('');
+              setActiveSearch('');
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <div>Loading...</div>
@@ -125,27 +190,35 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {users.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-800">{u.full_name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {u.role}
-                    <div className="text-xs text-gray-400">assigned by your organization</div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{u.grade_level}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{u.state_province}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{u.country} / {u.continent}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${u.status === 'Active' ? 'bg-green-100 text-green-800' : u.status === 'Idle' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}`}>
-                      {u.status === 'Active' ? '🟢 Active' : u.status === 'Idle' ? '🟡 Idle' : '⚫ Offline'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => setSelected(u)} className="px-3 py-1 bg-blue-600 text-white text-sm rounded">View Profile</button>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={8}>
+                    No users match the selected filter. Try a different search term.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredUsers.map((u) => (
+                  <tr key={u.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-800">{u.full_name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {u.role}
+                      <div className="text-xs text-gray-400">assigned by your organization</div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{u.grade_level}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{u.state_province}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{u.country} / {u.continent}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${u.status === 'Active' ? 'bg-green-100 text-green-800' : u.status === 'Idle' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}`}>
+                        {u.status === 'Active' ? '🟢 Active' : u.status === 'Idle' ? '🟡 Idle' : '⚫ Offline'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setSelected(u)} className="px-3 py-1 bg-blue-600 text-white text-sm rounded">View Profile</button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
