@@ -807,19 +807,12 @@ const DashboardPage: React.FC = () => {
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
 
-        // Fetch last week's champion
+        // Fetch most recent champion for this org
         setLastWeekLbLoading(true);
-        const lastWeekEnd = new Date();
-        lastWeekEnd.setUTCDate(lastWeekEnd.getUTCDate() - lastWeekEnd.getUTCDay()); // last Sunday
-        lastWeekEnd.setUTCHours(0, 0, 0, 0);
-        const lastWeekStart = new Date(lastWeekEnd);
-        lastWeekStart.setUTCDate(lastWeekEnd.getUTCDate() - 6);
-
         const { data: champion } = await supabase
           .from('weekly_champions')
           .select('*')
           .eq('org_id', orgSlug)
-          .gte('week_start', lastWeekStart.toISOString().split('T')[0])
           .order('week_start', { ascending: false })
           .limit(1)
           .maybeSingle();
