@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0891b2">
+<title>vAI Offline Fishing Advisor</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cyan-50:#ecfeff;--cyan-100:#cffafe;--cyan-200:#a5f3fc;--cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;--cyan-800:#155e75;--cyan-900:#164e63;
+  --teal-50:#f0fdfa;--teal-100:#ccfbf1;--teal-400:#2dd4bf;--teal-500:#14b8a6;--teal-600:#0d9488;--teal-700:#0f766e;
+  --red-50:#fef2f2;--red-100:#fee2e2;--red-400:#f87171;--red-600:#dc2626;--red-700:#b91c1c;--red-800:#991b1b;
+  --amber-50:#fffbeb;--amber-100:#fef3c7;--amber-400:#fbbf24;--amber-600:#d97706;--amber-700:#b45309;--amber-800:#92400e;
+  --orange-50:#fff7ed;--orange-400:#fb923c;--orange-700:#c2410c;--orange-800:#9a3412;
+  --green-50:#f0fdf4;--green-400:#4ade80;--green-500:#22c55e;--green-600:#16a34a;--green-700:#15803d;--green-800:#166534;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-500:#3b82f6;--blue-600:#2563eb;
+  --indigo-50:#eef2ff;--indigo-400:#818cf8;--indigo-700:#4338ca;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background:var(--gray-50); color:var(--gray-900); line-height:1.5; font-size:16px; -webkit-text-size-adjust:100%; min-height:100vh; padding-bottom:env(safe-area-inset-bottom,0); }
+.header { position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--gray-200); box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.header-inner { max-width:480px; margin:0 auto; padding:10px 12px; }
+.header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.header-brand { display:flex; align-items:center; gap:8px; }
+.header-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,var(--cyan-600),var(--teal-600)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; }
+.header-title { font-size:13px; font-weight:700; color:var(--gray-900); line-height:1.2; }
+.header-sub { font-size:10px; color:var(--gray-400); }
+.badge-offline { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--gray-500); background:var(--gray-100); padding:3px 8px; border-radius:6px; font-weight:600; }
+.badge-online { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--cyan-700); background:var(--cyan-50); padding:3px 8px; border-radius:6px; font-weight:600; }
+.badge-pending { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--amber-700); background:var(--amber-50); padding:3px 8px; border-radius:6px; font-weight:600; cursor:pointer; }
+.steps { display:flex; align-items:center; gap:3px; }
+.step-pill { display:flex; align-items:center; gap:3px; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:600; border:none; cursor:pointer; transition:all .15s; }
+.step-pill.current { background:var(--cyan-100); color:var(--cyan-700); }
+.step-pill.done { background:var(--cyan-100); color:var(--cyan-700); }
+.step-pill.upcoming { background:var(--gray-100); color:var(--gray-400); }
+.step-pill:disabled { cursor:default; }
+.step-line { flex:1; height:2px; border-radius:1px; background:var(--gray-200); }
+.step-line.done { background:var(--cyan-400); }
+.content { max-width:480px; margin:0 auto; padding:12px 12px 100px; }
+.card { background:#fff; border-radius:16px; border:1px solid var(--gray-200); box-shadow:0 1px 2px rgba(0,0,0,.04); padding:16px; margin-bottom:12px; }
+.card-title { font-size:17px; font-weight:700; color:var(--gray-900); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+.card-subtitle { font-size:12px; color:var(--gray-400); margin-bottom:14px; }
+.label { display:block; font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:5px; }
+.label .req { color:var(--red-600); margin-left:2px; }
+.label-hint { display:block; font-size:11px; color:var(--gray-400); margin-top:2px; font-weight:400; }
+.input,.textarea,.select { width:100%; padding:10px 14px; font-size:16px; border:1px solid var(--gray-300); border-radius:12px; background:#fff; color:var(--gray-900); outline:none; transition:border-color .15s,box-shadow .15s; -webkit-appearance:none; appearance:none; }
+.input:focus,.textarea:focus,.select:focus { border-color:var(--cyan-500); box-shadow:0 0 0 3px rgba(6,182,212,.15); }
+.textarea { resize:none; line-height:1.5; }
+.select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+.field { margin-bottom:14px; }
+.btn-group { display:flex; gap:8px; flex-wrap:wrap; }
+.btn-choice { flex:1; min-width:0; padding:10px 8px; border-radius:12px; border:2px solid var(--gray-200); background:#fff; font-size:13px; font-weight:600; color:var(--gray-600); cursor:pointer; transition:all .15s; text-align:center; -webkit-tap-highlight-color:transparent; }
+.btn-choice:active { transform:scale(.97); }
+.btn-choice.active { border-color:var(--cyan-500); background:var(--cyan-50); color:var(--cyan-800); }
+.btn-choice.active-red { border-color:var(--red-400); background:var(--red-50); color:var(--red-800); }
+.btn-chip { display:inline-block; padding:6px 12px; border-radius:8px; border:none; background:var(--gray-100); color:var(--gray-600); font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; margin:3px; }
+.btn-chip:active { transform:scale(.97); }
+.btn-chip.active { background:var(--cyan-600); color:#fff; }
+.toggle { width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; border:2px solid var(--gray-200); background:#fff; cursor:pointer; transition:all .15s; text-align:left; }
+.toggle.on { border-color:var(--cyan-500); background:var(--cyan-50); }
+.toggle-box { width:24px; height:24px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; }
+.toggle-box.off { background:var(--gray-200); }
+.toggle-box.on { background:var(--cyan-500); }
+.toggle-label { font-size:14px; font-weight:500; color:var(--gray-700); }
+.toggle.on .toggle-label { color:var(--cyan-800); }
+.alert { border-radius:12px; padding:12px 14px; display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+.alert-red { background:var(--red-50); border:2px solid var(--red-400); }
+.alert-amber { background:var(--amber-50); border:2px solid var(--amber-400); }
+.alert-green { background:var(--green-50); border:2px solid var(--green-400); }
+.alert-blue { background:var(--blue-50); border:2px solid var(--blue-500); }
+.alert-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-title { font-size:13px; font-weight:700; }
+.alert-text { font-size:12px; margin-top:2px; }
+.alert-red .alert-title { color:var(--red-800); }
+.alert-red .alert-text { color:var(--red-700); }
+.alert-amber .alert-title { color:var(--amber-800); }
+.alert-amber .alert-text { color:var(--amber-700); }
+.tooltip-btn { background:none; border:none; color:var(--cyan-600); font-size:14px; cursor:pointer; padding:0 4px; vertical-align:middle; }
+.tooltip-box { background:var(--cyan-900); color:var(--cyan-50); font-size:11px; border-radius:10px; padding:8px 12px; margin-top:4px; line-height:1.5; font-weight:400; }
+.section-label { font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; }
+.result-banner { border-radius:16px; border:3px solid; padding:16px; margin-bottom:12px; }
+.result-banner.urgent { background:var(--red-50); border-color:var(--red-400); }
+.result-banner.high { background:var(--orange-50); border-color:var(--orange-400); }
+.result-banner.medium { background:var(--amber-50); border-color:var(--amber-400); }
+.result-banner.low { background:var(--green-50); border-color:var(--green-400); }
+.result-level { font-size:20px; font-weight:900; text-transform:uppercase; margin-bottom:4px; }
+.result-banner.urgent .result-level { color:var(--red-800); }
+.result-banner.high .result-level { color:var(--orange-800); }
+.result-banner.medium .result-level { color:var(--amber-800); }
+.result-banner.low .result-level { color:var(--green-800); }
+.result-patient { font-size:13px; color:var(--gray-600); margin-bottom:10px; }
+.result-reason { font-size:13px; font-weight:500; margin:3px 0; }
+.result-section-title { font-size:13px; font-weight:700; color:var(--gray-900); margin-bottom:8px; }
+.result-item { font-size:13px; color:var(--gray-800); border-radius:8px; padding:8px 12px; margin-bottom:6px; }
+.result-item.action { background:var(--red-50); }
+.result-item.rec { background:var(--green-50); }
+.result-item.warning { background:var(--red-50); font-weight:600; color:var(--red-800); }
+.result-item.referral { background:var(--blue-50); border-left:3px solid var(--blue-500); }
+.result-item.income { background:var(--teal-50); }
+.referral-note { font-family:'Courier New',Courier,monospace; font-size:12px; background:var(--gray-50); border-radius:12px; padding:14px; white-space:pre-wrap; line-height:1.6; color:var(--gray-800); border:1px solid var(--gray-200); }
+.footer { position:fixed; bottom:0; left:0; right:0; z-index:20; background:#fff; border-top:1px solid var(--gray-200); box-shadow:0 -2px 10px rgba(0,0,0,.05); padding-bottom:env(safe-area-inset-bottom,0); }
+.footer-inner { max-width:480px; margin:0 auto; padding:10px 12px; display:flex; gap:10px; }
+.btn-nav { flex:1; padding:12px; border-radius:12px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.btn-nav:active { transform:scale(.97); }
+.btn-nav.primary { background:linear-gradient(135deg,var(--cyan-600),var(--teal-600)); color:#fff; }
+.btn-nav.secondary { background:#fff; color:var(--gray-600); border:2px solid var(--gray-300); }
+.btn-nav:disabled { opacity:.4; cursor:default; transform:none; }
+.btn-save { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(135deg,var(--cyan-600),var(--teal-600)); color:#fff; margin-bottom:8px; }
+.btn-save:active { transform:scale(.98); }
+.btn-reset { width:100%; padding:12px; border-radius:12px; border:2px solid var(--gray-300); background:#fff; font-size:13px; font-weight:700; color:var(--gray-600); cursor:pointer; }
+.btn-reset:active { transform:scale(.98); }
+.disclaimer { font-size:11px; color:var(--gray-400); text-align:center; padding:8px 16px 20px; line-height:1.5; }
+.sync-overlay { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.5); display:flex; align-items:flex-end; justify-content:center; }
+.sync-panel { background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; padding:20px 16px env(safe-area-inset-bottom,16px); }
+.sync-title { font-size:17px; font-weight:700; margin-bottom:4px; }
+.sync-sub { font-size:12px; color:var(--gray-400); margin-bottom:16px; }
+.sync-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:10px; background:var(--gray-50); margin-bottom:6px; font-size:13px; }
+.sync-item .name { font-weight:600; color:var(--gray-800); }
+.sync-item .meta { font-size:11px; color:var(--gray-400); }
+.sync-item .status { font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; }
+.sync-item .status.pending { background:var(--amber-50); color:var(--amber-700); }
+.sync-item .status.synced { background:var(--green-50); color:var(--green-700); }
+.btn-sync { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; }
+.btn-sync.go { background:linear-gradient(135deg,var(--cyan-600),var(--teal-600)); color:#fff; }
+.btn-sync.go:disabled { opacity:.5; cursor:default; }
+.btn-sync.close { background:var(--gray-100); color:var(--gray-600); margin-top:8px; }
+.chips-wrap { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.hidden { display:none !important; }
+.gap-sm > * + * { margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-row">
+      <div class="header-brand">
+        <div class="header-icon">🎣</div>
+        <div>
+          <div class="header-title">Offline Fishing Advisor</div>
+          <div class="header-sub">Rule-Based Triage · Niger Delta · No Internet Required</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="hidden" id="btn-sync-header" onclick="openSyncPanel()" title="Sync consultations">
+          <span class="badge-pending" id="badge-pending">⬆ <span id="pending-count">0</span></span>
+        </button>
+        <span class="badge-offline" id="badge-connectivity">📡 Offline</span>
+      </div>
+    </div>
+    <div class="steps" id="step-bar"></div>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+<div class="footer" id="footer"><div class="footer-inner" id="footer-inner"></div></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const SYNC_CONFIG = {
+  functionUrl: 'https://wohmsbeygxrbwogrggkq.supabase.co/functions/v1/sync-offline-fishing-consultations',
+  syncKey: 'vai-fishing-offline-2024-oloibiri',
+  navigatorUserId: 'offline-fishing-advisor',
+};
+
+const STEPS = [
+  { key:'fisher',  label:'Fisher'  },
+  { key:'type',    label:'Type'    },
+  { key:'intake',  label:'Intake'  },
+  { key:'result',  label:'Result'  },
+];
+
+const CONSULT_TYPES = {
+  'catch-problem':     { label:'Catch Problem',           emoji:'🎣', desc:'Declining catches, gear problems, wrong spots or times' },
+  'aquaculture':       { label:'Fish Pond / Aquaculture',  emoji:'🐟', desc:'Starting or fixing a catfish/tilapia pond, disease, feed, water quality' },
+  'processing-market': { label:'Processing & Market',     emoji:'💰', desc:'Smoking, drying, pricing, where to sell for more income' },
+  'oil-contamination': { label:'Oil Contamination',       emoji:'⚠️', desc:'Identifying pollution, food safety, legal rights, compensation' },
+  'climate-safety':    { label:'Climate & Safety',        emoji:'🌊', desc:'Flood risk, safe fishing seasons, weather, adapting to change' },
+};
+
+const INTAKE_FIELDS = {
+  'catch-problem': [
+    { key:'target_species', label:'Species targeted', placeholder:'e.g. catfish, bonga, tilapia, shrimp', tooltip:'Knowing the species tells us if the problem is species-specific (contamination, habitat) or general (wrong technique, season change).', required:true },
+    { key:'gear_used', label:'Gear used', placeholder:'e.g. gill net (3-inch mesh), cast net, long-line, drum trap', tooltip:'Gear type and mesh size determine which fish you can catch. Wrong mesh = wrong fish. Old nets = torn mesh = escaping fish.', required:true },
+    { key:'waterway', label:'Waterway / fishing location', placeholder:'e.g. Kolo Creek near the pipeline crossing, River Nun at Otuabagi bend', tooltip:'Exact location helps identify contamination risk, seasonal fish movement, and whether the area is overfished.', required:true },
+    { key:'fishing_time', label:'When they fish', placeholder:'e.g. night (6pm–6am), dawn, dry season only', tooltip:'Catfish feed at night. Mullet school at dawn. Fishing at the wrong time explains poor catches even with good gear.', required:true },
+    { key:'catch_change', label:'How catches have changed', placeholder:'e.g. dropped suddenly 3 weeks ago, gradually declining for 2 years, certain species disappeared', tooltip:'Sudden decline = spill or seasonal event. Gradual = long-term habitat damage or overfishing. This shapes everything.', required:true },
+    { key:'water_condition', label:'Water appearance and smell', placeholder:'e.g. oily sheen, petroleum smell, normal, dark/black sediment, floating dead fish', tooltip:'Oil contamination shows as an iridescent sheen, petroleum smell, dead fish. Black sediment near pipelines = historic contamination.' },
+  ],
+  'aquaculture': [
+    { key:'pond_status', label:'Existing pond or planning to start?', placeholder:'e.g. existing pond (1 year old, 100m²), or planning new pond', tooltip:'Existing pond = diagnose problems; new pond = site selection, construction, stocking advice.', required:true },
+    { key:'species', label:'Species in pond (or planned)', placeholder:'e.g. catfish (Clarias), tilapia, or mix', tooltip:'Catfish (Clarias gariepinus) is the best choice — tolerates low oxygen, grows fast (500–800g in 5–6 months). Tilapia is simpler but breeds fast.', required:true },
+    { key:'pond_size', label:'Pond size and depth', placeholder:'e.g. 10m × 10m (100m²), about 1.2m deep', tooltip:'Minimum 100m² for viable production. 1–1.5m deep. Shallower = temperature stress; deeper = oxygen problems at bottom.' },
+    { key:'stocking', label:'Number of fish stocked', placeholder:'e.g. 200 catfish fingerlings from NIOMR Yenagoa', tooltip:'100–200 catfish per 100m² is optimal. Overstocking is the #1 cause of poor growth and disease.' },
+    { key:'main_problem', label:'Main problem being experienced', placeholder:'e.g. fish gasping at surface, not eating, skin ulcers, slow growth, fish dying, pond flooding', tooltip:'Fish gasping at surface = low oxygen → change water NOW. Ulcers/fin rot = bacterial infection from poor water quality.', required:true },
+    { key:'water_management', label:'How they manage water quality', placeholder:'e.g. change 30% weekly, never change it, add freshwater when low', tooltip:'Change 30% of pond water weekly. Never let latrine or fertiliser runoff reach the pond.' },
+  ],
+  'processing-market': [
+    { key:'species_volume', label:'Species and quantity available', placeholder:'e.g. 50kg catfish, 200kg bonga, 10kg shrimp', tooltip:'Volume determines which markets are accessible. Shrimp must sell immediately. Catfish can be smoked for 2–6 weeks shelf life.', required:true },
+    { key:'current_method', label:'Current processing and selling method', placeholder:'e.g. selling fresh at local market, smoking with palm kernel shell kiln, sun-drying', tooltip:'Selling fresh = lowest price, highest spoilage risk. Smoking = 40–80% higher value, 2–6 week shelf life.', required:true },
+    { key:'current_price', label:'Price currently getting per kg', placeholder:'e.g. ₦1,800/kg fresh catfish from local trader', tooltip:'Comparing to market prices reveals if the client is being underpaid. Middlemen pay 40–60% of final market value.' },
+    { key:'selling_to', label:'Who they sell to and where', placeholder:'e.g. to a middleman who comes to the village, at Yenagoa market directly', tooltip:'Selling directly to market women or consumers adds 40–100% more income than selling to middlemen.' },
+    { key:'storage_access', label:'Storage and preservation available', placeholder:'e.g. traditional kiln, no kiln, cold storage (rare), dried on racks', tooltip:'Without cold storage, speed and smoking/drying are the only preservation options. A functional kiln changes the income equation.' },
+    { key:'main_challenge', label:'Biggest challenge', placeholder:'e.g. fish spoiling before sold, too low price, can\'t reach Yenagoa market, no kiln', tooltip:'The specific bottleneck tells us where to focus. Spoilage = processing method. Low price = market access.', required:true },
+  ],
+  'oil-contamination': [
+    { key:'location', label:'Exact location of suspected contamination', placeholder:'e.g. Kolo Creek stretch between the pipeline crossing and the old SPDC manifold', tooltip:'Exact location helps identify the responsible pipeline operator and is essential for any compensation claim.', required:true },
+    { key:'visual_signs', label:'What they can see on the water and fish', placeholder:'e.g. oily rainbow sheen, dead fish floating, petroleum smell, black oily sediment on banks', tooltip:'Rainbow/iridescent sheen = hydrocarbon contamination. Dead fish = acute toxicity event. Petroleum smell = active leak.', required:true },
+    { key:'catch_impact', label:'Impact on catches', placeholder:'e.g. no fish for 2 weeks, fish have unusual taste/smell, catches dropped 80%', tooltip:'Sudden collapse = acute spill. Gradual decline = chronic contamination. Fish with unusual smell should NOT be eaten.', required:true },
+    { key:'health_symptoms', label:'Any health symptoms from water contact', placeholder:'e.g. skin rash, eye irritation, headaches after fishing in the creek', tooltip:'Hydrocarbon exposure causes rashes, eye irritation, and respiratory issues. Document all symptoms for the NOSDRA report.' },
+    { key:'timeline', label:'When this started and any known incident', placeholder:'e.g. started 3 weeks ago, heard a pipeline burst near Otuabagi, or no known incident', tooltip:'Timeline helps establish causation for compensation claims. Document everything from the first day noticed.' },
+    { key:'documentation', label:'Documentation gathered so far', placeholder:'e.g. photos with dates, GPS location saved on phone, names of witnesses', tooltip:'Photos, dates, GPS coordinates, and witness names are the foundation of any compensation claim. Without documentation, claims fail.' },
+  ],
+  'climate-safety': [
+    { key:'waterways_used', label:'Waterways and open water they fish on', placeholder:'e.g. Kolo Creek (narrow), River Nun (open water), coastal creeks near Brass', tooltip:'Open wide rivers carry much higher capsize risk than narrow creeks.', required:true },
+    { key:'current_season', label:'Current season and recent weather', placeholder:'e.g. early wet season, heavy rain yesterday, dry season ending late', tooltip:'Traditional fishing calendars are shifting — dry season 2–4 weeks later than 20 years ago, wet season more intense.', required:true },
+    { key:'changes_noticed', label:'Changes they have noticed over recent years', placeholder:'e.g. floods worse than before, fish harder to find in usual spots, seasons unpredictable', tooltip:'Local observation of change is valuable. It helps us understand what is shifting and tailor adaptation advice.' },
+    { key:'safety_equipment', label:'Safety equipment on canoe', placeholder:'e.g. nothing, one life jacket, a rope, a bailing container', tooltip:'A plastic container tied to rope as a flotation aid is better than nothing. Life jackets are rare but critical.', required:true },
+    { key:'flood_risk', label:'Fish pond location and flood exposure (if applicable)', placeholder:'e.g. pond on low ground near creek, flooded in 2022, on higher ground', tooltip:'The 2022 floods submerged 300+ Bayelsa communities. Elevated bunds (50–80cm above flood level) are the critical mitigation.' },
+    { key:'main_concern', label:'Main concern or question', placeholder:'e.g. worried about fishing in rainy season, pond keeps flooding, catches very unpredictable', tooltip:'Safety first — if they describe dangerous conditions, we address that before anything else.', required:true },
+  ],
+};
+
+const ACTIVITY_OPTIONS = [
+  { value:'wild-fishing',        label:'Wild fishing (creek/river)',           emoji:'🎣' },
+  { value:'aquaculture',         label:'Fish pond / aquaculture',              emoji:'🐟' },
+  { value:'fish-trading',        label:'Fish trading / selling',               emoji:'🛒' },
+  { value:'fish-processing',     label:'Fish processing / smoking',            emoji:'🔥' },
+  { value:'shellfish-gathering', label:'Shellfish (periwinkle/clam/oyster)',   emoji:'🦪' },
+];
+
+const WATERWAY_OPTIONS = ['Kolo Creek','River Nun','Taylor Creek','Ekole River','Brass River','Ikebiri Creek','San Bartholomew River','Other'];
+const VILLAGES = ['Oloibiri','Otuabagi','Nembe','Brass','Ogbia','Yenagoa','Ikebiri','Other'];
+
+let state = {
+  step:0,
+  fisher:{ name:'', village:'Oloibiri', phone:'', activities:[], waterways:[], notes:'' },
+  consultType:null,
+  intake:{},
+  result:null,
+  saved:false,
+  saveMode:null,
+  savingToDb:false,
+  saveError:null,
+  openTooltip:null,
+  showReferral:false,
+  _lastStep:-1,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOM HELPER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  if (props) Object.entries(props).forEach(([k,v]) => {
+    if (k==='className') el.className=v;
+    else if (k==='style'&&typeof v==='string') el.style.cssText=v;
+    else if (k.startsWith('on')&&typeof v==='function') el.addEventListener(k.slice(2).toLowerCase(),v);
+    else if (k==='disabled'){if(v)el.disabled=true;}
+    else el.setAttribute(k,v);
+  });
+  children.flat().forEach(c=>{if(c!=null&&c!==false)el.append(typeof c==='string'||typeof c==='number'?document.createTextNode(String(c)):c);});
+  return el;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RULE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function computeAdvisory() {
+  const ct = state.consultType;
+  const intake = state.intake;
+  const allText = Object.values(intake).join(' ').toLowerCase();
+
+  const r = {
+    urgency:'low',
+    reasons:[],
+    immediateActions:[],
+    mediumTermActions:[],
+    incomeTips:[],
+    doNot:[],
+    referrals:[],
+    warnings:[],
+  };
+
+  const esc = (level) => {
+    const order = ['low','medium','high','urgent'];
+    if (order.indexOf(level) > order.indexOf(r.urgency)) r.urgency = level;
+  };
+
+  // ── CATCH PROBLEM ─────────────────────────────────────────────────────────
+  if (ct === 'catch-problem') {
+    // Oil contamination signs
+    if (allText.includes('sheen')||allText.includes('oily')||allText.includes('petroleum smell')||allText.includes('dead fish')||allText.includes('black sediment')) {
+      esc('urgent'); r.reasons.push('Oil contamination detected — visible signs in water');
+      r.immediateActions.push('STOP eating any fish from this stretch of water immediately — hydrocarbons accumulate in flesh and are a serious health risk.');
+      r.immediateActions.push('Document NOW: take photos with your phone, note the GPS location, write down today\'s date and what you can see and smell.');
+      r.immediateActions.push('Report to NOSDRA: call 0800-NOSDRA-9 (free) and describe the location, signs, and date it started.');
+      r.referrals.push({ who:'NOSDRA (National Oil Spill Detection and Response Agency)', why:'Report spill: 0800-NOSDRA-9. Documentation of date, location, photos, and catch impact is essential for compensation claims.', urgency:'TODAY' });
+      r.doNot.push('Do NOT sell fish caught from contaminated water — this is a health risk for buyers and could expose you to legal liability.');
+    }
+    // Sudden decline
+    if (allText.includes('sudden')||allText.includes('3 weeks')||allText.includes('2 weeks')||allText.includes('last week')&&allText.includes('drop')) {
+      esc('high'); r.reasons.push('Sudden catch decline — likely acute event (spill, seasonal shift, or new obstruction)');
+      r.immediateActions.push('Move fishing location: try a different section of the waterway at least 2km from the current problem area.');
+      r.immediateActions.push('Talk to other fishers in the area — did they also notice a sudden change? Shared experience strengthens a contamination report.');
+      r.mediumTermActions.push('If no visible contamination: check if a new structure (bridge, pipeline maintenance) or seasonal change explains the shift.');
+    }
+    // Wrong time
+    if (allText.includes('morning')&&!allText.includes('dawn')||allText.includes('afternoon')||allText.includes('midday')) {
+      esc('medium'); r.reasons.push('Fishing time may be suboptimal for target species');
+      r.mediumTermActions.push('Catfish: fish at night (set nets 6–10pm, collect dawn). Much higher catches than daytime.');
+      r.mediumTermActions.push('Mullet/bonga: best at dawn when schools surface. Cast nets at first light.');
+      r.mediumTermActions.push('Shrimp: evening/night near mangrove edges as tide rises.');
+    }
+    // Mesh size / wrong gear
+    if (allText.includes('mesh')||allText.includes('gill net')||allText.includes('cast net')) {
+      r.mediumTermActions.push('Gill net mesh size matters: 2–2.5 inch for tilapia and small catfish; 3–4 inch for larger catfish; 5+ inch for croaker and larger species. Wrong mesh = wrong fish or fish escape.');
+    }
+    // Dry season concentration
+    if (allText.includes('dry season')||allText.includes('december')||allText.includes('january')||allText.includes('february')) {
+      r.mediumTermActions.push('Dry season opportunity: as water level drops, fish concentrate in deep pools and channel bends. Focus effort at these points — catches can be 3–5x higher than dispersed wet-season fishing.');
+    }
+    // General declining over years
+    if (allText.includes('year')||allText.includes('gradual')||allText.includes('long time')) {
+      r.mediumTermActions.push('Long-term decline suggests habitat pressure. Consider transitioning to aquaculture (catfish pond) as a stable supplementary income — less dependent on wild stock.');
+      r.referrals.push({ who:'ADP (Agricultural Development Programme) or NIOMR Yenagoa', why:'Free technical advice on starting a catfish pond and access to certified fingerlings.', urgency:'When ready' });
+    }
+  }
+
+  // ── AQUACULTURE ───────────────────────────────────────────────────────────
+  if (ct === 'aquaculture') {
+    // Gasping — oxygen emergency
+    if (allText.includes('gasp')||allText.includes('surface')||allText.includes('jumping out')) {
+      esc('urgent'); r.reasons.push('Fish gasping at surface — critically low oxygen, fish will die within hours');
+      r.immediateActions.push('EMERGENCY: Change 50% of pond water RIGHT NOW with fresh water. This is the only immediate fix.');
+      r.immediateActions.push('Use a bucket, paddle, or pump to agitate the water surface — this aerates the pond and buys time.');
+      r.immediateActions.push('Remove any dead fish immediately — decomposition consumes oxygen and accelerates the problem.');
+      r.doNot.push('Do NOT feed the fish while oxygen is low — uneaten feed rots and makes the oxygen problem worse.');
+    }
+    // Ulcers / fin rot
+    if (allText.includes('ulcer')||allText.includes('sore')||allText.includes('fin rot')||allText.includes('wound')) {
+      esc('high'); r.reasons.push('Bacterial infection (ulcers/fin rot) — caused by poor water quality');
+      r.immediateActions.push('Change 40% of pond water immediately with clean fresh water.');
+      r.immediateActions.push('Reduce feeding by 50% for one week — overfeeding drives the bacterial load that causes ulcers.');
+      r.mediumTermActions.push('Establish weekly 30% water changes as a routine — this single practice prevents 80% of catfish pond diseases.');
+      r.mediumTermActions.push('If ulcers spread to many fish: contact NIOMR or ADP for potassium permanganate bath treatment guidance.');
+    }
+    // Not eating
+    if (allText.includes('not eat')||allText.includes('refuse')||allText.includes('won\'t eat')) {
+      esc('medium'); r.reasons.push('Fish refusing feed — stress, water quality, or disease signal');
+      r.immediateActions.push('Check water colour: green = algae bloom (reduce feed, change 20% water); cloudy/grey = high ammonia (change 30% water immediately).');
+      r.mediumTermActions.push('Feed catfish at dusk/dawn only — these are their natural feeding times. Midday feeding is mostly wasted.');
+    }
+    // Slow growth
+    if (allText.includes('slow')||allText.includes('small')||allText.includes('not grow')) {
+      esc('medium'); r.reasons.push('Slow growth — likely overcrowding, wrong feed, or water quality issue');
+      r.mediumTermActions.push('Stock density check: 100m² pond should have maximum 200 catfish. More than this = competition for feed and oxygen = slow growth for all.');
+      r.mediumTermActions.push('Feed quality: use floating pellets (you can see if fish are eating). 2–3mm pellets for fingerlings, 4–6mm for grow-out. Feed 3–5% of body weight per day.');
+      r.incomeTips.push('100m² catfish pond at correct stocking density produces 300–500kg per 5–6 month cycle. At ₦2,500/kg, that is ₦750,000–₦1,250,000 gross income.');
+    }
+    // Flooding
+    if (allText.includes('flood')||allText.includes('overflow')||allText.includes('rain')) {
+      esc('high'); r.reasons.push('Flood risk to fish pond — loss of entire stock possible');
+      r.immediateActions.push('Build or raise pond bunds (earth walls) to at least 50–80cm above the highest expected flood level. The 2022 floods destroyed thousands of ponds in Bayelsa.');
+      r.mediumTermActions.push('Install an overflow pipe at 80% of maximum water level — this automatically releases excess water without breaching bunds.');
+      r.mediumTermActions.push('Locate new ponds on ground that is naturally 1m or more above creek level. Never dig a pond in a flood-prone depression.');
+    }
+    // New pond planning
+    if (allText.includes('planning')||allText.includes('new pond')||allText.includes('start')) {
+      r.reasons.push('New aquaculture venture — planning guidance needed');
+      r.immediateActions.push('Start with ONE 10m × 10m (100m²) pond to learn. Expand after first successful harvest.');
+      r.mediumTermActions.push('Choose catfish (Clarias gariepinus): most resilient, fastest growing, highest market demand in Bayelsa.');
+      r.mediumTermActions.push('Source fingerlings from NIOMR Yenagoa or ADP — certified disease-free stock. Cost: ₦50–80 each. Stock 150–200 per 100m².');
+      r.incomeTips.push('Budget for one cycle: fingerlings ₦10,000 + feed ₦60,000–80,000 + pond construction ₦30,000–50,000. Expected return: ₦750,000–₦1,200,000. Payback on construction in cycle 1.');
+      r.referrals.push({ who:'NIOMR Yenagoa or ADP Extension Office', why:'Source certified catfish fingerlings and get free aquaculture setup guidance.', urgency:'Before starting' });
+    }
+  }
+
+  // ── PROCESSING & MARKET ───────────────────────────────────────────────────
+  if (ct === 'processing-market') {
+    // No smoking / selling fresh only
+    if (allText.includes('fresh')||(allText.includes('sell')||allText.includes('no kiln')||allText.includes('no smoking'))) {
+      esc('medium'); r.reasons.push('Selling fresh fish only — significant income opportunity being missed through smoking/drying');
+      r.mediumTermActions.push('A traditional smoking kiln costs ₦15,000–30,000 to build and pays back in 2–3 smoking cycles. Smoked catfish sells for ₦3,500–6,000/kg vs ₦2,500/kg fresh — a 40–80% premium.');
+      r.incomeTips.push('Price comparison (Bayelsa 2024–25): Live catfish ₦2,500–4,500/kg | Smoked catfish ₦3,500–6,000/kg | Smoked bonga ₦800–2,000/kg | Fresh shrimp ₦4,000–8,000/kg | Periwinkle ₦1,000–2,500/kg.');
+    }
+    // Middleman / low price
+    if (allText.includes('middleman')||allText.includes('trader come')||allText.includes('low price')||allText.includes('bad price')) {
+      esc('medium'); r.reasons.push('Selling through middlemen — receiving 40–60% below final market price');
+      r.mediumTermActions.push('Form a cooperative selling group with 3–5 other fishers or fish processors — combined volume unlocks direct access to Yenagoa main market and Port Harcourt buyers.');
+      r.mediumTermActions.push('Join WhatsApp fish trader groups for Yenagoa and Port Harcourt to check daily market prices before selling.');
+      r.incomeTips.push('Direct sale to market women or consumers typically adds ₦500–1,500/kg vs middleman prices. On 100kg catch, that is ₦50,000–150,000 extra.');
+    }
+    // Spoilage
+    if (allText.includes('spoil')||allText.includes('rot')||allText.includes('smell bad')||allText.includes('waste')) {
+      esc('high'); r.reasons.push('Fish spoilage — post-harvest losses causing direct income loss');
+      r.immediateActions.push('Ice or salt: if no kiln is available, pack fish in layers with coarse salt (1 part salt to 3 parts fish) to buy 3–5 days. This prevents spoilage while arranging to smoke or sell.');
+      r.immediateActions.push('Smoke within 6 hours of catch for maximum shelf life and best final product quality.');
+      r.mediumTermActions.push('A proper smoking kiln with a chimney produces better, longer-lasting smoked fish than open fire smoking — less tar, better colour, longer shelf life.');
+    }
+    // Shrimp specific
+    if (allText.includes('shrimp')) {
+      r.mediumTermActions.push('Shrimp must be processed within 2–3 hours of harvest — they deteriorate very fast. Sun-drying on clean racks immediately after harvest extends shelf life to 2–4 weeks and maintains ₦3,000–5,000/kg price for dried product.');
+    }
+  }
+
+  // ── OIL CONTAMINATION ─────────────────────────────────────────────────────
+  if (ct === 'oil-contamination') {
+    esc('urgent'); r.reasons.push('Oil contamination case — legal and health rights must be protected immediately');
+
+    r.immediateActions.push('STOP fishing in the contaminated area immediately. Do not eat fish caught there — hydrocarbons accumulate in fish flesh and cause cancer with long-term exposure.');
+    r.immediateActions.push('DOCUMENT NOW (this is your legal evidence): (1) Take photos/video with date and time visible. (2) Save GPS coordinates. (3) Write down names of all witnesses. (4) Record the date you first noticed the problem.');
+    r.immediateActions.push('Report to NOSDRA: call 0800-NOSDRA-9 (free, 24/7). Give them exact location, date, visible signs, and your name and phone number for follow-up.');
+
+    if (allText.includes('rash')||allText.includes('skin')||allText.includes('eye')||allText.includes('headache')) {
+      esc('urgent'); r.immediateActions.push('HEALTH EMERGENCY: Seek medical care immediately for anyone with skin rash, eye irritation, or persistent headaches from water contact. Document the symptoms and dates for your compensation claim.');
+    }
+
+    r.mediumTermActions.push('Keep a daily diary: record how your catch has changed each day since the contamination started. This is key evidence for compensation calculation.');
+    r.mediumTermActions.push('Contact Stakeholder Democracy Network (SDN) or Environmental Rights Action (ERA) — they provide free legal support for oil spill compensation claims in the Niger Delta.');
+    r.mediumTermActions.push('Recovery takes time: even after a spill is cleaned up, fish populations take 18–36 months to significantly recover. Document this ongoing impact too.');
+
+    r.referrals.push({ who:'NOSDRA — National Oil Spill Detection and Response Agency', why:'Report the spill: 0800-NOSDRA-9 (free). NOSDRA can force the operator to clean up and compensate.', urgency:'TODAY' });
+    r.referrals.push({ who:'Stakeholder Democracy Network (SDN) or Environmental Rights Action (ERA)', why:'Free legal support for compensation claims. Bring your documented evidence.', urgency:'As soon as possible' });
+
+    r.doNot.push('Do NOT clean up the spill yourself — this reduces the visible evidence and weakens your compensation claim.');
+    r.doNot.push('Do NOT accept any verbal promises from pipeline operators without written documentation countersigned by community leaders.');
+    r.warnings.push('Clams and periwinkle absorb heavy metals from contaminated sediment — they remain dangerous to eat even after visible contamination clears. Avoid for at least 12 months after a spill.');
+  }
+
+  // ── CLIMATE & SAFETY ──────────────────────────────────────────────────────
+  if (ct === 'climate-safety') {
+    // Safety on open water
+    if (allText.includes('river nun')||allText.includes('open water')||allText.includes('coastal')||allText.includes('brass')) {
+      esc('medium'); r.reasons.push('Fishing on open water — significant capsize risk especially in wet season');
+      r.immediateActions.push('Check weather BEFORE going out. If there are dark clouds, rising winds, or choppy water — do not go. No catch is worth drowning.');
+      r.mediumTermActions.push('Minimum safety kit every trip: (1) a large plastic container tied to a rope as flotation aid, (2) a bailing container, (3) someone on shore who knows where you are and when to expect you back.');
+      r.mediumTermActions.push('Life jackets cost ₦3,000–8,000 and are available in Yenagoa. A fisher who cannot swim or fishes open water should treat this as essential equipment.');
+    }
+    // Flood risk to pond
+    if (allText.includes('pond')&&(allText.includes('flood')||allText.includes('low ground')||allText.includes('2022'))) {
+      esc('high'); r.reasons.push('Fish pond flood risk — total stock loss possible in wet season');
+      r.immediateActions.push('Raise pond bunds NOW before the wet season. Minimum height: 50–80cm above highest previous flood mark. The 2022 floods submerged 300+ Bayelsa communities.');
+      r.mediumTermActions.push('Build an outlet pipe at 80% capacity — this allows controlled overflow without bund collapse.');
+    }
+    // Climate shift
+    if (allText.includes('season change')||allText.includes('unpredictable')||allText.includes('irregular')||allText.includes('dry season late')) {
+      r.reasons.push('Seasonal patterns shifting — traditional fishing calendar becoming unreliable');
+      r.mediumTermActions.push('Traditional dry-season fish concentration spots are still valid BUT the timing has shifted 2–4 weeks later in recent years. Adjust expectations accordingly.');
+      r.mediumTermActions.push('Diversify: fish farming (aquaculture) in a stable pond is less affected by seasonal unpredictability than wild fishing. It provides income when wild catches are poor.');
+      r.mediumTermActions.push('Track your catches and weather in a simple notebook — your own data over 1–2 seasons is more reliable than generalised predictions for planning your activities.');
+    }
+    // No safety equipment
+    if (allText.includes('nothing')||allText.includes('no life jacket')||allText.includes('no equipment')) {
+      esc('medium'); r.reasons.push('No safety equipment — unacceptable risk for any open-water fishing');
+      r.immediateActions.push('Before the next trip: put a large (20–25L) sealed plastic container tied to a 5-metre rope in the canoe. If the canoe capsizes, grab it — it will keep you afloat.');
+      r.mediumTermActions.push('Never fish alone on open water. Two people means someone can get help if the other falls overboard.');
+    }
+  }
+
+  // ── Fallback ──────────────────────────────────────────────────────────────
+  if (r.reasons.length === 0) {
+    r.reasons.push('Assessment complete — see recommendations below');
+    r.mediumTermActions.push('Based on the information provided, no immediate emergency was identified. Continue monitoring and use the follow-up section to track progress.');
+  }
+
+  return r;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REFERRAL NOTE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function makeReferralNote() {
+  const f = state.fisher;
+  const ct = CONSULT_TYPES[state.consultType] || {};
+  const res = state.result;
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  return `FISHING CONSULTATION RECORD
+──────────────────────────────
+Date: ${today}
+Fisher: ${f.name} · ${f.village}${f.phone?'\nPhone: '+f.phone:''}
+Activities: ${f.activities.join(', ')||'not recorded'}
+Waterways: ${f.waterways.join(', ')||'not recorded'}
+Consultation: ${ct.emoji||''} ${ct.label||state.consultType}
+
+INTAKE SUMMARY:
+${Object.entries(state.intake).filter(([,v])=>v&&v.trim()).map(([k,v])=>k.replace(/_/g,' ').toUpperCase()+': '+v).join('\n')}
+
+ADVISORY OUTCOME:
+URGENCY: ${res.urgency.toUpperCase()}
+${res.reasons[0]||''}
+
+REFERRALS: ${res.referrals.map(r=>r.who).join('; ')||'None'}
+
+Advisor: Community Fishing Ambassador
+Programme: vAI Community Impact, ${f.village}
+──────────────────────────────`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER STEPS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderFisher() {
+  const el = h('div',null);
+  el.append(h('div',{className:'card'},
+    h('div',{className:'card-title'},'🎣 Fisher Details'),
+    h('div',{className:'card-subtitle'},'Who are you consulting with today?'),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Fisher Name',h('span',{className:'req'},' *')),
+      h('input',{className:'input',type:'text',placeholder:'e.g. Mama Emeka',value:state.fisher.name,onInput:e=>{state.fisher.name=e.target.value;render();}})
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Village'),
+      h('select',{className:'select',onChange:e=>{state.fisher.village=e.target.value;}},
+        ...VILLAGES.map(v=>{const o=h('option',{value:v},v);if(v===state.fisher.village)o.selected=true;return o;})
+      )
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Phone (optional)'),
+      h('input',{className:'input',type:'tel',placeholder:'e.g. 08012345678',value:state.fisher.phone,onInput:e=>{state.fisher.phone=e.target.value;}})
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Fishing Activities'),
+      h('div',{className:'chips-wrap'},
+        ...ACTIVITY_OPTIONS.map(a=>{
+          const active=state.fisher.activities.includes(a.value);
+          return h('button',{type:'button',className:'btn-chip'+(active?' active':''),onClick:()=>{
+            if(active) state.fisher.activities=state.fisher.activities.filter(x=>x!==a.value);
+            else state.fisher.activities=[...state.fisher.activities,a.value];
+            render();
+          }},a.emoji+' '+a.label);
+        })
+      )
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Waterways Used'),
+      h('div',{className:'chips-wrap'},
+        ...WATERWAY_OPTIONS.map(w=>{
+          const active=state.fisher.waterways.includes(w);
+          return h('button',{type:'button',className:'btn-chip'+(active?' active':''),onClick:()=>{
+            if(active) state.fisher.waterways=state.fisher.waterways.filter(x=>x!==w);
+            else state.fisher.waterways=[...state.fisher.waterways,w];
+            render();
+          }},w);
+        })
+      )
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Notes (optional)'),
+      h('textarea',{className:'textarea',rows:'2',placeholder:'e.g. second visit, referred by navigator...',onInput:e=>{state.fisher.notes=e.target.value;}},state.fisher.notes)
+    )
+  ));
+  return el;
+}
+
+function renderType() {
+  const el = h('div',null);
+
+  // Oil contamination warning
+  el.append(h('div',{className:'alert alert-amber'},
+    h('span',{className:'alert-icon'},'⚠️'),
+    h('div',null,
+      h('div',{className:'alert-title'},'Oil Contamination?'),
+      h('div',{className:'alert-text'},'If the fisher reports an oily sheen, petroleum smell, or dead fish floating — select "Oil Contamination" and document carefully. This is legal evidence.')
+    )
+  ));
+
+  el.append(h('div',{className:'card'},
+    h('div',{className:'card-title'},'🗂 Consultation Type'),
+    h('div',{className:'card-subtitle'},'What does the fisher need help with today?'),
+    h('div',{className:'btn-group',style:'flex-direction:column;'},
+      ...Object.entries(CONSULT_TYPES).map(([key,ct])=>{
+        const active=state.consultType===key;
+        return h('button',{type:'button',className:'btn-choice'+(active?' active':''),
+          style:'text-align:left;display:flex;align-items:center;gap:10px;',
+          onClick:()=>{state.consultType=key;render();}},
+          h('span',{style:'font-size:22px;'},(key==='oil-contamination'?'⚠️':ct.emoji)),
+          h('div',null,
+            h('div',{style:'font-weight:700;font-size:14px;'},ct.label),
+            h('div',{style:'font-size:11px;color:var(--gray-400);font-weight:400;'},ct.desc)
+          )
+        );
+      })
+    )
+  ));
+  return el;
+}
+
+function renderIntake() {
+  const fields = INTAKE_FIELDS[state.consultType]||[];
+  const el = h('div',null);
+
+  const ct = CONSULT_TYPES[state.consultType];
+  el.append(h('div',{className:'card'},
+    h('div',{className:'card-title'},ct.emoji+' Intake — '+ct.label),
+    h('div',{className:'card-subtitle'},'Complete required fields (*). Use 💡 tips to understand each question.'),
+    ...fields.map(field=>{
+      const tipId='tip_'+field.key;
+      const open=state.openTooltip===tipId;
+      const container=h('div',{className:'field'});
+      container.append(h('label',{className:'label'},
+        field.label,
+        field.required?h('span',{className:'req'},' *'):null,
+        ' ',
+        h('button',{type:'button',className:'tooltip-btn',onClick:()=>{state.openTooltip=open?null:tipId;render();}},open?'▲':'💡')
+      ));
+      if(open) container.append(h('div',{className:'tooltip-box'},field.tooltip));
+      container.append(h('textarea',{className:'textarea',rows:'3',placeholder:field.placeholder,
+        onInput:e=>{state.intake[field.key]=e.target.value;}},state.intake[field.key]||''));
+      return container;
+    })
+  ));
+  return el;
+}
+
+function renderResult() {
+  const res=state.result;
+  const f=state.fisher;
+  const ct=CONSULT_TYPES[state.consultType]||{};
+  const els=[];
+
+  // Urgency icons
+  const urgencyIcons={urgent:'🔴 URGENT',high:'🟠 HIGH URGENCY',medium:'🟡 MEDIUM URGENCY',low:'🟢 LOW'};
+  const urgencyDesc={urgent:'Stop harmful activity immediately and act now.',high:'Act today — losses or health risks are escalating.',medium:'Act this week — follow up within 2–7 days.',low:'No immediate risk — plan medium-term improvements.'};
+
+  els.push(h('div',{className:'result-banner '+res.urgency},
+    h('div',{className:'result-level'},urgencyIcons[res.urgency]||res.urgency),
+    h('div',{className:'result-patient'},ct.emoji+' '+ct.label+' · '+f.name+' · '+f.village),
+    h('div',{className:'result-reason'},urgencyDesc[res.urgency]||''),
+    ...res.reasons.map(r=>h('div',{className:'result-reason',style:'margin-top:4px;font-size:12px;'},'• '+r))
+  ));
+
+  if(res.immediateActions.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'🚨 Immediate Actions'),
+    ...res.immediateActions.map(a=>h('div',{className:'result-item action'},'▶ '+a))
+  ));
+
+  if(res.referrals.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'📞 Referrals'),
+    ...res.referrals.map(r=>h('div',{className:'result-item referral'},
+      h('div',{style:'font-weight:700;font-size:13px;'},r.who),
+      h('div',{style:'font-size:12px;margin-top:2px;color:var(--gray-600);'},r.why),
+      h('div',{style:'font-size:11px;margin-top:3px;font-weight:700;color:var(--red-600);'},'⏰ '+r.urgency)
+    ))
+  ));
+
+  if(res.mediumTermActions.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'📋 Follow-Up Actions'),
+    ...res.mediumTermActions.map(a=>h('div',{className:'result-item rec'},'✓ '+a))
+  ));
+
+  if(res.incomeTips&&res.incomeTips.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'💰 Income Opportunity'),
+    ...res.incomeTips.map(t=>h('div',{className:'result-item income'},'₦ '+t))
+  ));
+
+  if(res.doNot&&res.doNot.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title',style:'color:var(--red-700);'},'🚫 Do NOT'),
+    ...res.doNot.map(d=>h('div',{className:'result-item warning'},'✗ '+d))
+  ));
+
+  if(res.warnings&&res.warnings.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title',style:'color:var(--red-700);'},'⚠️ Warnings'),
+    ...res.warnings.map(w=>h('div',{className:'result-item warning'},'🚨 '+w))
+  ));
+
+  // Referral note collapsible
+  const noteCard=h('div',{className:'card'});
+  noteCard.append(h('button',{type:'button',style:'width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;padding:0;',
+    onClick:()=>{state.showReferral=!state.showReferral;render();}},
+    h('div',{className:'result-section-title',style:'margin:0;'},'📄 Consultation Record'),
+    h('span',{style:'color:var(--gray-400);'},state.showReferral?'▾':'▸')
+  ));
+  if(state.showReferral) noteCard.append(h('pre',{className:'referral-note',style:'margin-top:10px;'},makeReferralNote()));
+  els.push(noteCard);
+
+  // Save
+  const saveCard=h('div',{className:'card'});
+  const isOnline=navigator.onLine;
+  const notConfigured=SYNC_CONFIG.syncKey==='CHANGE_ME_BEFORE_DEPLOY';
+
+  if(!state.saved){
+    if(isOnline&&!notConfigured){
+      const dbBtn=h('button',{type:'button',className:'btn-save',onClick:saveToDatabase},state.savingToDb?'⏳ Saving to vAI Database…':'☁️ Save to vAI Database');
+      dbBtn.disabled=state.savingToDb;
+      saveCard.append(dbBtn);
+      if(state.saveError) saveCard.append(h('div',{style:'margin:8px 0;padding:10px;background:var(--red-50);border-radius:8px;font-size:12px;color:var(--red-700);'},'⚠️ '+state.saveError));
+      saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:saveCurrent},'💾 Save Offline Instead'));
+    } else {
+      saveCard.append(h('button',{type:'button',className:'btn-save',onClick:saveCurrent},'💾 Save Offline'));
+      saveCard.append(h('div',{style:'font-size:12px;color:var(--amber-700);text-align:center;margin-top:8px;'},'📡 No connection — consultation will sync to vAI database when back online.'));
+    }
+  } else {
+    if(state.saveMode==='database'){
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'✅'),
+        h('div',null,h('div',{className:'alert-title'},'Saved to vAI Database'),h('div',{className:'alert-text'},'Consultation is in the NextVillage platform and available for follow-up.'))
+      ));
+    } else {
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'💾'),
+        h('div',null,h('div',{className:'alert-title'},'Saved to device'),h('div',{className:'alert-text'},getPending()+' consultation'+(getPending()!==1?'s':'')+' pending sync. Tap ⬆ when online to upload.'))
+      ));
+    }
+  }
+  saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:resetAll},'Start New Consultation'));
+  els.push(saveCard);
+
+  els.push(h('div',{className:'disclaimer'},'⚠️ FISHING ADVISORY SUPPORT ONLY — Rule-based recommendations for triage and initial guidance. For oil spill emergencies call NOSDRA: 0800-NOSDRA-9. For aquaculture emergencies contact NIOMR or ADP Yenagoa. The advisor must use their own judgement and training.\nBuilt for vAI Community Impact Programme, Oloibiri & Ibiade.'));
+
+  return h('div',null,...els);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY='vai_offline_fishing_consultations';
+function loadSaved(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch{return[];}}
+
+function saveCurrent(){
+  const list=loadSaved();
+  list.unshift({id:'fish_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),ts:new Date().toISOString(),fisher:state.fisher,consultType:state.consultType,intake:state.intake,result:state.result,synced:false});
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(list));
+  state.saved=true;state.saveMode='offline';updatePendingBadge();render();
+}
+
+async function saveToDatabase(){
+  state.savingToDb=true;state.saveError=null;render();
+  try{
+    const payload={fisher:state.fisher,consultType:state.consultType,intake:state.intake,result:state.result,ts:new Date().toISOString(),syncKey:SYNC_CONFIG.syncKey,navigatorUserId:SYNC_CONFIG.navigatorUserId};
+    const resp=await fetch(SYNC_CONFIG.functionUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({consultations:[{...payload,id:'fish_'+Date.now()+'_direct',synced:false}]})});
+    if(!resp.ok) throw new Error('Server error '+resp.status);
+    state.saved=true;state.saveMode='database';
+  }catch(e){state.saveError='Could not save to vAI database: '+e.message+'. Use offline save instead.';}
+  finally{state.savingToDb=false;render();}
+}
+
+function getPending(){return loadSaved().filter(a=>!a.synced).length;}
+function updatePendingBadge(){
+  const n=getPending();
+  const btn=document.getElementById('btn-sync-header');
+  const ct=document.getElementById('pending-count');
+  if(n>0){btn.classList.remove('hidden');ct.textContent=n;}else{btn.classList.add('hidden');}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYNC ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let syncPanelOpen=false;let syncing=false;
+function openSyncPanel(){syncPanelOpen=true;renderSyncPanel();}
+function closeSyncPanel(){syncPanelOpen=false;const el=document.getElementById('sync-overlay');if(el)el.remove();}
+
+function renderSyncPanel(){
+  let overlay=document.getElementById('sync-overlay');
+  if(overlay)overlay.remove();
+  if(!syncPanelOpen)return;
+  const saved=loadSaved();const pending=saved.filter(a=>!a.synced);const synced=saved.filter(a=>a.synced);const isOnline=navigator.onLine;
+  overlay=h('div',{className:'sync-overlay',id:'sync-overlay',onClick:e=>{if(e.target===overlay)closeSyncPanel();}},
+    h('div',{className:'sync-panel',onClick:e=>e.stopPropagation()},
+      h('div',{className:'sync-title'},'📡 Sync Fishing Consultations'),
+      h('div',{className:'sync-sub'},isOnline?`You are ONLINE. ${pending.length} consultation${pending.length!==1?'s':''} ready to sync.`:'You are OFFLINE. Connect to sync.'),
+      ...(pending.length>0?[h('div',{className:'section-label',style:'margin-top:8px;'},'Pending Upload'),...pending.map(a=>h('div',{className:'sync-item'},h('div',null,h('div',{className:'name'},a.fisher?.name||'Unknown'),h('div',{className:'meta'},(CONSULT_TYPES[a.consultType]?.emoji||'🎣')+' '+(a.result?.urgency||'').toUpperCase()+' · '+(a.fisher?.village||'')+' · '+new Date(a.ts).toLocaleDateString())),h('span',{className:'status '+(a._syncError?'error':'pending')},a._syncError?'✗ Error':'⏳ Pending')))]:[h('div',{style:'text-align:center;padding:20px;color:var(--gray-400);font-size:13px;'},'✅ All consultations synced!')]),
+      ...(synced.length>0?[h('div',{className:'section-label',style:'margin-top:12px;'},'Recently Synced'),...synced.slice(0,5).map(a=>h('div',{className:'sync-item'},h('div',null,h('div',{className:'name'},a.fisher?.name||'Unknown'),h('div',{className:'meta'},new Date(a.ts).toLocaleDateString())),h('span',{className:'status synced'},'✓ Synced')))]:[] ),
+      isOnline&&pending.length>0?h('button',{className:'btn-sync go',disabled:syncing,onClick:doSync},syncing?'⏳ Syncing…':`⬆ Sync ${pending.length} Consultation${pending.length!==1?'s':''}`):(!isOnline&&pending.length>0?h('div',{style:'text-align:center;padding:12px;color:var(--amber-700);font-size:13px;font-weight:600;'},'📡 No internet. Consultations are safe on your device.'):null),
+      h('button',{className:'btn-sync close',onClick:closeSyncPanel},'Close')
+    )
+  );
+  document.body.appendChild(overlay);
+}
+
+async function doSync(){
+  if(syncing)return;syncing=true;renderSyncPanel();
+  const saved=loadSaved();const pending=saved.filter(a=>!a.synced);
+  try{
+    const response=await fetch(SYNC_CONFIG.functionUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({consultations:pending.map(a=>({...a,syncKey:SYNC_CONFIG.syncKey,navigatorUserId:SYNC_CONFIG.navigatorUserId}))})});
+    if(!response.ok)throw new Error('Server '+response.status);
+    const data=await response.json();
+    const syncedIds=new Set((data.synced||[]).map(s=>s.id));
+    const updated=saved.map(a=>syncedIds.has(a.id)?{...a,synced:true}:a);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(updated));updatePendingBadge();
+  }catch(e){pending.forEach(a=>{a._syncError=e.message;});localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));}
+  finally{syncing=false;renderSyncPanel();}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function render(){
+  const bar=document.getElementById('step-bar');bar.innerHTML='';
+  STEPS.forEach((s,i)=>{
+    const cls=i===state.step?'step-pill current':i<state.step?'step-pill done':'step-pill upcoming';
+    bar.append(h('button',{className:cls,type:'button',disabled:i>state.step+1,onClick:()=>{if(i<state.step)goStep(i);}},(i<state.step?'✓ ':'')+s.label));
+    if(i<STEPS.length-1)bar.append(h('div',{className:'step-line'+(i<state.step?' done':'')}));
+  });
+
+  const content=document.getElementById('content');content.innerHTML='';
+  const renderers=[renderFisher,renderType,renderIntake,renderResult];
+  content.append(renderers[state.step]());
+
+  const footer=document.getElementById('footer');const inner=document.getElementById('footer-inner');
+  if(state.step===3){footer.style.display='none';}else{
+    footer.style.display='';inner.innerHTML='';
+    if(state.step>0)inner.append(h('button',{type:'button',className:'btn-nav secondary',onClick:goBack},'← Back'));
+    const labels=['Next ▶','Next ▶','Run Advisory ▶'];
+    const disabled=(state.step===0&&!state.fisher.name.trim())||(state.step===1&&!state.consultType)||(state.step===2&&!(INTAKE_FIELDS[state.consultType]||[]).filter(f=>f.required).every(f=>state.intake[f.key]?.trim()));
+    inner.append(h('button',{type:'button',className:'btn-nav primary',disabled,onClick:goNext},labels[state.step]));
+  }
+  if(state._lastStep!==state.step){window.scrollTo({top:0,behavior:'smooth'});state._lastStep=state.step;}
+}
+
+function goStep(i){state.step=i;render();}
+function goNext(){if(state.step===2){state.result=computeAdvisory();state.step=3;}else if(state.step<3){state.step++;}render();}
+function goBack(){if(state.step>0){state.step--;render();}}
+function resetAll(){state={step:0,fisher:{name:'',village:'Oloibiri',phone:'',activities:[],waterways:[],notes:''},consultType:null,intake:{},result:null,saved:false,saveMode:null,savingToDb:false,saveError:null,openTooltip:null,showReferral:false,_lastStep:-1};render();}
+
+function updateConnectivity(){
+  const badge=document.getElementById('badge-connectivity');
+  if(navigator.onLine){badge.className='badge-online';badge.innerHTML='🟢 Online';}
+  else{badge.className='badge-offline';badge.innerHTML='📡 Offline';}
+}
+window.addEventListener('online',updateConnectivity);
+window.addEventListener('offline',updateConnectivity);
+
+updatePendingBadge();updateConnectivity();render();
+</script>
+</body>
+</html>
