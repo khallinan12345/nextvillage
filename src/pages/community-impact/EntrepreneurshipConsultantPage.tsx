@@ -695,6 +695,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   const [challengeSubmitting, setChallengeSubmitting]   = useState(false);
   const [challengeResult, setChallengeResult]           = useState<ChallengeEvalResult | null>(null);
   const [enrolling, setEnrolling]                       = useState(false);
+  const [showOfflineModal, setShowOfflineModal]         = useState(false);
 
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
@@ -1277,10 +1278,19 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   <p className="text-sm text-amber-200">Your client records · Oloibiri & Ibiade</p>
                 </div>
               </div>
-              <button onClick={() => { resetAddClient(); setMode('add-client'); }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold text-sm hover:opacity-90">
-                <Plus size={16}/> Add Client
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowOfflineModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                  title="Use offline version"
+                >
+                  📴 Offline
+                </button>
+                <button onClick={() => { resetAddClient(); setMode('add-client'); }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold text-sm hover:opacity-90">
+                  <Plus size={16}/> Add Client
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1438,6 +1448,95 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Offline Mode Modal ────────────────────────────────────────── */}
+          {showOfflineModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div className="flex items-center justify-between px-5 py-4 border-b bg-amber-50 rounded-t-2xl">
+                  <div>
+                    <p className="text-xs font-bold text-amber-500 uppercase tracking-wide">Offline Mode</p>
+                    <h2 className="text-lg font-bold text-gray-900">Entrepreneur Advisor — Offline</h2>
+                  </div>
+                  <button onClick={() => setShowOfflineModal(false)} className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                    <X size={18}/>
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-amber-800 mb-2">📴 Use the offline advisor now</p>
+                    <p className="text-sm text-amber-700 mb-3 leading-relaxed">
+                      The offline version works without internet. It covers all six consultation types — starting up, business planning, pricing, marketing, fixing problems, and scaling — and saves consultations to your device for later sync.
+                    </p>
+                    <a
+                      href="/offline-entrepreneurship-advisor.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      <span>📴</span> Open Offline Advisor
+                    </a>
+                  </div>
+
+                  <div className="border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-gray-800 mb-3">📱 Install on your phone (works without internet)</p>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Open in your browser</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Tap "Open Offline Advisor" above. It will open in a new tab in your phone's browser (Chrome or Safari).</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Add to Home Screen</p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            <strong>Android (Chrome):</strong> Tap the ⋮ menu → "Add to Home Screen" → "Add".<br/>
+                            <strong>iPhone (Safari):</strong> Tap the Share button (□↑) → "Add to Home Screen" → "Add".
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Use it anywhere — no internet needed</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Open it during a consultation, complete the triage, and save to your device.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-orange-100 text-orange-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Sync when back online</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Tap the ⬆ sync button in the top right and your saved consultations upload to the vAI database automatically.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-amber-800 mb-2">💡 Tips for field use</p>
+                    <ul className="space-y-1.5 text-xs text-amber-700">
+                      <li>• Complete required fields — especially business idea/problem and current financial situation</li>
+                      <li>• Use the 💡 tip buttons — they explain what each field is really asking for</li>
+                      <li>• <strong>Cash crisis</strong> cases are flagged as urgent — the advisor will detect signs of financial distress</li>
+                      <li>• <strong>Pricing</strong> consultations: push for ALL costs including the entrepreneur's own time and transport</li>
+                      <li>• The Consultation Record can be shared with the entrepreneur as a take-home action plan</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => setShowOfflineModal(false)}
+                    className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           )}

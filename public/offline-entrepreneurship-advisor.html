@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#d97706">
+<title>vAI Offline Entrepreneur Advisor</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --amber-50:#fffbeb;--amber-100:#fef3c7;--amber-200:#fde68a;--amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--amber-700:#b45309;--amber-800:#92400e;--amber-900:#78350f;
+  --orange-50:#fff7ed;--orange-100:#ffedd5;--orange-400:#fb923c;--orange-500:#f97316;--orange-600:#ea580c;--orange-700:#c2410c;--orange-800:#9a3412;
+  --green-50:#f0fdf4;--green-100:#dcfce7;--green-400:#4ade80;--green-500:#22c55e;--green-600:#16a34a;--green-700:#15803d;--green-800:#166534;
+  --red-50:#fef2f2;--red-100:#fee2e2;--red-400:#f87171;--red-600:#dc2626;--red-700:#b91c1c;--red-800:#991b1b;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-500:#3b82f6;--blue-600:#2563eb;
+  --purple-50:#faf5ff;--purple-100:#f3e8ff;--purple-400:#c084fc;--purple-600:#9333ea;--purple-700:#7e22ce;
+  --pink-50:#fdf2f8;--pink-100:#fce7f3;--pink-600:#db2777;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background:var(--gray-50); color:var(--gray-900); line-height:1.5; font-size:16px; -webkit-text-size-adjust:100%; min-height:100vh; padding-bottom:env(safe-area-inset-bottom,0); }
+.header { position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--gray-200); box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.header-inner { max-width:480px; margin:0 auto; padding:10px 12px; }
+.header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.header-brand { display:flex; align-items:center; gap:8px; }
+.header-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,var(--amber-600),var(--orange-600)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; }
+.header-title { font-size:13px; font-weight:700; color:var(--gray-900); line-height:1.2; }
+.header-sub { font-size:10px; color:var(--gray-400); }
+.badge-offline { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--gray-500); background:var(--gray-100); padding:3px 8px; border-radius:6px; font-weight:600; }
+.badge-online { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--amber-700); background:var(--amber-50); padding:3px 8px; border-radius:6px; font-weight:600; }
+.badge-pending { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--amber-700); background:var(--amber-50); padding:3px 8px; border-radius:6px; font-weight:600; cursor:pointer; }
+.steps { display:flex; align-items:center; gap:3px; }
+.step-pill { display:flex; align-items:center; gap:3px; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:600; border:none; cursor:pointer; transition:all .15s; }
+.step-pill.current { background:var(--amber-100); color:var(--amber-700); }
+.step-pill.done { background:var(--amber-100); color:var(--amber-700); }
+.step-pill.upcoming { background:var(--gray-100); color:var(--gray-400); }
+.step-pill:disabled { cursor:default; }
+.step-line { flex:1; height:2px; border-radius:1px; background:var(--gray-200); }
+.step-line.done { background:var(--amber-400); }
+.content { max-width:480px; margin:0 auto; padding:12px 12px 100px; }
+.card { background:#fff; border-radius:16px; border:1px solid var(--gray-200); box-shadow:0 1px 2px rgba(0,0,0,.04); padding:16px; margin-bottom:12px; }
+.card-title { font-size:17px; font-weight:700; color:var(--gray-900); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+.card-subtitle { font-size:12px; color:var(--gray-400); margin-bottom:14px; }
+.label { display:block; font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:5px; }
+.label .req { color:var(--red-600); margin-left:2px; }
+.input,.textarea,.select { width:100%; padding:10px 14px; font-size:16px; border:1px solid var(--gray-300); border-radius:12px; background:#fff; color:var(--gray-900); outline:none; transition:border-color .15s,box-shadow .15s; -webkit-appearance:none; appearance:none; }
+.input:focus,.textarea:focus,.select:focus { border-color:var(--amber-500); box-shadow:0 0 0 3px rgba(217,119,6,.15); }
+.textarea { resize:none; line-height:1.5; }
+.select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+.field { margin-bottom:14px; }
+.btn-group { display:flex; gap:8px; flex-wrap:wrap; }
+.btn-choice { flex:1; min-width:0; padding:10px 8px; border-radius:12px; border:2px solid var(--gray-200); background:#fff; font-size:13px; font-weight:600; color:var(--gray-600); cursor:pointer; transition:all .15s; text-align:center; -webkit-tap-highlight-color:transparent; }
+.btn-choice:active { transform:scale(.97); }
+.btn-choice.active { border-color:var(--amber-500); background:var(--amber-50); color:var(--amber-800); }
+.tooltip-btn { background:none; border:none; color:var(--amber-600); font-size:14px; cursor:pointer; padding:0 4px; vertical-align:middle; }
+.tooltip-box { background:var(--amber-900); color:var(--amber-50); font-size:11px; border-radius:10px; padding:8px 12px; margin-top:4px; line-height:1.5; font-weight:400; }
+.section-label { font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; }
+.alert { border-radius:12px; padding:12px 14px; display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+.alert-red { background:var(--red-50); border:2px solid var(--red-400); }
+.alert-amber { background:var(--amber-50); border:2px solid var(--amber-400); }
+.alert-green { background:var(--green-50); border:2px solid var(--green-400); }
+.alert-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-title { font-size:13px; font-weight:700; }
+.alert-text { font-size:12px; margin-top:2px; }
+.alert-red .alert-title { color:var(--red-800); }
+.alert-red .alert-text { color:var(--red-700); }
+.alert-amber .alert-title { color:var(--amber-800); }
+.alert-amber .alert-text { color:var(--amber-700); }
+.result-banner { border-radius:16px; border:3px solid; padding:16px; margin-bottom:12px; }
+.result-banner.urgent { background:var(--red-50); border-color:var(--red-400); }
+.result-banner.high { background:var(--orange-50); border-color:var(--orange-400); }
+.result-banner.medium { background:var(--amber-50); border-color:var(--amber-400); }
+.result-banner.low { background:var(--green-50); border-color:var(--green-400); }
+.result-level { font-size:20px; font-weight:900; text-transform:uppercase; margin-bottom:4px; }
+.result-banner.urgent .result-level { color:var(--red-800); }
+.result-banner.high .result-level { color:var(--orange-800); }
+.result-banner.medium .result-level { color:var(--amber-800); }
+.result-banner.low .result-level { color:var(--green-800); }
+.result-patient { font-size:13px; color:var(--gray-600); margin-bottom:10px; }
+.result-reason { font-size:13px; font-weight:500; margin:3px 0; }
+.result-section-title { font-size:13px; font-weight:700; color:var(--gray-900); margin-bottom:8px; }
+.result-item { font-size:13px; color:var(--gray-800); border-radius:8px; padding:8px 12px; margin-bottom:6px; }
+.result-item.action { background:var(--red-50); }
+.result-item.rec { background:var(--green-50); }
+.result-item.warning { background:var(--red-50); font-weight:600; color:var(--red-800); }
+.result-item.referral { background:var(--blue-50); border-left:3px solid var(--blue-500); }
+.result-item.income { background:var(--amber-50); }
+.result-item.ai-tool { background:var(--purple-50); border-left:3px solid var(--purple-400); }
+.referral-note { font-family:'Courier New',Courier,monospace; font-size:12px; background:var(--gray-50); border-radius:12px; padding:14px; white-space:pre-wrap; line-height:1.6; color:var(--gray-800); border:1px solid var(--gray-200); }
+.footer { position:fixed; bottom:0; left:0; right:0; z-index:20; background:#fff; border-top:1px solid var(--gray-200); box-shadow:0 -2px 10px rgba(0,0,0,.05); padding-bottom:env(safe-area-inset-bottom,0); }
+.footer-inner { max-width:480px; margin:0 auto; padding:10px 12px; display:flex; gap:10px; }
+.btn-nav { flex:1; padding:12px; border-radius:12px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.btn-nav:active { transform:scale(.97); }
+.btn-nav.primary { background:linear-gradient(135deg,var(--amber-600),var(--orange-600)); color:#fff; }
+.btn-nav.secondary { background:#fff; color:var(--gray-600); border:2px solid var(--gray-300); }
+.btn-nav:disabled { opacity:.4; cursor:default; transform:none; }
+.btn-save { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(135deg,var(--amber-600),var(--orange-600)); color:#fff; margin-bottom:8px; }
+.btn-save:active { transform:scale(.98); }
+.btn-reset { width:100%; padding:12px; border-radius:12px; border:2px solid var(--gray-300); background:#fff; font-size:13px; font-weight:700; color:var(--gray-600); cursor:pointer; }
+.btn-reset:active { transform:scale(.98); }
+.disclaimer { font-size:11px; color:var(--gray-400); text-align:center; padding:8px 16px 20px; line-height:1.5; }
+.sync-overlay { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.5); display:flex; align-items:flex-end; justify-content:center; }
+.sync-panel { background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; padding:20px 16px env(safe-area-inset-bottom,16px); }
+.sync-title { font-size:17px; font-weight:700; margin-bottom:4px; }
+.sync-sub { font-size:12px; color:var(--gray-400); margin-bottom:16px; }
+.sync-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:10px; background:var(--gray-50); margin-bottom:6px; font-size:13px; }
+.sync-item .name { font-weight:600; color:var(--gray-800); }
+.sync-item .meta { font-size:11px; color:var(--gray-400); }
+.sync-item .status { font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; }
+.sync-item .status.pending { background:var(--amber-50); color:var(--amber-700); }
+.sync-item .status.synced { background:var(--green-50); color:var(--green-700); }
+.btn-sync { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; }
+.btn-sync.go { background:linear-gradient(135deg,var(--amber-600),var(--orange-600)); color:#fff; }
+.btn-sync.go:disabled { opacity:.5; cursor:default; }
+.btn-sync.close { background:var(--gray-100); color:var(--gray-600); margin-top:8px; }
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-row">
+      <div class="header-brand">
+        <div class="header-icon">💼</div>
+        <div>
+          <div class="header-title">Offline Entrepreneur Advisor</div>
+          <div class="header-sub">Rule-Based Business Triage · Oloibiri & Ibiade · No Internet Required</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="hidden" id="btn-sync-header" onclick="openSyncPanel()" title="Sync consultations">
+          <span class="badge-pending" id="badge-pending">⬆ <span id="pending-count">0</span></span>
+        </button>
+        <span class="badge-offline" id="badge-connectivity">📡 Offline</span>
+      </div>
+    </div>
+    <div class="steps" id="step-bar"></div>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+<div class="footer" id="footer"><div class="footer-inner" id="footer-inner"></div></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const SYNC_CONFIG = {
+  functionUrl: 'https://wohmsbeygxrbwogrggkq.supabase.co/functions/v1/sync-offline-entrepreneurship-consultations',
+  syncKey: 'vai-entrepreneur-offline-2024-oloibiri',
+  navigatorUserId: 'offline-entrepreneur-advisor',
+};
+
+const STEPS = [
+  { key:'client',  label:'Client'  },
+  { key:'type',    label:'Type'    },
+  { key:'intake',  label:'Intake'  },
+  { key:'result',  label:'Result'  },
+];
+
+const CONSULT_TYPES = {
+  'starting-up':       { label:'Starting Up',       emoji:'🚀', desc:'Validate the idea, register, open a business account, take the first real step' },
+  'business-planning': { label:'Business Planning',  emoji:'📋', desc:'Profit check, goals, what is blocking growth' },
+  'pricing-finance':   { label:'Pricing & Finance',  emoji:'💰', desc:'Price correctly, calculate real profit, separate money, find financing' },
+  'marketing-sales':   { label:'Marketing & Sales',  emoji:'📱', desc:'WhatsApp Business, social media, converting interest to sales' },
+  'fixing-problems':   { label:'Fixing a Problem',   emoji:'🔧', desc:'Diagnose falling sales, cash crisis, lost customers — and fix it' },
+  'growing-scaling':   { label:'Growing & Scaling',  emoji:'📈', desc:'When and how to hire, delegate, expand markets' },
+};
+
+const INTAKE_FIELDS = {
+  'starting-up': [
+    { key:'business_idea', label:'Business idea and target customer', placeholder:'e.g. Selling small chops at events in Yenagoa; target: event planners, churches, families', tooltip:'The clearer the idea and customer, the better the advice. Vague ideas need to be narrowed down first.', required:true },
+    { key:'capital', label:'How much money they have to start', placeholder:'e.g. ₦80,000 saved; father will add ₦20,000; no loan yet', tooltip:'Capital determines which path is realistic. Never recommend a route that requires money they do not have.', required:true },
+    { key:'validation', label:'Have they tested the idea with real customers yet?', placeholder:'e.g. Made 3 batches for neighbours, sold out; or never tested yet', tooltip:'Actually selling something is the most important step before spending capital.', required:true },
+    { key:'skills', label:'Relevant skills or experience', placeholder:'e.g. Cooked for family events for 3 years; self-taught phone repair via YouTube', tooltip:'Skills reduce startup costs. A skilled baker needs less training investment than a total beginner.' },
+    { key:'competition', label:'Who else does this nearby, and how does the entrepreneur differ?', placeholder:'e.g. Two other food sellers nearby but they do not do delivery; or no competition', tooltip:'Understanding competition helps define the unique value proposition.' },
+    { key:'registration', label:'Are they registered or planning to register?', placeholder:'e.g. Not yet; wants to register CAC Business Name; or already registered', tooltip:'CAC registration enables a business bank account — a critical first step.' },
+  ],
+  'business-planning': [
+    { key:'current_state', label:'Current business situation', placeholder:'e.g. Running for 6 months, 5–8 orders/week but feels disorganised; no records', tooltip:'Understand where they are now before planning where to go.', required:true },
+    { key:'revenue_costs', label:'Monthly revenue and main costs', placeholder:'e.g. About ₦45,000 income; spend ₦25,000 on ingredients; not sure about other costs', tooltip:'Revenue and cost awareness is the foundation of any business plan.', required:true },
+    { key:'goal', label:'What they want to achieve in 6–12 months', placeholder:'e.g. Hire one helper and double orders; or register and open a proper shop', tooltip:'Goals shape the plan. A stability goal requires a different plan than a growth goal.' },
+    { key:'biggest_block', label:'What is stopping them from growing or stabilising', placeholder:'e.g. Cannot keep up with demand alone; no records so do not know profit', tooltip:'The real constraint is what the plan must address. Push for specifics.' },
+    { key:'record_keeping', label:'Do they keep any financial records?', placeholder:'e.g. Nothing written down; uses a notebook; has a spreadsheet', tooltip:'No records = no real understanding of profit. A simple notebook system is the first action for most entrepreneurs.' },
+  ],
+  'pricing-finance': [
+    { key:'product_service', label:'What they sell and their current price', placeholder:'e.g. Garri at ₦4,500/bag; small chops ₦40,000 per 100 guests; airtime at ₦200/unit', tooltip:'Know exactly what is being priced before asking about costs.', required:true },
+    { key:'cost_breakdown', label:'What it costs to make or deliver (list ALL costs)', placeholder:'e.g. Cassava ₦3,500 + processing ₦800 + transport ₦400 = ₦4,700 total', tooltip:'Most entrepreneurs undercount costs — especially their own time, transport, generator fuel, packaging, and spoilage.', required:true },
+    { key:'how_price_set', label:'How did they decide on the current price?', placeholder:'e.g. Based on what the trader next door charges; guessed; asked a friend', tooltip:'Most businesses price by copying competitors — this leads to unsustainable margins.' },
+    { key:'money_separation', label:'Do they separate business and personal money?', placeholder:'e.g. All in one account; uses Kuda separate account; cash in an envelope', tooltip:'Mixing money is the single biggest cause of businesses failing without the owner realising.' },
+    { key:'financing_need', label:'Do they need financing, and what for?', placeholder:'e.g. Need ₦200,000 for a second sewing machine; looking for a grant; want to join an Ajo group', tooltip:'Match the need to the right tool: Ajo savings, TEF grant, LAPO microfinance, Bank of Industry.' },
+  ],
+  'marketing-sales': [
+    { key:'current_marketing', label:'How they currently find customers', placeholder:'e.g. Word of mouth; WhatsApp status; market stall; Facebook; nothing formal', tooltip:'Understand the current channel before recommending new ones. Optimise the best existing channel first.', required:true },
+    { key:'best_customer', label:'Who is their best customer (describe them)', placeholder:'e.g. Event planners aged 25–40 in Yenagoa who need 100+ guests catered; or weekly household buyers', tooltip:'The more specific the customer description, the more targeted and effective the marketing advice.' },
+    { key:'whatsapp_setup', label:'Do they use WhatsApp Business?', placeholder:'e.g. Uses personal WhatsApp; has Business account but no catalogue; fully set up with broadcast lists', tooltip:'WhatsApp Business is the most powerful free marketing tool for Nigerian small businesses.' },
+    { key:'conversion_problem', label:'What happens between someone showing interest and actually buying?', placeholder:'e.g. Many people say they are interested but do not follow through; people ask price then disappear', tooltip:'The gap between interest and purchase is the conversion problem — the most common and fixable marketing issue.' },
+    { key:'repeat_customers', label:'How many customers come back, and how do they keep in touch?', placeholder:'e.g. About half come back; no system for follow-up; adds everyone to broadcast list', tooltip:'Repeat customers cost nothing to acquire. A simple WhatsApp broadcast follow-up system can double revenue.' },
+  ],
+  'fixing-problems': [
+    { key:'problem_description', label:'What problem is the business facing right now', placeholder:'e.g. Sales dropped 40% in 2 months; key employee left and took customers; supplier raised prices', tooltip:'Get the full picture before diagnosing. Ask how long it has been happening and what changed.', required:true },
+    { key:'when_started', label:'When the problem started and what changed around then', placeholder:'e.g. Started after Sallah/Christmas season ended; after a bad review; after price increase', tooltip:'Timing correlates with cause. A seasonal drop needs a different fix than a structural problem.' },
+    { key:'tried_so_far', label:'What they have already tried', placeholder:'e.g. Tried lowering price — made it worse; tried posting more on WhatsApp — no response', tooltip:'Knowing what failed narrows the solution space and avoids repeating ineffective advice.' },
+    { key:'cash_situation', label:'Current cash and financial pressure', placeholder:'e.g. Three weeks of operating expenses left; family depending on this income; or financially stable but worried', tooltip:'Financial urgency determines whether the fix needs to be immediate or can be medium-term.', required:true },
+    { key:'ai_opportunity', label:'Could AI help with this specific problem?', placeholder:'e.g. Use AI to write better customer messages; AI to research competitor prices; AI to draft a proposal', tooltip:'Connect AI to the specific problem. Marketing problem = AI-written WhatsApp templates. Pricing problem = AI cost analysis.' },
+  ],
+  'growing-scaling': [
+    { key:'current_size', label:'Current monthly revenue and team', placeholder:'e.g. ₦120,000/month revenue; operates alone; or has 1 helper', tooltip:'Scale readiness depends on current performance. Do not advise scaling before the business is consistently profitable.', required:true },
+    { key:'profitability', label:'Monthly profit (after ALL costs including own salary)', placeholder:'e.g. About ₦40,000 net after all costs for past 3 months; or not sure; or varies a lot', tooltip:'Profit consistency for 3+ months is the minimum before scaling.', required:true },
+    { key:'bottleneck', label:'What is limiting growth right now', placeholder:'e.g. Cannot take more orders alone; running out of storage space; no money for more stock', tooltip:'The real constraint determines the growth strategy. People bottleneck = hire/delegate; capital bottleneck = financing.' },
+    { key:'systematised', label:'Are processes documented? Can someone else follow them?', placeholder:'e.g. Everything is in my head; or has a recipe/process sheet; or trained one person already', tooltip:'A business that depends entirely on the owner\'s knowledge cannot scale. Systemisation must come before delegation.' },
+    { key:'growth_goal', label:'What does growth look like to them — specifically', placeholder:'e.g. Open a second location; hire 2 people; reach Yenagoa wholesale market; export to Port Harcourt', tooltip:'Make the growth goal specific. "I want to grow" is not a plan.' },
+  ],
+};
+
+const BUSINESS_STAGES = ['Idea stage (not started yet)','Just started (0–6 months)','Early stage (6–18 months)','Established (18+ months)','Struggling / need to fix'];
+const VILLAGES = ['Oloibiri','Ibiade','Yenagoa','Nembe','Ogbia','Sagamu','Abeokuta','Other'];
+
+let state = {
+  step:0,
+  client:{ name:'', village:'Oloibiri', phone:'', business_type:'', business_stage:'Just started (0–6 months)', notes:'' },
+  consultType:null,
+  intake:{},
+  result:null,
+  saved:false,
+  saveMode:null,
+  savingToDb:false,
+  saveError:null,
+  openTooltip:null,
+  showReferral:false,
+  _lastStep:-1,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOM HELPER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function h(tag,props,...children){
+  const el=document.createElement(tag);
+  if(props)Object.entries(props).forEach(([k,v])=>{
+    if(k==='className')el.className=v;
+    else if(k==='style'&&typeof v==='string')el.style.cssText=v;
+    else if(k.startsWith('on')&&typeof v==='function')el.addEventListener(k.slice(2).toLowerCase(),v);
+    else if(k==='disabled'){if(v)el.disabled=true;}
+    else el.setAttribute(k,v);
+  });
+  children.flat().forEach(c=>{if(c!=null&&c!==false)el.append(typeof c==='string'||typeof c==='number'?document.createTextNode(String(c)):c);});
+  return el;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RULE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function computeAdvisory() {
+  const ct = state.consultType;
+  const intake = state.intake;
+  const allText = Object.values(intake).join(' ').toLowerCase();
+
+  const r = {
+    urgency:'low',
+    reasons:[],
+    immediateActions:[],
+    mediumTermActions:[],
+    incomeTips:[],
+    aiTools:[],
+    referrals:[],
+    doNot:[],
+    warnings:[],
+  };
+
+  const esc = (level) => {
+    const order=['low','medium','high','urgent'];
+    if(order.indexOf(level)>order.indexOf(r.urgency)) r.urgency=level;
+  };
+
+  // ── STARTING UP ───────────────────────────────────────────────────────────
+  if (ct === 'starting-up') {
+    // Not validated yet
+    if (allText.includes('never tested')||allText.includes('not tested')||allText.includes('haven\'t sold')) {
+      esc('medium'); r.reasons.push('Idea not yet validated — do not spend capital before testing');
+      r.immediateActions.push('BEFORE spending any money: sell 5–10 units to real customers at a real price. If people will not pay, the business does not work yet.');
+      r.immediateActions.push('Test this week: make a small batch, tell 10 people, and see how many buy. This costs almost nothing and tells you everything.');
+    }
+    // Low capital
+    if (allText.includes('₦5,000')||allText.includes('₦10,000')||allText.includes('₦20,000')||allText.includes('no money')||allText.includes('nothing saved')) {
+      esc('medium'); r.reasons.push('Very limited starting capital — start with a service-based or zero-inventory model');
+      r.mediumTermActions.push('With under ₦30,000: start with a service (hair braiding, phone repair, tutoring, delivery) — no stock needed, immediate income.');
+      r.mediumTermActions.push('Build capital from small sales before buying equipment or stock in bulk. Never take a loan to start an unvalidated idea.');
+    }
+    // No registration
+    if (allText.includes('not registered')||allText.includes('not yet')||allText.includes('no cac')) {
+      r.mediumTermActions.push('Register a CAC Business Name: costs ₦10,000–15,000 at the Corporate Affairs Commission. This enables a business bank account (Kuda, OPay, or traditional bank) — the #1 step to separating money.');
+    }
+    // Has capital and validation
+    if (!allText.includes('never tested')&&(allText.includes('₦50,000')||allText.includes('₦80,000')||allText.includes('₦100,000')||allText.includes('₦200,000'))) {
+      r.reasons.push('Validated idea with meaningful startup capital — ready to launch with the right structure');
+      r.immediateActions.push('Open a separate business bank account before spending anything. Kuda and OPay are free and work without CAC registration.');
+      r.mediumTermActions.push('Start small: spend 30–40% of capital on initial stock/materials, keep 30% as operating reserve, keep 30% for unexpected costs. Do not spend everything at launch.');
+    }
+    r.aiTools.push('Use ChatGPT (free) to write your first WhatsApp Business catalogue descriptions, price list, and customer messages.');
+    r.aiTools.push('Use Canva AI (free tier) to design a professional logo and product photos for your WhatsApp catalogue.');
+    r.referrals.push({ who:'Tony Elumelu Foundation (TEF) Grant Programme', why:'₦5 million non-refundable grant for African entrepreneurs. Applications open annually. Free mentorship included. Apply at tefconnect.com', urgency:'When application window opens' });
+  }
+
+  // ── BUSINESS PLANNING ─────────────────────────────────────────────────────
+  if (ct === 'business-planning') {
+    // No records
+    if (allText.includes('nothing written')||allText.includes('no record')||allText.includes('don\'t know profit')||allText.includes('not sure')) {
+      esc('medium'); r.reasons.push('No financial records — flying blind, cannot improve what you cannot measure');
+      r.immediateActions.push('Start a profit notebook TODAY: one page per week. Write income received and money spent. This single habit transforms business awareness.');
+      r.immediateActions.push('Calculate last month\'s profit NOW: total income minus all costs (materials, transport, rent, generator, own withdrawal). If you do not know it, estimate it together.');
+    }
+    // Revenue known, calculate margin
+    const revenueMatch = allText.match(/₦([\d,]+)\s*income/);
+    const costMatch = allText.match(/₦([\d,]+)\s*(on|for|spend)/);
+    if (revenueMatch && costMatch) {
+      const rev = parseInt(revenueMatch[1].replace(/,/g,''));
+      const cost = parseInt(costMatch[1].replace(/,/g,''));
+      if (rev > 0 && cost > 0) {
+        const margin = Math.round(((rev-cost)/rev)*100);
+        r.incomeTips.push(`Estimated gross margin: ${margin}%. ${margin < 20 ? 'This is very thin — costs may be undercounted or price needs to rise.' : margin < 40 ? 'This is workable but tight — look for cost reduction opportunities.' : 'This is healthy. Focus on volume and consistency.'}`);
+      }
+    }
+    r.mediumTermActions.push('Set one 6-month goal and work backwards: if you want to earn ₦80,000/month net, how many units do you need to sell at what price with what costs?');
+    r.aiTools.push('Use ChatGPT to build a simple 6-month business plan: describe your business and it will draft targets, a cost structure, and a marketing approach.');
+  }
+
+  // ── PRICING & FINANCE ─────────────────────────────────────────────────────
+  if (ct === 'pricing-finance') {
+    // Selling below cost
+    const costTotal = allText.match(/total[:\s]*₦([\d,]+)/);
+    const currentPrice = allText.match(/price[:\s]*₦([\d,]+)/)||allText.match(/₦([\d,]+)\s*\/|\s*per/);
+    if (costTotal && currentPrice) {
+      const cost = parseInt(costTotal[1].replace(/,/g,''));
+      const price = parseInt(currentPrice[1].replace(/,/g,''));
+      if (price <= cost) {
+        esc('urgent'); r.reasons.push('SELLING BELOW COST — every sale is losing money');
+        r.immediateActions.push('STOP selling at the current price immediately. Calculate the true cost (including your own time and transport), then set price = total cost + 30% minimum margin.');
+        r.warnings.push('Many businesses fail without the owner realising because they undercount costs, especially their own labour and transport.');
+      }
+    }
+    // Mixed money
+    if (allText.includes('one account')||allText.includes('same account')||allText.includes('mixing')||allText.includes('all together')) {
+      esc('high'); r.reasons.push('Business and personal money are mixed — cannot measure profit, easy to overspend');
+      r.immediateActions.push('Open a separate business account TODAY. Kuda and OPay are free, instant, and work on any smartphone. All business income goes in, all business costs come out.');
+      r.doNot.push('Do NOT use the business account for personal spending — even ₦500 for airtime. This habit destroys the separation immediately.');
+    }
+    // Financing need
+    if (allText.includes('loan')||allText.includes('financing')||allText.includes('grant')||allText.includes('ajo')) {
+      r.mediumTermActions.push('Financing options ranked by risk: (1) Ajo/esusu savings group — zero interest, community-based; (2) TEF grant — free money, no repayment; (3) LAPO microfinance — reasonable rates for small business; (4) Commercial bank loan — only if business has 6+ months of profitable records.');
+      r.referrals.push({ who:'LAPO Microfinance Bank', why:'Small business loans ₦50,000–₦500,000 at reasonable rates. Requires 3 months bank statements and a guarantor.', urgency:'When ready with documentation' });
+    }
+    r.incomeTips.push('Price formula: Total cost per unit × 1.4 (40% margin) = minimum viable price. If the market cannot bear this price, the product/service needs to be repositioned or costs reduced.');
+    r.aiTools.push('Use ChatGPT to build a full cost breakdown spreadsheet: describe what you sell and it will list every cost you might have forgotten.');
+  }
+
+  // ── MARKETING & SALES ─────────────────────────────────────────────────────
+  if (ct === 'marketing-sales') {
+    // No WhatsApp Business
+    if (allText.includes('personal whatsapp')||allText.includes('no business')||allText.includes('not set up')) {
+      esc('medium'); r.reasons.push('Not using WhatsApp Business — missing the most powerful free marketing tool in Nigeria');
+      r.immediateActions.push('Set up WhatsApp Business TODAY (free, same phone number): download from Play Store/App Store, switch from personal WhatsApp, add business name, description, address, and hours.');
+      r.immediateActions.push('Create a product catalogue in WhatsApp Business: add photos, prices, and descriptions of everything you sell. Customers can browse and order without calling.');
+      r.mediumTermActions.push('Build a broadcast list of your 50 best customers: send them one update per week (new product, special offer, or useful tip). Never spam — one message per week maximum.');
+    }
+    // Conversion problem
+    if (allText.includes('interested but')||allText.includes('ask price then')||allText.includes('many enquiries')||allText.includes('no follow')) {
+      esc('medium'); r.reasons.push('High interest, low conversion — the sales process is leaking');
+      r.immediateActions.push('Send a follow-up message to every enquiry within 2 hours: "Thank you for your interest! I have attached our price list. Can I answer any questions?" Most sales are lost because of slow response.');
+      r.mediumTermActions.push('Create a simple sales script: (1) Thank them, (2) Confirm what they need, (3) Give a specific price, (4) Tell them how to pay, (5) Give a deadline ("this price is available until Friday").');
+    }
+    // No repeat customers
+    if (allText.includes('no system')||allText.includes('don\'t follow up')||allText.includes('no follow-up')) {
+      r.mediumTermActions.push('Repeat customers are your cheapest growth strategy. After every sale: add the customer to your WhatsApp contact, send a thank-you message the next day, and follow up in 2 weeks with a new offer.');
+    }
+    r.aiTools.push('Use ChatGPT to write 5 WhatsApp message templates for your business: introduction, price list, follow-up, thank you, and re-engagement for old customers.');
+    r.aiTools.push('Use Canva AI (free) to create professional product photos and flyers for WhatsApp status and Instagram.');
+    r.incomeTips.push('WhatsApp Business broadcasts to 256 contacts at once. A weekly broadcast to 100 engaged customers typically generates 5–15 orders per message — at zero cost.');
+  }
+
+  // ── FIXING PROBLEMS ───────────────────────────────────────────────────────
+  if (ct === 'fixing-problems') {
+    // Cash crisis
+    if (allText.includes('week')||allText.includes('days left')||allText.includes('running out')||allText.includes('crisis')||allText.includes('cannot pay')) {
+      esc('urgent'); r.reasons.push('CASH CRISIS — immediate survival actions required');
+      r.immediateActions.push('CASH FIRST: Contact your 10 best customers TODAY and offer a 10% discount for immediate payment or advance order. Getting ₦20,000 now beats ₦25,000 next month when you are out of cash.');
+      r.immediateActions.push('Identify any stock or assets that can be sold immediately at a discount to generate cash. Survival first, margin second.');
+      r.immediateActions.push('Cut every non-essential cost TODAY: pause any subscriptions, reduce portion sizes, delay any non-urgent purchases.');
+      r.doNot.push('Do NOT take a high-interest loan (daily contributions, 30-day traders) to solve a cash crisis — this creates a debt spiral that kills businesses faster than the original problem.');
+    }
+    // Seasonal drop
+    if (allText.includes('after sallah')||allText.includes('after christmas')||allText.includes('after easter')||allText.includes('season')||allText.includes('slow period')) {
+      esc('medium'); r.reasons.push('Seasonal sales drop — plan for it rather than be surprised by it');
+      r.mediumTermActions.push('Post-holiday strategy: offer a "new year/new season" promotion targeting customers who have not bought since the holiday. Timing it 2 weeks after a holiday captures re-engagement.');
+      r.mediumTermActions.push('Build a slow-season cash reserve: during peak season, save 20% of profit in a separate account specifically for slow months.');
+    }
+    // Lost customers
+    if (allText.includes('lost customer')||allText.includes('customers left')||allText.includes('customers stopped')) {
+      esc('high'); r.reasons.push('Customer loss — requires active win-back campaign');
+      r.immediateActions.push('Call or message the last 10 customers who have not bought recently: "We have missed you! Here is a special offer for your next order." Personal outreach has a 20–40% win-back rate.');
+      r.mediumTermActions.push('Find out WHY customers left: ask 3 former customers honestly. Price? Quality? Slow delivery? Competitor? The answer shapes the fix completely.');
+    }
+    r.aiTools.push('Use ChatGPT to write a customer win-back message: describe your business and customer type and it will generate a compelling, specific message.');
+  }
+
+  // ── GROWING & SCALING ─────────────────────────────────────────────────────
+  if (ct === 'growing-scaling') {
+    // Not consistently profitable
+    if (allText.includes('not sure')||allText.includes('varies a lot')||allText.includes('sometimes')||allText.includes('don\'t know')) {
+      esc('medium'); r.reasons.push('Profit not consistently proven — not yet ready to scale');
+      r.immediateActions.push('Do NOT scale before you can prove consistent profit for 3 months. Scaling an unprofitable business creates bigger losses faster.');
+      r.mediumTermActions.push('Track profit for exactly 3 months in a notebook: monthly income minus all costs. Only when you see 3 consistent profitable months are you ready to grow.');
+    }
+    // Everything in owner's head
+    if (allText.includes('in my head')||allText.includes('only i know')||allText.includes('no process')||allText.includes('not documented')) {
+      esc('medium'); r.reasons.push('Business depends entirely on the owner — cannot scale or take time off');
+      r.immediateActions.push('Document your 3 most important processes this week: write down step-by-step how you make your product/deliver your service. If someone else could follow your instructions, you can delegate.');
+      r.mediumTermActions.push('Test your documentation: ask a trusted person to follow your written process without your help. Where they get confused = where your documentation needs more detail.');
+    }
+    // Ready to hire
+    if (allText.includes('hire')||allText.includes('helper')||allText.includes('employee')) {
+      r.mediumTermActions.push('Before hiring: calculate if the revenue generated by a helper exceeds their cost by at least 2x. At ₦30,000/month salary, they need to generate ₦60,000+ in additional revenue or free you up to earn ₦60,000+ more.');
+      r.mediumTermActions.push('Start with a 1-month trial before a permanent hire. Define clearly what they will do, what good looks like, and what you will pay. Write it down — even informally.');
+    }
+    r.incomeTips.push('Growth sequence: (1) Systemise current operations → (2) Prove consistent profit → (3) Hire/delegate one specific task → (4) Use freed time to sell more → (5) Repeat. Skip any step and you get chaos.');
+    r.aiTools.push('Use ChatGPT to create a staff training manual: describe your business processes and it will structure them into a clear, teachable document.');
+    r.referrals.push({ who:'Tony Elumelu Foundation (TEF) or Bank of Industry (BOI)', why:'Growth financing: TEF offers ₦5M grants; BOI offers low-interest loans for established businesses with records.', urgency:'When 3 months of records are ready' });
+  }
+
+  // ── Universal fallback ────────────────────────────────────────────────────
+  if (r.reasons.length === 0) {
+    r.reasons.push('Assessment complete — see recommendations below');
+    r.mediumTermActions.push('Based on the information provided, monitor progress and return for a follow-up consultation in 2–4 weeks.');
+  }
+
+  return r;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REFERRAL NOTE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function makeReferralNote() {
+  const c = state.client;
+  const ct = CONSULT_TYPES[state.consultType]||{};
+  const res = state.result;
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  return `ENTREPRENEURSHIP CONSULTATION RECORD
+──────────────────────────────
+Date: ${today}
+Client: ${c.name} · ${c.village}${c.phone?'\nPhone: '+c.phone:''}
+Business: ${c.business_type||'not specified'} (${c.business_stage})
+Consultation: ${ct.emoji||''} ${ct.label||state.consultType}
+
+INTAKE SUMMARY:
+${Object.entries(state.intake).filter(([,v])=>v&&v.trim()).map(([k,v])=>k.replace(/_/g,' ').toUpperCase()+': '+v).join('\n')}
+
+ADVISORY OUTCOME:
+URGENCY: ${res.urgency.toUpperCase()}
+${res.reasons[0]||''}
+
+REFERRALS: ${res.referrals.map(r=>r.who).join('; ')||'None'}
+
+Advisor: Community Entrepreneurship Ambassador
+Programme: vAI Community Impact, ${c.village}
+──────────────────────────────`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER STEPS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderClient() {
+  const el = h('div',null);
+  el.append(h('div',{className:'card'},
+    h('div',{className:'card-title'},'💼 Client Details'),
+    h('div',{className:'card-subtitle'},'Who are you consulting with today?'),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Client Name',h('span',{className:'req'},' *')),
+      h('input',{className:'input',type:'text',placeholder:'e.g. Inamuna Nice',value:state.client.name,onInput:e=>{state.client.name=e.target.value;render();}})
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Village'),
+      h('select',{className:'select',onChange:e=>{state.client.village=e.target.value;}},
+        ...VILLAGES.map(v=>{const o=h('option',{value:v},v);if(v===state.client.village)o.selected=true;return o;})
+      )
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Phone (optional)'),
+      h('input',{className:'input',type:'tel',placeholder:'e.g. 08012345678',value:state.client.phone,onInput:e=>{state.client.phone=e.target.value;}})
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Business Type',h('span',{className:'req'},' *')),
+      h('input',{className:'input',type:'text',placeholder:'e.g. Fashion design, food vending, phone repair, petty trading',value:state.client.business_type,onInput:e=>{state.client.business_type=e.target.value;render();}})
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Business Stage'),
+      h('select',{className:'select',onChange:e=>{state.client.business_stage=e.target.value;}},
+        ...BUSINESS_STAGES.map(s=>{const o=h('option',{value:s},s);if(s===state.client.business_stage)o.selected=true;return o;})
+      )
+    ),
+    h('div',{className:'field'},
+      h('label',{className:'label'},'Notes (optional)'),
+      h('textarea',{className:'textarea',rows:'2',placeholder:'e.g. second visit, referred by healthcare navigator...',onInput:e=>{state.client.notes=e.target.value;}},state.client.notes)
+    )
+  ));
+  return el;
+}
+
+function renderType() {
+  const el = h('div',null);
+  el.append(h('div',{className:'card'},
+    h('div',{className:'card-title'},'🗂 Consultation Type'),
+    h('div',{className:'card-subtitle'},'What does the entrepreneur need help with today?'),
+    h('div',{className:'btn-group',style:'flex-direction:column;'},
+      ...Object.entries(CONSULT_TYPES).map(([key,ct])=>{
+        const active=state.consultType===key;
+        return h('button',{type:'button',className:'btn-choice'+(active?' active':''),
+          style:'text-align:left;display:flex;align-items:center;gap:10px;',
+          onClick:()=>{state.consultType=key;render();}},
+          h('span',{style:'font-size:22px;'},ct.emoji),
+          h('div',null,
+            h('div',{style:'font-weight:700;font-size:14px;'},ct.label),
+            h('div',{style:'font-size:11px;color:var(--gray-400);font-weight:400;'},ct.desc)
+          )
+        );
+      })
+    )
+  ));
+  return el;
+}
+
+function renderIntake() {
+  const fields = INTAKE_FIELDS[state.consultType]||[];
+  const ct = CONSULT_TYPES[state.consultType];
+  const el = h('div',null);
+
+  // Cash crisis warning for fixing-problems
+  if (state.consultType === 'fixing-problems') {
+    el.append(h('div',{className:'alert alert-amber'},
+      h('span',{className:'alert-icon'},'⚠️'),
+      h('div',null,
+        h('div',{className:'alert-title'},'Cash Crisis Check'),
+        h('div',{className:'alert-text'},'If the entrepreneur has less than 2 weeks of operating expenses, this is urgent. Fill in the cash situation field carefully.')
+      )
+    ));
+  }
+
+  el.append(h('div',{className:'card'},
+    h('div',{className:'card-title'},ct.emoji+' Intake — '+ct.label),
+    h('div',{className:'card-subtitle'},'Complete required fields (*). Use 💡 tips to understand each question.'),
+    ...fields.map(field=>{
+      const tipId='tip_'+field.key;
+      const open=state.openTooltip===tipId;
+      const container=h('div',{className:'field'});
+      container.append(h('label',{className:'label'},
+        field.label,
+        field.required?h('span',{className:'req'},' *'):null,
+        ' ',
+        h('button',{type:'button',className:'tooltip-btn',onClick:()=>{state.openTooltip=open?null:tipId;render();}},open?'▲':'💡')
+      ));
+      if(open) container.append(h('div',{className:'tooltip-box'},field.tooltip));
+      container.append(h('textarea',{className:'textarea',rows:'3',placeholder:field.placeholder,
+        onInput:e=>{state.intake[field.key]=e.target.value;}},state.intake[field.key]||''));
+      return container;
+    })
+  ));
+  return el;
+}
+
+function renderResult() {
+  const res=state.result;
+  const c=state.client;
+  const ct=CONSULT_TYPES[state.consultType]||{};
+  const els=[];
+
+  const urgencyIcons={urgent:'🔴 URGENT',high:'🟠 HIGH URGENCY',medium:'🟡 MEDIUM URGENCY',low:'🟢 LOW'};
+  const urgencyDesc={urgent:'Immediate action needed — business survival at risk.',high:'Act today — cash or customer loss is escalating.',medium:'Act this week — momentum matters.',low:'No immediate crisis — plan and improve steadily.'};
+
+  els.push(h('div',{className:'result-banner '+res.urgency},
+    h('div',{className:'result-level'},urgencyIcons[res.urgency]||res.urgency),
+    h('div',{className:'result-patient'},ct.emoji+' '+ct.label+' · '+c.name+' · '+c.business_type+' · '+c.village),
+    h('div',{className:'result-reason'},urgencyDesc[res.urgency]||''),
+    ...res.reasons.map(r=>h('div',{className:'result-reason',style:'margin-top:4px;font-size:12px;'},'• '+r))
+  ));
+
+  if(res.immediateActions.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'🚨 Immediate Actions'),
+    ...res.immediateActions.map(a=>h('div',{className:'result-item action'},'▶ '+a))
+  ));
+
+  if(res.referrals.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'📞 Referrals & Resources'),
+    ...res.referrals.map(r=>h('div',{className:'result-item referral'},
+      h('div',{style:'font-weight:700;font-size:13px;'},r.who),
+      h('div',{style:'font-size:12px;margin-top:2px;color:var(--gray-600);'},r.why),
+      h('div',{style:'font-size:11px;margin-top:3px;font-weight:700;color:var(--amber-600);'},'⏰ '+r.urgency)
+    ))
+  ));
+
+  if(res.mediumTermActions.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'📋 Follow-Up Actions'),
+    ...res.mediumTermActions.map(a=>h('div',{className:'result-item rec'},'✓ '+a))
+  ));
+
+  if(res.incomeTips&&res.incomeTips.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'💰 Financial Insight'),
+    ...res.incomeTips.map(t=>h('div',{className:'result-item income'},'₦ '+t))
+  ));
+
+  if(res.aiTools&&res.aiTools.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title'},'🤖 AI Tools for This Business'),
+    ...res.aiTools.map(t=>h('div',{className:'result-item ai-tool'},'🤖 '+t))
+  ));
+
+  if(res.doNot&&res.doNot.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title',style:'color:var(--red-700);'},'🚫 Do NOT'),
+    ...res.doNot.map(d=>h('div',{className:'result-item warning'},'✗ '+d))
+  ));
+
+  if(res.warnings&&res.warnings.length) els.push(h('div',{className:'card'},
+    h('div',{className:'result-section-title',style:'color:var(--red-700);'},'⚠️ Warnings'),
+    ...res.warnings.map(w=>h('div',{className:'result-item warning'},'🚨 '+w))
+  ));
+
+  // Referral note collapsible
+  const noteCard=h('div',{className:'card'});
+  noteCard.append(h('button',{type:'button',style:'width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;padding:0;',
+    onClick:()=>{state.showReferral=!state.showReferral;render();}},
+    h('div',{className:'result-section-title',style:'margin:0;'},'📄 Consultation Record'),
+    h('span',{style:'color:var(--gray-400);'},state.showReferral?'▾':'▸')
+  ));
+  if(state.showReferral) noteCard.append(h('pre',{className:'referral-note',style:'margin-top:10px;'},makeReferralNote()));
+  els.push(noteCard);
+
+  // Save
+  const saveCard=h('div',{className:'card'});
+  const isOnline=navigator.onLine;
+  const notConfigured=SYNC_CONFIG.syncKey==='CHANGE_ME_BEFORE_DEPLOY';
+
+  if(!state.saved){
+    if(isOnline&&!notConfigured){
+      const dbBtn=h('button',{type:'button',className:'btn-save',onClick:saveToDatabase},state.savingToDb?'⏳ Saving to vAI Database…':'☁️ Save to vAI Database');
+      dbBtn.disabled=state.savingToDb;
+      saveCard.append(dbBtn);
+      if(state.saveError) saveCard.append(h('div',{style:'margin:8px 0;padding:10px;background:var(--red-50);border-radius:8px;font-size:12px;color:var(--red-700);'},'⚠️ '+state.saveError));
+      saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:saveCurrent},'💾 Save Offline Instead'));
+    } else {
+      saveCard.append(h('button',{type:'button',className:'btn-save',onClick:saveCurrent},'💾 Save Offline'));
+      saveCard.append(h('div',{style:'font-size:12px;color:var(--amber-700);text-align:center;margin-top:8px;'},'📡 No connection — consultation will sync to vAI database when back online.'));
+    }
+  } else {
+    if(state.saveMode==='database'){
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'✅'),
+        h('div',null,h('div',{className:'alert-title'},'Saved to vAI Database'),h('div',{className:'alert-text'},'Consultation is in the NextVillage platform.'))
+      ));
+    } else {
+      saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
+        h('span',{className:'alert-icon'},'💾'),
+        h('div',null,h('div',{className:'alert-title'},'Saved to device'),h('div',{className:'alert-text'},getPending()+' consultation'+(getPending()!==1?'s':'')+' pending sync. Tap ⬆ when online.'))
+      ));
+    }
+  }
+  saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:resetAll},'Start New Consultation'));
+  els.push(saveCard);
+
+  els.push(h('div',{className:'disclaimer'},'⚠️ ENTREPRENEURSHIP ADVISORY SUPPORT ONLY — Rule-based triage and initial guidance. For grants and financing, refer to TEF, LAPO, or Bank of Industry directly. The advisor must use their own judgement and training.\nBuilt for vAI Community Impact Programme, Oloibiri & Ibiade.'));
+
+  return h('div',null,...els);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCAL STORAGE & SYNC
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY='vai_offline_entrepreneur_consultations';
+function loadSaved(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch{return[];}}
+
+function saveCurrent(){
+  const list=loadSaved();
+  list.unshift({id:'ent_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),ts:new Date().toISOString(),client:state.client,consultType:state.consultType,intake:state.intake,result:state.result,synced:false});
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(list));
+  state.saved=true;state.saveMode='offline';updatePendingBadge();render();
+}
+
+async function saveToDatabase(){
+  state.savingToDb=true;state.saveError=null;render();
+  try{
+    const payload={client:state.client,consultType:state.consultType,intake:state.intake,result:state.result,ts:new Date().toISOString(),syncKey:SYNC_CONFIG.syncKey,navigatorUserId:SYNC_CONFIG.navigatorUserId};
+    const resp=await fetch(SYNC_CONFIG.functionUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({consultations:[{...payload,id:'ent_'+Date.now()+'_direct',synced:false}]})});
+    if(!resp.ok)throw new Error('Server error '+resp.status);
+    state.saved=true;state.saveMode='database';
+  }catch(e){state.saveError='Could not save to vAI database: '+e.message+'. Use offline save instead.';}
+  finally{state.savingToDb=false;render();}
+}
+
+function getPending(){return loadSaved().filter(a=>!a.synced).length;}
+function updatePendingBadge(){
+  const n=getPending();
+  const btn=document.getElementById('btn-sync-header');
+  const ct=document.getElementById('pending-count');
+  if(n>0){btn.classList.remove('hidden');ct.textContent=n;}else{btn.classList.add('hidden');}
+}
+
+let syncPanelOpen=false;let syncing=false;
+function openSyncPanel(){syncPanelOpen=true;renderSyncPanel();}
+function closeSyncPanel(){syncPanelOpen=false;const el=document.getElementById('sync-overlay');if(el)el.remove();}
+
+function renderSyncPanel(){
+  let overlay=document.getElementById('sync-overlay');
+  if(overlay)overlay.remove();
+  if(!syncPanelOpen)return;
+  const saved=loadSaved();const pending=saved.filter(a=>!a.synced);const synced=saved.filter(a=>a.synced);const isOnline=navigator.onLine;
+  overlay=h('div',{className:'sync-overlay',id:'sync-overlay',onClick:e=>{if(e.target===overlay)closeSyncPanel();}},
+    h('div',{className:'sync-panel',onClick:e=>e.stopPropagation()},
+      h('div',{className:'sync-title'},'📡 Sync Entrepreneur Consultations'),
+      h('div',{className:'sync-sub'},isOnline?`You are ONLINE. ${pending.length} consultation${pending.length!==1?'s':''} ready to sync.`:'You are OFFLINE. Connect to sync.'),
+      ...(pending.length>0?[h('div',{className:'section-label',style:'margin-top:8px;'},'Pending Upload'),...pending.map(a=>h('div',{className:'sync-item'},h('div',null,h('div',{className:'name'},a.client?.name||'Unknown'),h('div',{className:'meta'},(CONSULT_TYPES[a.consultType]?.emoji||'💼')+' '+(a.result?.urgency||'').toUpperCase()+' · '+(a.client?.business_type||'')+' · '+new Date(a.ts).toLocaleDateString())),h('span',{className:'status '+(a._syncError?'error':'pending')},a._syncError?'✗ Error':'⏳ Pending')))]:[h('div',{style:'text-align:center;padding:20px;color:var(--gray-400);font-size:13px;'},'✅ All consultations synced!')]),
+      ...(synced.length>0?[h('div',{className:'section-label',style:'margin-top:12px;'},'Recently Synced'),...synced.slice(0,5).map(a=>h('div',{className:'sync-item'},h('div',null,h('div',{className:'name'},a.client?.name||'Unknown'),h('div',{className:'meta'},new Date(a.ts).toLocaleDateString())),h('span',{className:'status synced'},'✓ Synced')))]:[] ),
+      isOnline&&pending.length>0?h('button',{className:'btn-sync go',disabled:syncing,onClick:doSync},syncing?'⏳ Syncing…':`⬆ Sync ${pending.length} Consultation${pending.length!==1?'s':''}`):(!isOnline&&pending.length>0?h('div',{style:'text-align:center;padding:12px;color:var(--amber-700);font-size:13px;font-weight:600;'},'📡 No internet. Consultations are safe on your device.'):null),
+      h('button',{className:'btn-sync close',onClick:closeSyncPanel},'Close')
+    )
+  );
+  document.body.appendChild(overlay);
+}
+
+async function doSync(){
+  if(syncing)return;syncing=true;renderSyncPanel();
+  const saved=loadSaved();const pending=saved.filter(a=>!a.synced);
+  try{
+    const response=await fetch(SYNC_CONFIG.functionUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({consultations:pending.map(a=>({...a,syncKey:SYNC_CONFIG.syncKey,navigatorUserId:SYNC_CONFIG.navigatorUserId}))})});
+    if(!response.ok)throw new Error('Server '+response.status);
+    const data=await response.json();
+    const syncedIds=new Set((data.synced||[]).map(s=>s.id));
+    const updated=saved.map(a=>syncedIds.has(a.id)?{...a,synced:true}:a);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(updated));updatePendingBadge();
+  }catch(e){pending.forEach(a=>{a._syncError=e.message;});localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));}
+  finally{syncing=false;renderSyncPanel();}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function render(){
+  const bar=document.getElementById('step-bar');bar.innerHTML='';
+  STEPS.forEach((s,i)=>{
+    const cls=i===state.step?'step-pill current':i<state.step?'step-pill done':'step-pill upcoming';
+    bar.append(h('button',{className:cls,type:'button',disabled:i>state.step+1,onClick:()=>{if(i<state.step)goStep(i);}},(i<state.step?'✓ ':'')+s.label));
+    if(i<STEPS.length-1)bar.append(h('div',{className:'step-line'+(i<state.step?' done':'')}));
+  });
+  const content=document.getElementById('content');content.innerHTML='';
+  const renderers=[renderClient,renderType,renderIntake,renderResult];
+  content.append(renderers[state.step]());
+  const footer=document.getElementById('footer');const inner=document.getElementById('footer-inner');
+  if(state.step===3){footer.style.display='none';}else{
+    footer.style.display='';inner.innerHTML='';
+    if(state.step>0)inner.append(h('button',{type:'button',className:'btn-nav secondary',onClick:goBack},'← Back'));
+    const labels=['Next ▶','Next ▶','Run Advisory ▶'];
+    const disabled=(state.step===0&&(!state.client.name.trim()||!state.client.business_type.trim()))||(state.step===1&&!state.consultType)||(state.step===2&&!(INTAKE_FIELDS[state.consultType]||[]).filter(f=>f.required).every(f=>state.intake[f.key]?.trim()));
+    inner.append(h('button',{type:'button',className:'btn-nav primary',disabled,onClick:goNext},labels[state.step]));
+  }
+  if(state._lastStep!==state.step){window.scrollTo({top:0,behavior:'smooth'});state._lastStep=state.step;}
+}
+
+function goStep(i){state.step=i;render();}
+function goNext(){if(state.step===2){state.result=computeAdvisory();state.step=3;}else if(state.step<3){state.step++;}render();}
+function goBack(){if(state.step>0){state.step--;render();}}
+function resetAll(){state={step:0,client:{name:'',village:'Oloibiri',phone:'',business_type:'',business_stage:'Just started (0–6 months)',notes:''},consultType:null,intake:{},result:null,saved:false,saveMode:null,savingToDb:false,saveError:null,openTooltip:null,showReferral:false,_lastStep:-1};render();}
+
+function updateConnectivity(){
+  const badge=document.getElementById('badge-connectivity');
+  if(navigator.onLine){badge.className='badge-online';badge.innerHTML='🟢 Online';}
+  else{badge.className='badge-offline';badge.innerHTML='📡 Offline';}
+}
+window.addEventListener('online',updateConnectivity);
+window.addEventListener('offline',updateConnectivity);
+updatePendingBadge();updateConnectivity();render();
+</script>
+</body>
+</html>
