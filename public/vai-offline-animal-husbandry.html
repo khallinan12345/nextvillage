@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#15803d">
+<title>vAI Offline Animal Husbandry Advisor</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green-50:#f0fdf4;--green-100:#dcfce7;--green-200:#bbf7d0;--green-400:#4ade80;--green-500:#22c55e;--green-600:#16a34a;--green-700:#15803d;--green-800:#166534;--green-900:#14532d;
+  --red-50:#fef2f2;--red-100:#fee2e2;--red-400:#f87171;--red-500:#ef4444;--red-600:#dc2626;--red-700:#b91c1c;--red-800:#991b1b;
+  --amber-50:#fffbeb;--amber-100:#fef3c7;--amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--amber-700:#b45309;--amber-800:#92400e;
+  --orange-50:#fff7ed;--orange-100:#ffedd5;--orange-400:#fb923c;--orange-500:#f97316;--orange-600:#ea580c;--orange-700:#c2410c;--orange-800:#9a3412;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-500:#3b82f6;--blue-600:#2563eb;
+  --teal-500:#14b8a6;--teal-600:#0d9488;
+  --pink-50:#fdf2f8;--pink-400:#f472b6;--pink-700:#be185d;--pink-800:#9d174d;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background:var(--gray-50); color:var(--gray-900); line-height:1.5; font-size:16px; -webkit-text-size-adjust:100%; min-height:100vh; min-height:100dvh; padding-bottom:env(safe-area-inset-bottom,0); }
+.header { position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--gray-200); box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.header-inner { max-width:480px; margin:0 auto; padding:10px 12px; }
+.header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.header-brand { display:flex; align-items:center; gap:8px; }
+.header-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,var(--green-600),#065f46); display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; }
+.header-title { font-size:13px; font-weight:700; color:var(--gray-900); line-height:1.2; }
+.header-sub { font-size:10px; color:var(--gray-400); }
+.badge-offline { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--gray-500); background:var(--gray-100); padding:3px 8px; border-radius:6px; font-weight:600; }
+.badge-online { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--green-700); background:var(--green-50); padding:3px 8px; border-radius:6px; font-weight:600; }
+.badge-pending { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--amber-700); background:var(--amber-50); padding:3px 8px; border-radius:6px; font-weight:600; cursor:pointer; }
+.steps { display:flex; align-items:center; gap:3px; }
+.step-pill { display:flex; align-items:center; gap:3px; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:600; border:none; cursor:pointer; transition:all .15s; }
+.step-pill.current { background:var(--green-100); color:var(--green-700); }
+.step-pill.done { background:var(--green-100); color:var(--green-700); }
+.step-pill.upcoming { background:var(--gray-100); color:var(--gray-400); }
+.step-pill:disabled { cursor:default; }
+.step-line { flex:1; height:2px; border-radius:1px; background:var(--gray-200); }
+.step-line.done { background:var(--green-400); }
+.content { max-width:480px; margin:0 auto; padding:12px 12px 100px; }
+.card { background:#fff; border-radius:16px; border:1px solid var(--gray-200); box-shadow:0 1px 2px rgba(0,0,0,.04); padding:16px; margin-bottom:12px; }
+.card-title { font-size:17px; font-weight:700; color:var(--gray-900); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+.card-subtitle { font-size:12px; color:var(--gray-400); margin-bottom:14px; }
+.label { display:block; font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:5px; }
+.label .req { color:var(--red-500); margin-left:2px; }
+.label-hint { display:block; font-size:11px; color:var(--gray-400); margin-top:2px; font-weight:400; }
+.input,.textarea,.select { width:100%; padding:10px 14px; font-size:16px; border:1px solid var(--gray-300); border-radius:12px; background:#fff; color:var(--gray-900); outline:none; transition:border-color .15s,box-shadow .15s; -webkit-appearance:none; appearance:none; }
+.input:focus,.textarea:focus,.select:focus { border-color:var(--green-500); box-shadow:0 0 0 3px rgba(22,163,74,.15); }
+.textarea { resize:none; line-height:1.5; }
+.select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+.field { margin-bottom:14px; }
+.btn-group { display:flex; gap:8px; flex-wrap:wrap; }
+.btn-choice { flex:1; min-width:0; padding:10px 8px; border-radius:12px; border:2px solid var(--gray-200); background:#fff; font-size:13px; font-weight:600; color:var(--gray-600); cursor:pointer; transition:all .15s; text-align:center; -webkit-tap-highlight-color:transparent; }
+.btn-choice:active { transform:scale(.97); }
+.btn-choice.active { border-color:var(--green-500); background:var(--green-50); color:var(--green-800); }
+.btn-choice.active-red { border-color:var(--red-400); background:var(--red-50); color:var(--red-800); }
+.btn-choice.active-orange { border-color:var(--orange-400); background:var(--orange-50); color:var(--orange-800); }
+.btn-chip { display:inline-block; padding:6px 12px; border-radius:8px; border:none; background:var(--gray-100); color:var(--gray-600); font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; }
+.btn-chip:active { transform:scale(.97); }
+.btn-chip.active { background:var(--green-600); color:#fff; }
+.btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.toggle { width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; border:2px solid var(--gray-200); background:#fff; cursor:pointer; transition:all .15s; text-align:left; -webkit-tap-highlight-color:transparent; }
+.toggle:active { transform:scale(.98); }
+.toggle.on { border-color:var(--green-500); background:var(--green-50); }
+.toggle-box { width:24px; height:24px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; }
+.toggle-box.off { background:var(--gray-200); }
+.toggle-box.on { background:var(--green-500); }
+.toggle-label { font-size:14px; font-weight:500; color:var(--gray-700); }
+.toggle.on .toggle-label { color:var(--green-800); }
+.toggle-hint { font-size:11px; color:var(--gray-400); margin-top:2px; }
+.alert { border-radius:12px; padding:12px 14px; display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+.alert-red { background:var(--red-50); border:2px solid var(--red-400); }
+.alert-amber { background:var(--amber-50); border:2px solid var(--amber-400); }
+.alert-green { background:var(--green-50); border:2px solid var(--green-400); }
+.alert-blue { background:var(--blue-50); border:2px solid var(--blue-500); }
+.alert-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-title { font-size:13px; font-weight:700; }
+.alert-text { font-size:12px; margin-top:2px; }
+.alert-red .alert-title { color:var(--red-800); }
+.alert-red .alert-text { color:var(--red-700); }
+.alert-green .alert-title { color:var(--green-800); }
+.alert-green .alert-text { color:var(--green-700); }
+.tooltip-btn { background:none; border:none; color:var(--green-600); font-size:14px; cursor:pointer; padding:0 4px; vertical-align:middle; }
+.tooltip-box { background:var(--green-900); color:var(--green-50); font-size:11px; border-radius:10px; padding:8px 12px; margin-top:4px; line-height:1.5; font-weight:400; }
+.section-label { font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; }
+.result-banner { border-radius:16px; border:3px solid; padding:16px; margin-bottom:12px; }
+.result-banner.emergency { background:var(--red-50); border-color:var(--red-400); }
+.result-banner.high { background:var(--orange-50); border-color:var(--orange-400); }
+.result-banner.medium { background:var(--amber-50); border-color:var(--amber-400); }
+.result-banner.low { background:var(--green-50); border-color:var(--green-400); }
+.result-level { font-size:20px; font-weight:900; text-transform:uppercase; margin-bottom:4px; }
+.result-banner.emergency .result-level { color:var(--red-800); }
+.result-banner.high .result-level { color:var(--orange-800); }
+.result-banner.medium .result-level { color:var(--amber-800); }
+.result-banner.low .result-level { color:var(--green-800); }
+.result-patient { font-size:13px; color:var(--gray-600); margin-bottom:10px; }
+.result-reason { font-size:13px; font-weight:500; margin:3px 0; }
+.result-section-title { font-size:13px; font-weight:700; color:var(--gray-900); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.result-item { font-size:13px; color:var(--gray-800); border-radius:8px; padding:8px 12px; margin-bottom:6px; }
+.result-item.action { background:var(--red-50); }
+.result-item.rec { background:var(--green-50); }
+.result-item.warning { background:var(--red-50); font-weight:600; color:var(--red-800); }
+.result-item.referral { background:var(--blue-50); border-left:3px solid var(--blue-500); }
+.result-item.isolate { background:var(--orange-50); font-weight:600; color:var(--orange-800); }
+.referral-note { font-family:'Courier New',Courier,monospace; font-size:12px; background:var(--gray-50); border-radius:12px; padding:14px; white-space:pre-wrap; line-height:1.6; color:var(--gray-800); border:1px solid var(--gray-200); }
+.footer { position:fixed; bottom:0; left:0; right:0; z-index:20; background:#fff; border-top:1px solid var(--gray-200); box-shadow:0 -2px 10px rgba(0,0,0,.05); padding-bottom:env(safe-area-inset-bottom,0); }
+.footer-inner { max-width:480px; margin:0 auto; padding:10px 12px; display:flex; gap:10px; }
+.btn-nav { flex:1; padding:12px; border-radius:12px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.btn-nav:active { transform:scale(.97); }
+.btn-nav.primary { background:linear-gradient(135deg,var(--green-600),#065f46); color:#fff; }
+.btn-nav.secondary { background:#fff; color:var(--gray-600); border:2px solid var(--gray-300); }
+.btn-nav:disabled { opacity:.4; cursor:default; transform:none; }
+.btn-save { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(135deg,var(--green-600),#065f46); color:#fff; margin-bottom:8px; }
+.btn-save:active { transform:scale(.98); }
+.btn-reset { width:100%; padding:12px; border-radius:12px; border:2px solid var(--gray-300); background:#fff; font-size:13px; font-weight:700; color:var(--gray-600); cursor:pointer; }
+.btn-reset:active { transform:scale(.98); }
+.disclaimer { font-size:11px; color:var(--gray-400); text-align:center; padding:8px 16px 20px; line-height:1.5; }
+.sync-overlay { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.5); display:flex; align-items:flex-end; justify-content:center; }
+.sync-panel { background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; padding:20px 16px env(safe-area-inset-bottom,16px); }
+.sync-title { font-size:17px; font-weight:700; margin-bottom:4px; }
+.sync-sub { font-size:12px; color:var(--gray-400); margin-bottom:16px; }
+.sync-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:10px; background:var(--gray-50); margin-bottom:6px; font-size:13px; }
+.sync-item .name { font-weight:600; color:var(--gray-800); }
+.sync-item .meta { font-size:11px; color:var(--gray-400); }
+.sync-item .status { font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; }
+.sync-item .status.pending { background:var(--amber-50); color:var(--amber-700); }
+.sync-item .status.synced { background:var(--green-50); color:var(--green-700); }
+.btn-sync { width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; }
+.btn-sync.go { background:linear-gradient(135deg,var(--green-600),#065f46); color:#fff; }
+.btn-sync.go:disabled { opacity:.5; cursor:default; }
+.btn-sync.close { background:var(--gray-100); color:var(--gray-600); margin-top:8px; }
+.gap-sm > * + * { margin-top:8px; }
+.gap-md > * + * { margin-top:14px; }
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-row">
+      <div class="header-brand">
+        <div class="header-icon">🐄</div>
+        <div>
+          <div class="header-title">Offline Animal Husbandry Advisor</div>
+          <div class="header-sub">Rule-Based Livestock Triage · No Internet Required</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="hidden" id="btn-sync-header" onclick="openSyncPanel()" title="Sync consultations">
+          <span class="badge-pending" id="badge-pending">⬆ <span id="pending-count">0</span></span>
+        </button>
+        <span class="badge-offline" id="badge-connectivity">📡 Offline</span>
+      </div>
+    </div>
+    <div class="steps" id="step-bar"></div>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<div class="footer" id="footer">
+  <div class="footer-inner" id="footer-inner"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE & CONFIG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STEPS = [
+  { key:'farmer', label:'Farmer' },
+  { key:'species', label:'Species' },
+  { key:'intake', label:'Intake' },
+  { key:'result', label:'Result' },
+];
+
+const SPECIES_CONFIG = {
+  poultry:     { label:'Poultry',      emoji:'🐔', desc:'Chickens, ducks, guinea fowl, turkeys' },
+  goats_sheep: { label:'Goats/Sheep',  emoji:'🐐', desc:'Goats, sheep, and small ruminants' },
+  cattle:      { label:'Cattle',       emoji:'🐄', desc:'Cows, bulls, calves' },
+  pigs:        { label:'Pigs',         emoji:'🐖', desc:'Pigs, weaners, sows, boars' },
+};
+
+// Intake fields per species — mirrors AnimalHusbandryPage.tsx SPECIES_INTAKE
+const INTAKE_FIELDS = {
+  poultry: [
+    { key:'scale', label:'How many sick vs. total flock', placeholder:'e.g. 12 sick out of 80 birds; 3 dead since yesterday', tooltip:'Scale determines urgency immediately. If more than 20% of birds are affected or deaths are rapid, this is HIGH or EMERGENCY.', required:true },
+    { key:'main_symptoms', label:'Main symptoms observed', placeholder:'e.g. drooping wings, watery/bloody droppings, gasping, twisted neck, swollen face', tooltip:'Twisted neck = Newcastle (emergency). Bloody droppings = Coccidiosis or Gumboro. Swollen face = Fowl pox or respiratory infection. Gasping = respiratory disease.', required:true },
+    { key:'onset', label:'When it started and how fast it spread', placeholder:'e.g. 2 days ago, 5 birds in one morning then 12 by evening', tooltip:'Sudden rapid spread in 1-2 days = Newcastle or HPAI. Gradual = Coccidiosis, worms, or nutrition.', required:true },
+    { key:'droppings', label:'Droppings colour and consistency', placeholder:'e.g. normal green-white, yellowish watery, bloody/reddish, whitish paste', tooltip:'Bloody droppings = Coccidiosis or severe infection. Yellowish watery = Gumboro. White paste around vent = Fowl typhoid.' },
+    { key:'vaccination', label:'Vaccination history', placeholder:'e.g. Newcastle vaccinated 6 weeks ago, no Gumboro vaccine, or no vaccinations at all', tooltip:'Unvaccinated flocks are at extreme risk of Newcastle and Gumboro. A vaccinated bird getting sick suggests a different disease or vaccine failure.' },
+    { key:'feed_water', label:'Feed and water quality recently', placeholder:'e.g. changed feed supplier last week, water from open creek, litter very wet', tooltip:'Wet litter = Coccidiosis risk. Changed feed = mycotoxin or nutrition problem. Dirty water = bacterial infections.' },
+    { key:'new_birds', label:'Any new birds introduced recently', placeholder:'e.g. bought 20 birds from Yenagoa market 10 days ago, no quarantine', tooltip:'New birds without quarantine are the #1 cause of disease introduction.', danger:true },
+  ],
+  goats_sheep: [
+    { key:'scale', label:'How many sick vs. total herd', placeholder:'e.g. 5 goats sick out of 18; 1 kid died overnight', tooltip:'PPR spreads fast — 5+ animals in 1-2 days is an emergency. Deaths in kids/lambs escalate urgency.', required:true },
+    { key:'main_symptoms', label:'Main symptoms observed', placeholder:'e.g. high fever, eye/nose discharge, bloody diarrhoea, mouth sores, difficulty breathing, rough coat', tooltip:'High fever + discharge + bloody diarrhoea + mouth sores = PPR (EMERGENCY, reportable). Pot-belly + poor coat = worms. Sudden collapse = poisoning or enterotoxaemia.', required:true },
+    { key:'onset', label:'When it started and spread pattern', placeholder:'e.g. 3 days ago, started with 2 animals, now 5 more', tooltip:'PPR can move through a herd in 3-5 days with high mortality. Gradual slow spread = parasites or chronic nutrition.', required:true },
+    { key:'deworming', label:'Deworming history', placeholder:'e.g. dewormed 3 months ago with Albendazole, never dewormed, or dewormed recently with no improvement', tooltip:'Internal parasites are the most common cause of poor performance and deaths in small ruminants in Nigeria.' },
+    { key:'body_condition', label:'Body condition and gum colour', placeholder:'e.g. very thin, bony spine, very pale pink gums (anaemia), or good body condition', tooltip:'Pale/white gums = severe anaemia from Haemonchus worm. This is life-threatening — needs immediate deworming.' },
+    { key:'mouth_feet', label:'Any sores in mouth or on feet', placeholder:'e.g. sores on gums and tongue, limping, sores between toes', tooltip:'Mouth + feet sores = FMD (if cattle also affected) — reportable. Foot rot = bacterial, treatable.' },
+    { key:'new_animals', label:'Any new animals added recently', placeholder:'e.g. bought 3 goats at Oloibiri market last week, no quarantine period', tooltip:'PPR spreads through contact with infected animals. New animals without quarantine are the most common source.', danger:true },
+  ],
+  cattle: [
+    { key:'scale', label:'How many affected vs. total herd', placeholder:'e.g. 2 cows sick out of 6, or 1 bull showing severe signs', tooltip:'Even one cow with severe respiratory signs, blisters on feet and mouth, or sudden collapse is an emergency.', required:true },
+    { key:'main_symptoms', label:'Main symptoms observed', placeholder:'e.g. heavy breathing/coughing, blisters on tongue and feet, extreme weight loss, swollen limbs, milk drop', tooltip:'Coughing + fever + difficulty breathing = CBPP (emergency/reportable). Blisters on mouth + feet = FMD (emergency/reportable). Chronic weight loss + anaemia = Trypanosomiasis.', required:true },
+    { key:'onset', label:'How long sick and any deaths', placeholder:'e.g. sick for 5 days, one cow died last night, another now showing same signs', tooltip:'CBPP starts slow but spreads and kills. FMD: sudden onset of blisters, spreads very fast. Any cattle death with respiratory signs or mouth/feet blisters = report immediately.' },
+    { key:'grazing_area', label:'Where they graze and water sources', placeholder:'e.g. near riverbank in tsetse-heavy bush, or dry open farmland', tooltip:'Tsetse fly habitat (riverine forest) = Trypanosomiasis risk. Shared water points = CBPP, FMD spread risk.' },
+    { key:'ticks', label:'Tick burden and tick-control', placeholder:'e.g. heavy ticks visible especially on ears and udder, or dipped regularly', tooltip:'Heavy ticks = Tick-borne diseases (Babesiosis, Anaplasmosis — can cause sudden death). Regular dipping prevents significant losses.' },
+    { key:'nutrition', label:'Dry-season feeding and body condition', placeholder:'e.g. only grazing dry pasture, no supplement, thin animals; or given crop residue + mineral block', tooltip:'Cattle in the dry season frequently suffer severe nutritional deficiency — this weakens immunity and worsens every disease.' },
+  ],
+  pigs: [
+    { key:'scale', label:'How many affected vs. total pen', placeholder:'e.g. 6 pigs sick out of 20, 3 already dead in 2 days', tooltip:'Multiple rapid deaths in pigs = ASF (African Swine Fever) until proven otherwise. ASF is 100% fatal with no cure.', required:true, danger:true },
+    { key:'main_symptoms', label:'Main symptoms observed', placeholder:'e.g. high fever, not eating, reddish/bluish skin patches, bloody diarrhoea, sudden death, or respiratory signs', tooltip:'Reddish/purple skin patches + fever + bloody diarrhoea + sudden deaths = ASF (EMERGENCY, no cure, must report). Respiratory signs alone = bacterial pneumonia (treatable).', required:true },
+    { key:'onset', label:'When it started and death rate', placeholder:'e.g. started 3 days ago, 30% dead already, rest declining fast', tooltip:'ASF kills 90-100% of affected pigs within days. A rapid death rate of 20%+ is an emergency requiring immediate reporting.' },
+    { key:'feed', label:'Feed sources and recent changes', placeholder:'e.g. given food waste/slaughterhouse scraps, changed commercial feed brand', tooltip:'Feeding kitchen or abattoir waste is the #1 cause of ASF introduction. This practice must stop immediately.' },
+    { key:'movement', label:'Any pigs moved in or out recently', placeholder:'e.g. bought 2 weaners from a farm in Yenagoa 2 weeks ago, sold 3 pigs to a trader last week', tooltip:'ASF spreads through movement of infected pigs. If pigs were recently brought in from another farm, that is the most likely source.', danger:true },
+    { key:'skin_lesions', label:'Skin colour and visible lesions', placeholder:'e.g. normal pink skin, or reddish/dark patches on ears, belly, and legs', tooltip:'Blue-purple discolouration of extremities = strong sign of ASF. Raised red patches = Swine Erysipelas (treatable with antibiotics).' },
+  ],
+};
+
+const VILLAGES = ['Oloibiri','Ibiade','Nembe','Brass','Yenagoa','Other'];
+
+const SYNC_CONFIG = {
+  functionUrl: 'https://wohmsbeygxrbwogrggkq.supabase.co/functions/v1/sync-offline-animal-consultations',
+  syncKey: 'vai-animal-offline-2024-oloibiri',
+  navigatorUserId: 'offline-animal-advisor',
+};
+
+let state = {
+  step:0,
+  farmer:{ name:'', village:'Oloibiri', phone:'', animals:[], notes:'' },
+  species:null,
+  intake:{},
+  result:null,
+  saved:false,
+  saveMode:null,
+  savingToDb:false,
+  saveError:null,
+  openTooltip:null,
+  showReferral:false,
+  _lastStep:-1,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOM HELPER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  if (props) {
+    Object.entries(props).forEach(([k, v]) => {
+      if (k === 'className') el.className = v;
+      else if (k === 'style' && typeof v === 'string') el.style.cssText = v;
+      else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+      else if (k === 'disabled') { if (v) el.disabled = true; }
+      else el.setAttribute(k, v);
+    });
+  }
+  children.flat().forEach(c => { if (c != null && c !== false) el.append(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c); });
+  return el;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RULE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function computeAdvisory() {
+  const sp = state.species;
+  const intake = state.intake;
+  const allText = Object.values(intake).join(' ').toLowerCase();
+
+  const r = {
+    urgency: 'low',
+    reasons: [],
+    immediateActions: [],
+    mediumTermActions: [],
+    doNot: [],
+    referrals: [],
+    isolate: false,
+    homeCare: [],
+    warnings: [],
+  };
+
+  const esc = (level) => {
+    const order = ['low','medium','high','emergency'];
+    if (order.indexOf(level) > order.indexOf(r.urgency)) r.urgency = level;
+  };
+
+  // ── POULTRY ────────────────────────────────────────────────────────────────
+  if (sp === 'poultry') {
+    // Newcastle Disease
+    if (allText.includes('twisted neck') || allText.includes('torticollis') || allText.includes('circling') || (allText.includes('paralysis') && allText.includes('wing'))) {
+      esc('emergency'); r.reasons.push('NEWCASTLE DISEASE (ND) highly suspected — twisted neck / wing paralysis are classic neurological signs');
+      r.isolate = true;
+      r.immediateActions.push('ISOLATE sick birds IMMEDIATELY in a separate pen. Do not mix with healthy birds under any circumstances.');
+      r.immediateActions.push('Do NOT sell or move any birds off the farm. Newcastle spreads through air, water, and direct contact.');
+      r.immediateActions.push('Emergency vaccination of healthy birds: LaSota or Komarov strain via eye-drop if available.');
+      r.mediumTermActions.push('After outbreak is controlled: disinfect all equipment, drinkers, feeders with 1:100 bleach solution.');
+      r.referrals.push({ who:'Nearest Veterinary Clinic or LGA Veterinary Officer', why:'Newcastle outbreak — confirm diagnosis and source emergency vaccine supply.', urgency:'TODAY' });
+      r.doNot.push('Do NOT sell sick or dead birds at market — this will spread Newcastle to other farms.');
+    }
+    // Gumboro / IBD
+    if (allText.includes('gumboro') || (allText.includes('young') && allText.includes('watery') && allText.includes('droop'))) {
+      esc('high'); r.reasons.push('Gumboro Disease (IBD) suspected — young birds with watery droppings and depression');
+      r.immediateActions.push('Provide electrolytes in drinking water: mix 1 teaspoon sugar + 1/4 teaspoon salt per 1 litre clean water.');
+      r.immediateActions.push('Remove wet litter immediately. Replace with dry sawdust or sand.');
+      r.mediumTermActions.push('Vaccinate next batch at Day 14 and Day 28 with Gumboro vaccine — crucial for flocks under 6 weeks.');
+      r.homeCare.push('Keep brooder temperature correct — cold-stressed chicks cannot recover from Gumboro.');
+    }
+    // Coccidiosis
+    if (allText.includes('bloody') || allText.includes('blood') && allText.includes('dropping')) {
+      esc('high'); r.reasons.push('Coccidiosis suspected — bloody droppings are the classic sign');
+      r.immediateActions.push('Start Amprolium treatment immediately: available as a feed or water supplement at most agro-vet shops.');
+      r.immediateActions.push('Remove all wet litter TODAY. Coccidia thrive in moist conditions — dry litter is the most important prevention.');
+      r.mediumTermActions.push('Coccidiostats in starter and grower feed prevent this disease in future flocks.');
+    }
+    // Fowl pox
+    if (allText.includes('pox') || allText.includes('scab') || allText.includes('wart') || (allText.includes('lesion') && (allText.includes('comb') || allText.includes('wattle') || allText.includes('face')))) {
+      esc('medium'); r.reasons.push('Fowl Pox suspected — skin lesions on comb, wattle, or around eyes');
+      r.immediateActions.push('Isolate affected birds. Apply iodine solution to dry skin lesions with a cotton swab to prevent secondary infection.');
+      r.mediumTermActions.push('Vaccinate healthy birds with Fowl Pox vaccine using wing-web method. Pox spreads via mosquitoes and direct contact.');
+      r.homeCare.push('Ensure birds have soft, wet feed (mash) as dry throat lesions make eating difficult.');
+    }
+    // Avian Influenza
+    if (allText.includes('avian influenza') || allText.includes('bird flu') || allText.includes('hpai') || (allText.includes('sudden death') && allText.includes('100%')) || (allText.includes('swollen') && allText.includes('head') && allText.includes('rapid'))) {
+      esc('emergency'); r.reasons.push('AVIAN INFLUENZA (Bird Flu) suspected — REPORTABLE DISEASE WITH HUMAN HEALTH RISK');
+      r.isolate = true;
+      r.immediateActions.push('STOP all movement of birds, people, and equipment on and off the farm immediately.');
+      r.immediateActions.push('Do NOT handle dead birds without gloves and face covering. Wash hands thoroughly with soap.');
+      r.referrals.push({ who:'State Ministry of Agriculture / Federal Dept of Veterinary Services', why:'Suspected HPAI — this is a notifiable disease with human health risk. Must report NOW.', urgency:'IMMEDIATELY' });
+      r.doNot.push('Do NOT attempt home treatment. Do NOT sell or slaughter birds without official guidance.');
+    }
+    // Rapid death, unvaccinated
+    if (!allText.includes('vaccin') && (allText.includes('dead') || allText.includes('died')) && (allText.includes('rapid') || allText.includes('sudden') || allText.includes('many'))) {
+      esc('emergency'); r.reasons.push('Rapid deaths in unvaccinated flock — Newcastle Disease must be ruled out first');
+      r.isolate = true;
+      r.immediateActions.push('Isolate all remaining birds from other poultry in the area. Do not share drinkers or feeders.');
+      r.referrals.push({ who:'LGA Veterinary Officer', why:'Rapid unexplained deaths in unvaccinated poultry require urgent diagnosis.', urgency:'TODAY' });
+    }
+  }
+
+  // ── GOATS / SHEEP ──────────────────────────────────────────────────────────
+  if (sp === 'goats_sheep') {
+    // PPR
+    if (allText.includes('ppr') || allText.includes('peste') || (allText.includes('discharge') && allText.includes('mouth sore') && allText.includes('diarrhoea')) || (allText.includes('fever') && allText.includes('sore') && allText.includes('bloody'))) {
+      esc('emergency'); r.reasons.push('PPR (Peste des Petits Ruminants) suspected — EMERGENCY, REPORTABLE, HIGHLY CONTAGIOUS');
+      r.isolate = true;
+      r.immediateActions.push('ISOLATE ALL sick animals NOW. Keep them completely separate from healthy animals.');
+      r.immediateActions.push('Do NOT sell, move, or slaughter any animals from this farm until cleared by a vet.');
+      r.immediateActions.push('Supportive care: clean fresh water, electrolytes, and soft browse for affected animals while awaiting vet.');
+      r.referrals.push({ who:'LGA Veterinary Officer / NVRI', why:'PPR is a notifiable disease. Emergency vaccination of healthy animals must be done by a vet.', urgency:'TODAY — do not wait' });
+      r.doNot.push('Do NOT take sick animals to market or sell to a trader — PPR spreads very rapidly and devastates herds.');
+    }
+    // Haemonchus / worm anaemia
+    if (allText.includes('pale') || allText.includes('white gum') || allText.includes('anaemi') || allText.includes('famacha') || (allText.includes('thin') && allText.includes('weak'))) {
+      esc('high'); r.reasons.push('Severe anaemia from Haemonchus contortus (barber pole worm) suspected — life-threatening worm burden');
+      r.immediateActions.push('Deworm IMMEDIATELY with Albendazole (10 mg/kg) or Levamisole. This is urgent — severe Haemonchus kills within days.');
+      r.immediateActions.push('Check gums of ALL animals in the herd — pale/white gums = deworm that animal NOW.');
+      r.mediumTermActions.push('Deworm all small ruminants every 3 months. In Bayelsa (high rainfall), worm burdens build faster — consider every 2 months.');
+      r.mediumTermActions.push('Rotate pastures if possible — this breaks the worm lifecycle significantly.');
+      r.homeCare.push('Supplement with energy (cassava peels, brewers grain) and protein (leaves, legume hay) to speed recovery after deworming.');
+    }
+    // FMD
+    if (allText.includes('blister') || (allText.includes('sore') && allText.includes('foot') && allText.includes('mouth')) || allText.includes('fmd') || allText.includes('foot and mouth')) {
+      esc('emergency'); r.reasons.push('FMD (Foot-and-Mouth Disease) suspected — EMERGENCY, REPORTABLE, SPREADS TO CATTLE AND PIGS');
+      r.isolate = true;
+      r.referrals.push({ who:'State Veterinary Officer', why:'FMD is a notifiable disease affecting all cloven-hoofed animals. Must report to authorities immediately.', urgency:'TODAY' });
+      r.doNot.push('Do NOT move animals to market. Do NOT share equipment with neighbouring farms.');
+    }
+    // Pneumonia
+    if (allText.includes('cough') || (allText.includes('breathe') && allText.includes('difficult')) || allText.includes('pneumonia')) {
+      esc('high'); r.reasons.push('Pneumonia suspected — respiratory infection in small ruminants');
+      r.immediateActions.push('Separate affected animals from healthy ones. Move to dry, draught-free shelter.');
+      r.immediateActions.push('Contact vet or animal health worker for antibiotic prescription (Oxytetracycline commonly used).');
+      r.homeCare.push('Keep animals warm and dry. Cold, wet conditions make pneumonia much worse and spread faster.');
+    }
+    // Enterotoxaemia
+    if (allText.includes('sudden') && allText.includes('death') && !allText.includes('ppr') && !allText.includes('fmd')) {
+      esc('emergency'); r.reasons.push('Enterotoxaemia (pulpy kidney disease) or acute poisoning possible for sudden unexplained deaths');
+      r.immediateActions.push('Remove animals from current pasture immediately — possible plant poisoning or sudden nutritional change.');
+      r.referrals.push({ who:'LGA Veterinary Officer', why:'Sudden unexplained deaths in small ruminants require post-mortem examination to determine cause.', urgency:'TODAY' });
+    }
+  }
+
+  // ── CATTLE ────────────────────────────────────────────────────────────────
+  if (sp === 'cattle') {
+    // CBPP
+    if (allText.includes('cbpp') || allText.includes('contagious bovine') || (allText.includes('cough') && allText.includes('fever') && allText.includes('cattle'))) {
+      esc('emergency'); r.reasons.push('CBPP (Contagious Bovine Pleuropneumonia) suspected — EMERGENCY, REPORTABLE');
+      r.isolate = true;
+      r.immediateActions.push('ISOLATE ALL affected cattle immediately. CBPP spreads through respiratory secretions over long distances.');
+      r.referrals.push({ who:'Federal Dept of Veterinary Services / State Vet', why:'CBPP is a notifiable disease. Emergency must be reported to authorities immediately.', urgency:'IMMEDIATELY' });
+      r.doNot.push('Do NOT move cattle to market or another location. Movement spreads CBPP rapidly across regions.');
+    }
+    // FMD
+    if (allText.includes('blister') || allText.includes('fmd') || allText.includes('foot and mouth') || (allText.includes('sore') && allText.includes('tongue'))) {
+      esc('emergency'); r.reasons.push('FMD (Foot-and-Mouth Disease) suspected — EMERGENCY, REPORTABLE');
+      r.isolate = true;
+      r.referrals.push({ who:'State Veterinary Officer', why:'FMD is a notifiable disease. Must be reported immediately. No treatment — only supportive care and quarantine.', urgency:'IMMEDIATELY' });
+      r.doNot.push('Do NOT share water troughs, handling equipment, or vehicles with other farms.');
+    }
+    // Trypanosomiasis
+    if (allText.includes('tryp') || allText.includes('tsetse') || (allText.includes('anaem') && allText.includes('weight loss') && allText.includes('cattle'))) {
+      esc('high'); r.reasons.push('Trypanosomiasis (sleeping sickness) suspected — tsetse-transmitted blood parasite, common in Niger Delta');
+      r.immediateActions.push('Contact vet for Diminazene Aceturate (Berenil) injection — specific and effective treatment for Trypanosomiasis.');
+      r.mediumTermActions.push('Apply pyrethroid-based pour-on or dip every 2 weeks to control tsetse fly burden on animals.');
+      r.mediumTermActions.push('Avoid grazing in dense riverine forest during dawn/dusk when tsetse is most active. Open bush is safer.');
+    }
+    // Tick-borne disease
+    if (allText.includes('tick') && (allText.includes('heavy') || allText.includes('many'))) {
+      esc('medium'); r.reasons.push('Heavy tick burden — risk of tick-borne diseases (Babesiosis, Anaplasmosis, East Coast Fever)');
+      r.immediateActions.push('Apply acaricide (tick dip or pour-on) TODAY. Amitraz or Deltamethrin are commonly available in Nigeria.');
+      r.mediumTermActions.push('Establish regular 2-week dipping/pour-on schedule. Tick control is the single most cost-effective cattle health investment.');
+    }
+    // Mastitis
+    if (allText.includes('mastitis') || (allText.includes('udder') && (allText.includes('swoll') || allText.includes('hard') || allText.includes('painful')))) {
+      esc('medium'); r.reasons.push('Mastitis suspected — udder infection, milk loss risk');
+      r.immediateActions.push('Strip affected quarter(s) completely at every milking — remove all infected milk. This alone significantly speeds recovery.');
+      r.immediateActions.push('Contact vet for intramammary antibiotic tube (Cloxacillin-based) — insert at milking for 3-5 days.');
+      r.doNot.push('Do NOT feed mastitis milk to calves or humans — contains bacteria and possibly antibiotic residues.');
+    }
+    // Nutritional
+    if (allText.includes('mineral') || allText.includes('no supplement') || (allText.includes('thin') && allText.includes('cattle'))) {
+      esc('medium'); r.reasons.push('Nutritional deficiency likely — dry season stress weakening herd');
+      r.homeCare.push('Provide mineral block or loose mineral mix (salt + bone meal + trace minerals) ad lib — this is low cost with high returns.');
+      r.mediumTermActions.push('Supplement with crop residues, cottonseed cake, or brewers grain during dry season to maintain body condition.');
+    }
+  }
+
+  // ── PIGS ──────────────────────────────────────────────────────────────────
+  if (sp === 'pigs') {
+    // ASF — always check first
+    const rapidDeaths = allText.includes('dead') && (allText.includes('rapid') || allText.includes('sudden') || allText.includes('many'));
+    const asfSigns = allText.includes('purple') || allText.includes('bluish') || allText.includes('reddish skin') || allText.includes('haemorrhage') || allText.includes('bloody diarrhoea');
+    const kitchenScraps = allText.includes('food waste') || allText.includes('kitchen scrap') || allText.includes('abattoir') || allText.includes('slaughter');
+
+    if (rapidDeaths || asfSigns || kitchenScraps) {
+      esc('emergency'); r.reasons.push('AFRICAN SWINE FEVER (ASF) suspected — EMERGENCY, 100% FATAL, NO CURE, NO VACCINE');
+      r.isolate = true;
+      r.immediateActions.push('STOP ALL PIG MOVEMENT immediately — no pig, person, or equipment moves on or off the farm.');
+      r.immediateActions.push('Separate ALL sick pigs from healthy ones NOW — different pen, different tools, different caretaker if possible.');
+      r.immediateActions.push('Do NOT slaughter and sell sick pigs — this spreads ASF through the food chain and is illegal.');
+      r.immediateActions.push('If feeding food waste/kitchen scraps: STOP IMMEDIATELY. This is the primary ASF introduction route in Nigeria.');
+      r.referrals.push({ who:'State Ministry of Agriculture / LGA Vet Officer', why:'ASF is a notifiable disease. Report IMMEDIATELY — there may be emergency compensation for affected farms.', urgency:'IMMEDIATELY — today, not tomorrow' });
+      r.doNot.push('Do NOT sell sick or dead pigs to ANY buyer under any circumstances — spreading ASF is illegal.');
+      r.doNot.push('Do NOT share vehicles, boots, or equipment between infected and healthy farms.');
+      r.warnings.push('If animals die: bury deeply (>1 metre) or burn on-site. Do NOT take carcasses to market or river.');
+    }
+
+    // Swine Erysipelas (good outcome if not ASF)
+    if (!asfSigns && !rapidDeaths && (allText.includes('raised') || allText.includes('diamond') || (allText.includes('red patch') && !allText.includes('bluish')))) {
+      esc('high'); r.reasons.push('Swine Erysipelas possible — raised reddish diamond-shaped skin patches (very different from ASF)');
+      r.immediateActions.push('Contact vet immediately for Penicillin injection — Swine Erysipelas responds very well to early antibiotic treatment.');
+      r.immediateActions.push('Isolate affected pig. Provide fresh water and a cool resting area — fever causes dehydration.');
+      r.homeCare.push('If Erysipelas is confirmed: recovery is typically complete within 5-7 days with correct treatment.');
+    }
+
+    // PRRS / Respiratory
+    if (allText.includes('cough') || allText.includes('sneez') || (allText.includes('breathe') && allText.includes('difficult'))) {
+      esc('high'); r.reasons.push('Respiratory disease suspected in pigs — PRRS or bacterial pneumonia');
+      r.immediateActions.push('Separate coughing pigs immediately. Respiratory infections spread very fast in crowded pig pens.');
+      r.mediumTermActions.push('Improve ventilation in pig houses — poor airflow is the primary driver of respiratory disease in pigs.');
+      r.referrals.push({ who:'LGA Veterinary Officer', why:'Pig respiratory diseases require proper diagnosis to choose the correct antibiotic treatment.', urgency:'Within 48 hours' });
+    }
+
+    // Scours / diarrhoea in piglets
+    if (allText.includes('scour') || (allText.includes('diarrhoea') && (allText.includes('piglet') || allText.includes('weaner')))) {
+      esc('medium'); r.reasons.push('Piglet scours (diarrhoea) — common but can be rapidly fatal in young pigs through dehydration');
+      r.immediateActions.push('Provide oral rehydration: 1 litre clean water + 1 teaspoon salt + 1 tablespoon sugar. Force-feed if necessary.');
+      r.immediateActions.push('Keep piglets warm and dry — cold + dehydration kills very fast in neonates.');
+      r.mediumTermActions.push('Ensure sow is vaccinated against E. coli and rotavirus before farrowing. Colostrum intake in first 6 hours is critical.');
+    }
+
+    // Mouldy feed
+    if (allText.includes('mould') || allText.includes('mold') || allText.includes('musty')) {
+      esc('medium'); r.reasons.push('Mycotoxin contamination from mouldy feed suspected');
+      r.immediateActions.push('REMOVE mouldy feed IMMEDIATELY. Dispose of it away from pigs, poultry, and other animals.');
+      r.doNot.push('Do NOT feed mouldy maize, cassava, or any mouldy grain to pigs — mycotoxins cause reproductive failure, liver damage, and immunosuppression.');
+    }
+  }
+
+  // ── UNIVERSAL: fallback if no specific condition matched ─────────────────
+  if (r.reasons.length === 0) {
+    r.reasons.push('No specific emergency condition identified from the information provided');
+    r.homeCare.push('Monitor the animals closely. Record daily: number sick, symptoms, deaths, and any changes.');
+    r.mediumTermActions.push('If condition worsens or new animals are affected, seek veterinary advice immediately.');
+    r.referrals.push({ who:'Local LGA Veterinary Officer', why:'Baseline check — bring a detailed record of symptoms, onset, and management history.', urgency:'Within the week' });
+  }
+
+  return r;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REFERRAL NOTE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function makeReferralNote() {
+  const f = state.farmer;
+  const sp = state.species;
+  const res = state.result;
+  const spConf = SPECIES_CONFIG[sp] || {};
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  return `ANIMAL HUSBANDRY CONSULTATION RECORD
+──────────────────────────────
+Date: ${today}
+Farmer: ${f.name} · ${f.village}${f.phone?'\nPhone: '+f.phone:''}
+Species: ${spConf.emoji||''} ${spConf.label||sp}
+
+SYMPTOMS REPORTED:
+${Object.entries(state.intake).filter(([,v])=>v&&v.trim()).map(([k,v])=>k.toUpperCase().replace(/_/g,' ')+': '+v).join('\n')}
+
+ADVISORY OUTCOME:
+URGENCY: ${res.urgency.toUpperCase()}
+${res.reasons[0]||''}
+${res.isolate?'\n⚠ ISOLATION REQUIRED — separate sick animals from healthy ones NOW':''}
+
+REFERRALS: ${res.referrals.map(r=>r.who).join('; ')||'None'}
+
+Advisor: Community Animal Husbandry Ambassador
+Programme: vAI Community Impact, ${f.village}
+──────────────────────────────`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER STEPS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderFarmer() {
+  const el = h('div', null);
+  el.append(h('div', { className:'card' },
+    h('div', { className:'card-title' }, '🐄 Farmer Details'),
+    h('div', { className:'card-subtitle' }, 'Who are you consulting with today?'),
+    h('div', { className:'field' },
+      h('label', { className:'label' }, 'Farmer Name', h('span', { className:'req' }, ' *')),
+      h('input', { className:'input', type:'text', placeholder:'e.g. Mr Emeka Okon', value:state.farmer.name, onInput:e=>{ state.farmer.name=e.target.value; render(); } })
+    ),
+    h('div', { className:'field' },
+      h('label', { className:'label' }, 'Village'),
+      h('select', { className:'select', onChange:e=>{ state.farmer.village=e.target.value; render(); } },
+        ...VILLAGES.map(v => { const opt=h('option',{value:v},v); if(v===state.farmer.village) opt.selected=true; return opt; })
+      )
+    ),
+    h('div', { className:'field' },
+      h('label', { className:'label' }, 'Phone (optional)'),
+      h('input', { className:'input', type:'tel', placeholder:'e.g. 08012345678', value:state.farmer.phone, onInput:e=>{ state.farmer.phone=e.target.value; } })
+    ),
+    h('div', { className:'field' },
+      h('label', { className:'label' }, 'Notes (optional)'),
+      h('textarea', { className:'textarea', rows:'2', placeholder:'e.g. second visit, referred by health navigator...', onInput:e=>{ state.farmer.notes=e.target.value; } }, state.farmer.notes)
+    )
+  ));
+  return el;
+}
+
+function renderSpecies() {
+  const el = h('div', null);
+  el.append(h('div', { className:'card' },
+    h('div', { className:'card-title' }, '🐾 Select Species'),
+    h('div', { className:'card-subtitle' }, 'Which animal needs assessment?'),
+    h('div', { className:'btn-group', style:'flex-direction:column;' },
+      ...Object.entries(SPECIES_CONFIG).map(([key, sp]) => {
+        const active = state.species === key;
+        const btn = h('button', {
+          type:'button',
+          className:'btn-choice' + (active?' active':''),
+          style:'text-align:left;display:flex;align-items:center;gap:10px;',
+          onClick:()=>{ state.species=key; render(); }
+        },
+          h('span', { style:'font-size:24px;' }, sp.emoji),
+          h('div', null,
+            h('div', { style:'font-weight:700;font-size:14px;' }, sp.label),
+            h('div', { style:'font-size:11px;color:var(--gray-400);font-weight:400;' }, sp.desc)
+          )
+        );
+        return btn;
+      })
+    )
+  ));
+  return el;
+}
+
+function renderIntake() {
+  const fields = INTAKE_FIELDS[state.species] || [];
+  const el = h('div', null);
+
+  // Emergency context banner for pigs
+  if (state.species === 'pigs') {
+    el.append(h('div', { className:'alert alert-red' },
+      h('span', { className:'alert-icon' }, '🚨'),
+      h('div', null,
+        h('div', { className:'alert-title' }, 'ASF Risk — Read Before Proceeding'),
+        h('div', { className:'alert-text' }, 'If pigs are showing rapid deaths, reddish/bluish skin patches, or bloody diarrhoea — suspect African Swine Fever immediately. Fill out the form and get the advisory.')
+      )
+    ));
+  }
+
+  el.append(h('div', { className:'card' },
+    h('div', { className:'card-title' }, SPECIES_CONFIG[state.species].emoji + ' Clinical Intake — ' + SPECIES_CONFIG[state.species].label),
+    h('div', { className:'card-subtitle' }, 'Complete as many fields as possible. Required fields marked *'),
+    ...fields.map(field => {
+      const tipId = 'tip_' + field.key;
+      const open = state.openTooltip === tipId;
+      const container = h('div', { className:'field' });
+
+      const labelEl = h('label', { className:'label' },
+        field.label,
+        field.required ? h('span', { className:'req' }, ' *') : null,
+        ' ',
+        h('button', { type:'button', className:'tooltip-btn', onClick:()=>{ state.openTooltip = open ? null : tipId; render(); } }, open ? '▲ hide tip' : '💡 tip')
+      );
+      container.append(labelEl);
+
+      if (open) container.append(h('div', { className:'tooltip-box' }, field.tooltip));
+
+      if (field.danger) {
+        container.append(h('div', { style:'font-size:11px;color:var(--red-600);font-weight:600;margin-bottom:4px;' }, '⚠ Danger indicator — answer carefully'));
+      }
+
+      const ta = h('textarea', {
+        className:'textarea', rows:'3', placeholder:field.placeholder,
+        onInput:e=>{ state.intake[field.key]=e.target.value; }
+      }, state.intake[field.key]||'');
+      container.append(ta);
+      return container;
+    })
+  ));
+  return el;
+}
+
+function renderResult() {
+  const res = state.result;
+  const f = state.farmer;
+  const sp = SPECIES_CONFIG[state.species];
+  const els = [];
+
+  // Emergency isolation banner
+  if (res.isolate) {
+    els.push(h('div', { className:'alert alert-red' },
+      h('span', { className:'alert-icon' }, '🚨'),
+      h('div', null,
+        h('div', { className:'alert-title' }, 'ISOLATION REQUIRED — Do This First'),
+        h('div', { className:'alert-text' }, 'Separate ALL sick animals from healthy ones IMMEDIATELY. Use a different pen, different water, different tools. Stop all movement of animals on and off this farm NOW.')
+      )
+    ));
+  }
+
+  // Urgency banner
+  const urgencyIcons = { emergency:'🔴 EMERGENCY', high:'🟠 HIGH URGENCY', medium:'🟡 MEDIUM URGENCY', low:'🟢 LOW URGENCY' };
+  const urgencyDesc = { emergency:'STOP all animal movement. Isolate. Report to veterinary authority immediately.', high:'Act today — deaths or rapid spread requires urgent vet contact.', medium:'Act this week — isolate, check vaccines, contact animal-health worker.', low:'Monitor and improve care — no immediate danger.' };
+  els.push(h('div', { className:'result-banner ' + res.urgency },
+    h('div', { className:'result-level' }, urgencyIcons[res.urgency]||res.urgency),
+    h('div', { className:'result-patient' }, sp.emoji + ' ' + sp.label + ' · ' + f.name + ' · ' + f.village),
+    h('div', { className:'result-reason' }, urgencyDesc[res.urgency]||''),
+    ...res.reasons.map(r => h('div', { className:'result-reason', style:'margin-top:4px;font-size:12px;' }, '• ' + r))
+  ));
+
+  // Immediate actions
+  if (res.immediateActions.length) {
+    els.push(h('div', { className:'card' },
+      h('div', { className:'result-section-title' }, '🚨 Immediate Actions Required'),
+      ...res.immediateActions.map(a => h('div', { className:'result-item action' }, '▶ ' + a))
+    ));
+  }
+
+  // Referrals
+  if (res.referrals.length) {
+    els.push(h('div', { className:'card' },
+      h('div', { className:'result-section-title' }, '📞 Seek Veterinary Help'),
+      ...res.referrals.map(r => h('div', { className:'result-item referral' },
+        h('div', { style:'font-weight:700;font-size:13px;' }, r.who),
+        h('div', { style:'font-size:12px;margin-top:2px;color:var(--gray-600);' }, r.why),
+        h('div', { style:'font-size:11px;margin-top:3px;font-weight:700;color:var(--red-600);' }, '⏰ ' + r.urgency)
+      ))
+    ));
+  }
+
+  // Medium term
+  if (res.mediumTermActions.length) {
+    els.push(h('div', { className:'card' },
+      h('div', { className:'result-section-title' }, '📋 Follow-Up Actions (This Week)'),
+      ...res.mediumTermActions.map(a => h('div', { className:'result-item rec' }, '✓ ' + a))
+    ));
+  }
+
+  // Home care
+  if (res.homeCare.length) {
+    els.push(h('div', { className:'card' },
+      h('div', { className:'result-section-title' }, '🏡 Home Care'),
+      ...res.homeCare.map(hc => h('div', { className:'result-item home' }, '✓ ' + hc))
+    ));
+  }
+
+  // Do not
+  if (res.doNot.length) {
+    els.push(h('div', { className:'card' },
+      h('div', { className:'result-section-title', style:'color:var(--red-700);' }, '🚫 Do NOT'),
+      ...res.doNot.map(d => h('div', { className:'result-item warning' }, '✗ ' + d))
+    ));
+  }
+
+  // Warning signs
+  if (res.warnings.length) {
+    els.push(h('div', { className:'card' },
+      h('div', { className:'result-section-title', style:'color:var(--red-700);' }, '⚠️ Warning Signs — Return If:'),
+      ...res.warnings.map(w => h('div', { className:'result-item warning' }, '🚨 ' + w))
+    ));
+  }
+
+  // Referral note (collapsible)
+  const noteCard = h('div', { className:'card' });
+  noteCard.append(h('button', { type:'button', style:'width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;padding:0;', onClick:()=>{ state.showReferral=!state.showReferral; render(); } },
+    h('div', { className:'result-section-title', style:'margin:0;' }, '📄 Consultation Record'),
+    h('span', { style:'color:var(--gray-400);' }, state.showReferral ? '▾' : '▸')
+  ));
+  if (state.showReferral) noteCard.append(h('pre', { className:'referral-note', style:'margin-top:10px;' }, makeReferralNote()));
+  els.push(noteCard);
+
+  // Save
+  const saveCard = h('div', { className:'card' });
+  const isOnline = navigator.onLine;
+  const notConfigured = SYNC_CONFIG.syncKey === 'CHANGE_ME_BEFORE_DEPLOY';
+
+  if (!state.saved) {
+    if (isOnline && !notConfigured) {
+      const dbBtn = h('button', { type:'button', className:'btn-save', onClick:saveToDatabase }, state.savingToDb ? '⏳ Saving to vAI Database…' : '☁️ Save to vAI Database');
+      dbBtn.disabled = state.savingToDb;
+      saveCard.append(dbBtn);
+      if (state.saveError) saveCard.append(h('div', { style:'margin:8px 0;padding:10px;background:var(--red-50);border-radius:8px;font-size:12px;color:var(--red-700);' }, '⚠️ ' + state.saveError));
+      saveCard.append(h('button', { type:'button', className:'btn-reset', style:'margin-top:8px;', onClick:saveCurrent }, '💾 Save Offline Instead'));
+    } else {
+      saveCard.append(h('button', { type:'button', className:'btn-save', onClick:saveCurrent }, '💾 Save Offline'));
+      saveCard.append(h('div', { style:'font-size:12px;color:var(--amber-700);text-align:center;margin-top:8px;' }, '📡 No connection — consultation will sync to vAI database when back online.'));
+    }
+  } else {
+    if (state.saveMode === 'database') {
+      saveCard.append(h('div', { className:'alert alert-green', style:'margin:0 0 8px;' },
+        h('span', { className:'alert-icon' }, '✅'),
+        h('div', null, h('div', { className:'alert-title' }, 'Saved to vAI Database'), h('div', { className:'alert-text' }, 'Consultation is in the NextVillage platform and available for follow-up.'))
+      ));
+    } else {
+      saveCard.append(h('div', { className:'alert alert-green', style:'margin:0 0 8px;' },
+        h('span', { className:'alert-icon' }, '💾'),
+        h('div', null, h('div', { className:'alert-title' }, 'Saved to device'), h('div', { className:'alert-text' }, getPending() + ' consultation' + (getPending()!==1?'s':'') + ' pending sync. Tap ⬆ when online to upload.'))
+      ));
+    }
+  }
+  saveCard.append(h('button', { type:'button', className:'btn-reset', style:'margin-top:8px;', onClick:resetAll }, 'Start New Consultation'));
+  els.push(saveCard);
+
+  els.push(h('div', { className:'disclaimer' }, '⚠️ ANIMAL HUSBANDRY ADVISORY SUPPORT ONLY — Rule-based recommendations. For reportable disease outbreaks (ASF, PPR, FMD, CBPP, HPAI), contact the State Ministry of Agriculture or Federal Dept of Veterinary Services immediately. The advisor must use their own judgement and training.\nBuilt for vAI Community Impact Programme, Oloibiri & Ibiade.'));
+
+  return h('div', null, ...els);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'vai_offline_animal_consultations';
+function loadSaved() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]; } catch{ return []; } }
+
+function saveCurrent() {
+  const list = loadSaved();
+  list.unshift({
+    id:'animal_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    ts:new Date().toISOString(),
+    farmer:state.farmer,
+    species:state.species,
+    intake:state.intake,
+    result:state.result,
+    synced:false,
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  state.saved = true;
+  state.saveMode = 'offline';
+  updatePendingBadge();
+  render();
+}
+
+async function saveToDatabase() {
+  state.savingToDb = true;
+  state.saveError = null;
+  render();
+  try {
+    const payload = {
+      farmer:state.farmer,
+      species:state.species,
+      intake:state.intake,
+      result:state.result,
+      ts:new Date().toISOString(),
+      syncKey:SYNC_CONFIG.syncKey,
+      navigatorUserId:SYNC_CONFIG.navigatorUserId,
+    };
+    const resp = await fetch(SYNC_CONFIG.functionUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ consultations:[{ ...payload, id:'animal_'+Date.now()+'_direct', synced:false }] }),
+    });
+    if (!resp.ok) throw new Error('Server error ' + resp.status);
+    state.saved = true;
+    state.saveMode = 'database';
+  } catch(e) {
+    state.saveError = 'Could not save to vAI database: ' + e.message + '. Use offline save instead.';
+  } finally {
+    state.savingToDb = false;
+    render();
+  }
+}
+
+function getPending() { return loadSaved().filter(a=>!a.synced).length; }
+function updatePendingBadge() {
+  const n = getPending();
+  const btn = document.getElementById('btn-sync-header');
+  const ct = document.getElementById('pending-count');
+  if (n>0) { btn.classList.remove('hidden'); ct.textContent=n; } else { btn.classList.add('hidden'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYNC ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let syncPanelOpen = false;
+let syncing = false;
+
+function openSyncPanel() { syncPanelOpen=true; renderSyncPanel(); }
+function closeSyncPanel() { syncPanelOpen=false; const el=document.getElementById('sync-overlay'); if(el) el.remove(); }
+
+function renderSyncPanel() {
+  let overlay = document.getElementById('sync-overlay');
+  if (overlay) overlay.remove();
+  if (!syncPanelOpen) return;
+
+  const saved = loadSaved();
+  const pending = saved.filter(a=>!a.synced);
+  const synced = saved.filter(a=>a.synced);
+  const isOnline = navigator.onLine;
+
+  overlay = h('div', { className:'sync-overlay', id:'sync-overlay', onClick:e=>{ if(e.target===overlay) closeSyncPanel(); } },
+    h('div', { className:'sync-panel', onClick:e=>e.stopPropagation() },
+      h('div', { className:'sync-title' }, '📡 Sync Animal Consultations'),
+      h('div', { className:'sync-sub' }, isOnline ? `You are ONLINE. ${pending.length} consultation${pending.length!==1?'s':''} ready to sync.` : 'You are OFFLINE. Connect to sync.'),
+      ...(pending.length>0 ? [
+        h('div', { className:'section-label', style:'margin-top:8px;' }, 'Pending Upload'),
+        ...pending.map(a=>h('div', { className:'sync-item' },
+          h('div', null,
+            h('div', { className:'name' }, a.farmer?.name||'Unknown'),
+            h('div', { className:'meta' }, (SPECIES_CONFIG[a.species]?.emoji||'🐾')+' '+(a.result?.urgency||'').toUpperCase()+' · '+(a.farmer?.village||'')+' · '+new Date(a.ts).toLocaleDateString())
+          ),
+          h('span', { className:'status '+(a._syncError?'error':'pending') }, a._syncError?'✗ Error':'⏳ Pending')
+        ))
+      ] : [h('div', { style:'text-align:center;padding:20px;color:var(--gray-400);font-size:13px;' }, '✅ All consultations synced!')]),
+      ...(synced.length>0 ? [
+        h('div', { className:'section-label', style:'margin-top:12px;' }, 'Recently Synced'),
+        ...synced.slice(0,5).map(a=>h('div', { className:'sync-item' },
+          h('div', null, h('div', { className:'name' }, a.farmer?.name||'Unknown'), h('div', { className:'meta' }, new Date(a.ts).toLocaleDateString())),
+          h('span', { className:'status synced' }, '✓ Synced')
+        ))
+      ] : []),
+      isOnline&&pending.length>0
+        ? h('button', { className:'btn-sync go', id:'btn-do-sync', disabled:syncing, onClick:doSync }, syncing?'⏳ Syncing…':`⬆ Sync ${pending.length} Consultation${pending.length!==1?'s':''}`)
+        : (!isOnline&&pending.length>0 ? h('div', { style:'text-align:center;padding:12px;color:var(--amber-700);font-size:13px;font-weight:600;' }, '📡 No internet. Consultations are safe on your device.') : null),
+      h('button', { className:'btn-sync close', onClick:closeSyncPanel }, 'Close')
+    )
+  );
+  document.body.appendChild(overlay);
+}
+
+async function doSync() {
+  if (syncing) return;
+  syncing = true;
+  renderSyncPanel();
+  const saved = loadSaved();
+  const pending = saved.filter(a=>!a.synced);
+  try {
+    const response = await fetch(SYNC_CONFIG.functionUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ consultations:pending.map(a=>({...a,syncKey:SYNC_CONFIG.syncKey,navigatorUserId:SYNC_CONFIG.navigatorUserId})) }),
+    });
+    if (!response.ok) throw new Error('Server '+response.status);
+    const data = await response.json();
+    const syncedIds = new Set((data.synced||[]).map(s=>s.id));
+    const updated = saved.map(a=>syncedIds.has(a.id)?{...a,synced:true}:a);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    updatePendingBadge();
+  } catch(e) {
+    pending.forEach(a=>{ a._syncError=e.message; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  } finally {
+    syncing=false;
+    renderSyncPanel();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function render() {
+  // Step bar
+  const bar = document.getElementById('step-bar');
+  bar.innerHTML = '';
+  STEPS.forEach((s,i) => {
+    const cls = i===state.step?'step-pill current':i<state.step?'step-pill done':'step-pill upcoming';
+    bar.append(h('button',{className:cls,type:'button',disabled:i>state.step+1,onClick:()=>{ if(i<state.step) goStep(i); }},(i<state.step?'✓ ':'')+s.label));
+    if (i<STEPS.length-1) bar.append(h('div',{className:'step-line'+(i<state.step?' done':'')}));
+  });
+
+  // Content
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const renderers = [renderFarmer, renderSpecies, renderIntake, renderResult];
+  content.append(renderers[state.step]());
+
+  // Footer
+  const footer = document.getElementById('footer');
+  const inner = document.getElementById('footer-inner');
+  if (state.step===3) { footer.style.display='none'; } else {
+    footer.style.display = '';
+    inner.innerHTML = '';
+    if (state.step>0) inner.append(h('button',{type:'button',className:'btn-nav secondary',onClick:goBack},'← Back'));
+    const labels = ['Next ▶','Next ▶','Run Advisory ▶'];
+    const disabled = (state.step===0 && !state.farmer.name.trim()) ||
+                     (state.step===1 && !state.species) ||
+                     (state.step===2 && !(INTAKE_FIELDS[state.species]||[]).filter(f=>f.required).every(f=>state.intake[f.key]?.trim()));
+    inner.append(h('button',{type:'button',className:'btn-nav primary',disabled,onClick:goNext},labels[state.step]));
+  }
+
+  if (state._lastStep!==state.step) { window.scrollTo({top:0,behavior:'smooth'}); state._lastStep=state.step; }
+}
+
+function goStep(i) { state.step=i; render(); }
+function goNext() {
+  if (state.step===2) { state.result=computeAdvisory(); state.step=3; }
+  else if (state.step<3) { state.step++; }
+  render();
+}
+function goBack() { if(state.step>0) { state.step--; render(); } }
+
+function resetAll() {
+  state = {
+    step:0, farmer:{name:'',village:'Oloibiri',phone:'',animals:[],notes:''},
+    species:null, intake:{}, result:null, saved:false, saveMode:null,
+    savingToDb:false, saveError:null, openTooltip:null, showReferral:false, _lastStep:-1,
+  };
+  render();
+}
+
+function updateConnectivity() {
+  const badge = document.getElementById('badge-connectivity');
+  if (navigator.onLine) { badge.className='badge-online'; badge.innerHTML='🟢 Online'; }
+  else { badge.className='badge-offline'; badge.innerHTML='📡 Offline'; }
+}
+window.addEventListener('online', updateConnectivity);
+window.addEventListener('offline', updateConnectivity);
+
+updatePendingBadge();
+updateConnectivity();
+render();
+</script>
+</body>
+</html>
