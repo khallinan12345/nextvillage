@@ -1867,29 +1867,37 @@ ${prior.impact_arc}
                     {/* Instructions panel */}
                     {grandShowInstructions && (
                       <div className="px-4 py-4 bg-amber-50 border-b border-amber-200 text-xs text-gray-700 leading-relaxed space-y-3">
+                        <div className="bg-amber-100 rounded-lg p-3 border border-amber-300">
+                          <p className="font-bold text-amber-900 mb-1">The most important thing</p>
+                          <p className="text-amber-800">Help the people you talk with make real change that improves their lives and their work — whether they are a farmer, fisher, animal herder, entrepreneur, or anyone else in your community. The Grand Challenge is not about using AI for its own sake. It is about what actually gets better for a real person because you showed up and helped.</p>
+                        </div>
                         <div>
                           <p className="font-bold text-amber-800 mb-1">What is the Grand Challenge?</p>
-                          <p>A 3-month community impact project. You pick a real person in your community — a farmer, fisher, trader, family member — and work with them over multiple visits to solve a real problem using AI. You document everything in your field journal and write your impact story at the end.</p>
+                          <p>A 3-month community impact project. You choose a real person in your community and work with them over multiple visits to solve a real problem. You use AI as your tool, document what happens, and write your story at the end. The learner with the deepest, most honest, most documented impact wins.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-amber-800 mb-1">How to use the Community Impact pages</p>
+                          <p>The Agriculture, Fishing, Healthcare, Entrepreneurship, Animal Husbandry, and AI Ambassadors pages are your AI toolkit. When you are with a farmer who has a crop disease, open the Agriculture page and describe the problem — copy the AI's advice and share it with the farmer. When you are helping a fisher, use the Fishing page. When you are with an entrepreneur, use the Entrepreneurship page. You can copy and paste observations, symptoms, and solutions directly from those pages into your field notes here. Use the tools. That is what they are for.</p>
                         </div>
                         <div>
                           <p className="font-bold text-amber-800 mb-1">Field notes</p>
-                          <p>Each time you visit your community member, add a field note. Describe what the situation was when you arrived, what you did with AI to help, and what changed after. You can add field notes from any Community Impact page — Agriculture, Healthcare, Fishing, and others.</p>
+                          <p>Each time you visit, add a field note. Three questions: what was the situation when you arrived? what did you do with AI to help? what changed after? Short and honest is better than long and vague. A field note that says "Grace removed 12 infected cassava plants after I showed her the AI diagnosis" is stronger than one that says "I helped a farmer with her crops."</p>
                         </div>
                         <div>
                           <p className="font-bold text-amber-800 mb-1">The impact arc</p>
-                          <p>Your impact arc is your story in your own words — the full picture of what you did over the quarter. Start with the problem, describe your visits and what you did with AI, and end with what changed for the person or community you helped. Be specific and honest.</p>
+                          <p>Your impact arc is your story in your own words — the full picture across the whole quarter. Start with the problem, describe what you did visit by visit, and end with what actually changed. What is different now for this person or their family or their business? Be specific. Be honest. The best stories are the ones that show real struggle and real progress.</p>
                         </div>
                         <div>
                           <p className="font-bold text-amber-800 mb-1">How you are evaluated</p>
-                          <p>An AI agent reads your field notes and impact arc and evaluates your submission on four dimensions: real documented change, sustained engagement over time, quality of evidence, and how well AI was used as a tool. You earn an impact tier — Seed, Scout, Bridge, Builder, or Village Leader — based on what you actually did.</p>
+                          <p>An AI agent evaluates every submission on: real documented change (did something actually get better?), sustained engagement (did you go back more than once?), quality of evidence (are your field notes specific and honest?), and effective use of AI (did the tools actually help?). You earn an impact tier — Seed, Scout, Bridge, Builder, or Village Leader — based on what you did, not what you planned to do.</p>
                         </div>
                         <div>
                           <p className="font-bold text-amber-800 mb-1">The winner</p>
-                          <p>On the deadline date, the AI agent compares all submissions and selects the Grand Challenge winner — the learner whose work shows the deepest, most documented, most honest community impact. The winner is announced on {new Date(grandChallenge.winner_announced_date).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})}.</p>
+                          <p>On the deadline date the AI agent compares all submissions and selects the Grand Challenge winner — the learner whose work shows the deepest, most documented, most honest community impact. The winner is announced on {new Date(grandChallenge.winner_announced_date).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})}.</p>
                         </div>
                         <div>
                           <p className="font-bold text-amber-800 mb-1">Carry over</p>
-                          <p>If you worked on a community problem in a previous quarter, you can carry that work forward. Your prior arc becomes the foundation and you add new developments on top. Expanding real impact over multiple quarters is recognised and rewarded.</p>
+                          <p>If you worked on a community problem in a previous quarter, carry it forward. Your prior story becomes the foundation and you add what happened next. Expanding real impact over multiple quarters is recognised and rewarded — a 6-month story of helping a farmer recover from crop disease is more powerful than a 3-month one.</p>
                         </div>
                         <div className="pt-1">
                           <p className="text-amber-700 font-bold">Deadline: {new Date(grandChallenge.submission_deadline).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})} · Winner announced: {new Date(grandChallenge.winner_announced_date).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})}</p>
