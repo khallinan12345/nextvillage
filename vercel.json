@@ -6,17 +6,8 @@
     }
   ],
   "functions": {
-    "api/assess-monthly.ts": {
-      "maxDuration": 300
-    },
-    "api/daily-report.ts": {
-      "maxDuration": 60
-    },
     "api/chat.js": {
       "maxDuration": 300
-    },
-    "api/playground-context-cleanup.ts": {
-      "maxDuration": 30
     },
     "api/playground-context.ts": {
        "maxDuration": 30 
