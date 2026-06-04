@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../ui/Button';
@@ -18,6 +18,27 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<'form' | 'magic-link-sent'>('form');
+
+  // ─── Active user tracking on component mount ──────────────────────────────
+  useEffect(() => {
+    const trackActiveUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        try {
+          await supabase
+            .from('visitor_logs')
+            .upsert(
+              { id: session.user.id, email: session.user.email, created_at: new Date().toISOString() },
+              { onConflict: 'id' }
+            );
+          console.log("Unique visitor tracked!");
+        } catch (err) {
+          console.error("Tracking error:", err);
+        }
+      }
+    };
+    trackActiveUser();
+  }, []);
 
   // ─── Visitor tracking ─────────────────────────────────────────────────────
   const logVisitor = async (userEmail: string, userId: string) => {
