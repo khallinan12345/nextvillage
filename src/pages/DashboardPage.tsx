@@ -30,6 +30,9 @@ import {
   Activity,
   ChevronDown,
   ChevronUp,
+  BookOpen,
+  Calendar,
+  Sparkles,
 } from 'lucide-react';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/ui/Button';
@@ -67,18 +70,28 @@ interface CommunityLeaderEntry {
   multiplier_count: number;
 }
 
-interface WeeklyChampion {
+// ─── Grand Challenge types ───────────────────────────────────────────────────
+
+interface GrandChallenge {
+  quarter: string;
+  start_date: string;
+  submission_deadline: string;
+  winner_announced_date: string;
+  active: boolean;
+}
+
+interface GrandSubmission {
   id: string;
-  org_id: string;
-  week_start: string;
-  week_end: string;
-  champion_user_id: string;
-  champion_name: string;
-  winning_tier: string;
-  winning_tier_label: string;
-  was_tiebreak: boolean;
-  tiebreak_reasoning: string | null;
-  champion_story: string | null;
+  quarter: string;
+  title: string;
+  status: 'draft' | 'submitted' | 'evaluated' | 'awarded' | 'expired';
+  journal_entry_count: number;
+  weeks_documented: number;
+  tier_awarded: string | null;
+  is_quarter_winner: boolean;
+  impact_arc: string;
+  community_impact_slug: string;
+  community_member_name: string | null;
 }
 
 const TIER_COLOURS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
@@ -105,6 +118,14 @@ const SLUG_EMOJI: Record<string, string> = {
   'healthcare':       '🏥',
   'entrepreneurship': '💼',
   'animal-husbandry': '🐾',
+};
+
+const TIER_LABELS_MAP: Record<string, string> = {
+  seed:       'Community Teacher',
+  scout:      'Problem Finder',
+  bridge:     'Community Connector',
+  builder:    'AI for Good',
+  multiplier: 'Village Leader',
 };
 
 // Add interface for dashboard activities with sub_category
@@ -443,9 +464,18 @@ const DashboardPage: React.FC = () => {
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
-  const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
-  const [lastWeekLeaderboard, setLastWeekLeaderboard] = useState<CommunityLeaderEntry[]>([]);
-  const [lastWeekLbLoading, setLastWeekLbLoading]     = useState(false);
+
+  // ── Grand Challenge state ─────────────────────────────────────────────────
+  const [grandChallenge, setGrandChallenge]           = useState<GrandChallenge | null>(null);
+  const [grandSubmission, setGrandSubmission]         = useState<GrandSubmission | null>(null);
+  const [grandLoading, setGrandLoading]               = useState(false);
+  const [grandSaving, setGrandSaving]                 = useState(false);
+  const [grandDraftTitle, setGrandDraftTitle]         = useState('');
+  const [grandDraftArc, setGrandDraftArc]             = useState('');
+  const [grandDraftSlug, setGrandDraftSlug]           = useState('agriculture');
+  const [grandJournalCount, setGrandJournalCount]     = useState(0);
+  const [grandWeeksActive, setGrandWeeksActive]       = useState(0);
+  const [priorSubmissions, setPriorSubmissions]       = useState<GrandSubmission[]>([]);
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
@@ -806,36 +836,176 @@ const DashboardPage: React.FC = () => {
           .limit(10);
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
-
-        // Fetch most recent champion for this org
-        setLastWeekLbLoading(true);
-        const { data: champion } = await supabase
-          .from('weekly_champions')
-          .select('*')
-          .eq('org_id', orgSlug)
-          .order('week_start', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (champion) setLastWeekChampion(champion as WeeklyChampion);
-
-        // Fetch last week's community leaderboard snapshot
-        // (all enrollments awarded in the last 7–14 days)
-        const { data: lastLb } = await supabase
-          .from('community_leaderboard')
-          .select('*')
-          .order('rank', { ascending: true })
-          .limit(10);
-
-        if (lastLb) setLastWeekLeaderboard(lastLb as CommunityLeaderEntry[]);
-
       } finally {
         setChallengeLoading(false);
         setCommunityLbLoading(false);
-        setLastWeekLbLoading(false);
       }
     })();
   }, [user?.id]);
+
+  // ── Fetch Grand Challenge quarter + submission ──────────────────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      setGrandLoading(true);
+      try {
+        // Get active quarter
+        const { data: quarter } = await supabase
+          .from('grand_challenge_quarters')
+          .select('*')
+          .eq('active', true)
+          .single();
+        if (!quarter) return;
+        setGrandChallenge(quarter);
+
+        // Get learner's existing submission for this quarter
+        const { data: sub } = await supabase
+          .from('grand_challenge_submissions')
+          .select('*')
+          .eq('learner_id', user.id)
+          .eq('quarter', quarter.quarter)
+          .maybeSingle();
+
+        if (sub) {
+          setGrandSubmission(sub);
+          setGrandDraftTitle(sub.title ?? '');
+          setGrandDraftArc(sub.impact_arc ?? '');
+          setGrandDraftSlug(sub.community_impact_slug ?? 'agriculture');
+        }
+
+        // Get journal entry count for this quarter
+        const { count } = await supabase
+          .from('community_impact_journal')
+          .select('*', { count: 'exact', head: true })
+          .eq('learner_id', user.id)
+          .gte('visit_date', quarter.start_date)
+          .lte('visit_date', quarter.submission_deadline);
+        setGrandJournalCount(count ?? 0);
+
+        // Get prior submissions for carryover
+        const { data: prior } = await supabase
+          .from('grand_challenge_submissions')
+          .select('id, quarter, title, status, tier_awarded, journal_entry_count, weeks_documented, impact_arc, community_impact_slug, community_member_name, is_quarter_winner')
+          .eq('learner_id', user.id)
+          .neq('quarter', quarter.quarter)
+          .in('status', ['evaluated', 'awarded'])
+          .order('quarter', { ascending: false });
+        setPriorSubmissions(prior ?? []);
+      } finally {
+        setGrandLoading(false);
+      }
+    })();
+  }, [user?.id]);
+
+  // ── Save grand challenge draft ────────────────────────────────────────────
+  const handleSaveGrandDraft = async () => {
+    if (!user?.id || !grandChallenge || !grandDraftTitle.trim()) return;
+    setGrandSaving(true);
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+
+      let orgSlug = 'oloibiri';
+      if (profile?.organization_id) {
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('name')
+          .eq('id', profile.organization_id)
+          .single();
+        orgSlug = org?.name?.toLowerCase().includes('ibiade') ? 'ibiade' : 'oloibiri';
+      }
+
+      if (grandSubmission?.id) {
+        // Update existing draft
+        await supabase
+          .from('grand_challenge_submissions')
+          .update({
+            title:                 grandDraftTitle.trim(),
+            impact_arc:            grandDraftArc.trim(),
+            community_impact_slug: grandDraftSlug,
+            updated_at:            new Date().toISOString(),
+          })
+          .eq('id', grandSubmission.id);
+        setGrandSubmission(prev => prev ? {
+          ...prev,
+          title: grandDraftTitle.trim(),
+          impact_arc: grandDraftArc.trim(),
+        } : prev);
+      } else {
+        // Create new draft
+        const { data: newSub } = await supabase
+          .from('grand_challenge_submissions')
+          .insert({
+            learner_id:            user.id,
+            org_id:                orgSlug,
+            quarter:               grandChallenge.quarter,
+            title:                 grandDraftTitle.trim(),
+            impact_arc:            grandDraftArc.trim() || ' ',
+            community_impact_slug: grandDraftSlug,
+            status:                'draft',
+            journal_entry_count:   grandJournalCount,
+          })
+          .select()
+          .single();
+        if (newSub) setGrandSubmission(newSub);
+      }
+    } finally { setGrandSaving(false); }
+  };
+
+  // ── Submit grand challenge ────────────────────────────────────────────────
+  const handleSubmitGrandChallenge = async () => {
+    if (!grandSubmission?.id || !grandDraftArc.trim()) return;
+    setGrandSaving(true);
+    try {
+      // Count weeks active from journal entries
+      const { data: entries } = await supabase
+        .from('community_impact_journal')
+        .select('visit_date')
+        .eq('learner_id', user!.id)
+        .order('visit_date', { ascending: true });
+
+      let weeksActive = 0;
+      if (entries && entries.length >= 2) {
+        const first = new Date(entries[0].visit_date);
+        const last  = new Date(entries[entries.length - 1].visit_date);
+        weeksActive = Math.ceil((last.getTime() - first.getTime()) / (7 * 86400000)) + 1;
+      }
+
+      await supabase
+        .from('grand_challenge_submissions')
+        .update({
+          status:              'submitted',
+          submitted_at:        new Date().toISOString(),
+          impact_arc:          grandDraftArc.trim(),
+          title:               grandDraftTitle.trim(),
+          journal_entry_count: grandJournalCount,
+          weeks_documented:    weeksActive,
+        })
+        .eq('id', grandSubmission.id);
+
+      setGrandSubmission(prev => prev ? { ...prev, status: 'submitted' } : prev);
+    } finally { setGrandSaving(false); }
+  };
+
+  // ── Carry over prior submission to new quarter ────────────────────────────
+  const handleCarryOver = async (prior: GrandSubmission) => {
+    if (!grandChallenge || !user?.id) return;
+    setGrandDraftTitle(prior.title + ' (continued)');
+    setGrandDraftArc(prior.impact_arc
+      ? `[Continuing from ${prior.quarter}]
+
+${prior.impact_arc}
+
+[New developments this quarter]
+`
+      : '');
+    setGrandDraftSlug(prior.community_impact_slug);
+    // Save immediately as a draft
+    await handleSaveGrandDraft();
+  };
 
   // ── Enroll in weekly challenge then navigate ──────────────────────────────
   const handleChallengeCheckout = async () => {
@@ -868,10 +1038,24 @@ const DashboardPage: React.FC = () => {
       // Navigate to the community impact page, passing enrollment state
       // so the page doesn't need to re-query (avoids race condition)
       const path = SLUG_TO_PATH[weeklyChallenge.community_impact_slug];
+
+      // If enrollment insert returned nothing (duplicate), fetch existing row
+      let enrollmentId = enrollment?.id;
+      if (!enrollmentId) {
+        const { data: existing } = await supabase
+          .from('challenge_enrollments')
+          .select('id, status')
+          .eq('learner_id', user.id)
+          .eq('challenge_id', weeklyChallenge.id)
+          .single();
+        enrollmentId = existing?.id;
+        if (existing) setEnrollmentStatus(existing.status as any);
+      }
+
       if (path) navigate(path, {
         state: {
           challengeEnrollment: {
-            enrollmentId:          enrollment?.id ?? '',
+            enrollmentId:          enrollmentId ?? '',
             challengeId:           weeklyChallenge.id,
             title:                 weeklyChallenge.title,
             description:           weeklyChallenge.description,
@@ -1583,97 +1767,211 @@ const DashboardPage: React.FC = () => {
         ) : (
           <div className="space-y-8">
 
-            {/* ── Community AI Challenge Banner ──────────────────────────── */}
-            {!challengeLoading && weeklyChallenge && (
-              <div className={classNames(
-                'rounded-xl border overflow-hidden shadow-sm',
-                enrollmentStatus === 'active' || enrollmentStatus === 'submitted'
-                  ? 'border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50'
-                  : enrollmentStatus === 'awarded'
-                  ? 'border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50'
-                  : 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50'
-              )}>
-                <div className="px-5 py-4">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className={classNames(
-                        'w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0',
-                        enrollmentStatus === 'awarded' ? 'bg-purple-100' : 'bg-white shadow-sm'
-                      )}>
-                        {SLUG_EMOJI[weeklyChallenge.community_impact_slug] ?? '🌍'}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className={classNames(
-                            'text-xs font-bold uppercase tracking-wide',
-                            enrollmentStatus === 'active' || enrollmentStatus === 'submitted' ? 'text-emerald-600'
-                            : enrollmentStatus === 'awarded' ? 'text-purple-600'
-                            : 'text-blue-600'
-                          )}>
-                            {enrollmentStatus === 'awarded' ? '✅ Challenge Completed'
-                             : enrollmentStatus === 'active' || enrollmentStatus === 'submitted' ? '🎯 Challenge Checked Out'
-                             : '🌍 Community AI Challenge — This Week'}
-                          </span>
-                          <span className={classNames(
-                            'text-xs px-2 py-0.5 rounded-full font-semibold border',
-                            TIER_COLOURS[weeklyChallenge.tier_target]?.bg ?? 'bg-gray-50',
-                            TIER_COLOURS[weeklyChallenge.tier_target]?.text ?? 'text-gray-600',
-                            TIER_COLOURS[weeklyChallenge.tier_target]?.border ?? 'border-gray-200',
-                          )}>
-                            {weeklyChallenge.tier_target} tier
-                          </span>
-                          {(() => {
-                            const daysLeft = Math.ceil((new Date(weeklyChallenge.week_end).getTime() - Date.now()) / 86400000);
-                            return daysLeft > 0
-                              ? <span className="text-xs text-gray-400">{daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>
-                              : null;
-                          })()}
-                        </div>
-                        <h3 className="text-base font-bold text-gray-900 leading-tight mb-1">{weeklyChallenge.title}</h3>
-                        <p className="text-sm text-gray-600 leading-relaxed">{weeklyChallenge.description}</p>
-                      </div>
-                    </div>
+            {/* ── Community AI Challenges — Two Column Layout ─────────── */}
+            {(!challengeLoading || !grandLoading) && (weeklyChallenge || grandChallenge) && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                    <div className="flex-shrink-0 flex flex-col gap-2 items-end">
+                {/* ── Left: Weekly Challenge ── */}
+                {weeklyChallenge && (
+                  <div className={classNames(
+                    'rounded-xl border overflow-hidden',
+                    enrollmentStatus === 'active' || enrollmentStatus === 'submitted'
+                      ? 'border-emerald-300 bg-emerald-50'
+                      : enrollmentStatus === 'awarded'
+                      ? 'border-purple-300 bg-purple-50'
+                      : 'border-blue-300 bg-blue-50'
+                  )}>
+                    <div className="px-4 py-3 border-b border-black/5 flex items-center gap-2">
+                      <Globe2 size={15} className="text-blue-600 flex-shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wide text-blue-600">Weekly Challenge</span>
+                      {(() => {
+                        const daysLeft = Math.ceil((new Date(weeklyChallenge.week_end).getTime() - Date.now()) / 86400000);
+                        return daysLeft > 0
+                          ? <span className="ml-auto text-xs text-gray-400">{daysLeft}d left</span>
+                          : null;
+                      })()}
+                    </div>
+                    <div className="px-4 py-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-white flex-shrink-0">
+                          {SLUG_EMOJI[weeklyChallenge.community_impact_slug] ?? '🌍'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                            <span className={classNames(
+                              'text-xs px-2 py-0.5 rounded-full font-semibold border',
+                              TIER_COLOURS[weeklyChallenge.tier_target]?.bg ?? 'bg-gray-50',
+                              TIER_COLOURS[weeklyChallenge.tier_target]?.text ?? 'text-gray-600',
+                              TIER_COLOURS[weeklyChallenge.tier_target]?.border ?? 'border-gray-200',
+                            )}>
+                              {weeklyChallenge.tier_target}
+                            </span>
+                            {enrollmentStatus === 'awarded' && <span className="text-xs text-purple-600 font-bold">✅ Completed</span>}
+                            {(enrollmentStatus === 'active' || enrollmentStatus === 'submitted') && <span className="text-xs text-emerald-600 font-bold">🎯 Active</span>}
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900 leading-tight mb-1">{weeklyChallenge.title}</h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">{weeklyChallenge.description}</p>
+                        </div>
+                      </div>
+                      {(enrollmentStatus === 'active' || enrollmentStatus === 'submitted') && (
+                        <div className="bg-white/70 rounded-lg p-2.5 mb-3">
+                          <p className="text-xs font-bold text-emerald-700 mb-0.5">Your mission:</p>
+                          <p className="text-xs text-gray-700">{weeklyChallenge.challenge_instruction}</p>
+                        </div>
+                      )}
                       {enrollmentStatus === 'none' ? (
-                        <button
-                          onClick={handleChallengeCheckout}
-                          disabled={enrolling}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-colors whitespace-nowrap"
-                        >
-                          {enrolling
-                            ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Checking out…</>
-                            : <><ArrowRight size={15} /> Take this challenge</>
-                          }
-                        </button>
-                      ) : enrollmentStatus === 'awarded' ? (
-                        <button
-                          onClick={() => navigate(SLUG_TO_PATH[weeklyChallenge.community_impact_slug] ?? '/')}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl transition-colors"
-                        >
-                          <ArrowRight size={15} /> View page
+                        <button onClick={handleChallengeCheckout} disabled={enrolling}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-colors">
+                          {enrolling ? <><div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Checking out…</>
+                            : <><ArrowRight size={13} /> Take this challenge</>}
                         </button>
                       ) : (
-                        <button
-                          onClick={() => navigate(SLUG_TO_PATH[weeklyChallenge.community_impact_slug] ?? '/')}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-colors"
-                        >
-                          <ArrowRight size={15} /> Continue challenge
+                        <button onClick={() => navigate(SLUG_TO_PATH[weeklyChallenge.community_impact_slug] ?? '/')}
+                          className={classNames('w-full flex items-center justify-center gap-2 px-4 py-2 text-white font-bold text-xs rounded-lg transition-colors',
+                            enrollmentStatus === 'awarded' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-emerald-600 hover:bg-emerald-700')}>
+                          <ArrowRight size={13} /> {enrollmentStatus === 'awarded' ? 'View page' : 'Continue challenge'}
                         </button>
                       )}
                     </div>
                   </div>
+                )}
 
-                  {/* Expanded detail when enrolled */}
-                  {(enrollmentStatus === 'active' || enrollmentStatus === 'submitted') && (
-                    <div className="mt-3 pt-3 border-t border-emerald-200">
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-xs font-bold text-emerald-700 mb-1">Your mission:</p>
-                        <p className="text-sm text-gray-700">{weeklyChallenge.challenge_instruction}</p>
-                      </div>
+                {/* ── Right: Grand Challenge ── */}
+                {grandChallenge && (
+                  <div className={classNames(
+                    'rounded-xl border overflow-hidden',
+                    grandSubmission?.status === 'awarded' ? 'border-amber-400 bg-amber-50'
+                    : grandSubmission?.status === 'submitted' || grandSubmission?.status === 'evaluated' ? 'border-orange-300 bg-orange-50'
+                    : grandSubmission?.status === 'draft' ? 'border-amber-300 bg-amber-50'
+                    : 'border-amber-200 bg-amber-50'
+                  )}>
+                    <div className="px-4 py-3 border-b border-black/5 flex items-center gap-2">
+                      <Trophy size={15} className="text-amber-600 flex-shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wide text-amber-700">Grand Challenge · {grandChallenge.quarter}</span>
+                      {(() => {
+                        const daysLeft = Math.ceil((new Date(grandChallenge.submission_deadline).getTime() - Date.now()) / 86400000);
+                        return daysLeft > 0
+                          ? <span className="ml-auto text-xs text-gray-400">{daysLeft}d to deadline</span>
+                          : <span className="ml-auto text-xs text-red-500 font-bold">Deadline passed</span>;
+                      })()}
                     </div>
-                  )}
-                </div>
+                    <div className="px-4 py-4">
+
+                      {/* Winner state */}
+                      {grandSubmission?.status === 'awarded' && grandSubmission.is_quarter_winner ? (
+                        <div className="text-center py-2">
+                          <div className="text-3xl mb-2">🏆</div>
+                          <p className="text-sm font-bold text-amber-800 mb-1">Grand Challenge Winner!</p>
+                          <p className="text-xs text-amber-700 mb-3">{grandSubmission.title}</p>
+                          <p className="text-xs text-gray-500">{TIER_LABELS_MAP[grandSubmission.tier_awarded ?? ''] ?? grandSubmission.tier_awarded}</p>
+                        </div>
+
+                      /* Submitted / evaluated state */
+                      ) : grandSubmission?.status === 'submitted' || grandSubmission?.status === 'evaluated' ? (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle size={14} className="text-orange-600" />
+                            <p className="text-xs font-bold text-orange-700">Submitted — awaiting evaluation</p>
+                          </div>
+                          <p className="text-xs text-gray-700 font-medium mb-1">{grandSubmission.title}</p>
+                          <p className="text-xs text-gray-500 mb-3">{grandSubmission.journal_entry_count} field notes · {grandSubmission.weeks_documented} weeks</p>
+                          {grandSubmission.tier_awarded && (
+                            <div className={classNames('inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold border mb-3',
+                              TIER_COLOURS[grandSubmission.tier_awarded]?.bg,
+                              TIER_COLOURS[grandSubmission.tier_awarded]?.text,
+                              TIER_COLOURS[grandSubmission.tier_awarded]?.border,
+                            )}>
+                              <span className={classNames('w-1.5 h-1.5 rounded-full', TIER_COLOURS[grandSubmission.tier_awarded]?.dot)} />
+                              {TIER_LABELS_MAP[grandSubmission.tier_awarded]}
+                            </div>
+                          )}
+                        </div>
+
+                      /* Draft state — show editor */
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="grid grid-cols-3 gap-2 w-full">
+                              <div className="bg-white/70 rounded-lg p-2 text-center">
+                                <p className="text-base font-bold text-amber-700">{grandJournalCount}</p>
+                                <p className="text-xs text-gray-500">field notes</p>
+                              </div>
+                              <div className="bg-white/70 rounded-lg p-2 text-center">
+                                <p className="text-base font-bold text-amber-700">{grandWeeksActive}</p>
+                                <p className="text-xs text-gray-500">weeks active</p>
+                              </div>
+                              <div className="bg-white/70 rounded-lg p-2 text-center col-span-1">
+                                <p className="text-base font-bold text-amber-700">{grandJournalCount >= 4 ? '✓' : `${4 - grandJournalCount}`}</p>
+                                <p className="text-xs text-gray-500">{grandJournalCount >= 4 ? 'ready' : 'more needed'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <input
+                              type="text"
+                              value={grandDraftTitle}
+                              onChange={e => setGrandDraftTitle(e.target.value)}
+                              placeholder="Your story title…"
+                              className="w-full px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
+                            />
+                          </div>
+
+                          <div>
+                            <textarea
+                              value={grandDraftArc}
+                              onChange={e => setGrandDraftArc(e.target.value)}
+                              rows={3}
+                              placeholder="Tell your impact story — what problem did you work on, what did you do with AI, what changed for the community member?"
+                              className="w-full px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-amber-400 resize-none leading-relaxed"
+                            />
+                          </div>
+
+                          {/* Carryover from prior quarters */}
+                          {priorSubmissions.length > 0 && (
+                            <div className="bg-white/60 rounded-lg p-2.5">
+                              <p className="text-xs font-bold text-amber-800 mb-1.5 flex items-center gap-1">
+                                <BookOpen size={11} /> Continue from a previous quarter
+                              </p>
+                              {priorSubmissions.map(prior => (
+                                <div key={prior.id} className="flex items-center justify-between gap-2 py-1 border-b border-amber-100 last:border-0">
+                                  <div className="min-w-0">
+                                    <p className="text-xs text-gray-700 truncate">{prior.title}</p>
+                                    <p className="text-xs text-gray-400">{prior.quarter} · {prior.journal_entry_count} entries</p>
+                                  </div>
+                                  <button
+                                    onClick={() => handleCarryOver(prior)}
+                                    className="flex-shrink-0 text-xs text-amber-700 font-bold hover:text-amber-900 underline"
+                                  >
+                                    carry over
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="flex gap-2">
+                            <button onClick={handleSaveGrandDraft} disabled={grandSaving || !grandDraftTitle.trim()}
+                              className="flex-1 py-1.5 text-xs border border-amber-300 rounded-lg text-amber-800 hover:bg-amber-100 disabled:opacity-40 transition-colors">
+                              {grandSaving ? 'Saving…' : 'Save draft'}
+                            </button>
+                            <button
+                              onClick={handleSubmitGrandChallenge}
+                              disabled={grandSaving || grandJournalCount < 4 || !grandDraftArc.trim() || !grandDraftTitle.trim()}
+                              className="flex-1 py-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg disabled:opacity-40 transition-colors flex items-center justify-center gap-1"
+                            >
+                              <Trophy size={11} /> Submit
+                            </button>
+                          </div>
+                          {grandJournalCount < 4 && (
+                            <p className="text-xs text-center text-gray-400">add {4 - grandJournalCount} more field note{4 - grandJournalCount !== 1 ? 's' : ''} to unlock submission</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 
@@ -1749,60 +2047,6 @@ const DashboardPage: React.FC = () => {
                     })}
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* ── Last Week's Champion ────────────────────────────────────── */}
-            {lastWeekChampion && (
-              <div className="rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 shadow-sm overflow-hidden">
-                <div className="px-5 py-4">
-                  <div className="flex items-start gap-4 flex-wrap">
-                    <div className="w-14 h-14 rounded-xl bg-amber-100 flex items-center justify-center text-3xl flex-shrink-0">
-                      🏆
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold uppercase tracking-wide text-amber-600 mb-1">
-                        Last Week's Community Champion
-                        {lastWeekChampion.was_tiebreak && (
-                          <span className="ml-2 text-amber-400 font-normal normal-case">· decided by tiebreak</span>
-                        )}
-                      </p>
-                      <p className="text-xl font-bold text-gray-900 leading-tight">
-                        {lastWeekChampion.champion_name}
-                      </p>
-                      <span className={classNames(
-                        'inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border mt-1',
-                        TIER_COLOURS[lastWeekChampion.winning_tier]?.bg ?? 'bg-gray-50',
-                        TIER_COLOURS[lastWeekChampion.winning_tier]?.text ?? 'text-gray-700',
-                        TIER_COLOURS[lastWeekChampion.winning_tier]?.border ?? 'border-gray-200',
-                      )}>
-                        <span className={classNames('w-2 h-2 rounded-full', TIER_COLOURS[lastWeekChampion.winning_tier]?.dot ?? 'bg-gray-400')} />
-                        {lastWeekChampion.winning_tier_label}
-                      </span>
-                      {lastWeekChampion.champion_story && (
-                        <div className="mt-3 bg-white/70 rounded-lg p-3 border border-amber-200">
-                          <p className="text-xs font-bold text-amber-700 mb-1">What they did:</p>
-                          <p className="text-sm text-gray-700 leading-relaxed line-clamp-4">
-                            {lastWeekChampion.champion_story}
-                          </p>
-                        </div>
-                      )}
-                      {lastWeekChampion.tiebreak_reasoning && (
-                        <div className="mt-2 bg-white/70 rounded-lg p-3 border border-amber-200">
-                          <p className="text-xs font-bold text-amber-700 mb-1">Why they won:</p>
-                          <p className="text-sm text-gray-600 italic leading-relaxed">
-                            {lastWeekChampion.tiebreak_reasoning}
-                          </p>
-                        </div>
-                      )}
-                      <p className="text-xs text-gray-400 mt-2">
-                        Week of {new Date(lastWeekChampion.week_start).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                        {' – '}
-                        {new Date(lastWeekChampion.week_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -2236,10 +2480,7 @@ const DashboardPage: React.FC = () => {
                     }
                     
                     const content = (
-                      <div className={classNames(
-                        'p-6 transition-colors rounded-3xl',
-                        isAdvancedComplete ? 'bg-green-50/80 border border-green-200 shadow-sm text-green-900 opacity-90' : 'bg-white'
-                      )}>
+                      <div className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4 flex-1">
                             <div className="p-2 bg-gray-100 rounded-lg">{getCategoryIcon(activity.category_activity)}</div>
@@ -2255,11 +2496,6 @@ const DashboardPage: React.FC = () => {
                             <span className={classNames('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getProgressColor(activity.progress))}>
                               {activity.progress}
                             </span>
-                            {isAdvancedComplete && (
-                              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 border border-green-200">
-                                Advanced • Completed
-                              </span>
-                            )}
                             {(activity.evaluation_score != null || activity.certification_evaluation_score != null) && (
                               <div className="text-lg font-semibold text-green-600">
                                 {activity.certification_evaluation_score ?? activity.evaluation_score}%
