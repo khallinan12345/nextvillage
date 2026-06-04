@@ -19,6 +19,21 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<'form' | 'magic-link-sent'>('form');
 
+  // ─── Visitor tracking ─────────────────────────────────────────────────────
+  const logVisitor = async (userEmail: string, userId: string) => {
+    try {
+      await supabase
+        .from('visitor_logs')
+        .upsert(
+          { id: userId, email: userEmail, created_at: new Date().toISOString() },
+          { onConflict: 'id' }
+        );
+      console.log("Unique visitor tracked successfully!");
+    } catch (err) {
+      console.error("Tracking error:", err);
+    }
+  };
+
   // ─── Duplicate email check ────────────────────────────────────────────────
   const emailAlreadyExists = async (email: string): Promise<boolean> => {
     const { data, error } = await supabase
@@ -95,6 +110,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
 
         if (signInError) throw signInError;
         console.log('Login successful:', loginData);
+        // Track unique visitor
+        if (loginData.user?.email && loginData.user?.id) {
+          await logVisitor(loginData.user.email, loginData.user.id);
+        }
         navigate('/home');
       }
     } catch (err: any) {
