@@ -481,13 +481,14 @@ interface CurrentEvaluationState {
   weakestDimension: string | null;
 }
 
-const SKILLS_ACTIVITY_TARGETS: Record<string, number> = {
-  'Digital Fluency': 18,
-  'Critical Thinking': 14,
-  'Problem-Solving': 20,
-  Creativity: 20,
-  Communication: 20,
-};
+// SKILLS_ACTIVITY_TARGETS kept for reference but not currently used
+// const SKILLS_ACTIVITY_TARGETS: Record<string, number> = {
+//   'Digital Fluency': 18,
+//   'Critical Thinking': 14,
+//   'Problem-Solving': 20,
+//   Creativity: 20,
+//   Communication: 20,
+// };
 
 const SKILLS_CATEGORY_METADATA: Record<string, { slug: string; focus: string; deliverable: string }> = {
   'Digital Fluency': {
@@ -535,6 +536,11 @@ YOUR TEACHING STYLE:
 - Actively listen to student questions and provide profound, technically precise answers.
 - When a student asks a direct question, answer it fully before returning to the lesson flow.
 - Ground all guidance in real productive and economic context.
+
+EXTENSIVE TUTOR INSTRUCTIONS (MANDATORY):
+- The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
+- The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.
+- Do not provide terse or incomplete replies. When a learner asks something, explore it fully with examples and connections.
 
 SKILL CONTEXT:
 Skill: ${subCategory}
@@ -702,7 +708,8 @@ function buildSkillsMockActivities(): DashboardActivity[] {
       const style = learningStyles[index % learningStyles.length];
       const id = `mock-${metadata.slug}-${index + 1}`;
       const description = `${style} activity based on ${title}. Learners must apply ${category.themeHint} while practicing ${metadata.deliverable}.`;
-      const promptTemplate = `You are designing a ${style.toLowerCase()} experience for ${title}. Guide the learner through clear steps, practical checks, and local Nigerian context.`;
+      // promptTemplate kept for future reference but not currently used
+      // const promptTemplate = `You are designing a ${style.toLowerCase()} experience for ${title}. Guide the learner through clear steps, practical checks, and local Nigerian context.`;
       const systemPrompt = buildSkillsSystemPrompt(title, category.subCategory, style, metadata.deliverable);
 
       mockActivities.push({
@@ -1203,6 +1210,11 @@ LANGUAGE RULES:
 `;
 
   return `You are a skills coach helping a learner develop their "${subCategory}" skills through a real-world scenario they have chosen.
+
+EXTENSIVE TUTOR INSTRUCTIONS (MANDATORY):
+- The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
+- The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity and learner's skill level.
+- Do not provide terse or incomplete replies. When a learner asks something, explore it fully with examples and connections to their scenario.
 
 LEARNER'S CONTEXT:
 ${context}
@@ -3122,6 +3134,10 @@ Provide assessment now:`;
   const handleActivitySelect = async (activity: DashboardActivity) => {
     if (!isActivitySelectable(activity)) return;
 
+    // CHAT HISTORY LOADING & PERSISTENCE:
+    // When user opens an activity, we load any previously saved chat messages to allow them to
+    // continue from where they left off. This applies to uncompleted and completed activities.
+    
     // Persist current activity's chat history to local cache before switching
     try {
       if (selectedActivity) {
@@ -3151,7 +3167,7 @@ Provide assessment now:`;
     // Restore from local cache if present
     if (newKey && historyCache[newKey] && Array.isArray(historyCache[newKey]) && historyCache[newKey].length > 0) {
       initialChatHistory = historyCache[newKey];
-    } else if (activity.progress === 'started' && activity.chat_history) {
+    } else if (activity.chat_history) {
       try {
         const storedHistory = JSON.parse(activity.chat_history);
         if (Array.isArray(storedHistory) && storedHistory.length > 0) {
@@ -3199,7 +3215,7 @@ Provide assessment now:`;
     } else {
       const gradeInstructions = getGradeAppropriateInstructions(userGradeLevel, communicationLevel);
       
-      setActivityDescription('No description available.');
+      setActivityDescription('Description could not be loaded.');
       setModuleTitle(activity.title);
       setAiFacilitatorInstructions(`${gradeInstructions}\n\nYou are a helpful skills learning assistant. Guide the student through this learning activity with patience and encouragement.`);
       setAiAssessmentInstructions('Based on the conversation history, evaluate the student\'s performance.');
@@ -3252,6 +3268,14 @@ Provide assessment now:`;
   };
 
   // Handle user message submission with automatic evaluation
+  // CHAT PERSISTENCE STRATEGY:
+  // 1. FETCH ON OPEN: When an activity is opened in handleActivitySelect, we fetch any existing chat_history
+  //    from the activity record (via chat_history field) and restore it to the chat state.
+  //    This applies to ALL activity states: 'not started', 'started', 'completed'.
+  // 2. AUTO-SAVE USER MESSAGE: When user submits, we immediately save their message to database via updateChatHistory.
+  // 3. AUTO-SAVE AI RESPONSE: After receiving AI response, we save the full chat history (user + AI) immediately.
+  // 4. CONTINUOUS HISTORY: No conversational progress is lost if the user leaves before clicking "Complete Session".
+  // 5. BACKGROUND EVALUATION: For Skills learning activities, automatic evaluation runs in background after each message.
   const handleSubmitMessage = async () => {
     if (!userInput.trim() || submitting || !selectedActivity) return;
 
@@ -3304,7 +3328,7 @@ Provide assessment now:`;
           setReflectionText(currentInput.trim());
           setAwaitingReflection(false);
         } else {
-          setReflectionAttempts(prev => prev + 1);
+          setReflectionAttempts((prev: any) => prev + 1);
           if (validation.nudge) {
             const nudgeMessage: ChatMessage = {
               role: 'assistant',
@@ -3988,7 +4012,7 @@ Provide assessment now:`;
                     {moduleTitle}
                   </h1>
                   <p className="text-xl text-gray-600 mb-3">
-                    {activityDescription}
+                    {activityDescription || 'Description could not be loaded.'}
                   </p>
                   <div className="flex items-center space-x-2 text-lg text-gray-500">
                     <span>{selectedActivity.category_activity}</span>
@@ -4545,9 +4569,12 @@ Provide assessment now:`;
               const otherActivities  = currentActivities.filter(a => a.isPublic !== false);
 
               const renderRow = (activity: DashboardActivity) => {
+                // Safely guard against undefined activity or missing properties
+                if (!activity?.id) return null;
+                
                 // Collect per-dimension scores for display
-                const isAdvancedComplete = activity.progress === 'completed' && activity.certification_evaluation_score === 3;
-                const subCat = activity.sub_category || '';
+                const isAdvancedComplete = (activity?.progress === 'completed' && activity?.certification_evaluation_score === 3) || false;
+                const subCat = activity?.sub_category || '';
                 const colMap = RUBRIC_COLUMN_MAP[subCat] || {};
                 const dimensions = RUBRIC_DEFINITIONS[subCat] || [];
 
@@ -4555,13 +4582,13 @@ Provide assessment now:`;
                   .map(dim => {
                     const dimKey = dim.toLowerCase().replace(/[^a-z0-9]+/g, '_');
                     const cols = colMap[dimKey];
-                    const score = cols ? (activity[cols.score] ?? null) : null;
+                    const score = cols ? (activity?.[cols.score] ?? null) : null;
                     return score != null ? { label: dim.replace(/_/g, ' '), score } : null;
                   })
                   .filter(Boolean) as { label: string; score: number }[];
 
-                const hasScores = activity.progress !== 'not started' &&
-                  (activity.certification_evaluation_score != null || dimScores.length > 0);
+                const hasScores = (activity?.progress !== 'not started') &&
+                  (activity?.certification_evaluation_score != null || dimScores.length > 0);
 
                 return (
                   <div
@@ -4569,7 +4596,7 @@ Provide assessment now:`;
                     className={classNames(
                       'relative p-6 transition-colors rounded-3xl overflow-hidden',
                       isAdvancedComplete
-                        ? 'bg-green-50/80 border border-green-200 shadow-sm text-green-900 opacity-90 backdrop-blur-sm pointer-events-none cursor-not-allowed'
+                        ? 'bg-green-50/80 border border-green-200 shadow-sm text-green-900 backdrop-blur-sm pointer-events-none opacity-50 cursor-not-allowed'
                         : activity.progress === 'completed'
                         ? 'bg-gray-50 opacity-60 cursor-not-allowed'
                         : isActivitySelectable(activity)

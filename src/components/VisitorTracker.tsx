@@ -20,14 +20,23 @@ const VisitorTracker = () => {
       const { data: authData } = await supabase.auth.getUser();
 
       try {
-        await supabase.from('visitor_logs').insert({
+        const { error } = await supabase.from('visitor_logs').insert({
           page_path,
           country_code: data?.country_code || 'Unknown',
           user_agent,
           user_email: authData?.user?.email || 'Anonymous',
         });
-      } catch {
-        // Analytics — fail silently
+        // Silently handle 404 or other errors (visitor_logs table may not exist in all deployments)
+        if (error?.code === '404' || error?.message?.includes('relation') || error?.message?.includes('not found')) {
+          console.debug('visitor_logs table unavailable (normal in some deployments)');
+        } else if (error) {
+          console.warn('Visitor tracking error:', error.message);
+        }
+      } catch (err) {
+        // Analytics — fail silently; table may not exist in all deployments
+        if (!(err instanceof Error) || !err.message?.includes('relation')) {
+          console.debug('Visitor tracking exception (non-critical):', err);
+        }
       }
     };
 

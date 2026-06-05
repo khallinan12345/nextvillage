@@ -25,15 +25,23 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         try {
-          await supabase
+          const { error } = await supabase
             .from('visitor_logs')
             .upsert(
               { id: session.user.id, email: session.user.email, created_at: new Date().toISOString() },
               { onConflict: 'id' }
             );
-          console.log("Unique visitor tracked!");
+          // Silently handle 404 or missing table (visitor_logs may not exist in all deployments)
+          if (error?.code === '404' || error?.message?.includes('relation') || error?.message?.includes('not found')) {
+            console.debug('[AuthForm] visitor_logs table unavailable (normal for some deployments)');
+          } else if (error) {
+            console.warn('[AuthForm] Tracking error:', error.message);
+          } else {
+            console.log("Unique visitor tracked!");
+          }
         } catch (err) {
-          console.error("Tracking error:", err);
+          // Non-critical: visitor_logs may not exist
+          console.debug('[AuthForm] Tracking exception (non-critical):', err instanceof Error ? err.message : String(err));
         }
       }
     };
@@ -43,15 +51,23 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   // ─── Visitor tracking ─────────────────────────────────────────────────────
   const logVisitor = async (userEmail: string, userId: string) => {
     try {
-      await supabase
+      const { error } = await supabase
         .from('visitor_logs')
         .upsert(
           { id: userId, email: userEmail, created_at: new Date().toISOString() },
           { onConflict: 'id' }
         );
-      console.log("Unique visitor tracked successfully!");
+      // Silently handle 404 or missing table (visitor_logs may not exist in all deployments)
+      if (error?.code === '404' || error?.message?.includes('relation') || error?.message?.includes('not found')) {
+        console.debug('[AuthForm logVisitor] visitor_logs table unavailable (normal for some deployments)');
+      } else if (error) {
+        console.warn('[AuthForm logVisitor] Tracking error:', error.message);
+      } else {
+        console.log("Unique visitor tracked successfully!");
+      }
     } catch (err) {
-      console.error("Tracking error:", err);
+      // Non-critical: visitor_logs may not exist
+      console.debug('[AuthForm logVisitor] Tracking exception (non-critical):', err instanceof Error ? err.message : String(err));
     }
   };
 

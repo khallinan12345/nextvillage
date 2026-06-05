@@ -789,23 +789,41 @@ const deriveProgress = (rows: DashboardSession[]): UserProgress => {
   const strongestLevel = (current: ProficiencyLevel | null, candidate: ProficiencyLevel) =>
     !current || levelPriority[candidate] > levelPriority[current] ? candidate : current;
 
+  // First pass: collect strongest evidence per pathway & stage (safe numeric parsing)
   for (const row of rows) {
     const ev = row.science_skills_evaluation;
     const pathway = ev?.pathway as Pathway;
-    const stageId = Number(ev?.stage_id);
-    if (!ev || !pathway || Number.isNaN(stageId) || stageId < 0 || stageId > 4) continue;
+    const rawId = Number(ev?.stage_id);
+    if (!ev || !pathway || Number.isNaN(rawId) || rawId < 0 || rawId > 4) continue;
     if (!prog[pathway]) continue;
-    prog[pathway].stageLevels[stageId] = strongestLevel(prog[pathway].stageLevels[stageId], ev.overall_level);
-    prog[pathway].completedStages[stageId] = ev.overall_level === 'Advanced';
+    const idx = Math.max(0, Math.min(4, rawId));
+    prog[pathway].stageLevels[idx] = strongestLevel(prog[pathway].stageLevels[idx], ev.overall_level);
+    prog[pathway].completedStages[idx] = prog[pathway].completedStages[idx] || ev.overall_level === 'Advanced';
   }
 
+  // Enforce sequential gating: a stage >0 remains ignored unless previous stage has Proficient or Advanced
   for (const pathway of ['reasoning', 'life', 'physical'] as const) {
     const data = prog[pathway];
-    let frontier = 0;
-    while (frontier < data.completedStages.length && data.completedStages[frontier]) {
-      frontier += 1;
+    for (let i = 1; i < data.stageLevels.length; i++) {
+      const prevLevel = data.stageLevels[i - 1];
+      if (!(prevLevel === 'Proficient' || prevLevel === 'Advanced')) {
+        // clear any evidence for this and later stages to enforce strict sequence
+        data.stageLevels[i] = null;
+        data.completedStages[i] = false;
+      }
     }
-    data.unlockedUpTo = frontier;
+
+    // compute unlockedUpTo as the highest index where previous stage is Proficient+ (or index 0 always accessible)
+    let unlocked = 0;
+    for (let i = 1; i < data.stageLevels.length; i++) {
+      const prev = data.stageLevels[i - 1];
+      if (prev && (levelPriority[prev] >= levelPriority['Proficient'])) {
+        unlocked = i;
+      } else {
+        break;
+      }
+    }
+    data.unlockedUpTo = unlocked;
   }
 
   prog.tier1Complete = prog.reasoning.completedStages.every(Boolean);
