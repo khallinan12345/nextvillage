@@ -493,7 +493,7 @@ const DashboardPage: React.FC = () => {
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
-
+<<<<<<< HEAD
 
   // ── Grand Challenge state ─────────────────────────────────────────────────
   const [grandChallenge, setGrandChallenge]           = useState<GrandChallenge | null>(null);
@@ -516,9 +516,11 @@ const DashboardPage: React.FC = () => {
   const [pastCohortLeaderboards, setPastCohortLeaderboards] = useState<PastCohortLeaderboard[]>([]);
   const [showPastCohortLb, setShowPastCohortLb]       = useState(false);
   const [pastCohortLoading, setPastCohortLoading]     = useState(false);
+=======
   const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
   const [, setLastWeekLeaderboard]                    = useState<CommunityLeaderEntry[]>([]);
   const [, setLastWeekLbLoading]                      = useState(false);
+>>>>>>> 131b761a298760c44f804486063e9cc96067ae77
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
@@ -875,7 +877,8 @@ const DashboardPage: React.FC = () => {
         const { data: lb } = await supabase
           .from('community_leaderboard')
           .select('*')
-          .order('rank', { ascending: true });
+          .order('rank', { ascending: true })
+          .limit(10);
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
 
@@ -1253,7 +1256,7 @@ ${prior.impact_arc}
 
       const entries: LeaderboardEntry[] = Object.entries(counts)
         .map(([uid, count]) => ({ user_id: uid, name: nameMap[uid] || 'Unknown', value: count, rank: 0 }))
-        .sort((a, b) => b.value - a.value)
+        .sort((a, b) => b.value - a.value).slice(0, 10)
         .map((e, i) => ({ ...e, rank: i + 1 }));
       setLeaderboard(entries);
     } catch (e) {
@@ -2200,13 +2203,9 @@ ${prior.impact_arc}
                     <p className="text-sm font-semibold text-gray-700 mb-1">No community actions yet this week</p>
                     <p className="text-xs text-gray-400">Complete this week's challenge to appear on the leaderboard.</p>
                   </div>
-                ) : (() => {
-                    const top10 = communityLeaderboard.slice(0, 10);
-                    const myEntry = communityLeaderboard.find(e => e.learner_id === user?.id);
-                    const myRank = myEntry?.rank ?? 0;
-                    const iAmOutside = myRank > 10;
-
-                    const renderCommunityRow = (entry: CommunityLeaderEntry) => {
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {communityLeaderboard.map(entry => {
                       const isMe = entry.learner_id === user?.id;
                       const medal = MEDAL[entry.rank];
                       const tc = TIER_COLOURS[entry.highest_tier] ?? TIER_COLOURS.seed;
@@ -2252,25 +2251,9 @@ ${prior.impact_arc}
                           </div>
                         </div>
                       );
-                    };
-
-                    return (
-                      <div className="divide-y divide-gray-100">
-                        {top10.map(renderCommunityRow)}
-                        {iAmOutside && myEntry && (
-                          <>
-                            <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2">
-                              <div className="flex-1 border-t border-dashed border-gray-300" />
-                              <span className="text-xs text-gray-400 flex-shrink-0">{myRank - 10} more above you</span>
-                              <div className="flex-1 border-t border-dashed border-gray-300" />
-                            </div>
-                            {renderCommunityRow(myEntry)}
-                          </>
-                        )}
-                      </div>
-                    );
-                  })()
-                }
+                    })}
+                  </div>
+                )}
 
                 {/* ── Past Challenge Winners ── */}
                 {showPastChallenges && pastChallenges.length > 0 && (
@@ -2490,75 +2473,77 @@ ${prior.impact_arc}
                     };
 
                     return (
-                      <div className="divide-y divide-gray-100">
-                        {top10.map(renderCohortRow)}
-                        {iAmOutside && myEntry && (
-                          <>
-                            <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2">
-                              <div className="flex-1 border-t border-dashed border-gray-300" />
-                              <span className="text-xs text-gray-400 flex-shrink-0">{myRank - 10} more above you</span>
-                              <div className="flex-1 border-t border-dashed border-gray-300" />
+                      <>
+                        <div className="divide-y divide-gray-100">
+                          {top10.map(renderCohortRow)}
+                          {iAmOutside && myEntry && (
+                            <>
+                              <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2">
+                                <div className="flex-1 border-t border-dashed border-gray-300" />
+                                <span className="text-xs text-gray-400 flex-shrink-0">{myRank - 10} more above you</span>
+                                <div className="flex-1 border-t border-dashed border-gray-300" />
+                              </div>
+                              {renderCohortRow(myEntry)}
+                            </>
+                          )}
+                        </div>
+
+                        {/* ── Past Monthly Leaderboards ── */}
+                        {showPastCohortLb && (
+                          <div className="border-t border-gray-200 bg-gray-50">
+                            <div className="px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                              <Calendar size={14} className="text-amber-500" />
+                              <span className="text-sm font-semibold text-gray-700">Past Monthly Leaderboards — Sessions</span>
                             </div>
-                            {renderCohortRow(myEntry)}
-                          </>
+                            {pastCohortLoading ? (
+                              <div className="flex items-center justify-center py-8">
+                                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-amber-400" />
+                              </div>
+                            ) : pastCohortLeaderboards.length === 0 ? (
+                              <div className="px-6 py-6 text-center text-sm text-gray-400">No historical data available yet.</div>
+                            ) : (
+                              <div className="divide-y divide-gray-200">
+                                {pastCohortLeaderboards.map(board => (
+                                  <div key={board.month} className="px-6 py-4">
+                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                      <span className="text-amber-500">📅</span> {board.label}
+                                    </h3>
+                                    <div className="space-y-1.5">
+                                      {board.entries.map(entry => {
+                                        const isMe = entry.user_id === user?.id;
+                                        const medal = MEDAL[entry.rank];
+                                        return (
+                                          <div key={entry.user_id}
+                                            className={classNames('flex items-center gap-3 px-3 py-1.5 rounded-lg',
+                                              isMe ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-gray-100')}>
+                                            <div className="w-8 text-center flex-shrink-0 text-sm">
+                                              {medal ?? <span className="text-gray-400 font-bold text-xs">#{entry.rank}</span>}
+                                            </div>
+                                            <span className={classNames('flex-1 text-xs font-medium truncate',
+                                              isMe ? 'text-amber-800' : 'text-gray-800')}>
+                                              {entry.name}
+                                              {isMe && <span className="ml-1 text-amber-600">(you)</span>}
+                                            </span>
+                                            <span className={classNames('text-xs font-bold',
+                                              entry.rank === 1 ? 'text-amber-600' :
+                                              entry.rank === 2 ? 'text-gray-500' :
+                                              entry.rank === 3 ? 'text-orange-600' : 'text-gray-600')}>
+                                              {entry.value} <span className="font-normal text-gray-400">sessions</span>
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         )}
-                      </div>
+                      </>
                     );
                   })()
-
-                  {/* ── Past Monthly Leaderboards ── */}
-                  {showPastCohortLb && (
-                    <div className="border-t border-gray-200 bg-gray-50">
-                      <div className="px-6 py-3 border-b border-gray-200 flex items-center gap-2">
-                        <Calendar size={14} className="text-amber-500" />
-                        <span className="text-sm font-semibold text-gray-700">Past Monthly Leaderboards — Sessions</span>
-                      </div>
-                      {pastCohortLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-amber-400" />
-                        </div>
-                      ) : pastCohortLeaderboards.length === 0 ? (
-                        <div className="px-6 py-6 text-center text-sm text-gray-400">No historical data available yet.</div>
-                      ) : (
-                        <div className="divide-y divide-gray-200">
-                          {pastCohortLeaderboards.map(board => (
-                            <div key={board.month} className="px-6 py-4">
-                              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="text-amber-500">📅</span> {board.label}
-                              </h3>
-                              <div className="space-y-1.5">
-                                {board.entries.map(entry => {
-                                  const isMe = entry.user_id === user?.id;
-                                  const medal = MEDAL[entry.rank];
-                                  return (
-                                    <div key={entry.user_id}
-                                      className={classNames('flex items-center gap-3 px-3 py-1.5 rounded-lg',
-                                        isMe ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-gray-100')}>
-                                      <div className="w-8 text-center flex-shrink-0 text-sm">
-                                        {medal ?? <span className="text-gray-400 font-bold text-xs">#{entry.rank}</span>}
-                                      </div>
-                                      <span className={classNames('flex-1 text-xs font-medium truncate',
-                                        isMe ? 'text-amber-800' : 'text-gray-800')}>
-                                        {entry.name}
-                                        {isMe && <span className="ml-1 text-amber-600">(you)</span>}
-                                      </span>
-                                      <span className={classNames('text-xs font-bold',
-                                        entry.rank === 1 ? 'text-amber-600' :
-                                        entry.rank === 2 ? 'text-gray-500' :
-                                        entry.rank === 3 ? 'text-orange-600' : 'text-gray-600')}>
-                                        {entry.value} <span className="font-normal text-gray-400">sessions</span>
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                )}
+                }
               </div>
             )}
 
