@@ -877,8 +877,7 @@ const DashboardPage: React.FC = () => {
         const { data: lb } = await supabase
           .from('community_leaderboard')
           .select('*')
-          .order('rank', { ascending: true })
-          .limit(10);
+          .order('rank', { ascending: true });
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
 
@@ -1256,7 +1255,7 @@ ${prior.impact_arc}
 
       const entries: LeaderboardEntry[] = Object.entries(counts)
         .map(([uid, count]) => ({ user_id: uid, name: nameMap[uid] || 'Unknown', value: count, rank: 0 }))
-        .sort((a, b) => b.value - a.value).slice(0, 10)
+        .sort((a, b) => b.value - a.value)
         .map((e, i) => ({ ...e, rank: i + 1 }));
       setLeaderboard(entries);
     } catch (e) {
@@ -2203,9 +2202,13 @@ ${prior.impact_arc}
                     <p className="text-sm font-semibold text-gray-700 mb-1">No community actions yet this week</p>
                     <p className="text-xs text-gray-400">Complete this week's challenge to appear on the leaderboard.</p>
                   </div>
-                ) : (
-                  <div className="divide-y divide-gray-100">
-                    {communityLeaderboard.map(entry => {
+                ) : (() => {
+                    const top10 = communityLeaderboard.slice(0, 10);
+                    const myEntry = communityLeaderboard.find(e => e.learner_id === user?.id);
+                    const myRank = myEntry?.rank ?? 0;
+                    const iAmOutside = myRank > 10;
+
+                    const renderCommunityRow = (entry: CommunityLeaderEntry) => {
                       const isMe = entry.learner_id === user?.id;
                       const medal = MEDAL[entry.rank];
                       const tc = TIER_COLOURS[entry.highest_tier] ?? TIER_COLOURS.seed;
@@ -2251,9 +2254,25 @@ ${prior.impact_arc}
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
-                )}
+                    };
+
+                    return (
+                      <div className="divide-y divide-gray-100">
+                        {top10.map(renderCommunityRow)}
+                        {iAmOutside && myEntry && (
+                          <>
+                            <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2">
+                              <div className="flex-1 border-t border-dashed border-gray-300" />
+                              <span className="text-xs text-gray-400 flex-shrink-0">{myRank - 10} more above you</span>
+                              <div className="flex-1 border-t border-dashed border-gray-300" />
+                            </div>
+                            {renderCommunityRow(myEntry)}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()
+                }
 
                 {/* ── Past Challenge Winners ── */}
                 {showPastChallenges && pastChallenges.length > 0 && (
@@ -2422,16 +2441,19 @@ ${prior.impact_arc}
                   </div>
                 ) : leaderboard.length === 0 ? (
                   <div className="py-8 text-center text-gray-400 text-sm">No data yet for this metric.</div>
-                ) : (
-                  <div className="divide-y divide-gray-100">
-                    {leaderboard.map(entry => {
+                ) : (() => {
+                    const top10 = leaderboard.slice(0, 10);
+                    const myEntry = leaderboard.find(e => e.user_id === user?.id);
+                    const myRank = myEntry?.rank ?? 0;
+                    const iAmOutside = myRank > 10;
+                    const metricLabelFor = (val: number) =>
+                      leaderboardMetric === 'sessions_alltime' || leaderboardMetric === 'sessions_thismonth'
+                        ? val === 1 ? 'session' : 'sessions'
+                        : val === 1 ? 'certification' : 'certifications';
+
+                    const renderCohortRow = (entry: LeaderboardEntry) => {
                       const isMe = entry.user_id === user?.id;
                       const medal = MEDAL[entry.rank];
-                      const metricLabel =
-                        leaderboardMetric === 'sessions_alltime' || leaderboardMetric === 'sessions_thismonth'
-                          ? entry.value === 1 ? 'session' : 'sessions'
-                          : entry.value === 1 ? 'certification' : 'certifications';
-
                       return (
                         <div key={entry.user_id}
                           className={classNames('flex items-center px-6 py-3 gap-4 transition-colors',
@@ -2454,7 +2476,7 @@ ${prior.impact_arc}
                               entry.rank === 3 ? 'text-orange-700' : 'text-gray-700')}>
                               {entry.value}
                             </span>
-                            <span className="ml-1 text-xs text-gray-400">{metricLabel}</span>
+                            <span className="ml-1 text-xs text-gray-400">{metricLabelFor(entry.value)}</span>
                           </div>
                           <div className="hidden sm:block w-28 flex-shrink-0">
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -2467,8 +2489,24 @@ ${prior.impact_arc}
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
+                    };
+
+                    return (
+                      <div className="divide-y divide-gray-100">
+                        {top10.map(renderCohortRow)}
+                        {iAmOutside && myEntry && (
+                          <>
+                            <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2">
+                              <div className="flex-1 border-t border-dashed border-gray-300" />
+                              <span className="text-xs text-gray-400 flex-shrink-0">{myRank - 10} more above you</span>
+                              <div className="flex-1 border-t border-dashed border-gray-300" />
+                            </div>
+                            {renderCohortRow(myEntry)}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()
 
                   {/* ── Past Monthly Leaderboards ── */}
                   {showPastCohortLb && (
