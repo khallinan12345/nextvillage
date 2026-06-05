@@ -883,7 +883,6 @@ const DashboardPage: React.FC = () => {
           .eq('org_id', orgSlug)
           .order('week_start', { ascending: false })
           .limit(12);
-        console.log('[PastChallenges]', pastChallengeRows, orgSlug);
         if (pastChallengeRows) setPastChallenges(pastChallengeRows as PastChallenge[]);
       } finally {
         setChallengeLoading(false);
@@ -1333,7 +1332,7 @@ ${prior.impact_arc}
       } else {
         let projects: any[] = [];
         try {
-          const projectQuery = supabase.from('weekly_challenge_projects').select('*').eq('user_id', user.id);
+          const projectQuery = supabase.from('projects').select('*').eq('user_id', user.id);
           if (user.team_id) projectQuery.or(`user_id.eq.${user.id},team_id.eq.${user.team_id}`);
           const { data: projectsData, error: projectsError } = await projectQuery.order('updated_at', { ascending: false });
           // Gracefully handle 404 or missing projects table
@@ -2175,6 +2174,34 @@ ${prior.impact_arc}
                   </h2>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-gray-500">ranked by highest tier · then total actions</span>
+
+                {/* ── Tier Legend ── */}
+                <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-emerald-50 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Impact Tiers — highest to lowest</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { tier: 'multiplier', emoji: '🏘️', label: 'Village Leader',       desc: 'Recruited & mentoring a new learner' },
+                      { tier: 'builder',    emoji: '🤖', label: 'AI for Good',           desc: 'Co-solved a real problem with AI' },
+                      { tier: 'bridge',     emoji: '🌉', label: 'Community Connector',   desc: 'Brought a community member to the hub' },
+                      { tier: 'scout',      emoji: '🔍', label: 'Problem Finder',        desc: 'Found & documented a real community problem' },
+                      { tier: 'seed',       emoji: '🌱', label: 'Community Teacher',     desc: 'Made genuine community contact' },
+                    ].map(({ tier, emoji, label, desc }) => {
+                      const tc = TIER_COLOURS[tier];
+                      return (
+                        <div key={tier} className={classNames(
+                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs',
+                          tc.bg, tc.border
+                        )}>
+                          <span>{emoji}</span>
+                          <div>
+                            <span className={classNames('font-bold', tc.text)}>{label}</span>
+                            <span className="text-gray-400 ml-1 hidden sm:inline">— {desc}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
                     {pastChallenges.length > 0 && (
                       <button
                         onClick={() => setShowPastChallenges(v => !v)}
