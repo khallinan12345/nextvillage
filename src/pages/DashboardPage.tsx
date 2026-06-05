@@ -493,7 +493,7 @@ const DashboardPage: React.FC = () => {
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
-<<<<<<< HEAD
+
 
   // ── Grand Challenge state ─────────────────────────────────────────────────
   const [grandChallenge, setGrandChallenge]           = useState<GrandChallenge | null>(null);
