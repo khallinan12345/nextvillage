@@ -516,7 +516,6 @@ const DashboardPage: React.FC = () => {
   const [pastCohortLeaderboards, setPastCohortLeaderboards] = useState<PastCohortLeaderboard[]>([]);
   const [showPastCohortLb, setShowPastCohortLb]       = useState(false);
   const [pastCohortLoading, setPastCohortLoading]     = useState(false);
-=======
   const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
   const [, setLastWeekLeaderboard]                    = useState<CommunityLeaderEntry[]>([]);
   const [, setLastWeekLbLoading]                      = useState(false);
