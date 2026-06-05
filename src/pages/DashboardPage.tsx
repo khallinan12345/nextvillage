@@ -520,7 +520,6 @@ const DashboardPage: React.FC = () => {
   const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
   const [, setLastWeekLeaderboard]                    = useState<CommunityLeaderEntry[]>([]);
   const [, setLastWeekLbLoading]                      = useState(false);
->>>>>>> 131b761a298760c44f804486063e9cc96067ae77
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
