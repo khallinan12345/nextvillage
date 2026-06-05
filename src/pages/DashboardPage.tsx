@@ -493,6 +493,7 @@ const DashboardPage: React.FC = () => {
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
+<<<<<<< HEAD
 
   // ── Grand Challenge state ─────────────────────────────────────────────────
   const [grandChallenge, setGrandChallenge]           = useState<GrandChallenge | null>(null);
@@ -515,6 +516,11 @@ const DashboardPage: React.FC = () => {
   const [pastCohortLeaderboards, setPastCohortLeaderboards] = useState<PastCohortLeaderboard[]>([]);
   const [showPastCohortLb, setShowPastCohortLb]       = useState(false);
   const [pastCohortLoading, setPastCohortLoading]     = useState(false);
+=======
+  const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
+  const [, setLastWeekLeaderboard]                    = useState<CommunityLeaderEntry[]>([]);
+  const [, setLastWeekLbLoading]                      = useState(false);
+>>>>>>> 131b761a298760c44f804486063e9cc96067ae77
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
@@ -871,8 +877,7 @@ const DashboardPage: React.FC = () => {
         const { data: lb } = await supabase
           .from('community_leaderboard')
           .select('*')
-          .order('rank', { ascending: true })
-          .limit(10);
+          .order('rank', { ascending: true });
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
 
@@ -1250,7 +1255,7 @@ ${prior.impact_arc}
 
       const entries: LeaderboardEntry[] = Object.entries(counts)
         .map(([uid, count]) => ({ user_id: uid, name: nameMap[uid] || 'Unknown', value: count, rank: 0 }))
-        .sort((a, b) => b.value - a.value).slice(0, 10)
+        .sort((a, b) => b.value - a.value)
         .map((e, i) => ({ ...e, rank: i + 1 }));
       setLeaderboard(entries);
     } catch (e) {
@@ -2197,9 +2202,13 @@ ${prior.impact_arc}
                     <p className="text-sm font-semibold text-gray-700 mb-1">No community actions yet this week</p>
                     <p className="text-xs text-gray-400">Complete this week's challenge to appear on the leaderboard.</p>
                   </div>
-                ) : (
-                  <div className="divide-y divide-gray-100">
-                    {communityLeaderboard.map(entry => {
+                ) : (() => {
+                    const top10 = communityLeaderboard.slice(0, 10);
+                    const myEntry = communityLeaderboard.find(e => e.learner_id === user?.id);
+                    const myRank = myEntry?.rank ?? 0;
+                    const iAmOutside = myRank > 10;
+
+                    const renderRow = (entry: CommunityLeaderEntry) => {
                       const isMe = entry.learner_id === user?.id;
                       const medal = MEDAL[entry.rank];
                       const tc = TIER_COLOURS[entry.highest_tier] ?? TIER_COLOURS.seed;
@@ -2245,9 +2254,25 @@ ${prior.impact_arc}
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
-                )}
+                    };
+
+                    return (
+                      <div className="divide-y divide-gray-100">
+                        {top10.map(renderRow)}
+                        {iAmOutside && myEntry && (
+                          <>
+                            <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2">
+                              <div className="flex-1 border-t border-dashed border-gray-300" />
+                              <span className="text-xs text-gray-400 flex-shrink-0">{myRank - 10} more above you</span>
+                              <div className="flex-1 border-t border-dashed border-gray-300" />
+                            </div>
+                            {renderRow(myEntry)}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()
+                }
 
                 {/* ── Past Challenge Winners ── */}
                 {showPastChallenges && pastChallenges.length > 0 && (
