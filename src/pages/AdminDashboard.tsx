@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 type MockUser = {
@@ -65,8 +65,21 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<MockUser | null>(null);
   const [filterType, setFilterType] = useState<'location' | 'name' | 'email'>('location');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+
+  // derive a list of unique, non-empty location strings from users (city/state/country/continent)
+  const uniqueLocations = useMemo(() => {
+    const s = new Set<string>();
+    users.forEach(u => {
+      [u.city, u.state_province, u.country, u.continent].forEach(v => {
+        if (v && String(v).trim()) s.add(String(v).trim());
+      });
+    });
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [users]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -106,27 +119,31 @@ export default function AdminDashboard() {
     setSelected(null);
   };
 
-  const filteredUsers = users.filter((u) => {
-    const query = activeSearch.trim().toLowerCase();
-    if (!query) return true;
+  const filteredUsers = useMemo(() => {
+    const q = activeSearch.trim().toLowerCase();
 
-    if (filterType === 'name') {
-      return u.full_name.toLowerCase().includes(query);
-    }
+    const matchesSearch = (u: MockUser) => {
+      if (!q) return true;
+      if (filterType === 'name') return u.full_name.toLowerCase().includes(q);
+      if (filterType === 'email') return u.email.toLowerCase().includes(q);
+      const locationString = [u.city, u.state_province, u.country, u.continent].filter(Boolean).join(' ').toLowerCase();
+      return locationString.includes(q);
+    };
 
-    if (filterType === 'email') {
-      return u.email.toLowerCase().includes(query);
-    }
+    const matchesSelectedLocation = (u: MockUser) => {
+      if (!selectedLocation) return true;
+      const check = selectedLocation.toLowerCase();
+      return [u.city, u.state_province, u.country, u.continent].some(v => v && v.toLowerCase() === check);
+    };
 
-    const locationString = [u.city, u.state_province, u.country, u.continent].filter(Boolean).join(' ').toLowerCase();
-    return locationString.includes(query);
-  });
+    return users.filter(u => matchesSearch(u) && matchesSelectedLocation(u));
+  }, [users, activeSearch, filterType, selectedLocation]);
 
   return (
     <div className="p-6 font-sans">
       <h2 className="text-2xl font-semibold mb-4">Teacher Dashboard — Active Students</h2>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid gap-3 sm:grid-cols-4">
         <label className="block">
           <span className="text-sm font-medium text-gray-700">Filter By</span>
           <select
@@ -151,6 +168,20 @@ export default function AdminDashboard() {
           />
         </label>
 
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Location</span>
+          <select
+            className="mt-1 block rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            value={selectedLocation}
+            onChange={(e) => setSelectedLocation(e.target.value)}
+          >
+            <option value="">All Locations</option>
+            {uniqueLocations.map(loc => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
+          </select>
+        </label>
+
         <div className="flex items-end gap-2">
           <button
             type="button"
@@ -165,6 +196,7 @@ export default function AdminDashboard() {
             onClick={() => {
               setSearchQuery('');
               setActiveSearch('');
+              setSelectedLocation('');
             }}
           >
             Clear

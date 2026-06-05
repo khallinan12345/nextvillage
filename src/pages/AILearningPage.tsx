@@ -2567,6 +2567,10 @@ Respond ONLY with valid JSON:
   const handleActivitySelect = async (activity: DashboardActivity) => {
     if (!isActivitySelectable(activity)) return;
 
+    // CHAT HISTORY LOADING & PERSISTENCE:
+    // When user opens an activity, we load any previously saved chat messages to allow them to
+    // continue from where they left off.
+    
     // Persist current activity's chat history to local cache before switching
     try {
       if (selectedActivity) {
@@ -2772,6 +2776,12 @@ Respond ONLY with valid JSON:
   };
 
   // Handle user message submission
+  // CHAT PERSISTENCE STRATEGY:
+  // 1. FETCH ON OPEN: When an activity is opened in handleActivitySelect, we fetch any existing chat_history
+  //    from the dashboard entry and restore it to the chat state.
+  // 2. AUTO-SAVE USER MESSAGE: When user submits, we immediately save their message to database via updateChatHistory.
+  // 3. AUTO-SAVE AI RESPONSE: After receiving AI response, we save the full chat history (user + AI) immediately.
+  // 4. CONTINUOUS HISTORY: No conversational progress is lost if the user leaves before clicking "Complete Session".
   const handleSubmitMessage = async () => {
     if (!userInput.trim() || submitting || !selectedActivity || !currentDashboardId) return;
 
