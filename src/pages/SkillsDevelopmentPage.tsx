@@ -4569,9 +4569,12 @@ Provide assessment now:`;
               const otherActivities  = currentActivities.filter(a => a.isPublic !== false);
 
               const renderRow = (activity: DashboardActivity) => {
+                // Safely guard against undefined activity or missing properties
+                if (!activity?.id) return null;
+                
                 // Collect per-dimension scores for display
-                const isAdvancedComplete = activity.progress === 'completed' && activity.certification_evaluation_score === 3;
-                const subCat = activity.sub_category || '';
+                const isAdvancedComplete = (activity?.progress === 'completed' && activity?.certification_evaluation_score === 3) || false;
+                const subCat = activity?.sub_category || '';
                 const colMap = RUBRIC_COLUMN_MAP[subCat] || {};
                 const dimensions = RUBRIC_DEFINITIONS[subCat] || [];
 
@@ -4579,13 +4582,13 @@ Provide assessment now:`;
                   .map(dim => {
                     const dimKey = dim.toLowerCase().replace(/[^a-z0-9]+/g, '_');
                     const cols = colMap[dimKey];
-                    const score = cols ? (activity[cols.score] ?? null) : null;
+                    const score = cols ? (activity?.[cols.score] ?? null) : null;
                     return score != null ? { label: dim.replace(/_/g, ' '), score } : null;
                   })
                   .filter(Boolean) as { label: string; score: number }[];
 
-                const hasScores = activity.progress !== 'not started' &&
-                  (activity.certification_evaluation_score != null || dimScores.length > 0);
+                const hasScores = (activity?.progress !== 'not started') &&
+                  (activity?.certification_evaluation_score != null || dimScores.length > 0);
 
                 return (
                   <div

@@ -439,13 +439,13 @@ const DashboardPage: React.FC = () => {
   const [weeklyChallenge, setWeeklyChallenge]         = useState<WeeklyChallenge | null>(null);
   const [challengeLoading, setChallengeLoading]       = useState(false);
   const [enrollmentStatus, setEnrollmentStatus]       = useState<'none' | 'active' | 'submitted' | 'awarded'>('none');
-  const [enrollmentId, setEnrollmentId]               = useState<string | null>(null);
+  const [, setEnrollmentId]                           = useState<string | null>(null);
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
   const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
-  const [lastWeekLeaderboard, setLastWeekLeaderboard] = useState<CommunityLeaderEntry[]>([]);
-  const [lastWeekLbLoading, setLastWeekLbLoading]     = useState(false);
+  const [, setLastWeekLeaderboard]                    = useState<CommunityLeaderEntry[]>([]);
+  const [, setLastWeekLbLoading]                      = useState(false);
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
@@ -742,9 +742,9 @@ const DashboardPage: React.FC = () => {
 
   // ── Leaderboard fetch ────────────────────────────────────────────────────
   const resolvedJoinCode =
-    userProfile?.role === 'platform_administrator' ? selectedOrgJoinCode :
-    userProfile?.role === 'leader' ? leaderJoinCode :
-    (userProfile?.join_code_used ?? '');
+    ((userProfile?.role as unknown) as string) === 'platform_administrator' ? selectedOrgJoinCode :
+    ((userProfile?.role as unknown) as string) === 'leader' ? leaderJoinCode :
+    ((userProfile as any)?.join_code_used ?? '');
 
   // ── Fetch weekly challenge and enrollment status ─────────────────────────
   useEffect(() => {
@@ -943,7 +943,7 @@ const DashboardPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (userProfile?.role !== 'platform_administrator') return;
+    if (((userProfile?.role as unknown) as string) !== 'platform_administrator') return;
     supabase.from('organizations').select('id, name, join_code').order('name', { ascending: true })
       .then(({ data }) => {
         if (data && data.length > 0) { setOrgOptions(data); setSelectedOrgJoinCode(data[0].join_code); }
@@ -951,20 +951,20 @@ const DashboardPage: React.FC = () => {
   }, [userProfile?.role]);
 
   useEffect(() => {
-    if (userProfile?.role !== 'leader' || !user?.id) return;
+    if (((userProfile?.role as unknown) as string) !== 'leader' || !user?.id) return;
     supabase.from('profiles').select('organizations(join_code, join_codes)').eq('id', user.id).single()
       .then(({ data: profileData }) => {
         const org = (profileData as any)?.organizations;
         const code: string = (Array.isArray(org?.join_codes) && org.join_codes.length > 0 ? org.join_codes[0] : org?.join_code) ?? '';
         if (code) { setLeaderJoinCode(code); }
-        else if (userProfile?.organization_id) {
+        else if ((userProfile as any)?.organization_id) {
           supabase.from('profiles').select('join_code_used')
-            .eq('organization_id', userProfile.organization_id).eq('role', 'student')
+            .eq('organization_id', (userProfile as any).organization_id).eq('role', 'student')
             .not('join_code_used', 'is', null).limit(1)
             .then(({ data: pd }) => { setLeaderJoinCode(pd?.[0]?.join_code_used ?? ''); });
         }
       });
-  }, [userProfile?.role, userProfile?.organization_id, user?.id]);
+  }, [userProfile?.role, (userProfile as any)?.organization_id, user?.id]);
 
   useEffect(() => {
     if (resolvedJoinCode) fetchLeaderboardForCode(leaderboardMetric, resolvedJoinCode);
@@ -1014,13 +1014,24 @@ const DashboardPage: React.FC = () => {
       if (user.role === 'facilitator') {
         setData({ projects: [], dashboardActivities: [], certifications: [] });
       } else {
-        let projects = [];
+        let projects: any[] = [];
         try {
           const projectQuery = supabase.from('projects').select('*').eq('user_id', user.id);
           if (user.team_id) projectQuery.or(`user_id.eq.${user.id},team_id.eq.${user.team_id}`);
           const { data: projectsData, error: projectsError } = await projectQuery.order('updated_at', { ascending: false });
-          if (!projectsError) projects = projectsData || [];
-        } catch (error) { console.warn('Projects table may not exist:', error); }
+          // Gracefully handle 404 or missing projects table
+          if (projectsError) {
+            if (projectsError.code === '404' || projectsError.message?.includes('relation') || projectsError.message?.includes('not found')) {
+              console.debug('[Dashboard] projects table not available (normal for some deployments)');
+            } else {
+              console.warn('[Dashboard] Error fetching projects:', projectsError.message);
+            }
+          }
+          projects = projectsData && Array.isArray(projectsData) ? projectsData : [];
+        } catch (error) {
+          console.debug('[Dashboard] Projects fetch exception (non-critical):', error instanceof Error ? error.message : String(error));
+          projects = [];
+        }
 
         let team = null;
         if (user.team_id) {
@@ -1034,7 +1045,7 @@ const DashboardPage: React.FC = () => {
         let certifications: CertificationProgress[] = [];
         
         const { data: dashboardData, error: dashboardError } = await supabase
-          .from<'dashboard'>('dashboard').select('*').eq('user_id', user.id)
+          .from('dashboard').select('*').eq('user_id', user.id)
           .order('updated_at', { ascending: false });
 
         if (dashboardError || !dashboardData || dashboardData.length === 0) {
@@ -1044,7 +1055,7 @@ const DashboardPage: React.FC = () => {
           );
           if (rpcError) throw rpcError;
           const { data: retry, error: retryError } = await supabase
-            .from<'dashboard'>('dashboard').select('*').eq('user_id', user.id)
+            .from('dashboard').select('*').eq('user_id', user.id)
             .order('updated_at', { ascending: false });
           if (retryError) throw retryError;
           dashboardActivities = retry || [];
@@ -1807,29 +1818,29 @@ const DashboardPage: React.FC = () => {
             )}
 
             {/* ── Cohort Leaderboard ──────────────────────────────────────── */}
-            {(userProfile?.role === 'platform_administrator'
-              || userProfile?.role === 'leader'
-              || userProfile?.join_code_used) && (
+            {(((userProfile?.role as unknown) as string) === 'platform_administrator'
+              || ((userProfile?.role as unknown) as string) === 'leader'
+              || (userProfile as any)?.join_code_used) && (
               <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-50 to-yellow-50 flex items-center justify-between flex-wrap gap-3">
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <Trophy className="h-6 w-6 text-amber-500" />
                     Cohort Leaderboard
-                    {userProfile?.role === 'platform_administrator' && selectedOrgJoinCode && (
+                    {((userProfile?.role as unknown) as string) === 'platform_administrator' && selectedOrgJoinCode && (
                       <span className="text-sm font-normal text-gray-500 ml-1">
                         ({orgOptions.find(o => o.join_code === selectedOrgJoinCode)?.name ?? selectedOrgJoinCode})
                       </span>
                     )}
-                    {userProfile?.role === 'leader' && leaderJoinCode && (
+                    {((userProfile?.role as unknown) as string) === 'leader' && leaderJoinCode && (
                       <span className="text-sm font-normal text-gray-500 ml-1">({leaderJoinCode})</span>
                     )}
-                    {userProfile?.role === 'student' && userProfile?.join_code_used && (
-                      <span className="text-sm font-normal text-gray-500 ml-1">({userProfile.join_code_used})</span>
+                    {userProfile?.role === 'student' && (userProfile as any)?.join_code_used && (
+                      <span className="text-sm font-normal text-gray-500 ml-1">({(userProfile as any).join_code_used})</span>
                     )}
                   </h2>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    {userProfile?.role === 'platform_administrator' && orgOptions.length > 0 && (
+                    {((userProfile?.role as unknown) as string) === 'platform_administrator' && orgOptions.length > 0 && (
                       <select value={selectedOrgJoinCode} onChange={e => setSelectedOrgJoinCode(e.target.value)}
                         className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
                         {orgOptions.map(org => (
@@ -2234,7 +2245,9 @@ const DashboardPage: React.FC = () => {
                         activityLink = '/learning/skills';
                       else activityLink = `/learning/ai/${activity.learning_module_id}`;
                     }
-                    
+
+                    const isAdvancedComplete = false;
+
                     const content = (
                       <div className={classNames(
                         'p-6 transition-colors rounded-3xl',
