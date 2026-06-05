@@ -883,6 +883,7 @@ const DashboardPage: React.FC = () => {
           .eq('org_id', orgSlug)
           .order('week_start', { ascending: false })
           .limit(12);
+        console.log('[PastChallenges]', pastChallengeRows, orgSlug);
         if (pastChallengeRows) setPastChallenges(pastChallengeRows as PastChallenge[]);
       } finally {
         setChallengeLoading(false);
