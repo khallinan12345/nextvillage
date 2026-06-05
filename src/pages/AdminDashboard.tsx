@@ -16,6 +16,8 @@ type MockUser = {
   status: 'Active' | 'Idle' | 'Offline';
   is_active?: boolean;
   last_seen?: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 function random<T>(arr: T[]) {
@@ -67,6 +69,27 @@ function generateMockUsers(count = 120): MockUser[] {
   return users;
 }
 
+function normalizeProfileRecord(p: any): MockUser {
+  return {
+    id: p.id ?? p.user_id ?? String(p.email ?? p.id ?? Math.random()),
+    full_name: p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.email || 'User',
+    email: p.email || p.user_email || 'unknown@example.com',
+    role: p.role || 'Student',
+    grade_level: p.grade_level || 'High School [Grades 9–12 / Ages 14–18]',
+    gender: p.gender || 'other',
+    continent: p.continent || 'Unknown',
+    country: p.country || 'Unknown',
+    state_province: p.state || p.state_province || 'Unknown',
+    city: p.city || '',
+    school: p.school || '',
+    status: p.status || 'Active',
+    is_active: typeof p.is_active === 'boolean' ? p.is_active : false,
+    last_seen: p.last_seen ? new Date(p.last_seen).toISOString() : undefined,
+    created_at: p.created_at ? new Date(p.created_at).toISOString() : undefined,
+    updated_at: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
+  };
+}
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState<MockUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,22 +116,7 @@ export default function AdminDashboard() {
       try {
         const { data, error } = await supabase.from('profiles').select('*');
         if (!error && Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((p: any) => ({
-            id: p.id ?? p.user_id ?? String(p.email ?? p.id ?? Math.random()),
-            full_name: p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.email || 'User',
-            email: p.email || p.user_email || 'unknown@example.com',
-            role: p.role || 'Student',
-            grade_level: p.grade_level || 'High School [Grades 9–12 / Ages 14–18]',
-            gender: p.gender || 'other',
-            continent: p.continent || 'Unknown',
-            country: p.country || 'Unknown',
-            state_province: p.state || p.state_province || 'Unknown',
-            city: p.city || '',
-            school: p.school || '',
-            status: p.status || 'Active',
-            is_active: typeof p.is_active === 'boolean' ? p.is_active : false,
-            last_seen: p.last_seen ? new Date(p.last_seen).toISOString() : undefined,
-          }));
+          const mapped = data.map((p: any) => normalizeProfileRecord(p));
           setUsers(mapped);
         } else {
           setUsers(generateMockUsers(120));
@@ -123,22 +131,66 @@ export default function AdminDashboard() {
     fetchUsers();
   }, []);
 
+  const upsertUser = (updated: MockUser) => {
+    setUsers((prev) => [updated, ...prev.filter((u) => u.id !== updated.id)]);
+  };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('profiles-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, (payload) => {
+        if (!payload.new) return;
+        upsertUser(normalizeProfileRecord(payload.new));
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        if (!payload.new) return;
+        upsertUser(normalizeProfileRecord(payload.new));
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
+
   const saveLocal = (updated: MockUser) => {
     setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     setSelected(null);
   };
 
-  const isUserRecentlyActive = (user: MockUser) => {
-    if (user.is_active) return true;
+  const isUserCurrentlyOnline = (user: MockUser) => {
+    if (user.is_active === true) return true;
     if (!user.last_seen) return false;
     const lastSeen = new Date(user.last_seen).getTime();
-    return Date.now() - lastSeen < 10 * 60 * 1000;
+    return Date.now() - lastSeen < 5 * 60 * 1000;
   };
 
   const getActivityDotClass = (user: MockUser) => {
-    return isUserRecentlyActive(user)
-      ? 'bg-emerald-500'
-      : 'bg-amber-400';
+    if (isUserCurrentlyOnline(user)) return 'bg-emerald-500';
+    if (user.status === 'Idle') return 'bg-amber-400';
+    return 'bg-gray-400';
+  };
+
+  const getStatusDisplay = (user: MockUser) => {
+    if (isUserCurrentlyOnline(user)) {
+      return {
+        label: '🟢 Active',
+        style: 'bg-green-100 text-green-800',
+        subtitle: 'Online now',
+      };
+    }
+    if (user.status === 'Idle') {
+      return {
+        label: '🟡 Idle',
+        style: 'bg-yellow-100 text-yellow-800',
+        subtitle: 'Inactive recently',
+      };
+    }
+    return {
+      label: '⚫ Offline',
+      style: 'bg-gray-100 text-gray-600',
+      subtitle: 'Inactive recently',
+    };
   };
 
   const filteredUsers = useMemo(() => {
@@ -163,9 +215,14 @@ export default function AdminDashboard() {
 
   const sortedUsers = useMemo(() => {
     return [...filteredUsers].sort((a, b) => {
-      const aActive = isUserRecentlyActive(a);
-      const bActive = isUserRecentlyActive(b);
+      const aActive = isUserCurrentlyOnline(a);
+      const bActive = isUserCurrentlyOnline(b);
       if (aActive !== bActive) return aActive ? -1 : 1;
+
+      const aTimestamp = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bTimestamp = new Date(b.updated_at || b.created_at || 0).getTime();
+      if (aTimestamp !== bTimestamp) return bTimestamp - aTimestamp;
+
       return a.full_name.localeCompare(b.full_name);
     });
   }, [filteredUsers]);
@@ -268,7 +325,7 @@ export default function AdminDashboard() {
                         <span>{u.full_name}</span>
                       </div>
                       <div className="text-xs text-gray-500">
-                        {isUserRecentlyActive(u) ? 'Recently active' : 'Inactive recently'}
+                        {getStatusDisplay(u).subtitle}
                         {u.last_seen ? ` · last seen ${new Date(u.last_seen).toLocaleString()}` : ''}
                       </div>
                     </td>
@@ -281,8 +338,8 @@ export default function AdminDashboard() {
                     <td className="px-4 py-3 text-sm text-gray-600">{u.state_province}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{u.country} / {u.continent}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${u.status === 'Active' ? 'bg-green-100 text-green-800' : u.status === 'Idle' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}`}>
-                        {u.status === 'Active' ? '🟢 Active' : u.status === 'Idle' ? '🟡 Idle' : '⚫ Offline'}
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${getStatusDisplay(u).style}`}>
+                        {getStatusDisplay(u).label}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
