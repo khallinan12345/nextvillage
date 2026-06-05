@@ -1332,7 +1332,7 @@ ${prior.impact_arc}
       } else {
         let projects: any[] = [];
         try {
-          const projectQuery = supabase.from('projects').select('*').eq('user_id', user.id);
+          const projectQuery = supabase.from('weekly_challenge_projects').select('*').eq('user_id', user.id);
           if (user.team_id) projectQuery.or(`user_id.eq.${user.id},team_id.eq.${user.team_id}`);
           const { data: projectsData, error: projectsError } = await projectQuery.order('updated_at', { ascending: false });
           // Gracefully handle 404 or missing projects table
