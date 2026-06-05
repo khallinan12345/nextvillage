@@ -14,6 +14,8 @@ type MockUser = {
   city?: string;
   school?: string;
   status: 'Active' | 'Idle' | 'Offline';
+  is_active?: boolean;
+  last_seen?: string;
 };
 
 function random<T>(arr: T[]) {
@@ -36,11 +38,14 @@ function generateMockUsers(count = 120): MockUser[] {
   const statuses: MockUser['status'][] = ['Active', 'Idle', 'Offline'];
 
   const users: MockUser[] = [];
+  const now = Date.now();
   for (let i = 0; i < count; i += 1) {
     const f = random(first);
     const l = random(last);
     const full = `${f} ${l}`;
     const country = random(countries);
+    const isActive = Math.random() > 0.4;
+    const lastSeenOffset = isActive ? Math.random() * 5 * 60 * 1000 : 30 * 60 * 1000 + Math.random() * 6 * 60 * 60 * 1000;
 
     users.push({
       id: `mock-${i + 1}`,
@@ -54,7 +59,9 @@ function generateMockUsers(count = 120): MockUser[] {
       state_province: random(states),
       city: random(cities),
       school: Math.random() > 0.4 ? `${f} ${l} Academy` : undefined,
-      status: random(statuses),
+      status: isActive ? 'Active' : random(['Idle', 'Offline']),
+      is_active: isActive,
+      last_seen: new Date(now - lastSeenOffset).toISOString(),
     });
   }
   return users;
@@ -98,7 +105,9 @@ export default function AdminDashboard() {
             state_province: p.state || p.state_province || 'Unknown',
             city: p.city || '',
             school: p.school || '',
-            status: 'Active',
+            status: p.status || 'Active',
+            is_active: typeof p.is_active === 'boolean' ? p.is_active : false,
+            last_seen: p.last_seen ? new Date(p.last_seen).toISOString() : undefined,
           }));
           setUsers(mapped);
         } else {
@@ -117,6 +126,19 @@ export default function AdminDashboard() {
   const saveLocal = (updated: MockUser) => {
     setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     setSelected(null);
+  };
+
+  const isUserRecentlyActive = (user: MockUser) => {
+    if (user.is_active) return true;
+    if (!user.last_seen) return false;
+    const lastSeen = new Date(user.last_seen).getTime();
+    return Date.now() - lastSeen < 10 * 60 * 1000;
+  };
+
+  const getActivityDotClass = (user: MockUser) => {
+    return isUserRecentlyActive(user)
+      ? 'bg-emerald-500'
+      : 'bg-amber-400';
   };
 
   const filteredUsers = useMemo(() => {
@@ -138,6 +160,15 @@ export default function AdminDashboard() {
 
     return users.filter(u => matchesSearch(u) && matchesSelectedLocation(u));
   }, [users, activeSearch, filterType, selectedLocation]);
+
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
+      const aActive = isUserRecentlyActive(a);
+      const bActive = isUserRecentlyActive(b);
+      if (aActive !== bActive) return aActive ? -1 : 1;
+      return a.full_name.localeCompare(b.full_name);
+    });
+  }, [filteredUsers]);
 
   return (
     <div className="p-6 font-sans">
@@ -229,9 +260,18 @@ export default function AdminDashboard() {
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u) => (
+                sortedUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-800">{u.full_name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-800">
+                      <div className="inline-flex items-center gap-2">
+                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${getActivityDotClass(u)}`} />
+                        <span>{u.full_name}</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {isUserRecentlyActive(u) ? 'Recently active' : 'Inactive recently'}
+                        {u.last_seen ? ` · last seen ${new Date(u.last_seen).toLocaleString()}` : ''}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {u.role}
