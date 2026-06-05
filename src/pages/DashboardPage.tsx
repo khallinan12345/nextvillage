@@ -493,7 +493,6 @@ const DashboardPage: React.FC = () => {
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
-<<<<<<< HEAD
 
   // ── Grand Challenge state ─────────────────────────────────────────────────
   const [grandChallenge, setGrandChallenge]           = useState<GrandChallenge | null>(null);
@@ -516,11 +515,6 @@ const DashboardPage: React.FC = () => {
   const [pastCohortLeaderboards, setPastCohortLeaderboards] = useState<PastCohortLeaderboard[]>([]);
   const [showPastCohortLb, setShowPastCohortLb]       = useState(false);
   const [pastCohortLoading, setPastCohortLoading]     = useState(false);
-=======
-  const [lastWeekChampion, setLastWeekChampion]       = useState<WeeklyChampion | null>(null);
-  const [, setLastWeekLeaderboard]                    = useState<CommunityLeaderEntry[]>([]);
-  const [, setLastWeekLbLoading]                      = useState(false);
->>>>>>> 131b761a298760c44f804486063e9cc96067ae77
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
