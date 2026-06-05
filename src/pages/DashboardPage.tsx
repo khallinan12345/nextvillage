@@ -94,6 +94,35 @@ interface GrandSubmission {
   community_member_name: string | null;
 }
 
+interface PastChallenge {
+  id: string;
+  title: string;
+  description: string;
+  community_impact_slug: string;
+  tier_target: string;
+  week_start: string;
+  week_end: string;
+  winner_name: string | null;
+  winner_id: string | null;
+  winner_reason: string | null;
+  winner_tier: string | null;
+}
+
+interface PastChallengeLeaderEntry {
+  learner_id: string;
+  name: string;
+  highest_tier: string;
+  highest_tier_label: string;
+  total_actions: number;
+  rank: number;
+}
+
+interface PastCohortLeaderboard {
+  month: string; // e.g. "2025-03"
+  label: string; // e.g. "March 2025"
+  entries: LeaderboardEntry[];
+}
+
 const TIER_COLOURS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
   seed:       { bg: 'bg-green-50',   text: 'text-green-700',   border: 'border-green-300',  dot: 'bg-green-500'   },
   scout:      { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-300',   dot: 'bg-blue-500'    },
@@ -477,6 +506,15 @@ const DashboardPage: React.FC = () => {
   const [grandWeeksActive, setGrandWeeksActive]       = useState(0);
   const [grandShowInstructions, setGrandShowInstructions] = useState(false);
   const [priorSubmissions, setPriorSubmissions]       = useState<GrandSubmission[]>([]);
+
+  // ── Past challenge history state ─────────────────────────────────────────
+  const [pastChallenges, setPastChallenges]           = useState<PastChallenge[]>([]);
+  const [showPastChallenges, setShowPastChallenges]   = useState(false);
+  const [pastChallengeLeaderboards, setPastChallengeLeaderboards] = useState<Record<string, PastChallengeLeaderEntry[]>>({});
+  const [expandedPastChallenge, setExpandedPastChallenge] = useState<string | null>(null);
+  const [pastCohortLeaderboards, setPastCohortLeaderboards] = useState<PastCohortLeaderboard[]>([]);
+  const [showPastCohortLb, setShowPastCohortLb]       = useState(false);
+  const [pastCohortLoading, setPastCohortLoading]     = useState(false);
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
@@ -837,6 +875,16 @@ const DashboardPage: React.FC = () => {
           .limit(10);
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
+
+        // Fetch past (inactive) challenges for this org
+        const { data: pastChallengeRows } = await supabase
+          .from('community_challenges')
+          .select('id, title, description, community_impact_slug, tier_target, week_start, week_end, winner_name, winner_id, winner_reason, winner_tier')
+          .eq('active', false)
+          .eq('org_id', orgSlug)
+          .order('week_start', { ascending: false })
+          .limit(12);
+        if (pastChallengeRows) setPastChallenges(pastChallengeRows as PastChallenge[]);
       } finally {
         setChallengeLoading(false);
         setCommunityLbLoading(false);
@@ -1073,6 +1121,90 @@ ${prior.impact_arc}
       setEnrolling(false);
     }
   };
+
+  // ── Fetch leaderboard for a past challenge ───────────────────────────────
+  const fetchPastChallengeLeaderboard = useCallback(async (challengeId: string) => {
+    if (pastChallengeLeaderboards[challengeId]) return; // already loaded
+    try {
+      const { data: enrollments } = await supabase
+        .from('challenge_enrollments')
+        .select('learner_id, status, tier_awarded, profiles(name)')
+        .eq('challenge_id', challengeId)
+        .in('status', ['submitted', 'awarded', 'active'])
+        .order('tier_awarded', { ascending: false });
+
+      if (!enrollments) return;
+
+      const TIER_ORDER: Record<string, number> = { multiplier: 5, builder: 4, bridge: 3, scout: 2, seed: 1 };
+      const entries: PastChallengeLeaderEntry[] = enrollments
+        .map((e: any) => ({
+          learner_id: e.learner_id,
+          name: e.profiles?.name ?? 'Learner',
+          highest_tier: e.tier_awarded ?? 'seed',
+          highest_tier_label: TIER_LABELS_MAP[e.tier_awarded ?? 'seed'] ?? e.tier_awarded ?? 'Seed',
+          total_actions: 1,
+          rank: 0,
+        }))
+        .sort((a, b) => (TIER_ORDER[b.highest_tier] ?? 0) - (TIER_ORDER[a.highest_tier] ?? 0))
+        .map((e, i) => ({ ...e, rank: i + 1 }));
+
+      setPastChallengeLeaderboards(prev => ({ ...prev, [challengeId]: entries }));
+    } catch (err) {
+      console.error('[PastChallengeLeaderboard] error:', err);
+    }
+  }, [pastChallengeLeaderboards]);
+
+  // ── Fetch past cohort leaderboards (by month) ────────────────────────────
+  const fetchPastCohortLeaderboards = useCallback(async (joinCode: string) => {
+    if (!joinCode || pastCohortLeaderboards.length > 0) return;
+    setPastCohortLoading(true);
+    try {
+      const { data: cohortProfiles } = await supabase
+        .from('profiles').select('id, name')
+        .eq('join_code_used', joinCode).eq('role', 'student');
+      if (!cohortProfiles || cohortProfiles.length === 0) return;
+
+      const cohortIds = cohortProfiles.map(p => p.id);
+      const nameMap: Record<string, string> = {};
+      cohortProfiles.forEach(p => { nameMap[p.id] = p.name; });
+
+      const { data: rows } = await supabase
+        .from('dashboard').select('user_id, progress, created_at')
+        .in('user_id', cohortIds).in('progress', ['started', 'completed']);
+      if (!rows) return;
+
+      // Group by YYYY-MM
+      const monthMap: Record<string, Record<string, number>> = {};
+      rows.forEach(r => {
+        const d = new Date(r.created_at);
+        const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+        if (!monthMap[key]) monthMap[key] = {};
+        monthMap[key][r.user_id] = (monthMap[key][r.user_id] || 0) + 1;
+      });
+
+      const now = new Date();
+      const currentKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+
+      const boards: PastCohortLeaderboard[] = Object.entries(monthMap)
+        .filter(([key]) => key !== currentKey)
+        .sort(([a], [b]) => b.localeCompare(a))
+        .slice(0, 6)
+        .map(([key, counts]) => {
+          const [year, month] = key.split('-');
+          const label = new Date(Number(year), Number(month) - 1, 1)
+            .toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          const entries: LeaderboardEntry[] = Object.entries(counts)
+            .map(([uid, count]) => ({ user_id: uid, name: nameMap[uid] || 'Unknown', value: count, rank: 0 }))
+            .sort((a, b) => b.value - a.value).slice(0, 10)
+            .map((e, i) => ({ ...e, rank: i + 1 }));
+          return { month: key, label, entries };
+        });
+
+      setPastCohortLeaderboards(boards);
+    } finally {
+      setPastCohortLoading(false);
+    }
+  }, [pastCohortLeaderboards.length]);
 
   const fetchLeaderboardForCode = useCallback(async (
     metric: LeaderboardMetric, joinCode: string
@@ -2030,7 +2162,18 @@ ${prior.impact_arc}
                     <Globe2 className="h-6 w-6 text-emerald-600" />
                     Community Impact Leaderboard
                   </h2>
-                  <span className="text-xs text-gray-500">ranked by highest tier · then total actions</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500">ranked by highest tier · then total actions</span>
+                    {pastChallenges.length > 0 && (
+                      <button
+                        onClick={() => setShowPastChallenges(v => !v)}
+                        className="text-xs font-medium text-emerald-700 hover:text-emerald-900 border border-emerald-300 hover:border-emerald-500 rounded-full px-3 py-1 transition-colors flex items-center gap-1"
+                      >
+                        <Calendar size={12} />
+                        {showPastChallenges ? 'Hide history' : `Past winners (${pastChallenges.length})`}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {communityLbLoading ? (
@@ -2094,6 +2237,113 @@ ${prior.impact_arc}
                     })}
                   </div>
                 )}
+
+                {/* ── Past Challenge Winners ── */}
+                {showPastChallenges && pastChallenges.length > 0 && (
+                  <div className="border-t border-gray-200 bg-gray-50">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                      <Trophy size={14} className="text-amber-500" />
+                      <span className="text-sm font-semibold text-gray-700">Past Weekly Challenges</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {pastChallenges.map(pc => {
+                        const isExpanded = expandedPastChallenge === pc.id;
+                        const weekLabel = new Date(pc.week_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        const tc = TIER_COLOURS[pc.winner_tier ?? 'seed'] ?? TIER_COLOURS.seed;
+                        const lbEntries = pastChallengeLeaderboards[pc.id];
+
+                        return (
+                          <div key={pc.id} className="px-6 py-3">
+                            <button
+                              onClick={async () => {
+                                if (!isExpanded) await fetchPastChallengeLeaderboard(pc.id);
+                                setExpandedPastChallenge(isExpanded ? null : pc.id);
+                              }}
+                              className="w-full flex items-start justify-between gap-3 text-left"
+                            >
+                              <div className="flex items-start gap-3 flex-1 min-w-0">
+                                <span className="text-lg leading-none flex-shrink-0 mt-0.5">
+                                  {SLUG_EMOJI[pc.community_impact_slug] ?? '🌍'}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs text-gray-400">Week ending {weekLabel}</span>
+                                    <span className={classNames(
+                                      'text-xs px-2 py-0.5 rounded-full font-semibold border',
+                                      TIER_COLOURS[pc.tier_target]?.bg ?? 'bg-gray-50',
+                                      TIER_COLOURS[pc.tier_target]?.text ?? 'text-gray-600',
+                                      TIER_COLOURS[pc.tier_target]?.border ?? 'border-gray-200',
+                                    )}>
+                                      {pc.tier_target}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm font-medium text-gray-800 mt-0.5 truncate">{pc.title}</p>
+                                  {pc.winner_name && (
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                      <span className="text-sm">🏆</span>
+                                      <span className="text-xs font-semibold text-amber-700">{pc.winner_name}</span>
+                                      {pc.winner_tier && (
+                                        <span className={classNames('text-xs px-1.5 py-0.5 rounded-full font-semibold border', tc.bg, tc.text, tc.border)}>
+                                          {TIER_LABELS_MAP[pc.winner_tier] ?? pc.winner_tier}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                  {!pc.winner_name && (
+                                    <p className="text-xs text-gray-400 italic mt-1">No winner recorded</p>
+                                  )}
+                                </div>
+                              </div>
+                              {isExpanded
+                                ? <ChevronUp size={16} className="text-gray-400 flex-shrink-0 mt-1" />
+                                : <ChevronDown size={16} className="text-gray-400 flex-shrink-0 mt-1" />}
+                            </button>
+
+                            {/* Expanded: winner reason + leaderboard */}
+                            {isExpanded && (
+                              <div className="mt-3 space-y-3">
+                                {pc.winner_reason && (
+                                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-amber-800 mb-1">Why they won:</p>
+                                    <p className="text-xs text-amber-900 leading-relaxed">{pc.winner_reason}</p>
+                                  </div>
+                                )}
+                                {lbEntries === undefined ? (
+                                  <div className="flex items-center justify-center py-4">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-emerald-400" />
+                                  </div>
+                                ) : lbEntries.length === 0 ? (
+                                  <p className="text-xs text-gray-400 text-center py-2">No participants recorded.</p>
+                                ) : (
+                                  <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+                                    <div className="px-3 py-1.5 bg-gray-50 rounded-t-lg">
+                                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Participants</span>
+                                    </div>
+                                    {lbEntries.slice(0, 8).map(e => {
+                                      const medal = MEDAL[e.rank];
+                                      const etc = TIER_COLOURS[e.highest_tier] ?? TIER_COLOURS.seed;
+                                      return (
+                                        <div key={e.learner_id} className="flex items-center px-3 py-2 gap-3">
+                                          <div className="w-8 text-center flex-shrink-0 text-sm">
+                                            {medal ?? <span className="text-gray-400 font-bold">#{e.rank}</span>}
+                                          </div>
+                                          <span className="flex-1 text-xs font-medium text-gray-800 truncate">{e.name}</span>
+                                          <span className={classNames('text-xs px-2 py-0.5 rounded-full font-semibold border', etc.bg, etc.text, etc.border)}>
+                                            {e.highest_tier_label}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -2134,6 +2384,18 @@ ${prior.impact_arc}
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
+                    {(leaderboardMetric === 'sessions_alltime' || leaderboardMetric === 'sessions_thismonth') && resolvedJoinCode && (
+                      <button
+                        onClick={async () => {
+                          if (!showPastCohortLb) await fetchPastCohortLeaderboards(resolvedJoinCode);
+                          setShowPastCohortLb(v => !v);
+                        }}
+                        className="text-xs font-medium text-amber-700 hover:text-amber-900 border border-amber-300 hover:border-amber-500 rounded-full px-3 py-1 transition-colors flex items-center gap-1"
+                      >
+                        <Calendar size={12} />
+                        {showPastCohortLb ? 'Hide history' : 'Past months'}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -2190,6 +2452,59 @@ ${prior.impact_arc}
                       );
                     })}
                   </div>
+
+                  {/* ── Past Monthly Leaderboards ── */}
+                  {showPastCohortLb && (
+                    <div className="border-t border-gray-200 bg-gray-50">
+                      <div className="px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                        <Calendar size={14} className="text-amber-500" />
+                        <span className="text-sm font-semibold text-gray-700">Past Monthly Leaderboards — Sessions</span>
+                      </div>
+                      {pastCohortLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-amber-400" />
+                        </div>
+                      ) : pastCohortLeaderboards.length === 0 ? (
+                        <div className="px-6 py-6 text-center text-sm text-gray-400">No historical data available yet.</div>
+                      ) : (
+                        <div className="divide-y divide-gray-200">
+                          {pastCohortLeaderboards.map(board => (
+                            <div key={board.month} className="px-6 py-4">
+                              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <span className="text-amber-500">📅</span> {board.label}
+                              </h3>
+                              <div className="space-y-1.5">
+                                {board.entries.map(entry => {
+                                  const isMe = entry.user_id === user?.id;
+                                  const medal = MEDAL[entry.rank];
+                                  return (
+                                    <div key={entry.user_id}
+                                      className={classNames('flex items-center gap-3 px-3 py-1.5 rounded-lg',
+                                        isMe ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-gray-100')}>
+                                      <div className="w-8 text-center flex-shrink-0 text-sm">
+                                        {medal ?? <span className="text-gray-400 font-bold text-xs">#{entry.rank}</span>}
+                                      </div>
+                                      <span className={classNames('flex-1 text-xs font-medium truncate',
+                                        isMe ? 'text-amber-800' : 'text-gray-800')}>
+                                        {entry.name}
+                                        {isMe && <span className="ml-1 text-amber-600">(you)</span>}
+                                      </span>
+                                      <span className={classNames('text-xs font-bold',
+                                        entry.rank === 1 ? 'text-amber-600' :
+                                        entry.rank === 2 ? 'text-gray-500' :
+                                        entry.rank === 3 ? 'text-orange-600' : 'text-gray-600')}>
+                                        {entry.value} <span className="font-normal text-gray-400">sessions</span>
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 )}
               </div>
             )}
