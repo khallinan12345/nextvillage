@@ -2144,7 +2144,7 @@ ${prior.impact_arc}
 
                       {/* ── Intro ── */}
                       <p className="text-xs text-amber-800 leading-relaxed mb-4 bg-amber-100/60 rounded-lg px-3 py-2.5 border border-amber-200">
-                        <span className="font-bold">Your 3-month community impact story.</span> Go into your community. Help real people solve real problems using AI. Document each visit. Show what changed — for farmers, fishers, traders, families, anyone you worked with. The learner whose work shows the deepest, most honest improvement wins.
+                        <span className="font-bold">Your 3-month community impact story.</span> Go into your community. Help real people solve real problems using AI — one person at a time. Use the Agriculture, Fishing, Healthcare, Entrepreneurship, Animal Husbandry, and AI Ambassadors pages as your toolkit, or simply open Claude and describe the problem. Document each visit. Show what changed. The learner whose work shows the deepest, most honest improvement wins.
                       </p>
 
                       {/* Winner state */}
