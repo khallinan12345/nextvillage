@@ -30,9 +30,12 @@ import {
   Activity,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   BookOpen,
   Calendar,
   Sparkles,
+  Newspaper,
+  X as XIcon,
 } from 'lucide-react';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/ui/Button';
@@ -459,6 +462,20 @@ const trendBadge = (trend: string | null) => {
 
 // ───────────────────────────────────────────────────────────────────────────
 
+// ── News banner ───────────────────────────────────────────────────────────────
+interface NewsItem {
+  id: number;
+  title: string;
+  body: string;
+  link?: string;
+  link_label?: string;
+  emoji?: string;
+  created_at: string;
+  organization_ids: string[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData>({
@@ -515,6 +532,11 @@ const DashboardPage: React.FC = () => {
   const [pastCohortLeaderboards, setPastCohortLeaderboards] = useState<PastCohortLeaderboard[]>([]);
   const [showPastCohortLb, setShowPastCohortLb]       = useState(false);
   const [pastCohortLoading, setPastCohortLoading]     = useState(false);
+
+  // ── News banner state ─────────────────────────────────────────────────────
+  const [newsItems, setNewsItems]       = useState<NewsItem[]>([]);
+  const [newsDismissed, setNewsDismissed] = useState(false);
+  const [newsIndex, setNewsIndex]       = useState(0);
   const navigate = useNavigate();
   const [orgOptions, setOrgOptions] = useState<{ id: string; name: string; join_code: string }[]>([]);
   const [selectedOrgJoinCode, setSelectedOrgJoinCode] = useState<string>('');
@@ -888,6 +910,33 @@ const DashboardPage: React.FC = () => {
         setChallengeLoading(false);
         setCommunityLbLoading(false);
       }
+    })();
+  }, [user?.id]);
+
+  // ── Fetch platform news ───────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        let orgId: string | null = null;
+        if (user?.id) {
+          const { data: profileData } = await supabase
+            .from('profiles').select('organization_id').eq('id', user.id).single();
+          orgId = profileData?.organization_id ?? null;
+        }
+        const { data } = await supabase
+          .from('platform_news')
+          .select('id,title,body,link,link_label,emoji,created_at,organization_ids')
+          .eq('active', true)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (data) {
+          const filtered = data.filter((item: any) => {
+            const ids: string[] = item.organization_ids ?? [];
+            return ids.length === 0 || (orgId && ids.includes(orgId));
+          });
+          setNewsItems(filtered as NewsItem[]);
+        }
+      } catch { /* silent — banner is non-critical */ }
     })();
   }, [user?.id]);
 
@@ -1910,7 +1959,52 @@ ${prior.impact_arc}
         ) : (
           <div className="space-y-8">
 
-            {/* ── Community AI Challenges — Two Column Layout ─────────── */}
+            {/* ── News Banner ─────────────────────────────────────────────── */}
+            {!newsDismissed && newsItems.length > 0 && (
+              <div className="rounded-2xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-300 px-5 py-4 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Newspaper size={15} className="text-yellow-600 flex-shrink-0" />
+                    <span className="text-xs font-bold text-yellow-700 uppercase tracking-widest">What's New</span>
+                    {newsItems.length > 1 && (
+                      <span className="text-[10px] text-yellow-500 font-medium">
+                        {newsIndex + 1} / {newsItems.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {newsItems.length > 1 && (
+                      <button onClick={() => setNewsIndex(i => (i + 1) % newsItems.length)}
+                        className="text-yellow-500 hover:text-yellow-700 transition-colors" title="Next">
+                        <ChevronRight size={16} />
+                      </button>
+                    )}
+                    <button onClick={() => setNewsDismissed(true)}
+                      className="text-yellow-400 hover:text-yellow-700 transition-colors" title="Dismiss">
+                      <XIcon size={14} />
+                    </button>
+                  </div>
+                </div>
+                {(() => {
+                  const item = newsItems[newsIndex];
+                  return (
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {item.emoji && <span className="mr-1.5">{item.emoji}</span>}
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-gray-600 leading-relaxed mt-0.5">{item.body}</p>
+                      {item.link && (
+                        <a href={item.link}
+                          className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold text-yellow-700 hover:text-yellow-900 underline underline-offset-2 transition-colors">
+                          {item.link_label ?? 'Learn more'} <ChevronRight size={11} />
+                        </a>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
             {(!challengeLoading || !grandLoading) && (weeklyChallenge || grandChallenge) && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
@@ -2174,34 +2268,6 @@ ${prior.impact_arc}
                   </h2>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-gray-500">ranked by highest tier · then total actions</span>
-
-                {/* ── Tier Legend ── */}
-                <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-emerald-50 border-b border-gray-100">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Impact Tiers — highest to lowest</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { tier: 'multiplier', emoji: '🏘️', label: 'Village Leader',       desc: 'Recruited & mentoring a new learner' },
-                      { tier: 'builder',    emoji: '🤖', label: 'AI for Good',           desc: 'Co-solved a real problem with AI' },
-                      { tier: 'bridge',     emoji: '🌉', label: 'Community Connector',   desc: 'Brought a community member to the hub' },
-                      { tier: 'scout',      emoji: '🔍', label: 'Problem Finder',        desc: 'Found & documented a real community problem' },
-                      { tier: 'seed',       emoji: '🌱', label: 'Community Teacher',     desc: 'Made genuine community contact' },
-                    ].map(({ tier, emoji, label, desc }) => {
-                      const tc = TIER_COLOURS[tier];
-                      return (
-                        <div key={tier} className={classNames(
-                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs',
-                          tc.bg, tc.border
-                        )}>
-                          <span>{emoji}</span>
-                          <div>
-                            <span className={classNames('font-bold', tc.text)}>{label}</span>
-                            <span className="text-gray-400 ml-1 hidden sm:inline">— {desc}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
                     {pastChallenges.length > 0 && (
                       <button
                         onClick={() => setShowPastChallenges(v => !v)}
