@@ -2280,6 +2280,34 @@ ${prior.impact_arc}
                   </div>
                 </div>
 
+                {/* ── Tier Legend ── */}
+                <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-emerald-50 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Impact Tiers — highest to lowest</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { tier: 'multiplier', emoji: '🏘️', label: 'Village Leader',     desc: 'Recruited & mentoring a new learner' },
+                      { tier: 'builder',    emoji: '🤖', label: 'AI for Good',         desc: 'Co-solved a real problem with AI' },
+                      { tier: 'bridge',     emoji: '🌉', label: 'Community Connector', desc: 'Brought a community member to the hub' },
+                      { tier: 'scout',      emoji: '🔍', label: 'Problem Finder',      desc: 'Found & documented a real community problem' },
+                      { tier: 'seed',       emoji: '🌱', label: 'Community Teacher',   desc: 'Made genuine community contact' },
+                    ].map(({ tier, emoji, label, desc }) => {
+                      const tc = TIER_COLOURS[tier];
+                      return (
+                        <div key={tier} className={classNames(
+                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs',
+                          tc.bg, tc.border
+                        )}>
+                          <span>{emoji}</span>
+                          <div>
+                            <span className={classNames('font-bold', tc.text)}>{label}</span>
+                            <span className="text-gray-400 ml-1 hidden sm:inline">— {desc}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {communityLbLoading ? (
                   <div className="flex items-center justify-center py-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400" />
