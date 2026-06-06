@@ -2142,6 +2142,11 @@ ${prior.impact_arc}
                     )}
                     <div className="px-4 py-4">
 
+                      {/* ── Intro ── */}
+                      <p className="text-xs text-amber-800 leading-relaxed mb-4 bg-amber-100/60 rounded-lg px-3 py-2.5 border border-amber-200">
+                        <span className="font-bold">Your 3-month community impact story.</span> Go into your community. Help real people solve real problems using AI. Document each visit. Show what changed — for farmers, fishers, traders, families, anyone you worked with. The learner whose work shows the deepest, most honest improvement wins.
+                      </p>
+
                       {/* Winner state */}
                       {grandSubmission?.status === 'awarded' && grandSubmission.is_quarter_winner ? (
                         <div className="text-center py-2">
