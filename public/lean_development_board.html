@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nextvillage · dev board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F4F2ED;
+    --surface: #FFFFFF;
+    --border: #D8D5CE;
+    --border-light: #E8E5DF;
+    --text: #1A1916;
+    --muted: #6B6860;
+    --faint: #9B9890;
+    --teal: #0F6E56;
+    --teal-bg: #E1F5EE;
+    --teal-mid: #1D9E75;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --blue: #185FA5;
+    --blue-bg: #E6F1FB;
+    --kevin: #185FA5;
+    --kevin-bg: #E6F1FB;
+    --silas: #3B6D11;
+    --silas-bg: #EAF3DE;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .shell {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wordmark {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .wordmark strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .progress-track {
+    width: 120px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--teal-mid);
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .github-hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    background: var(--border-light);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .github-hint:hover { color: var(--muted); }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 1.5rem;
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-red { background: #E24B4A; }
+  .dot-amber { background: #EF9F27; }
+  .dot-gray { background: #AAAAAA; }
+
+  /* SECTION */
+  .section { margin-bottom: 1.75rem; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+
+  /* TASK CARD */
+  .task {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: border-color 0.15s, opacity 0.2s;
+  }
+
+  .task:hover { border-color: var(--border); }
+  .task.done { opacity: 0.45; }
+  .task.done .task-title { text-decoration: line-through; color: var(--faint); }
+
+  .task-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .checkbox {
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    background: transparent;
+  }
+  .checkbox:hover { border-color: var(--teal-mid); }
+  .checkbox.checked { background: var(--teal-mid); border-color: var(--teal-mid); }
+  .checkbox svg { display: none; }
+  .checkbox.checked svg { display: block; }
+
+  .priority-pip {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+  }
+
+  .task-title {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 5px;
+  }
+
+  .task-note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .sign-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sign-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+  }
+
+  .sign-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 2px 10px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .sign-btn:hover { border-color: var(--border); color: var(--text); }
+  .sign-btn.kevin-on { background: var(--kevin-bg); border-color: var(--kevin); color: var(--kevin); }
+  .sign-btn.silas-on { background: var(--silas-bg); border-color: var(--silas); color: var(--silas); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--border);
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+  .delete-btn:hover { color: #E24B4A; }
+
+  /* ADD TASK */
+  .add-section { margin-top: 2rem; }
+
+  .add-toggle {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .add-toggle:hover { color: var(--text); border-color: var(--border); background: var(--surface); }
+
+  .add-form {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .add-form.open { display: block; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+
+  label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  input[type="text"], select, textarea {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--teal-mid); }
+
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+  select { cursor: pointer; }
+
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
+  .btn-cancel {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 16px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .btn-cancel:hover { color: var(--text); }
+
+  .btn-add {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--teal-mid);
+    border: none;
+    border-radius: 4px;
+    padding: 7px 16px;
+    cursor: pointer;
+    color: white;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+  .btn-add:hover { opacity: 0.85; }
+
+  /* EXPORT */
+  .footer {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .footer-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    line-height: 1.6;
+  }
+
+  .export-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--text);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .export-btn:hover { opacity: 0.8; }
+
+  .copy-confirm {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--teal);
+    display: none;
+  }
+  .copy-confirm.show { display: inline; }
+
+  @media (max-width: 540px) {
+    .form-row { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="header">
+    <div class="wordmark"><strong>nextvillage.community</strong> · dev board</div>
+    <div class="header-right">
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+        <span class="progress-text" id="prog-label">0 / 0</span>
+      </div>
+      <button class="github-hint" onclick="showGithubInstructions()">↑ commit to github</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="dot dot-red"></div> urgent</div>
+    <div class="legend-item"><div class="dot dot-amber"></div> important</div>
+    <div class="legend-item"><div class="dot dot-gray"></div> when ready</div>
+    <div class="legend-item" style="margin-left:auto;">
+      <span style="background:var(--kevin-bg);color:var(--kevin);font-family:var(--mono);font-size:10px;border-radius:99px;padding:1px 8px;">K</span>&nbsp;kevin&nbsp;&nbsp;
+      <span style="background:var(--silas-bg);color:var(--silas);font-family:var(--mono);font-size:10px;border-radius:99px;padding:1px 8px;">S</span>&nbsp;silas
+    </div>
+  </div>
+
+  <div id="board"></div>
+
+  <div class="add-section">
+    <button class="add-toggle" id="add-toggle-btn" onclick="toggleAddForm()">+ add task</button>
+    <div class="add-form" id="add-form">
+      <div class="form-row">
+        <div class="form-field" style="grid-column: 1 / -1;">
+          <label>task title</label>
+          <input type="text" id="new-title" placeholder="What needs to happen?" />
+        </div>
+      </div>
+      <div class="form-field" style="margin-bottom:10px;">
+        <label>note / context</label>
+        <textarea id="new-note" placeholder="Why does this matter? What's the acceptance criteria?"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>section</label>
+          <select id="new-section">
+            <option value="🔴 harden what exists">harden what exists</option>
+            <option value="📊 instrument everything">instrument everything</option>
+            <option value="⚙️ operational stability">operational stability</option>
+            <option value="📄 documentation & knowledge transfer">documentation & knowledge transfer</option>
+            <option value="🔁 user feedback loops">user feedback loops</option>
+            <option value="📌 other">other</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>priority</label>
+          <select id="new-priority">
+            <option value="red">urgent</option>
+            <option value="amber" selected>important</option>
+            <option value="gray">when ready</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="toggleAddForm()">cancel</button>
+        <button class="btn-add" onclick="addTask()">add task</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-note">
+      state saves locally · export JSON → commit to repo as <code style="font-size:10px;">board-state.json</code><br>
+      to sync: both open the file, import latest JSON from repo
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="copy-confirm" id="copy-confirm">✓ copied</span>
+      <button class="export-btn" onclick="exportState()">export JSON</button>
+      <button class="export-btn" style="background:var(--muted);" onclick="importState()">import JSON</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DEFAULT_TASKS = [
+  { id:"t1", section:"🔴 harden what exists", priority:"red", title:"Fix error handling — surface silent failures to user", note:"Known gap. Audit try/catch blocks; ensure every AI call, Supabase write, and Edge Function failure shows a message, not a blank screen.", tagLabel:"partial — known gap" },
+  { id:"t2", section:"🔴 harden what exists", priority:"red", title:"Admin deduplication UI for repeat registrations", note:"Root cause: missing forgot-password. Build a simple merge/delete interface Silas can run without DB access.", tagLabel:"recurring pain" },
+  { id:"t3", section:"🔴 harden what exists", priority:"amber", title:"RLS policy audit — confirm all tables are locked down", note:"You think it's done. Verify by testing as an anon user and a cross-org user. Write down what you find.", tagLabel:"verify & document" },
+  { id:"t4", section:"🔴 harden what exists", priority:"amber", title:"API key exposure check", note:"Scan the repo for any keys committed to git history. Confirm env vars are set in Vercel and not in client-side code.", tagLabel:"one-time" },
+  { id:"t5", section:"🔴 harden what exists", priority:"gray", title:"Edge case testing with real learners", note:"Give Silas or Godwill a specific task and watch them do it. You'll find things no code review ever catches.", tagLabel:"field test" },
+  { id:"t6", section:"🔴 harden what exists", priority:"gray", title:"Supabase query performance review", note:"Use Supabase's built-in query analyzer. Flag any query without an index that runs on page load.", tagLabel:"when ready" },
+  { id:"t7", section:"📊 instrument everything", priority:"amber", title:"Structured error logging to Supabase or console", note:"Not just 'something broke' — log which user, which page, which function, what the payload was.", tagLabel:"gaps exist" },
+  { id:"t8", section:"📊 instrument everything", priority:"amber", title:"Cost anomaly alerting — catch bill spikes early", note:"You have monitoring. Confirm it fires before the bill arrives, not after.", tagLabel:"revenue risk" },
+  { id:"t9", section:"📊 instrument everything", priority:"gray", title:"User drop-off visibility", note:"Which pages do learners visit and then abandon? A simple Supabase event log per page would reveal this.", tagLabel:"when ready" },
+  { id:"t10", section:"⚙️ operational stability", priority:"red", title:"Runbook: duplicate user procedure", note:"Write the step-by-step so Silas can handle it without calling you. Keep it in the repo.", tagLabel:"recurring" },
+  { id:"t11", section:"⚙️ operational stability", priority:"amber", title:"Dependency risk audit", note:"List every free-tier provider. For each: what breaks if it disappears? Which has a paid fallback in your chain?", tagLabel:"strategic" },
+  { id:"t12", section:"⚙️ operational stability", priority:"gray", title:"Backup & recovery — actually test it", note:"Can you restore from a Supabase backup? Have you tried? Schedule a 1-hour test.", tagLabel:"untested" },
+  { id:"t13", section:"📄 documentation & knowledge transfer", priority:"amber", title:"Architecture decision record (ADR)", note:"One markdown file per major decision: why multi-provider fallback, why Netlify for triage, why Supabase Storage for certs. Silas writes the first draft; Kevin corrects.", tagLabel:"silas-led" },
+  { id:"t14", section:"📄 documentation & knowledge transfer", priority:"amber", title:"Silas onboarding guide — run the platform without Kevin", note:"If Kevin disappeared for a month, what would Silas need? That's the doc.", tagLabel:"silas-led" },
+  { id:"t15", section:"🔁 user feedback loops", priority:"amber", title:"In-platform feedback mechanism for learners", note:"A simple 'something's wrong' button that logs to Supabase with page + user context. Solomon can triage.", tagLabel:"community-facing" },
+  { id:"t16", section:"🔁 user feedback loops", priority:"amber", title:"Tier-1 triage process for Solomon and Silas", note:"What can they resolve? What escalates to Kevin? Write it down and test it with a real issue.", tagLabel:"ops handoff" },
+];
+
+const STORAGE_KEY = "nv_board_v2";
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)), progress: {} };
+}
+
+let state = loadState();
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function tagColor(priority) {
+  if (priority === "red") return "background:#FCEBEB;color:#A32D2D;";
+  if (priority === "amber") return "background:#FAEEDA;color:#854F0B;";
+  return "background:#F1EFE8;color:#5F5E5A;";
+}
+
+function pipColor(priority) {
+  if (priority === "red") return "#E24B4A";
+  if (priority === "amber") return "#EF9F27";
+  return "#AAAAAA";
+}
+
+function getSections() {
+  const order = ["🔴 harden what exists","📊 instrument everything","⚙️ operational stability","📄 documentation & knowledge transfer","🔁 user feedback loops","📌 other"];
+  const map = {};
+  state.tasks.forEach(t => {
+    if (!map[t.section]) map[t.section] = [];
+    map[t.section].push(t);
+  });
+  const result = [];
+  order.forEach(s => { if (map[s]) result.push([s, map[s]]); delete map[s]; });
+  Object.keys(map).forEach(s => result.push([s, map[s]]));
+  return result;
+}
+
+function render() {
+  const board = document.getElementById("board");
+  const sections = getSections();
+  let html = "";
+  let total = 0, done = 0;
+
+  sections.forEach(([section, tasks]) => {
+    const label = section.replace(/^[^\s]+\s/, "");
+    html += `<div class="section"><div class="section-label">${label}</div>`;
+    tasks.forEach(task => {
+      const p = state.progress[task.id] || {};
+      const isDone = !!p.done;
+      if (isDone) done++;
+      total++;
+      html += `
+      <div class="task ${isDone ? 'done' : ''}" id="card-${task.id}">
+        <div class="task-left">
+          <div class="checkbox ${isDone ? 'checked' : ''}" onclick="toggleDone('${task.id}')">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <polyline points="1.5,5 4,7.5 8.5,2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="priority-pip" style="background:${pipColor(task.priority)};"></div>
+        </div>
+        <div class="task-body">
+          <div class="task-meta">
+            <span class="tag" style="${tagColor(task.priority)}">${task.tagLabel || task.priority}</span>
+          </div>
+          <div class="task-title">${task.title}</div>
+          <div class="task-note">${task.note}</div>
+          <div class="sign-row">
+            <span class="sign-label">signed off:</span>
+            <button class="sign-btn ${p.kevin ? 'kevin-on' : ''}" onclick="toggleSign('${task.id}','kevin')">${p.kevin ? '✓ ' : ''}kevin</button>
+            <button class="sign-btn ${p.silas ? 'silas-on' : ''}" onclick="toggleSign('${task.id}','silas')">${p.silas ? '✓ ' : ''}silas</button>
+          </div>
+        </div>
+        <button class="delete-btn" onclick="deleteTask('${task.id}')" title="remove task">×</button>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  board.innerHTML = html;
+
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById("prog").style.width = pct + "%";
+  document.getElementById("prog-label").textContent = done + " / " + total;
+}
+
+function toggleDone(id) {
+  state.progress[id] = state.progress[id] || {};
+  state.progress[id].done = !state.progress[id].done;
+  saveState(); render();
+}
+
+function toggleSign(id, who) {
+  state.progress[id] = state.progress[id] || {};
+  state.progress[id][who] = !state.progress[id][who];
+  saveState(); render();
+}
+
+function deleteTask(id) {
+  if (!confirm("Remove this task?")) return;
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  delete state.progress[id];
+  saveState(); render();
+}
+
+function toggleAddForm() {
+  const form = document.getElementById("add-form");
+  const btn = document.getElementById("add-toggle-btn");
+  const isOpen = form.classList.contains("open");
+  form.classList.toggle("open");
+  btn.style.display = isOpen ? "block" : "none";
+  if (!isOpen) document.getElementById("new-title").focus();
+}
+
+function addTask() {
+  const title = document.getElementById("new-title").value.trim();
+  if (!title) { alert("Please enter a task title."); return; }
+  const id = "custom_" + Date.now();
+  const task = {
+    id,
+    section: document.getElementById("new-section").value,
+    priority: document.getElementById("new-priority").value,
+    title,
+    note: document.getElementById("new-note").value.trim(),
+    tagLabel: document.getElementById("new-priority").options[document.getElementById("new-priority").selectedIndex].text,
+  };
+  state.tasks.push(task);
+  saveState();
+  document.getElementById("new-title").value = "";
+  document.getElementById("new-note").value = "";
+  toggleAddForm();
+  render();
+}
+
+function exportState() {
+  const json = JSON.stringify(state, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    const el = document.getElementById("copy-confirm");
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 2000);
+  }).catch(() => {
+    const blob = new Blob([json], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "board-state.json";
+    a.click();
+  });
+}
+
+function importState() {
+  const raw = prompt("Paste JSON from board-state.json:");
+  if (!raw) return;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.tasks && parsed.progress) {
+      state = parsed;
+      saveState();
+      render();
+    } else { alert("Invalid board state JSON."); }
+  } catch(e) { alert("Could not parse JSON: " + e.message); }
+}
+
+function showGithubInstructions() {
+  alert(
+    "GitHub sync workflow:\n\n" +
+    "1. Click 'export JSON' — copies board-state.json to clipboard\n" +
+    "2. Paste into board-state.json in the repo root\n" +
+    "3. git add board-state.json\n" +
+    "4. git commit -m 'board: update task progress'\n" +
+    "5. git push\n\n" +
+    "Other person: git pull, then click 'import JSON' and paste the file contents."
+  );
+}
+
+render();
+</script>
+</body>
+</html>
