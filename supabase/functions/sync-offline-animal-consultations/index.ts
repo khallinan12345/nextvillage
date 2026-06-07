@@ -27,6 +27,22 @@ const CORS_HEADERS = {
 
 const EXPECTED_SYNC_KEY = Deno.env.get('ANIMAL_OFFLINE_SYNC_KEY') ?? 'vai-animal-offline-2024-oloibiri';
 
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'sync-offline-animal-consultations',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block sync for logging */ }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
   if (req.method !== 'POST') {
@@ -109,8 +125,31 @@ Deno.serve(async (req) => {
 
       synced.push({ id: c.id });
     } catch (err) {
-      errors.push({ id: c.id, error: String(err) });
+      const msg = err instanceof Error ? err.message : String(err);
+      errors.push({ id: c.id, error: msg });
+      await logEvent(supabase, {
+        event_type: 'sync_error',
+        severity:   'error',
+        details: {
+          offline_id: c.id,
+          farmer:     c.farmer?.name,
+          species:    c.species,
+          error:      msg,
+        },
+      });
     }
+  }
+
+  if (errors.length > 0) {
+    await logEvent(supabase, {
+      event_type: 'sync_partial_failure',
+      severity:   errors.length === consultations.length ? 'error' : 'warning',
+      details: {
+        received: consultations.length,
+        synced:   synced.length,
+        failed:   errors.length,
+      },
+    });
   }
 
   return new Response(
