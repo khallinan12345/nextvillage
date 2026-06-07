@@ -20,6 +20,24 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.3';
 
+// ─── Structured error logging ─────────────────────────────────────────────────
+
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'generate-weekly-challenges',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block generation for logging */ }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ChallengeTemplate {
@@ -226,8 +244,27 @@ Deno.serve(async (req) => {
     try {
       results[org.id] = await generateForOrg(supabase, anthropic, org, body.dry_run ?? false);
     } catch (err) {
-      results[org.id] = { error: String(err) };
+      const msg = String(err);
+      results[org.id] = { error: msg };
+      await logEvent(supabase, {
+        event_type: 'challenge_generation_failed',
+        severity:   'error',
+        details: { org_id: org.id, error: msg },
+      });
     }
+  }
+
+  const failures = Object.values(results).filter((r: any) => r?.error).length;
+  if (failures > 0) {
+    await logEvent(supabase, {
+      event_type: 'weekly_generation_summary',
+      severity:   failures === targetOrgs.length ? 'critical' : 'warning',
+      details: {
+        orgs_attempted: targetOrgs.length,
+        orgs_failed:    failures,
+        orgs_succeeded: targetOrgs.length - failures,
+      },
+    });
   }
 
   return new Response(JSON.stringify({ ok: true, results }), {
