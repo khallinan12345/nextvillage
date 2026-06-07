@@ -206,6 +206,54 @@ async function logCost({ page, provider, model, inputTokens, outputTokens,
   } catch { /* never block the response for logging */ }
 }
 
+// ── Triage alert constants ─────────────────────────────────────────────────────
+
+const TRIAGE_SUPABASE_URL = process.env.SUPABASE_URL || '';
+const TRIAGE_SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const TRIAGE_RESEND_KEY   = process.env.RESEND_API_KEY || '';
+const TRIAGE_ALERT_EMAIL  = process.env.TRIAGE_ALERT_EMAIL || '';
+
+// ── Triage event logger (mirrors chat-stream.js logEvent) ─────────────────────
+// Writes to system_events and emails on error/critical severity.
+// Fire-and-forget — never blocks the response.
+
+async function logEvent({ function_name, event_type, severity, payload }) {
+  if (TRIAGE_SUPABASE_URL && TRIAGE_SUPABASE_KEY) {
+    fetch(`${TRIAGE_SUPABASE_URL}/rest/v1/system_events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        TRIAGE_SUPABASE_KEY,
+        'Authorization': `Bearer ${TRIAGE_SUPABASE_KEY}`,
+        'Prefer':        'return=minimal',
+      },
+      body: JSON.stringify({
+        function_name,
+        event_type,
+        severity,
+        payload,
+        created_at: new Date().toISOString(),
+      }),
+    }).catch(() => {});
+  }
+
+  if ((severity === 'error' || severity === 'critical') && TRIAGE_RESEND_KEY && TRIAGE_ALERT_EMAIL) {
+    fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${TRIAGE_RESEND_KEY}`,
+      },
+      body: JSON.stringify({
+        from:    'triage@nextvillage.community',
+        to:      TRIAGE_ALERT_EMAIL,
+        subject: `[vAI ERROR] ${event_type} in ${function_name}`,
+        html:    `<h2>${event_type}</h2><p><strong>Function:</strong> ${function_name}</p><pre>${JSON.stringify(payload, null, 2)}</pre>`,
+      }),
+    }).catch(() => {});
+  }
+}
+
 // ── Route resolver ─────────────────────────────────────────────────────────────
 
 function resolveRoute(page, playgroundModel, taskType) {
@@ -918,6 +966,23 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('[chat.js] Error:', error);
     try { console.error('[chat.js] Error (stringified):', JSON.stringify(error)); } catch (e) { /* ignore */ }
+
+    // Log to system_events and send triage alert email
+    logEvent({
+      function_name: 'chat.js',
+      event_type:    error.status === 429 ? 'rate_limit'
+                   : error.status === 401 ? 'auth_error'
+                   : error.status === 503 ? 'all_providers_failed'
+                   : 'unhandled_exception',
+      severity:      error.status >= 500 || !error.status ? 'error' : 'warning',
+      payload: {
+        message:         error.message,
+        status:          error.status || 500,
+        type:            error.constructor?.name,
+        provider_errors: error.provider_errors || undefined,
+      },
+    });
+
     const status = error.status || 500;
     if (!res.headersSent) {
       res.setHeader('Content-Type', 'application/json');
