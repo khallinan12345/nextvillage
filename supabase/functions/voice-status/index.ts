@@ -9,6 +9,22 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
 };
 
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'voice-status',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block for logging */ }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -133,6 +149,17 @@ Deno.serve(async (req: Request) => {
 
   } catch (err) {
     console.error('[voice-status] Error:', err);
+    try {
+      const sb = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await logEvent(sb, {
+        event_type: 'unhandled_exception',
+        severity:   'critical',
+        details:    { error: String(err) },
+      });
+    } catch { /* ignore */ }
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
