@@ -20,6 +20,24 @@ interface TiebreakResult {
   reasoning: string;
 }
 
+// ─── Structured error logging ─────────────────────────────────────────────────
+
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'generate-champion-community-challenge-weekly',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block champion selection for logging */ }
+}
+
 const TIER_ORDER: Record<string, number> = {
   multiplier: 5,
   builder: 4,
@@ -258,8 +276,27 @@ Deno.serve(async (req) => {
         tiebreak: wasTiebreak,
       });
     } catch (err) {
-      results.push({ org: orgSlug, status: `error: ${(err as Error).message}` });
+      const msg = (err as Error).message;
+      results.push({ org: orgSlug, status: `error: ${msg}` });
+      await logEvent(supabase, {
+        event_type: 'champion_selection_failed',
+        severity:   'error',
+        details: { org_id: orgSlug, error: msg },
+      });
     }
+  }
+
+  const failures = results.filter(r => r.status.startsWith('error')).length;
+  if (failures > 0) {
+    await logEvent(supabase, {
+      event_type: 'champion_generation_summary',
+      severity:   failures === ORG_SLUGS.length ? 'critical' : 'warning',
+      details: {
+        orgs_attempted: ORG_SLUGS.length,
+        orgs_failed:    failures,
+        week_start:     weekStartStr,
+      },
+    });
   }
 
   return new Response(
