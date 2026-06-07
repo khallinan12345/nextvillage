@@ -77,6 +77,24 @@ interface GeneratedChallenge {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+// ─── Structured error logging ─────────────────────────────────────────────────
+
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'weekly-champion-and-challenge',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block weekly run for logging */ }
+}
+
 const TIER_ORDER: Record<string, number> = {
   multiplier: 5, builder: 4, bridge: 3, scout: 2, seed: 1,
 };
@@ -237,8 +255,27 @@ Deno.serve(async (req) => {
 
       results[org.id] = { champion, challenge: dryRun ? challenge : { title: (challenge as any).title, slug: (challenge as any).slug } };
     } catch (err) {
-      results[org.id] = { error: String(err) };
+      const msg = String(err);
+      results[org.id] = { error: msg };
+      await logEvent(supabase, {
+        event_type: 'weekly_run_failed',
+        severity:   'error',
+        details: { org_id: org.id, error: msg },
+      });
     }
+  }
+
+  const failures = Object.values(results).filter((r: any) => r?.error).length;
+  if (failures > 0) {
+    await logEvent(supabase, {
+      event_type: 'weekly_run_summary',
+      severity:   failures === targetOrgs.length ? 'critical' : 'warning',
+      details: {
+        orgs_attempted: targetOrgs.length,
+        orgs_failed:    failures,
+        dry_run:        dryRun,
+      },
+    });
   }
 
   return new Response(JSON.stringify({ ok: true, dry_run: dryRun, results }), {
