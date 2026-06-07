@@ -5,6 +5,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ── Structured error logging to system_events ─────────────────────────────────
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'sync-offline-agri-consultations',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block sync for logging */ }
+}
+
 interface OfflineFarmer {
   name: string;
   village: string;
@@ -174,11 +191,35 @@ Deno.serve(async (req: Request) => {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[sync-offline-agri] Failed for ${consult.id}:`, msg);
         results.push({ offline_id: consult.id, status: 'failed', error: msg });
+        await logEvent(supabase, {
+          event_type: 'sync_error',
+          severity:   'error',
+          details: {
+            offline_id:  consult.id,
+            user_id:     effectiveUserId,
+            farmer:      consult.farmer?.name,
+            error:       msg,
+          },
+        });
       }
     }
 
     const synced = results.filter((r) => r.status === 'synced').length;
     const failed = results.filter((r) => r.status === 'failed').length;
+
+    // Log summary if any failures occurred
+    if (failed > 0) {
+      await logEvent(supabase, {
+        event_type: 'sync_partial_failure',
+        severity:   failed === consultations.length ? 'error' : 'warning',
+        details: {
+          user_id:  effectiveUserId,
+          received: consultations.length,
+          synced,
+          failed,
+        },
+      });
+    }
 
     return new Response(JSON.stringify({ received: consultations.length, synced, failed, results }), {
       status: 200,
@@ -187,6 +228,18 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[sync-offline-agri] Unhandled error:', msg);
+    // Best-effort log — supabase client may not be available if error was during init
+    try {
+      const sb = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+      await logEvent(sb, {
+        event_type: 'unhandled_exception',
+        severity:   'critical',
+        details:    { error: msg },
+      });
+    } catch { /* ignore */ }
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
