@@ -41,6 +41,8 @@ const ACTIONABLE_EVENTS = new Set([
   'invalid_request',
   'auth_error',
   'missing_api_key',
+  'http_520',        // ← add this
+  'http_error',      // ← catch-all for anything else chat-stream logs
 ]);
 
 const ACTIONABLE_SEVERITIES = new Set(['warning', 'error', 'critical']);
