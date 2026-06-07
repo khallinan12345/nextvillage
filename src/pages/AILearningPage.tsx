@@ -2964,14 +2964,19 @@ Respond ONLY with valid JSON:
       D: '1. Verification Process: names ≥2 verification sources or methods — at least one must address whether AI output could lead to a bad business or financial decision\n2. Error & Bias Detection: identifies ≥1 flaw/assumption + suggests a correction grounded in real-world consequences\n3. Reflective Judgment: states when AI output should/should not be trusted and why — must address at least one high-stakes productive use scenario',
       E: '1. Problem Decomposition: breaks problem into ≥2 components with causal connections — must include at least one economic or cost component\n2. AI Suitability: justifies AI vs ≥1 alternative, including a cost-benefit comparison\n3. Outcome Measurement: defines success with ≥1 measurable economic indicator (revenue, cost saving, yield increase, time saved with monetary value, etc.)',
     };
-    const result = await chatText({
-      page: 'AILearningPage',
-      messages: [{ role: 'user', content: `A learner is doing an AI Proficiency session with an entrepreneurial focus:\n${context}\n\nRubric criteria:\n${rubrics[categoryId] || rubrics['A']}\n\nWrite a concise paragraph (3–5 sentences) describing specific evidence the learner must produce to score Competent (2) or higher on each criterion, grounded in their scenario. Emphasise that answers must connect AI thinking to real economic value, cost-benefit reasoning, or productive outcomes — not just technical accuracy.` }],
-      system: 'You are an educational assessment designer who specialises in connecting AI skills to entrepreneurial and productive-use contexts. Be specific, concise, and use the learner\'s context.',
-      max_tokens: 400,
-      temperature: 0.3
-    });
-    return result.trim();
+    try {
+      const result = await chatText({
+        page: 'AILearningPage',
+        messages: [{ role: 'user', content: `A learner is doing an AI Proficiency session with an entrepreneurial focus:\n${context}\n\nRubric criteria:\n${rubrics[categoryId] || rubrics['A']}\n\nWrite a concise paragraph (3–5 sentences) describing specific evidence the learner must produce to score Competent (2) or higher on each criterion, grounded in their scenario. Emphasise that answers must connect AI thinking to real economic value, cost-benefit reasoning, or productive outcomes — not just technical accuracy.` }],
+        system: 'You are an educational assessment designer who specialises in connecting AI skills to entrepreneurial and productive-use contexts. Be specific, concise, and use the learner\'s context.',
+        max_tokens: 400,
+        temperature: 0.3
+      });
+      return result.trim();
+    } catch (error) {
+      console.error('[generateMetricsForSuccess] Error:', error);
+      return '';
+    }
   };
 
   // Create a new user-defined learning module + launch it
