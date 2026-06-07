@@ -69,6 +69,24 @@ const TIER_RANKS: Record<string, number> = {
   seed: 1, scout: 2, bridge: 3, builder: 4, multiplier: 5,
 };
 
+// ─── Structured error logging ─────────────────────────────────────────────────
+
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'select-grand-challenge-winner',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block winner selection for logging */ }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -124,7 +142,13 @@ Deno.serve(async (req) => {
         supabase, anthropic, quarter, orgId, body.dry_run ?? false
       );
     } catch (err) {
-      results[orgId] = { error: String(err) };
+      const msg = String(err);
+      results[orgId] = { error: msg };
+      await logEvent(supabase, {
+        event_type: 'winner_selection_failed',
+        severity:   'error',
+        details: { org_id: orgId, quarter, error: msg },
+      });
     }
   }
 
