@@ -26,6 +26,24 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ─── Structured error logging ─────────────────────────────────────────────────
+
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'evaluate-challenge-submission',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block evaluation for logging */ }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
@@ -67,14 +85,23 @@ Deno.serve(async (req) => {
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('evaluate-challenge-submission error:', err);
     const message = String(err);
     // Surface rejection reasons cleanly to the frontend
-    if (message.startsWith('TEMPLATE_SUBMISSION:') || message.startsWith('SHORT_SUBMISSION:')) {
+    if (message.startsWith('TEMPLATE_SUBMISSION:') || message.startsWith('SHORT_SUBMISSION:') || message.startsWith('AI_GENERATED_SUBMISSION:')) {
       return new Response(JSON.stringify({ ok: false, rejection: true, error: message }), {
         status: 422, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       });
     }
+    // Log unexpected errors only — rejections are expected flow
+    console.error('evaluate-challenge-submission error:', err);
+    await logEvent(supabase, {
+      event_type: 'evaluation_error',
+      severity:   'error',
+      details: {
+        enrollment_id: body.enrollment_id,
+        error:         message,
+      },
+    });
     return new Response(JSON.stringify({ error: message }), {
       status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
@@ -95,8 +122,6 @@ const TEMPLATE_PATTERNS = [
   /\[your/i,
 ];
 
-// Phrases that indicate the learner asked an AI to answer FOR them
-// instead of going into the community themselves
 const AI_GENERATED_PATTERNS = [
   /as an ai,?\s+i (do not|don't) have a physical/i,
   /as an ai,?\s+i (do not|don't) have a body/i,
@@ -142,22 +167,14 @@ async function evaluateSubmission(
   anthropic: Anthropic,
   enrollmentId: string,
 ) {
-  // ── 1. Load enrollment + challenge ──────────────────────────────────────────
   const { data: enrollment, error: enrollErr } = await supabase
     .from('challenge_enrollments')
     .select(`
       *,
       community_challenges (
-        title,
-        description,
-        community_impact_slug,
-        tier_target,
-        challenge_instruction,
-        return_question_1,
-        return_question_2,
-        return_question_3,
-        community_role,
-        org_id
+        title, description, community_impact_slug, tier_target,
+        challenge_instruction, return_question_1, return_question_2,
+        return_question_3, community_role, org_id
       )
     `)
     .eq('id', enrollmentId)
@@ -182,7 +199,6 @@ async function evaluateSubmission(
 
   const challenge = enrollment.community_challenges;
 
-  // ── 2. Pre-check: reject template/placeholder/too-short submissions ──────────
   const quality = checkSubmissionQuality(
     enrollment.action_taken,
     enrollment.impact_observed,
@@ -190,7 +206,7 @@ async function evaluateSubmission(
   );
 
   if (!quality.valid) {
-    const isTemplate = quality.reason === 'template';
+    const isTemplate    = quality.reason === 'template';
     const isAiGenerated = quality.reason === 'ai_generated';
 
     let summary: string;
@@ -206,7 +222,7 @@ async function evaluateSubmission(
     } else if (isTemplate) {
       errorPrefix = 'TEMPLATE_SUBMISSION';
       summary = 'Submission contained template placeholder text and was not evaluated.';
-      tier_reasoning = 'Your submission appears to contain unfilled template text (e.g. [Name], [Your Title]). This tells us you may have pasted in the wrong text. Please describe in your own words what you actually did in the community this week.';
+      tier_reasoning = 'Your submission appears to contain unfilled template text (e.g. [Name], [Your Title]). Please describe in your own words what you actually did in the community this week.';
       follow_up_instruction = 'Rewrite your submission in your own words — describe exactly who you talked to, what you said, and what happened.';
     } else {
       errorPrefix = 'SHORT_SUBMISSION';
@@ -224,7 +240,6 @@ async function evaluateSubmission(
       next_tier_hint: 'Every learner who goes into the community and writes what they personally saw and heard earns at least a Seed (Community Teacher) tier.',
     };
 
-    // Write feedback back so the learner sees it, but keep status as 'submitted' so they can fix and resubmit
     await supabase
       .from('challenge_enrollments')
       .update({ impact_evaluation: rejectionEval })
@@ -233,7 +248,6 @@ async function evaluateSubmission(
     throw new Error(`${errorPrefix}: ${tier_reasoning}`);
   }
 
-  // ── 3. Load learner profile for context ─────────────────────────────────────
   const { data: profile } = await supabase
     .from('profiles')
     .select('name, city, age')
@@ -242,10 +256,8 @@ async function evaluateSubmission(
 
   const learnerName = profile?.name ?? 'the learner';
 
-  // ── 4. Call Claude to evaluate ──────────────────────────────────────────────
   const evaluation = await callClaude(anthropic, { learnerName, challenge, enrollment });
 
-  // ── 5. Write evaluation back to enrollment row ───────────────────────────────
   const { error: updateErr } = await supabase
     .from('challenge_enrollments')
     .update({
@@ -258,7 +270,6 @@ async function evaluateSubmission(
 
   if (updateErr) throw new Error(`Update enrollment: ${updateErr.message}`);
 
-  // ── 6. Insert tier record ────────────────────────────────────────────────────
   const { error: tierErr } = await supabase
     .from('community_impact_tiers')
     .insert({
