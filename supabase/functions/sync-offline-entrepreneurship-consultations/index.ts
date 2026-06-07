@@ -2,23 +2,6 @@
 //
 // Syncs offline entrepreneurship consultations from
 // entrepreneurship-advisor-offline.html into Supabase.
-//
-// Expected body:
-// {
-//   consultations: [{
-//     id: string,
-//     ts: string,
-//     client: {
-//       name: string, village: string, phone?: string,
-//       business_type: string, business_stage: string, notes?: string,
-//     },
-//     consultType: string,   // starting-up | business-planning | pricing-finance |
-//                            // marketing-sales | fixing-problems | growing-scaling
-//     intake: Record<string, string>,
-//     result: { urgency: string, reasons: string[], immediateActions: string[], ... },
-//     syncKey: string,
-//   }]
-// }
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -37,6 +20,22 @@ const VALID_CONSULT_TYPES = new Set([
 ]);
 
 const VALID_URGENCY = new Set(['low', 'medium', 'high', 'urgent']);
+
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'sync-offline-entrepreneurship-consultations',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block sync for logging */ }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
@@ -76,7 +75,6 @@ Deno.serve(async (req) => {
       const businessType  = (client.business_type  ?? 'general').trim();
       const businessStage = (client.business_stage ?? 'Just started (0–6 months)').trim();
 
-      // ── 1. Upsert entrepreneurship_clients ──────────────────────────────────
       const { data: existingClient } = await supabase
         .from('entrepreneurship_clients')
         .select('id')
@@ -89,7 +87,6 @@ Deno.serve(async (req) => {
 
       if (existingClient) {
         clientId = existingClient.id;
-        // Update business details if phone was empty
         await supabase
           .from('entrepreneurship_clients')
           .update({
@@ -119,24 +116,20 @@ Deno.serve(async (req) => {
         clientId = newClient.id;
       }
 
-      // ── 2. Sanitise consultation_type and urgency_level ──────────────────────
-      const rawType     = (c.consultType ?? '').toLowerCase().trim();
-      const consultType = VALID_CONSULT_TYPES.has(rawType) ? rawType : 'fixing-problems';
+      const rawType      = (c.consultType ?? '').toLowerCase().trim();
+      const consultType  = VALID_CONSULT_TYPES.has(rawType) ? rawType : 'fixing-problems';
 
-      const rawUrgency  = (c.result?.urgency ?? '').toLowerCase().trim();
+      const rawUrgency   = (c.result?.urgency ?? '').toLowerCase().trim();
       const urgencyLevel = VALID_URGENCY.has(rawUrgency) ? rawUrgency : 'low';
 
-      // ── 3. Build problem_summary from intake ─────────────────────────────────
       const intakeLines = Object.entries(c.intake ?? {})
         .filter(([, v]) => v && String(v).trim())
         .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
         .join(' | ');
 
-      const reasonsText = (c.result?.reasons ?? []).join('. ');
-      const problemSummary = [intakeLines, reasonsText].filter(Boolean).join('\n').slice(0, 1000)
-        || 'Offline consultation';
+      const reasonsText    = (c.result?.reasons ?? []).join('. ');
+      const problemSummary = [intakeLines, reasonsText].filter(Boolean).join('\n').slice(0, 1000) || 'Offline consultation';
 
-      // ── 4. Build ai_advice from result ───────────────────────────────────────
       const immediate  = (c.result?.immediateActions  ?? []).map((a: string) => '• ' + a).join('\n');
       const mediumTerm = (c.result?.mediumTermActions  ?? []).map((a: string) => '• ' + a).join('\n');
       const incomeTips = (c.result?.incomeTips         ?? []).map((t: string) => '₦ ' + t).join('\n');
@@ -151,23 +144,22 @@ Deno.serve(async (req) => {
         referrals  ? `REFERRALS:\n${referrals}`           : '',
       ].filter(Boolean).join('\n\n').slice(0, 2000);
 
-      // ── 5. Insert consultation ────────────────────────────────────────────────
       const { error: consultErr } = await supabase
         .from('entrepreneurship_consultations')
         .insert({
-          youth_user_id:       OFFLINE_USER_ID,
-          client_id:           clientId,
-          consultation_type:   consultType,
-          problem_summary:     problemSummary,
-          ai_advice:           aiAdvice || null,
-          urgency_level:       urgencyLevel,
-          youth_actions_taken: null,
+          youth_user_id:        OFFLINE_USER_ID,
+          client_id:            clientId,
+          consultation_type:    consultType,
+          problem_summary:      problemSummary,
+          ai_advice:            aiAdvice || null,
+          urgency_level:        urgencyLevel,
+          youth_actions_taken:  null,
           conversation_history: [],
-          follow_up_needed:    urgencyLevel === 'urgent' || urgencyLevel === 'high',
-          follow_up_date:      null,
-          follow_up_notes:     null,
-          resolved:            false,
-          created_at:          c.ts ?? new Date().toISOString(),
+          follow_up_needed:     urgencyLevel === 'urgent' || urgencyLevel === 'high',
+          follow_up_date:       null,
+          follow_up_notes:      null,
+          resolved:             false,
+          created_at:           c.ts ?? new Date().toISOString(),
         });
 
       if (consultErr) throw new Error(`entrepreneurship_consultations insert: ${consultErr.message}`);
@@ -175,9 +167,32 @@ Deno.serve(async (req) => {
       synced.push({ id: c.id });
 
     } catch (err) {
-      console.error(`Sync error for ${c.id}:`, err);
-      errors.push({ id: c.id ?? 'unknown', error: String(err) });
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Sync error for ${c.id}:`, msg);
+      errors.push({ id: c.id ?? 'unknown', error: msg });
+      await logEvent(supabase, {
+        event_type: 'sync_error',
+        severity:   'error',
+        details: {
+          offline_id:    c.id,
+          client:        c.client?.name,
+          consult_type:  c.consultType,
+          error:         msg,
+        },
+      });
     }
+  }
+
+  if (errors.length > 0) {
+    await logEvent(supabase, {
+      event_type: 'sync_partial_failure',
+      severity:   errors.length === consultations.length ? 'error' : 'warning',
+      details: {
+        received: consultations.length,
+        synced:   synced.length,
+        failed:   errors.length,
+      },
+    });
   }
 
   return new Response(
