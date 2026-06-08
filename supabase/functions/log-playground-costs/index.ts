@@ -49,6 +49,22 @@ interface PlaygroundChat {
   updated_at: string;
 }
 
+async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'log-playground-costs',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block cost logging for logging */ }
+}
+
 Deno.serve(async (_req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -157,6 +173,17 @@ Deno.serve(async (_req) => {
 
   } catch (err) {
     console.error('[log-playground-costs] Error:', err.message);
+    try {
+      const sb = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await logEvent(sb, {
+        event_type: 'unhandled_exception',
+        severity:   'error',
+        details:    { error: err.message },
+      });
+    } catch { /* ignore */ }
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
