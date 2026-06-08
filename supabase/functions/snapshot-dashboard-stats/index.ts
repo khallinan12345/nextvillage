@@ -15,6 +15,22 @@ const K_ANON_SALT = Deno.env.get("K_ANON_SALT") ?? "vai-research-salt-2025";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+async function logEvent(payload: {
+  event_type: string;
+  severity: 'warning' | 'error' | 'critical';
+  details: Record<string, unknown>;
+}) {
+  try {
+    await supabase.from('system_events').insert({
+      function_name: 'snapshot-dashboard-stats',
+      event_type:    payload.event_type,
+      severity:      payload.severity,
+      payload:       payload.details,
+      created_at:    new Date().toISOString(),
+    });
+  } catch { /* never block snapshot for logging */ }
+}
+
 // Stable, non-reversible learner token
 function learnerToken(userId: string): string {
   const encoder = new TextEncoder();
@@ -242,6 +258,11 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error("[snapshot] Error:", err);
+    await logEvent({
+      event_type: 'snapshot_failed',
+      severity:   'error',
+      details:    { error: err.message },
+    });
     return new Response(JSON.stringify({ success: false, error: err.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
