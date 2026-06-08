@@ -1,16 +1,16 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import OpenAI from "npm:openai@4";
+import Anthropic from "npm:@anthropic-ai/sdk@0.27.3";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const openaiKey = Deno.env.get("OPENAI_API_KEY");
+const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
 
-if (!supabaseUrl || !supabaseKey || !openaiKey) {
+if (!supabaseUrl || !supabaseKey || !anthropicKey) {
   throw new Error("Missing required environment variables");
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
-const openai = new OpenAI({ apiKey: openaiKey });
+const anthropic = new Anthropic({ apiKey: anthropicKey });
 
 export interface MonthlySkillsResult {
   cognitive_score: number;
@@ -129,28 +129,24 @@ Provide JSON with scores (0-100) and evidence arrays for:
 - pue_score
 - pue_evidence`;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: "You are an assessment expert. Respond with valid JSON only.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.3,
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1024,
+    system: 'You are an assessment expert. Respond with valid JSON only. No preamble, no markdown.',
+    messages: [{ role: 'user', content: prompt }],
   });
 
-  const content = completion.choices[0]?.message?.content;
+  const content = response.content
+    .filter(b => b.type === 'text')
+    .map(b => (b as { type: 'text'; text: string }).text)
+    .join('');
+
   if (!content) {
-    throw new Error("Empty response from OpenAI");
+    throw new Error("Empty response from Anthropic");
   }
 
-  const result: MonthlySkillsResult = JSON.parse(content);
+  const clean = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+  const result: MonthlySkillsResult = JSON.parse(clean);
 
   const { error: insertError } = await supabase
     .from("user_monthly_assessments")
@@ -158,8 +154,8 @@ Provide JSON with scores (0-100) and evidence arrays for:
       user_id: userId,
       measured_at: endDate.toISOString(),
       ...result,
-      assessment_model: "gpt-4o",
-      assessment_version: "v1.0",
+      assessment_model: "claude-haiku-4-5",
+      assessment_version: "v2.0",
     });
 
   if (insertError) {
@@ -289,6 +285,23 @@ export async function runMonthlyAssessments(): Promise<MonthlyAssessmentRunResul
     if (i < userIds.length - 1) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
     }
+  }
+
+  if (failedUserIds.length > 0) {
+    await supabase.from('system_events').insert({
+      function_name: 'monthly-assessment',
+      event_type:    'assessment_partial_failure',
+      severity:      failedUserIds.length === userIds.length ? 'error' : 'warning',
+      payload: {
+        period_start:    startDate.toISOString(),
+        period_end:      endDate.toISOString(),
+        total_users:     userIds.length,
+        successful:      successCount,
+        failed:          failedUserIds.length,
+        failed_user_ids: failedUserIds,
+      },
+      created_at: new Date().toISOString(),
+    }).catch(() => {});
   }
 
   return {
