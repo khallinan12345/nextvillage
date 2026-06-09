@@ -18,6 +18,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<'form' | 'magic-link-sent'>('form');
+  const [similarMatch, setSimilarMatch] = useState<{ maskedEmail: string; rawEmail: string } | null>(null);
 
   // ─── Active user tracking on component mount ──────────────────────────────
   useEffect(() => {
@@ -86,7 +87,64 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     return !!data;
   };
 
-  // ─── Forgot password (magic link to reset page) ───────────────────────────
+  // ─── Fuzzy duplicate check ────────────────────────────────────────────────
+  // Returns the best-matching canonical email if a near-duplicate is found,
+  // or null if the user appears genuinely new.
+  const findSimilarAccount = async (
+    inputEmail: string,
+    inputName: string
+  ): Promise<{ maskedEmail: string; rawEmail: string } | null> => {
+    const emailLocal = inputEmail.split('@')[0].toLowerCase();
+    const nameLower  = inputName.trim().toLowerCase();
+
+    // Fetch all active profiles — small table, acceptable for now
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('email, name')
+      .eq('is_active', true);
+
+    if (error || !data) return null;
+
+    // Levenshtein distance (simple iterative implementation)
+    const lev = (a: string, b: string): number => {
+      const m = a.length, n = b.length;
+      const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+        Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+      );
+      for (let i = 1; i <= m; i++)
+        for (let j = 1; j <= n; j++)
+          dp[i][j] = a[i-1] === b[j-1]
+            ? dp[i-1][j-1]
+            : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      return dp[m][n];
+    };
+
+    const maskEmail = (e: string) => {
+      const [local, domain] = e.split('@');
+      if (!domain) return e;
+      const visible = local.slice(0, 2);
+      return `${visible}${'*'.repeat(Math.max(local.length - 2, 2))}@${domain}`;
+    };
+
+    for (const profile of data) {
+      if (!profile.email) continue;
+      const profileLocal = profile.email.split('@')[0].toLowerCase();
+      const profileName  = (profile.name ?? '').toLowerCase();
+
+      // Same email local part (different domain suffix e.g. gmail.co vs gmail.com)
+      const sameLocal = profileLocal === emailLocal;
+      // Email local part within 2 edits (typo tolerance)
+      const emailClose = lev(emailLocal, profileLocal) <= 2;
+      // Name match: exact or within 2 edits (handles "Princss" vs "Princess")
+      const nameMatch = nameLower.length >= 3 &&
+        (profileName === nameLower || lev(profileName, nameLower) <= 2);
+
+      if (sameLocal || emailClose || nameMatch) {
+        return { maskedEmail: maskEmail(profile.email), rawEmail: profile.email };
+      }
+    }
+    return null;
+  };
   const handleForgotPassword = async () => {
     if (!email) {
       setError('Please enter your email address above first.');
@@ -113,6 +171,26 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     }
   };
 
+  // ─── "That's me" — send reset link to the matched canonical email ──────────
+  const handleThatsMe = async () => {
+    if (!similarMatch) return;
+    try {
+      setLoading(true);
+      setError('');
+      const { error } = await supabase.auth.signInWithOtp({
+        email: similarMatch.rawEmail,
+        options: { emailRedirectTo: `${window.location.origin}/auth/reset-password` },
+      });
+      if (error) throw error;
+      setSimilarMatch(null);
+      setView('magic-link-sent');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send reset link. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ─── Main auth handler ────────────────────────────────────────────────────
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +199,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
 
     try {
       if (mode === 'signup') {
+        // 1. Exact email match — hard block
         const exists = await emailAlreadyExists(email);
         if (exists) {
           setError(
@@ -129,6 +208,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
           setLoading(false);
           return;
         }
+
+        // 2. Fuzzy match — warn and let user decide
+        if (!similarMatch) {
+          const match = await findSimilarAccount(email, username);
+          if (match) {
+            setSimilarMatch(match);
+            setLoading(false);
+            return; // pause signup — UI will render the confirmation prompt
+          }
+        }
+        // If similarMatch is already set, user clicked "No, continue" — proceed
 
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
@@ -204,6 +294,69 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         <Button variant="outline" onClick={() => setView('form')}>
           Back to sign in
         </Button>
+      </div>
+    );
+  }
+
+  // ─── Similar account warning ──────────────────────────────────────────────
+  if (mode === 'signup' && similarMatch) {
+    return (
+      <div className="max-w-md w-full space-y-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 space-y-3">
+          <div className="flex items-start gap-3">
+            <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
+            <div>
+              <h3 className="font-semibold text-gray-900 text-sm">
+                You may already have an account
+              </h3>
+              <p className="text-gray-600 text-sm mt-1">
+                We found an existing account that looks similar to the details
+                you entered. It's registered to{' '}
+                <strong className="font-mono">{similarMatch.maskedEmail}</strong>.
+              </p>
+              <p className="text-gray-600 text-sm mt-2">
+                Is that you? If so, you don't need a new account — just reset
+                your password and sign in.
+              </p>
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2 pt-1">
+            <Button
+              type="button"
+              fullWidth
+              isLoading={loading}
+              onClick={handleThatsMe}
+            >
+              Yes, that's me — send me a password reset link
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              fullWidth
+              onClick={() => {
+                setSimilarMatch(null);
+                // Re-submit the form now that user has confirmed they're new
+                handleAuth({ preventDefault: () => {} } as React.FormEvent);
+              }}
+            >
+              No, I'm a new user — continue signing up
+            </Button>
+            <button
+              type="button"
+              className="text-sm text-gray-400 hover:text-gray-600 text-center mt-1"
+              onClick={() => setSimilarMatch(null)}
+            >
+              ← Back
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
