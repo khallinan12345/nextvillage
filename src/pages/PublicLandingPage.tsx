@@ -225,6 +225,7 @@ const PublicLandingPage: React.FC = () => {
   const [loading, setLoading]     = useState(true);
   const [programs, setPrograms]   = useState<ResearchProgram[]>([]);
   const [questions, setQuestions] = useState<GuidingQuestion[]>([]);
+  const [menuOpen, setMenuOpen]   = useState(false);
 
   // ── Public aggregate view: one row per cohort_month ─────────────────────
   // One row per "visit rank" = nth month of use across all learners
@@ -401,6 +402,7 @@ const PublicLandingPage: React.FC = () => {
 
         @media (max-width: 640px) {
           .hide-sm { display: none !important; }
+          .show-sm { display: flex !important; }
           .stat-g  { grid-template-columns: 1fr 1fr !important; }
           .score-g { grid-template-columns: 1fr !important; }
         }
@@ -413,28 +415,100 @@ const PublicLandingPage: React.FC = () => {
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
           background: "rgba(12,18,10,0.9)", backdropFilter: "blur(14px)",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
-          padding: "0 2rem", height: 60,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
-            <Sparkles size={17} color="#d97706" />
-            <span style={{
-              fontFamily: "'Playfair Display', serif",
-              fontWeight: 700, fontSize: "0.98rem", color: "#fff",
+          {/* Main bar */}
+          <div style={{
+            padding: "0 2rem", height: 60,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
+              <Sparkles size={17} color="#d97706" />
+              <span style={{
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 700, fontSize: "0.98rem", color: "#fff",
+              }}>
+                vAI · Davidson AI Innovation Center
+              </span>
+            </div>
+
+            {/* Desktop links */}
+            <div className="hide-sm" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+              <a href="#impact"     className="nav-lnk">Impact</a>
+              <a href="#programmes" className="nav-lnk">Programmes</a>
+              <a href="#community"  className="nav-lnk">Join Us</a>
+              <a href="#research"   className="nav-lnk">Research</a>
+              <a href="#support"    className="nav-lnk">Support</a>
+              <Link to="/login" className="pub-btn btn-amber" style={{ padding: "0.42rem 1.1rem", fontSize: "0.82rem" }}>
+                Log In / Sign Up
+              </Link>
+            </div>
+
+            {/* Hamburger — mobile only */}
+            <button
+              className="show-sm"
+              onClick={() => setMenuOpen(o => !o)}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                color: "#fff", padding: "0.4rem", display: "none",
+                flexDirection: "column", gap: "5px", alignItems: "center", justifyContent: "center",
+              }}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? (
+                <span style={{ fontSize: "1.4rem", lineHeight: 1 }}>✕</span>
+              ) : (
+                <>
+                  <span style={{ display: "block", width: 22, height: 2, background: "#fff", borderRadius: 2 }} />
+                  <span style={{ display: "block", width: 22, height: 2, background: "#fff", borderRadius: 2 }} />
+                  <span style={{ display: "block", width: 22, height: 2, background: "#fff", borderRadius: 2 }} />
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Mobile accordion menu */}
+          {menuOpen && (
+            <div className="show-sm" style={{
+              display: "none",
+              flexDirection: "column",
+              borderTop: "1px solid rgba(255,255,255,0.07)",
+              background: "rgba(12,18,10,0.97)",
+              padding: "0.5rem 0 1rem",
             }}>
-              vAI · Davidson AI Innovation Center
-            </span>
-          </div>
-          <div className="hide-sm" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-            <a href="#impact"     className="nav-lnk">Impact</a>
-            <a href="#programmes" className="nav-lnk">Programmes</a>
-            <a href="#community"  className="nav-lnk">Join Us</a>
-            <a href="#research"   className="nav-lnk">Research</a>
-            <a href="#support"    className="nav-lnk">Support</a>
-            <Link to="/login" className="pub-btn btn-amber" style={{ padding: "0.42rem 1.1rem", fontSize: "0.82rem" }}>
-              Log In / Sign Up
-            </Link>
-          </div>
+              {[
+                { href: "#impact",     label: "Impact" },
+                { href: "#programmes", label: "Programmes" },
+                { href: "#community",  label: "Join Us" },
+                { href: "#research",   label: "Research" },
+                { href: "#support",    label: "Support" },
+              ].map(item => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    display: "block", padding: "0.85rem 2rem",
+                    color: "rgba(255,255,255,0.82)", fontWeight: 600,
+                    fontSize: "0.95rem", textDecoration: "none",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    transition: "color 0.15s",
+                  }}
+                >
+                  {item.label}
+                </a>
+              ))}
+              <div style={{ padding: "1rem 2rem 0" }}>
+                <Link
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="pub-btn btn-amber"
+                  style={{ width: "100%", justifyContent: "center", fontSize: "0.95rem" }}
+                >
+                  Log In / Sign Up
+                </Link>
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* ── Hero ────────────────────────────────────────────────────────── */}
@@ -1279,7 +1353,7 @@ const PublicLandingPage: React.FC = () => {
                 AI learning, grounded in community
               </h2>
               <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.92rem", lineHeight: 1.7, maxWidth: 560, margin: "0 auto" }}>
-                A look at the vAI platform and the communities it serves.
+                A look at the Davidson AI Innovation Center platform and the communities it serves.
               </p>
             </div>
             <div style={{
@@ -1290,7 +1364,7 @@ const PublicLandingPage: React.FC = () => {
             }}>
               <iframe
                 src="https://www.youtube.com/embed/1mFbtVEiEpY"
-                title="vAI — AI learning in community"
+                title="vAI — AI learning in community — AI learning in community"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
@@ -1956,7 +2030,7 @@ const PublicLandingPage: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "center", marginBottom: "0.65rem" }}>
             <Sparkles size={15} color="#d97706" />
             <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "0.92rem", color: "rgba(255,255,255,0.5)" }}>
-              vAI · Davidson AI Innovation Center
+              vAI · Davidson AI Innovation Center · Davidson AI Innovation Center
             </span>
           </div>
           <p style={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.22)", margin: "0 0 0.4rem" }}>
