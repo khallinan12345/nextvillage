@@ -223,7 +223,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-y-0 left-0 z-10 w-56 bg-white shadow-lg hidden sm:flex">
+    <div className="fixed inset-y-0 left-0 z-10 w-56 bg-white shadow-lg hidden md:flex">
       <div className="h-full w-full flex flex-col overflow-y-auto py-4">
         <nav className="px-3 space-y-1 pt-10">
 
