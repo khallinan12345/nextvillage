@@ -25,8 +25,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   }
 
   // Only redirect if BOTH loading is done AND there is no session.
-  // Checking session (not just user) avoids a race where user state
-  // hasn't been set yet but a valid session already exists.
   if (requireAuth && !session && !user) {
     return <Navigate to="/login" replace />;
   }
@@ -37,7 +35,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
       <div className="flex">
         {user && <Sidebar />}
-        <main className={`flex-1 p-6 ${user ? 'ml-64' : ''}`}>
+        <main className={`flex-1 p-6 ${user ? 'md:ml-64' : ''}`}>
           {children}
         </main>
       </div>
