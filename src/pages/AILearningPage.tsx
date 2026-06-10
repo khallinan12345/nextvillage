@@ -337,7 +337,7 @@ const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
 
       {/* Normal background */}
       <div
-        className="fixed top-16 left-64 right-0 bottom-0"
+        className="fixed top-14 left-0 md:left-64 right-0 bottom-0"
         style={{
           backgroundImage: `url('${imageUrl}')`,
           backgroundSize: 'cover',
@@ -354,7 +354,7 @@ const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
       {/* Distorted layer - only visible during mouse movement */}
       {isMouseMoving && (
         <div
-          className="fixed top-16 left-64 right-0 bottom-0 pointer-events-none transition-opacity duration-100"
+          className="fixed top-14 left-0 md:left-64 right-0 bottom-0 pointer-events-none transition-opacity duration-100"
           style={{
             backgroundImage: `url('${imageUrl}')`,
             backgroundSize: 'cover',

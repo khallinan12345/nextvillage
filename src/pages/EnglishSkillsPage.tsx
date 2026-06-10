@@ -156,7 +156,7 @@ const EnglishDistortedBackground: React.FC = () => {
 
       {/* Static background layer */}
       <div
-        className="fixed top-16 left-64 right-0 bottom-0"
+        className="fixed top-14 left-0 md:left-64 right-0 bottom-0"
         style={{
           backgroundImage: `url('${imageUrl}')`,
           backgroundSize: 'cover',
@@ -173,7 +173,7 @@ const EnglishDistortedBackground: React.FC = () => {
       {/* Whirl layer — only renders while mouse is moving */}
       {isMouseMoving && (
         <div
-          className="fixed top-16 left-64 right-0 bottom-0 pointer-events-none"
+          className="fixed top-14 left-0 md:left-64 right-0 bottom-0 pointer-events-none"
           style={{
             backgroundImage: `url('${imageUrl}')`,
             backgroundSize: 'cover',

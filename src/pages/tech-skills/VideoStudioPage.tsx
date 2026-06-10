@@ -1083,7 +1083,7 @@ const VideoStudioPage: React.FC = () => {
         .rec-pulse { animation: rec-pulse 1s ease-in-out infinite; }
       `}</style>
 
-      <div className="studio-root fixed top-16 left-64 right-0 bottom-0 flex flex-col bg-slate-950 overflow-hidden">
+      <div className="studio-root fixed top-14 left-0 md:left-64 right-0 bottom-0 flex flex-col bg-slate-950 overflow-hidden">
 
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 py-3 bg-slate-900 border-b border-slate-700/60 shrink-0 flex-wrap gap-2">

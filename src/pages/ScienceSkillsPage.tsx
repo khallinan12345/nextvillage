@@ -129,7 +129,7 @@ const ScienceDistortedBackground: React.FC = () => {
         </defs>
       </svg>
       <div
-        className="fixed top-16 left-64 right-0 bottom-0"
+        className="fixed top-14 left-0 md:left-64 right-0 bottom-0"
         style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/65 via-teal-900/55 to-cyan-900/60" />
@@ -137,7 +137,7 @@ const ScienceDistortedBackground: React.FC = () => {
       </div>
       {isMouseMoving && (
         <div
-          className="fixed top-16 left-64 right-0 bottom-0 pointer-events-none"
+          className="fixed top-14 left-0 md:left-64 right-0 bottom-0 pointer-events-none"
           style={{
             backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center',
             zIndex: 1, filter: 'url(#science-ripple-distortion)',
