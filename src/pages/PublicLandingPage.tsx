@@ -422,7 +422,7 @@ const PublicLandingPage: React.FC = () => {
               fontFamily: "'Playfair Display', serif",
               fontWeight: 700, fontSize: "0.98rem", color: "#fff",
             }}>
-              vAI · Girls AIing &amp; Vibing
+              vAI · Davidson AI Innovation Center
             </span>
           </div>
           <div className="hide-sm" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
@@ -473,7 +473,7 @@ const PublicLandingPage: React.FC = () => {
               fontWeight: 900, lineHeight: 1.07, color: "#fff",
               marginBottom: "1.2rem", marginTop: 0,
             }}>
-              vAI AIing and Vibing<br />
+              vAI · Davidson AI Innovation Center<br />
               <span style={{
                 background: "linear-gradient(135deg,#d97706,#fbbf24)",
                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
@@ -1279,7 +1279,7 @@ const PublicLandingPage: React.FC = () => {
                 AI learning, grounded in community
               </h2>
               <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.92rem", lineHeight: 1.7, maxWidth: 560, margin: "0 auto" }}>
-                A look at the Girls AIing &amp; Vibing platform and the communities it serves.
+                A look at the vAI platform and the communities it serves.
               </p>
             </div>
             <div style={{
@@ -1290,7 +1290,7 @@ const PublicLandingPage: React.FC = () => {
             }}>
               <iframe
                 src="https://www.youtube.com/embed/1mFbtVEiEpY"
-                title="Girls AIing and Vibing — AI learning in community"
+                title="vAI — AI learning in community"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
@@ -1672,7 +1672,7 @@ const PublicLandingPage: React.FC = () => {
               borderRadius: 22, padding: "3rem 2.5rem",
               border: "1px solid rgba(139,92,246,0.2)",
             }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3rem", alignItems: "start" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: "2.5rem", alignItems: "start" }}>
 
                 {/* Left: vision */}
                 <div>
@@ -1956,7 +1956,7 @@ const PublicLandingPage: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "center", marginBottom: "0.65rem" }}>
             <Sparkles size={15} color="#d97706" />
             <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "0.92rem", color: "rgba(255,255,255,0.5)" }}>
-              vAI · Davidson AI Innovation Center · Girls AIing &amp; Vibing
+              vAI · Davidson AI Innovation Center
             </span>
           </div>
           <p style={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.22)", margin: "0 0 0.4rem" }}>
