@@ -15,7 +15,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 }) => {
   const { user, session, loading } = useAuth();
 
-  // Show spinner while auth is resolving
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -24,7 +23,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
     );
   }
 
-  // Only redirect if BOTH loading is done AND there is no session.
   if (requireAuth && !session && !user) {
     return <Navigate to="/login" replace />;
   }
@@ -34,8 +32,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       <Navbar />
 
       <div className="flex">
-        {user && <Sidebar />}
-        <main className={`flex-1 p-6 ${user ? 'md:ml-64' : ''}`}>
+        {/* Sidebar hidden on mobile, visible md+ */}
+        {user && (
+          <div className="hidden md:block">
+            <Sidebar />
+          </div>
+        )}
+        {/* No left margin on mobile; sidebar margin only on md+ */}
+        <main className={`flex-1 min-w-0 p-6 ${user ? 'md:ml-64' : ''}`}>
           {children}
         </main>
       </div>
