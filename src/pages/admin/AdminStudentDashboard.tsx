@@ -3276,7 +3276,7 @@ const AdminStudentDashboard: React.FC = () => {
             { id: 'model-overview' as const, label: 'Model Overview', icon: <Server size={14} />, show: isPlatformAdmin },
             { id: 'cost-overview' as const, label: 'Cost Overview', icon: <DollarSign size={14} />, show: isPlatformAdmin },
             { id: 'cost-learner' as const, label: 'Per-Learner Cost', icon: <Activity size={14} />, show: isPlatformAdmin },
-            { id: 'page-analytics' as const, label: 'Page Analytics', icon: <TrendingDown size={14} />, show: isPlatformAdmin },
+            { id: 'page-analytics' as const, label: 'Page Dropoffs', icon: <TrendingDown size={14} />, show: isPlatformAdmin },
           ]).filter(t => t.show).map(tab => (
             <button
               key={tab.id}
