@@ -13,6 +13,7 @@ import {
   useNavigate
 } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
+import { usePageTracking } from './hooks/usePageTracking';
 import { setChatIdentity } from './lib/chatClient';
 import { supabase } from './lib/supabaseClient';
 import { ImpersonationProvider, ImpersonationBanner } from './contexts/ImpersonationContext';
@@ -104,9 +105,10 @@ const AppContent: React.FC = () => {
     markProfileCompleted
   } = useAuth();
 
-  useEffect(() => {
-    console.log('[AppContent] location change:', location.pathname);
-  }, [location.pathname]);
+  // ─── Page tracking ────────────────────────────────────────────────────────
+  usePageTracking(user?.id ?? null, user?.user_metadata?.cohort ?? null);
+
+  // location changes are now handled by usePageTracking
 
   const showPopup = useMemo(
     () =>
