@@ -453,11 +453,11 @@
         <div class="form-field">
           <label>section</label>
           <select id="new-section">
-            <option value="🔴 harden what exists">harden what exists</option>
-            <option value="📊 instrument everything">instrument everything</option>
-            <option value="⚙️ operational stability">operational stability</option>
             <option value="📄 documentation & knowledge transfer">documentation & knowledge transfer</option>
             <option value="🔁 user feedback loops">user feedback loops</option>
+            <option value="📊 instrument everything">instrument everything</option>
+            <option value="🔴 harden what exists">harden what exists</option>
+            <option value="⚙️ operational stability">operational stability</option>
             <option value="📌 other">other</option>
           </select>
         </div>
@@ -493,25 +493,30 @@
 
 <script>
 const DEFAULT_TASKS = [
-  { id:"t1", section:"🔴 harden what exists", priority:"red", title:"Fix error handling — surface silent failures to user", note:"Known gap. Audit try/catch blocks; ensure every AI call, Supabase write, and Edge Function failure shows a message, not a blank screen.", tagLabel:"partial — known gap" },
-  { id:"t2", section:"🔴 harden what exists", priority:"red", title:"Admin deduplication UI for repeat registrations", note:"Root cause: missing forgot-password. Build a simple merge/delete interface Silas can run without DB access.", tagLabel:"recurring pain" },
-  { id:"t3", section:"🔴 harden what exists", priority:"amber", title:"RLS policy audit — confirm all tables are locked down", note:"You think it's done. Verify by testing as an anon user and a cross-org user. Write down what you find.", tagLabel:"verify & document" },
+  // ── TIER 1: do before anything else ──────────────────────────────────────
+  { id:"t14", section:"📄 documentation & knowledge transfer", priority:"red", title:"Silas onboarding guide — run the platform without Kevin", note:"If Kevin disappeared for a month, what would Silas need? That's the doc. Kevin-as-single-point-of-failure is the biggest existential risk on this board — bigger than any RLS gap or API key.", tagLabel:"🔺 highest priority" },
+  { id:"t16", section:"🔁 user feedback loops", priority:"red", title:"Tier-1 triage process for Solomon and Silas", note:"What can they resolve? What escalates to Kevin? Write it down and test it with a real issue. Pair with the Silas onboarding guide — together they fix the bus-factor problem.", tagLabel:"🔺 highest priority" },
+  { id:"t8", section:"📊 instrument everything", priority:"red", title:"Cost anomaly alerting — catch bill spikes early", note:"You have monitoring. Confirm it fires before the bill arrives, not after. One runaway loop at the wrong moment wipes the AI budget — asymmetric downside, 15-minute fix.", tagLabel:"🔺 highest priority" },
+  // ── TIER 2: do soon ───────────────────────────────────────────────────────
+  { id:"t15", section:"🔁 user feedback loops", priority:"amber", title:"In-platform feedback mechanism for learners", note:"A simple 'something's wrong' button that logs to Supabase with page + user context. Solomon can triage. Closes the feedback loop that no code review can replace.", tagLabel:"community-facing" },
+  { id:"t3", section:"🔴 harden what exists", priority:"amber", title:"RLS policy audit — confirm all tables are locked down", note:"You think it's done. Verify by testing as an anon user and a cross-org user. Write down what you find. A cross-org data leak would be a serious trust violation with a vulnerable community.", tagLabel:"verify & document" },
+  { id:"t10", section:"⚙️ operational stability", priority:"amber", title:"Runbook: duplicate user procedure", note:"Write the step-by-step so Silas can handle it without calling you. Keep it in the repo.", tagLabel:"recurring" },
+  { id:"t2", section:"🔴 harden what exists", priority:"amber", title:"Admin deduplication UI for repeat registrations", note:"Root cause: missing forgot-password. Build a simple merge/delete interface Silas can run without DB access.", tagLabel:"recurring pain" },
+  // ── TIER 3: important, not on fire ────────────────────────────────────────
+  { id:"t1", section:"🔴 harden what exists", priority:"amber", title:"Fix error handling — surface silent failures to user", note:"Known gap. Audit try/catch blocks; ensure every AI call, Supabase write, and Edge Function failure shows a message, not a blank screen.", tagLabel:"partial — known gap" },
   { id:"t4", section:"🔴 harden what exists", priority:"amber", title:"API key exposure check", note:"Scan the repo for any keys committed to git history. Confirm env vars are set in Vercel and not in client-side code.", tagLabel:"one-time" },
-  { id:"t5", section:"🔴 harden what exists", priority:"gray", title:"Edge case testing with real learners", note:"Give Silas or Godwill a specific task and watch them do it. You'll find things no code review ever catches.", tagLabel:"field test" },
-  { id:"t6", section:"🔴 harden what exists", priority:"gray", title:"Supabase query performance review", note:"Use Supabase's built-in query analyzer. Flag any query without an index that runs on page load.", tagLabel:"when ready" },
+  { id:"t14b", section:"📄 documentation & knowledge transfer", priority:"amber", title:"Architecture decision record (ADR)", note:"One markdown file per major decision: why multi-provider fallback, why Netlify for triage, why Supabase Storage for certs. Silas writes the first draft; Kevin corrects.", tagLabel:"silas-led" },
   { id:"t7", section:"📊 instrument everything", priority:"amber", title:"Structured error logging to Supabase or console", note:"Not just 'something broke' — log which user, which page, which function, what the payload was.", tagLabel:"gaps exist" },
-  { id:"t8", section:"📊 instrument everything", priority:"amber", title:"Cost anomaly alerting — catch bill spikes early", note:"You have monitoring. Confirm it fires before the bill arrives, not after.", tagLabel:"revenue risk" },
-  { id:"t9", section:"📊 instrument everything", priority:"gray", title:"User drop-off visibility", note:"Which pages do learners visit and then abandon? A simple Supabase event log per page would reveal this.", tagLabel:"when ready" },
-  { id:"t10", section:"⚙️ operational stability", priority:"red", title:"Runbook: duplicate user procedure", note:"Write the step-by-step so Silas can handle it without calling you. Keep it in the repo.", tagLabel:"recurring" },
   { id:"t11", section:"⚙️ operational stability", priority:"amber", title:"Dependency risk audit", note:"List every free-tier provider. For each: what breaks if it disappears? Which has a paid fallback in your chain?", tagLabel:"strategic" },
+  // ── TIER 4: when ready ────────────────────────────────────────────────────
+  { id:"t5", section:"🔴 harden what exists", priority:"gray", title:"Edge case testing with real learners", note:"Give Silas or Godwill a specific task and watch them do it. You'll find things no code review ever catches.", tagLabel:"field test" },
   { id:"t12", section:"⚙️ operational stability", priority:"gray", title:"Backup & recovery — actually test it", note:"Can you restore from a Supabase backup? Have you tried? Schedule a 1-hour test.", tagLabel:"untested" },
-  { id:"t13", section:"📄 documentation & knowledge transfer", priority:"amber", title:"Architecture decision record (ADR)", note:"One markdown file per major decision: why multi-provider fallback, why Netlify for triage, why Supabase Storage for certs. Silas writes the first draft; Kevin corrects.", tagLabel:"silas-led" },
-  { id:"t14", section:"📄 documentation & knowledge transfer", priority:"amber", title:"Silas onboarding guide — run the platform without Kevin", note:"If Kevin disappeared for a month, what would Silas need? That's the doc.", tagLabel:"silas-led" },
-  { id:"t15", section:"🔁 user feedback loops", priority:"amber", title:"In-platform feedback mechanism for learners", note:"A simple 'something's wrong' button that logs to Supabase with page + user context. Solomon can triage.", tagLabel:"community-facing" },
-  { id:"t16", section:"🔁 user feedback loops", priority:"amber", title:"Tier-1 triage process for Solomon and Silas", note:"What can they resolve? What escalates to Kevin? Write it down and test it with a real issue.", tagLabel:"ops handoff" },
+  { id:"t17", section:"📄 documentation & knowledge transfer", priority:"amber", title:"AI eval framework — build a golden dataset and CI quality gate", note:"Practical quick-wins for the platform AI quality:\n\n1. GOLDEN DATASET: Take 200–500 real learner queries from production, anonymize them, write reference answers, tag by difficulty and topic. This is your north star for every model change — every future prompt edit or provider swap gets tested against it.\n\n2. PASS THRESHOLD + DEPLOY BLOCK: Use DeepEval (github.com/confident-ai/deepeval) or Promptfoo (promptfoo.dev) to run evals in the Vercel/GitHub CI pipeline. A failing eval should be as loud as a failing unit test. Set a threshold (e.g. 85% pass) and block deploys that miss it.\n\n3. RAG EVAL — RETRIEVAL VS GENERATION: For any RAG-based feature (healthcare navigator, ag advisor, etc.), use RAGAS metrics to split retrieval quality from generation quality. Faithfulness below 0.90 means the model is hallucinating beyond retrieved context — a different problem than retrieval precision, needs a different fix.\n\n4. RED-TEAM BEFORE LAUNCH: Test systematically for prompt injections, jailbreaks, and PII extraction — not ad-hoc. Garak (github.com/leondz/garak) automates 100+ vulnerability probes out of the box. Run it before any major prompt or model change.\n\nSilas leads implementation. Kevin reviews golden dataset quality and sets pass thresholds.", tagLabel:"silas-led" },
+  { id:"t9", section:"📊 instrument everything", priority:"gray", title:"User drop-off visibility", note:"Which pages do learners visit and then abandon? A simple Supabase event log per page would reveal this.", tagLabel:"✓ done" },
+  { id:"t6", section:"🔴 harden what exists", priority:"gray", title:"Supabase query performance review", note:"Use Supabase's built-in query analyzer. Flag any query without an index that runs on page load.", tagLabel:"when ready" },
 ];
 
-const STORAGE_KEY = "nv_board_v2";
+const STORAGE_KEY = "nv_board_v4";
 
 function loadState() {
   try {
@@ -540,7 +545,7 @@ function pipColor(priority) {
 }
 
 function getSections() {
-  const order = ["🔴 harden what exists","📊 instrument everything","⚙️ operational stability","📄 documentation & knowledge transfer","🔁 user feedback loops","📌 other"];
+  const order = ["📄 documentation & knowledge transfer","🔁 user feedback loops","📊 instrument everything","🔴 harden what exists","⚙️ operational stability","📌 other"];
   const map = {};
   state.tasks.forEach(t => {
     if (!map[t.section]) map[t.section] = [];
