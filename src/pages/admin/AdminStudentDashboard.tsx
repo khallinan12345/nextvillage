@@ -18,7 +18,7 @@ import {
   ChevronUp, Trophy, User, BarChart2, Code, Brain,
   Target, Lightbulb, MessageSquare, Cpu,
   DollarSign, TrendingUp, Zap, Activity,
-  Server, Building2, Search, Globe,
+  Server, Building2, Search, Globe, TrendingDown,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
@@ -2421,6 +2421,354 @@ const PlatformGlobalPanel: React.FC<{
   );
 };
 
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PAGE ANALYTICS PANEL
+   — Drop-off visibility: page views, engagement rate, exit destinations
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+interface PageStat {
+  page: string;
+  views: number;
+  engaged: number;
+  exits: number;
+  engagement_pct: number;
+}
+
+interface ExitDestination {
+  went_to: string;
+  count: number;
+}
+
+const PAGE_LABELS: Record<string, string> = {
+  english_skills:         'English Skills',
+  ai_learning:            'AI Learning',
+  vibe_coding:            'Vibe Coding',
+  web_development:        'Web Development',
+  full_stack_development: 'Full Stack Dev',
+  ai_image_creation:      'AI Image Creation',
+  ai_voice_creation:      'AI Voice Creation',
+  ai_video_creation:      'AI Video Creation',
+  ai_video_studio:        'AI Video Studio',
+  ai_content_creation:    'AI Content Creation',
+  ai_workflow_dev:        'AI Workflow Dev',
+  ai_for_business:        'AI for Business',
+  tech_skills_hub:        'Tech Skills Hub',
+  ci_ai_ambassadors:      'CI · AI Ambassadors',
+  ci_agriculture:         'CI · Agriculture',
+  ci_fishing:             'CI · Fishing',
+  ci_healthcare:          'CI · Healthcare',
+  ci_entrepreneurship:    'CI · Entrepreneurship',
+  ci_animal_husbandry:    'CI · Animal Husbandry',
+  home:                   'Home',
+  dashboard:              'Dashboard',
+  public_landing:         'Landing Page',
+  ai_playground:          'AI Playground',
+  math_skills:            'Math Skills',
+  science_skills:         'Science Skills',
+};
+
+const friendlyPage = (p: string) =>
+  PAGE_LABELS[p] ?? p.replace(/^other:/, '').replace(/_/g, ' ');
+
+const engagementColor = (pct: number) => {
+  if (pct >= 60) return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+  if (pct >= 35) return 'text-amber-700 bg-amber-50 border-amber-200';
+  return 'text-red-700 bg-red-50 border-red-200';
+};
+
+const PageAnalyticsPanel: React.FC = () => {
+  const [days, setDays] = useState<7 | 14 | 30 | 90>(30);
+  const [stats, setStats] = useState<PageStat[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPage, setSelectedPage] = useState<string | null>(null);
+  const [exits, setExits] = useState<ExitDestination[]>([]);
+  const [loadingExits, setLoadingExits] = useState(false);
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
+
+  const fetchStats = useCallback(async (d: number) => {
+    setLoading(true);
+    setError(null);
+    setSelectedPage(null);
+    setExits([]);
+    try {
+      const { data, error: err } = await supabase.rpc('page_engagement_stats', { days_back: d });
+      if (err) throw err;
+      setStats((data as PageStat[]) ?? []);
+      setLastFetched(new Date());
+    } catch (e: any) {
+      // Fallback: query system_events directly if RPC doesn't exist yet
+      try {
+        const since = new Date(Date.now() - d * 86400_000).toISOString();
+        const { data: raw, error: rawErr } = await supabase
+          .from('system_events')
+          .select('function_name, event_type')
+          .in('event_type', ['page_view', 'page_engaged', 'page_exit'])
+          .gte('created_at', since);
+        if (rawErr) throw rawErr;
+
+        const map = new Map<string, PageStat>();
+        (raw ?? []).forEach(r => {
+          const page = r.function_name;
+          if (!page) return;
+          const s = map.get(page) ?? { page, views: 0, engaged: 0, exits: 0, engagement_pct: 0 };
+          if (r.event_type === 'page_view')    s.views++;
+          if (r.event_type === 'page_engaged') s.engaged++;
+          if (r.event_type === 'page_exit')    s.exits++;
+          map.set(page, s);
+        });
+        const result = [...map.values()].map(s => ({
+          ...s,
+          engagement_pct: s.views > 0 ? Math.round((s.engaged / s.views) * 100) : 0,
+        })).sort((a, b) => b.views - a.views);
+        setStats(result);
+        setLastFetched(new Date());
+      } catch (fallbackErr: any) {
+        setError(fallbackErr?.message ?? 'Failed to load page analytics.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchExits = useCallback(async (page: string) => {
+    setLoadingExits(true);
+    setExits([]);
+    const since = new Date(Date.now() - days * 86400_000).toISOString();
+    const { data, error: err } = await supabase
+      .from('system_events')
+      .select('payload')
+      .eq('event_type', 'page_exit')
+      .eq('function_name', page)
+      .gte('created_at', since);
+    if (!err && data) {
+      const counts = new Map<string, number>();
+      data.forEach(r => {
+        const dest = (r.payload as any)?.next_page;
+        if (dest) counts.set(dest, (counts.get(dest) ?? 0) + 1);
+      });
+      setExits([...counts.entries()]
+        .map(([went_to, count]) => ({ went_to, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8));
+    }
+    setLoadingExits(false);
+  }, [days]);
+
+  // Load on mount
+  useEffect(() => { fetchStats(days); }, []);
+
+  const handleSelectPage = (page: string) => {
+    if (selectedPage === page) {
+      setSelectedPage(null);
+      setExits([]);
+    } else {
+      setSelectedPage(page);
+      fetchExits(page);
+    }
+  };
+
+  const totalViews    = stats.reduce((s, r) => s + r.views, 0);
+  const totalEngaged  = stats.reduce((s, r) => s + r.engaged, 0);
+  const overallPct    = totalViews > 0 ? Math.round((totalEngaged / totalViews) * 100) : 0;
+  const worstPages    = [...stats].sort((a, b) => a.engagement_pct - b.engagement_pct).slice(0, 3);
+
+  return (
+    <div className="space-y-5">
+
+      {/* Header + controls */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <TrendingDown size={16} className="text-purple-600" />
+          <span className="text-sm font-bold text-gray-700">Page Drop-off Analytics</span>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {([7, 14, 30, 90] as const).map(d => (
+            <button
+              key={d}
+              onClick={() => { setDays(d); fetchStats(d); }}
+              className={classNames(
+                'px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors',
+                days === d
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
+              )}
+            >{d}d</button>
+          ))}
+          <button
+            onClick={() => fetchStats(days)}
+            className="ml-1 p-1.5 text-gray-400 hover:text-purple-600 border border-gray-200 rounded-lg transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          </button>
+        </div>
+      </div>
+
+      {lastFetched && (
+        <p className="text-[11px] text-gray-400 -mt-3">
+          Last fetched {lastFetched.toLocaleTimeString()} · click a row to see where learners went next
+        </p>
+      )}
+
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle size={15} /> {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex items-center justify-center gap-2 py-16 text-gray-400">
+          <Loader2 size={20} className="animate-spin" /> Loading page analytics…
+        </div>
+      )}
+
+      {!loading && !error && stats.length === 0 && (
+        <div className="text-center py-16 text-sm text-gray-400">
+          No page tracking data yet. Deploy the tracking code and visit some pages first.
+        </div>
+      )}
+
+      {!loading && stats.length > 0 && (
+        <>
+          {/* Summary cards */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Page Views</p>
+              <p className="text-2xl font-bold text-gray-900">{totalViews.toLocaleString()}</p>
+              <p className="text-xs text-gray-400">last {days} days</p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Overall Engagement</p>
+              <p className={classNames('text-2xl font-bold', overallPct >= 50 ? 'text-emerald-700' : overallPct >= 30 ? 'text-amber-700' : 'text-red-700')}>
+                {overallPct}%
+              </p>
+              <p className="text-xs text-gray-400">stayed 30+ seconds</p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Pages Tracked</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.length}</p>
+              <p className="text-xs text-gray-400">unique pages visited</p>
+            </div>
+          </div>
+
+          {/* Lowest engagement callout */}
+          {worstPages.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <p className="text-xs font-bold text-amber-700 mb-2 flex items-center gap-1.5">
+                <TrendingDown size={13} /> Highest drop-off pages (lowest engagement)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {worstPages.map(p => (
+                  <button
+                    key={p.page}
+                    onClick={() => handleSelectPage(p.page)}
+                    className="text-xs px-2.5 py-1 bg-white border border-amber-200 rounded-lg text-amber-800 font-medium hover:border-amber-400 transition-colors"
+                  >
+                    {friendlyPage(p.page)} — {p.engagement_pct}%
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Main table */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Page</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Views</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Engaged</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Exits</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Engagement</th>
+                  <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase w-32">Rate</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {stats.map(row => (
+                  <React.Fragment key={row.page}>
+                    <tr
+                      onClick={() => handleSelectPage(row.page)}
+                      className={classNames(
+                        'cursor-pointer transition-colors',
+                        selectedPage === row.page
+                          ? 'bg-purple-50'
+                          : 'hover:bg-gray-50'
+                      )}
+                    >
+                      <td className="px-4 py-2.5 font-medium text-gray-900">
+                        {friendlyPage(row.page)}
+                        {selectedPage === row.page && (
+                          <span className="ml-2 text-[10px] text-purple-500 font-normal">▲ exit destinations below</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-gray-700 font-mono text-xs">{row.views}</td>
+                      <td className="px-4 py-2.5 text-right text-gray-700 font-mono text-xs">{row.engaged}</td>
+                      <td className="px-4 py-2.5 text-right text-gray-700 font-mono text-xs">{row.exits}</td>
+                      <td className="px-4 py-2.5 text-right">
+                        <span className={classNames(
+                          'text-xs px-2 py-0.5 rounded-full border font-semibold',
+                          engagementColor(row.engagement_pct)
+                        )}>
+                          {row.engagement_pct}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                          <div
+                            className={classNames(
+                              'h-1.5 rounded-full transition-all',
+                              row.engagement_pct >= 60 ? 'bg-emerald-500' :
+                              row.engagement_pct >= 35 ? 'bg-amber-500' : 'bg-red-400'
+                            )}
+                            style={{ width: `${Math.min(row.engagement_pct, 100)}%` }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Exit destinations inline */}
+                    {selectedPage === row.page && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-3 bg-purple-50 border-t border-purple-100">
+                          {loadingExits ? (
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                              <Loader2 size={12} className="animate-spin" /> Loading exit destinations…
+                            </div>
+                          ) : exits.length === 0 ? (
+                            <p className="text-xs text-gray-400">No exit data for this page yet.</p>
+                          ) : (
+                            <div>
+                              <p className="text-[10px] font-bold text-purple-600 uppercase mb-2">
+                                Where learners went after {friendlyPage(row.page)}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {exits.map(e => (
+                                  <div key={e.went_to} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-purple-200 rounded-lg text-xs">
+                                    <span className="font-medium text-gray-700">{friendlyPage(e.went_to)}</span>
+                                    <span className="text-purple-600 font-bold">{e.count}×</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 /* ═══════════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════════════════════ */
@@ -2452,7 +2800,7 @@ const AdminStudentDashboard: React.FC = () => {
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
   const isLeader = userRole === 'leader' && !isPlatformAdmin;
 
-  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'model-overview' | 'cost-overview' | 'cost-learner'>(
+  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'page-analytics'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
   );
 
@@ -2929,6 +3277,7 @@ const AdminStudentDashboard: React.FC = () => {
             { id: 'model-overview' as const, label: 'Model Overview', icon: <Server size={14} />, show: isPlatformAdmin },
             { id: 'cost-overview' as const, label: 'Cost Overview', icon: <DollarSign size={14} />, show: isPlatformAdmin },
             { id: 'cost-learner' as const, label: 'Per-Learner Cost', icon: <Activity size={14} />, show: isPlatformAdmin },
+            { id: 'page-analytics' as const, label: 'Page Analytics', icon: <TrendingDown size={14} />, show: isPlatformAdmin },
           ]).filter(t => t.show).map(tab => (
             <button
               key={tab.id}
@@ -3055,6 +3404,10 @@ const AdminStudentDashboard: React.FC = () => {
             costOrgId={costOrgId} setCostOrgId={setCostOrgId} loadingOrgs={loadingOrgs}
             days={costDays} setDays={(d) => { console.log(`[parent] learner setDays(${d}), costRows=${costRows.length}`); setCostDays(d); fetchCostData(d); }}
           />
+        )}
+
+        {activeTab === 'page-analytics' && (
+          <PageAnalyticsPanel />
         )}
 
       </div>
