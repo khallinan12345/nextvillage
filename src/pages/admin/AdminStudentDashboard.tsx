@@ -2421,7 +2421,6 @@ const PlatformGlobalPanel: React.FC<{
   );
 };
 
-};
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    PAGE ANALYTICS PANEL
