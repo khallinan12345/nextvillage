@@ -2325,37 +2325,67 @@ ${prior.impact_arc}
                   </div>
                 ) : (() => {
                     const top10 = communityLeaderboard.slice(0, 10);
+                    const rest = communityLeaderboard.slice(10);
                     const myEntry = communityLeaderboard.find(e => e.learner_id === user?.id);
                     const myRank = myEntry?.rank ?? 0;
-                    const iAmOutside = myRank > 10;
+                    const iAmInRest = myRank > 10;
 
-                    const renderRow = (entry: CommunityLeaderEntry) => {
+                    // Build a human-readable summary of what someone has done
+                    const buildActivitySummary = (entry: CommunityLeaderEntry): string => {
+                      const parts: string[] = [];
+                      if (entry.multiplier_count > 0) parts.push(`${entry.multiplier_count} Village Leader${entry.multiplier_count > 1 ? 's' : ''}`);
+                      if (entry.builder_count > 0)    parts.push(`${entry.builder_count} AI for Good`);
+                      if (entry.bridge_count > 0)     parts.push(`${entry.bridge_count} Community Connector${entry.bridge_count > 1 ? 's' : ''}`);
+                      if (entry.scout_count > 0)      parts.push(`${entry.scout_count} Problem Finder${entry.scout_count > 1 ? 's' : ''}`);
+                      if (entry.seed_count > 0)       parts.push(`${entry.seed_count} Community Teacher${entry.seed_count > 1 ? 's' : ''}`);
+                      if (parts.length === 0) return `${entry.total_actions} action${entry.total_actions !== 1 ? 's' : ''}`;
+                      return parts.join(' · ');
+                    };
+
+                    const renderRow = (entry: CommunityLeaderEntry, compact = false) => {
                       const isMe = entry.learner_id === user?.id;
                       const medal = MEDAL[entry.rank];
                       const tc = TIER_COLOURS[entry.highest_tier] ?? TIER_COLOURS.seed;
+                      const summary = buildActivitySummary(entry);
+
                       return (
                         <div key={entry.learner_id}
-                          className={classNames('flex items-center px-6 py-3 gap-4 transition-colors',
-                            isMe ? 'bg-emerald-50 border-l-4 border-emerald-400' : 'hover:bg-gray-50')}>
-                          <div className="w-10 text-center flex-shrink-0">
-                            {medal ? <span className="text-2xl leading-none">{medal}</span>
+                          className={classNames(
+                            'flex items-start gap-4 transition-colors',
+                            compact ? 'px-6 py-2.5' : 'px-6 py-3.5',
+                            isMe ? 'bg-emerald-50 border-l-4 border-emerald-400' : 'hover:bg-gray-50'
+                          )}>
+                          {/* Rank / Medal */}
+                          <div className="w-10 text-center flex-shrink-0 pt-0.5">
+                            {medal
+                              ? <span className="text-2xl leading-none">{medal}</span>
                               : <span className="text-base font-bold text-gray-400">#{entry.rank}</span>}
                           </div>
+
+                          {/* Name + tier badge + activity summary */}
                           <div className="flex-1 min-w-0">
-                            <span className={classNames('text-sm font-semibold truncate block',
-                              isMe ? 'text-emerald-800' : 'text-gray-800')}>
-                              {entry.name ?? 'Learner'}
-                              {isMe && <span className="ml-2 text-xs font-normal text-emerald-600">(you)</span>}
-                            </span>
-                            <span className={classNames(
-                              'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold border mt-0.5',
-                              tc.bg, tc.text, tc.border
-                            )}>
-                              <span className={classNames('w-1.5 h-1.5 rounded-full', tc.dot)} />
-                              {entry.highest_tier_label}
-                            </span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={classNames(
+                                'text-sm font-semibold truncate',
+                                isMe ? 'text-emerald-800' : 'text-gray-800'
+                              )}>
+                                {entry.name ?? 'Learner'}
+                                {isMe && <span className="ml-1.5 text-xs font-normal text-emerald-600">(you)</span>}
+                              </span>
+                              <span className={classNames(
+                                'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold border flex-shrink-0',
+                                tc.bg, tc.text, tc.border
+                              )}>
+                                <span className={classNames('w-1.5 h-1.5 rounded-full', tc.dot)} />
+                                {entry.highest_tier_label}
+                              </span>
+                            </div>
+                            {/* Activity summary line */}
+                            <p className="text-xs text-gray-500 mt-0.5 leading-tight">{summary}</p>
                           </div>
-                          <div className="flex-shrink-0 text-right">
+
+                          {/* Total actions */}
+                          <div className="flex-shrink-0 text-right pt-0.5">
                             <span className={classNames('text-base font-bold',
                               entry.rank === 1 ? 'text-amber-600' :
                               entry.rank === 2 ? 'text-gray-500' :
@@ -2366,23 +2396,44 @@ ${prior.impact_arc}
                               {entry.total_actions === 1 ? 'action' : 'actions'}
                             </span>
                           </div>
-                          <div className="hidden sm:flex gap-1 flex-shrink-0">
-                            {entry.seed_count > 0 && <span title="Seed" className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs flex items-center justify-center font-bold">{entry.seed_count}</span>}
-                            {entry.scout_count > 0 && <span title="Scout" className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-bold">{entry.scout_count}</span>}
-                            {entry.bridge_count > 0 && <span title="Bridge" className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-bold">{entry.bridge_count}</span>}
-                            {entry.builder_count > 0 && <span title="Builder" className="w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs flex items-center justify-center font-bold">{entry.builder_count}</span>}
-                            {entry.multiplier_count > 0 && <span title="Multiplier" className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs flex items-center justify-center font-bold">{entry.multiplier_count}</span>}
-                          </div>
                         </div>
                       );
                     };
 
                     return (
-                      <div className="divide-y divide-gray-100">
-                        {top10.map(renderRow)}
-                        {iAmOutside && myEntry && (
+                      <div>
+                        {/* ── Top 10 — always visible ── */}
+                        <div className="divide-y divide-gray-100">
+                          {top10.map(e => renderRow(e))}
+                        </div>
+
+                        {/* ── Remaining entries — scrollable ── */}
+                        {rest.length > 0 && (
+                          <div className="border-t border-gray-200">
+                            <div
+                              className="overflow-y-auto divide-y divide-gray-100"
+                              style={{ maxHeight: '320px' }}
+                            >
+                              {rest.map(e => renderRow(e, true))}
+                            </div>
+                            {/* Scroll fade hint */}
+                            <div className="px-6 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                              <span className="text-xs text-gray-400">
+                                Showing all {communityLeaderboard.length} participants · scroll to see more
+                              </span>
+                              {iAmInRest && myEntry && (
+                                <span className="text-xs font-medium text-emerald-700">
+                                  You're #{myRank}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── "You" pinned below if not in top 10 and there are no rest entries (edge case) ── */}
+                        {iAmInRest && myEntry && rest.length === 0 && (
                           <>
-                            <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2">
+                            <div className="px-6 py-1.5 bg-gray-50 flex items-center gap-2 border-t border-gray-200">
                               <div className="flex-1 border-t border-dashed border-gray-300" />
                               <span className="text-xs text-gray-400 flex-shrink-0">{myRank - 10} more above you</span>
                               <div className="flex-1 border-t border-dashed border-gray-300" />
