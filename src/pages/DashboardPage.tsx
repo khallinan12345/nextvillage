@@ -73,6 +73,15 @@ interface CommunityLeaderEntry {
   multiplier_count: number;
 }
 
+interface LearnerAction {
+  challenge_id: string;
+  challenge_title: string;
+  community_impact_slug: string;
+  week_end: string;
+  tier_awarded: string | null;
+  status: string;
+}
+
 // ─── Grand Challenge types ───────────────────────────────────────────────────
 
 interface GrandChallenge {
@@ -158,6 +167,14 @@ const TIER_LABELS_MAP: Record<string, string> = {
   bridge:     'Community Connector',
   builder:    'AI for Good',
   multiplier: 'Village Leader',
+};
+
+const TIER_DESCRIPTIONS: Record<string, string> = {
+  seed:       'Made genuine community contact',
+  scout:      'Found & documented a real community problem',
+  bridge:     'Brought a community member to the hub',
+  builder:    'Co-solved a real problem with AI',
+  multiplier: 'Recruited & mentoring a new learner',
 };
 
 // Add interface for dashboard activities with sub_category
@@ -510,6 +527,8 @@ const DashboardPage: React.FC = () => {
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
+  const [learnerActionsModal, setLearnerActionsModal] = useState<{ entry: CommunityLeaderEntry; actions: LearnerAction[] | null } | null>(null);
+  const [learnerActionsLoading, setLearnerActionsLoading] = useState(false);
 
   // ── Grand Challenge state ─────────────────────────────────────────────────
   const [grandChallenge, setGrandChallenge]           = useState<GrandChallenge | null>(null);
@@ -1169,6 +1188,35 @@ ${prior.impact_arc}
       setEnrolling(false);
     }
   };
+
+  // ── Fetch individual actions for a leaderboard member ───────────────────
+  const fetchLearnerActions = useCallback(async (entry: CommunityLeaderEntry) => {
+    setLearnerActionsModal({ entry, actions: null });
+    setLearnerActionsLoading(true);
+    try {
+      const { data: enrollments } = await supabase
+        .from('challenge_enrollments')
+        .select('challenge_id, status, tier_awarded, community_challenges(title, community_impact_slug, week_end)')
+        .eq('learner_id', entry.learner_id)
+        .in('status', ['active', 'submitted', 'awarded'])
+        .order('created_at', { ascending: false });
+
+      const actions: LearnerAction[] = (enrollments ?? []).map((e: any) => ({
+        challenge_id:          e.challenge_id,
+        challenge_title:       e.community_challenges?.title ?? 'Challenge',
+        community_impact_slug: e.community_challenges?.community_impact_slug ?? '',
+        week_end:              e.community_challenges?.week_end ?? '',
+        tier_awarded:          e.tier_awarded ?? null,
+        status:                e.status,
+      }));
+      setLearnerActionsModal({ entry, actions });
+    } catch (err) {
+      console.error('[LearnerActions] fetch error:', err);
+      setLearnerActionsModal({ entry, actions: [] });
+    } finally {
+      setLearnerActionsLoading(false);
+    }
+  }, []);
 
   // ── Fetch leaderboard for a past challenge ───────────────────────────────
   const fetchPastChallengeLeaderboard = useCallback(async (challengeId: string) => {
@@ -2380,21 +2428,31 @@ ${prior.impact_arc}
                                 {entry.highest_tier_label}
                               </span>
                             </div>
+                            {/* Tier description */}
+                            <p className="text-xs text-gray-400 italic leading-tight">{TIER_DESCRIPTIONS[entry.highest_tier] ?? entry.highest_tier_label}</p>
                             {/* Activity summary line */}
                             <p className="text-xs text-gray-500 mt-0.5 leading-tight">{summary}</p>
                           </div>
 
-                          {/* Total actions */}
-                          <div className="flex-shrink-0 text-right pt-0.5">
-                            <span className={classNames('text-base font-bold',
-                              entry.rank === 1 ? 'text-amber-600' :
-                              entry.rank === 2 ? 'text-gray-500' :
-                              entry.rank === 3 ? 'text-orange-700' : 'text-gray-700')}>
-                              {entry.total_actions}
-                            </span>
-                            <span className="ml-1 text-xs text-gray-400">
-                              {entry.total_actions === 1 ? 'action' : 'actions'}
-                            </span>
+                          {/* Total actions + View button */}
+                          <div className="flex-shrink-0 text-right pt-0.5 flex flex-col items-end gap-1">
+                            <div>
+                              <span className={classNames('text-base font-bold',
+                                entry.rank === 1 ? 'text-amber-600' :
+                                entry.rank === 2 ? 'text-gray-500' :
+                                entry.rank === 3 ? 'text-orange-700' : 'text-gray-700')}>
+                                {entry.total_actions}
+                              </span>
+                              <span className="ml-1 text-xs text-gray-400">
+                                {entry.total_actions === 1 ? 'action' : 'actions'}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => fetchLearnerActions(entry)}
+                              className="text-[11px] font-medium text-emerald-600 hover:text-emerald-800 hover:underline whitespace-nowrap"
+                            >
+                              View details →
+                            </button>
                           </div>
                         </div>
                       );
@@ -3344,6 +3402,102 @@ ${prior.impact_arc}
                 </span>
                 <button onClick={() => setShowDetailsModal(false)}
                   className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Learner Actions Modal ─────────────────────────────────────────── */}
+      {learnerActionsModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" onClick={() => setLearnerActionsModal(null)}>
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/50 transition-opacity" />
+            <div
+              className="relative bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">{learnerActionsModal.entry.name}</h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    {(() => {
+                      const tc = TIER_COLOURS[learnerActionsModal.entry.highest_tier] ?? TIER_COLOURS.seed;
+                      return (
+                        <span className={classNames('inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold border', tc.bg, tc.text, tc.border)}>
+                          <span className={classNames('w-1.5 h-1.5 rounded-full', tc.dot)} />
+                          {learnerActionsModal.entry.highest_tier_label}
+                        </span>
+                      );
+                    })()}
+                    <span className="text-xs text-gray-400">{learnerActionsModal.entry.total_actions} total {learnerActionsModal.entry.total_actions === 1 ? 'action' : 'actions'}</span>
+                  </div>
+                </div>
+                <button onClick={() => setLearnerActionsModal(null)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 px-6 py-4">
+                {learnerActionsLoading || learnerActionsModal.actions === null ? (
+                  <div className="flex items-center justify-center py-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400" />
+                  </div>
+                ) : learnerActionsModal.actions.length === 0 ? (
+                  <div className="text-center py-10 text-gray-400 text-sm">
+                    <Globe2 className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                    <p>No recorded actions yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {learnerActionsModal.actions.map((action, i) => {
+                      const tier = action.tier_awarded ?? 'seed';
+                      const tc = TIER_COLOURS[tier] ?? TIER_COLOURS.seed;
+                      const emoji = SLUG_EMOJI[action.community_impact_slug] ?? '🌍';
+                      const weekLabel = action.week_end
+                        ? new Date(action.week_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : '';
+                      return (
+                        <div key={i} className="flex items-start gap-3 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                          <span className="text-xl leading-none flex-shrink-0 mt-0.5">{emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 leading-tight">{action.challenge_title}</p>
+                            {weekLabel && (
+                              <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                                <Calendar className="w-3 h-3" /> Week ending {weekLabel}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-0.5 italic">
+                              {TIER_DESCRIPTIONS[tier] ?? TIER_LABELS_MAP[tier] ?? tier}
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0 text-right">
+                            {action.tier_awarded ? (
+                              <span className={classNames('inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold border', tc.bg, tc.text, tc.border)}>
+                                <span className={classNames('w-1.5 h-1.5 rounded-full', tc.dot)} />
+                                {TIER_LABELS_MAP[tier] ?? tier}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400 italic">pending</span>
+                            )}
+                            <p className="text-[10px] text-gray-400 mt-0.5 capitalize">{action.status}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="border-t bg-gray-50 px-6 py-3 flex justify-end">
+                <button
+                  onClick={() => setLearnerActionsModal(null)}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
                   Close
                 </button>
               </div>
