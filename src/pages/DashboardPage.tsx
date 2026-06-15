@@ -58,6 +58,17 @@ interface WeeklyChallenge {
   return_question_3: string | null;
 }
 
+interface WeeklyChampion {
+  id: string;
+  champion_name: string;
+  winning_tier: string;
+  winning_tier_label: string;
+  champion_story: string | null;
+  was_tiebreak: boolean;
+  week_start: string;
+  week_end: string;
+}
+
 interface CommunityLeaderEntry {
   learner_id: string;
   name: string;
@@ -521,6 +532,7 @@ const DashboardPage: React.FC = () => {
 
   // ── Community AI Challenge state ─────────────────────────────────────────
   const [weeklyChallenge, setWeeklyChallenge]         = useState<WeeklyChallenge | null>(null);
+  const [weeklyChampion,  setWeeklyChampion]          = useState<WeeklyChampion | null>(null);
   const [challengeLoading, setChallengeLoading]       = useState(false);
   const [enrollmentStatus, setEnrollmentStatus]       = useState<'none' | 'active' | 'submitted' | 'awarded'>('none');
   const [, setEnrollmentId]                           = useState<string | null>(null);
@@ -925,6 +937,16 @@ const DashboardPage: React.FC = () => {
           .order('week_start', { ascending: false })
           .limit(12);
         if (pastChallengeRows) setPastChallenges(pastChallengeRows as PastChallenge[]);
+
+        // Fetch most recent weekly champion for this org
+        const { data: champRow } = await supabase
+          .from('weekly_champions')
+          .select('id, champion_name, winning_tier, winning_tier_label, champion_story, was_tiebreak, week_start, week_end')
+          .eq('org_id', orgSlug)
+          .order('week_start', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (champRow) setWeeklyChampion(champRow as WeeklyChampion);
       } finally {
         setChallengeLoading(false);
         setCommunityLbLoading(false);
@@ -937,10 +959,17 @@ const DashboardPage: React.FC = () => {
     (async () => {
       try {
         let orgId: string | null = null;
+        let newsOrgSlug: string | null = null;
         if (user?.id) {
           const { data: profileData } = await supabase
             .from('profiles').select('organization_id').eq('id', user.id).single();
           orgId = profileData?.organization_id ?? null;
+          if (orgId) {
+            const { data: orgData } = await supabase
+              .from('organizations').select('name').eq('id', orgId).single();
+            const name = orgData?.name?.toLowerCase() ?? '';
+            newsOrgSlug = name.includes('ibiade') ? 'ibiade' : 'oloibiri';
+          }
         }
         const { data } = await supabase
           .from('platform_news')
@@ -951,7 +980,7 @@ const DashboardPage: React.FC = () => {
         if (data) {
           const filtered = data.filter((item: any) => {
             const ids: string[] = item.organization_ids ?? [];
-            return ids.length === 0 || (orgId && ids.includes(orgId));
+            return ids.length === 0 || (newsOrgSlug && ids.includes(newsOrgSlug));
           });
           setNewsItems(filtered as NewsItem[]);
         }
@@ -2053,6 +2082,37 @@ ${prior.impact_arc}
                 })()}
               </div>
             )}
+            {/* ── Weekly Champion Banner ── */}
+            {weeklyChampion && (
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+                <span className="text-2xl leading-none flex-shrink-0">🏆</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-0.5">
+                    This Week's Community Champion
+                  </p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {weeklyChampion.champion_name}
+                    <span className={classNames(
+                      'ml-2 text-xs px-2 py-0.5 rounded-full font-semibold border align-middle',
+                      TIER_COLOURS[weeklyChampion.winning_tier]?.bg,
+                      TIER_COLOURS[weeklyChampion.winning_tier]?.text,
+                      TIER_COLOURS[weeklyChampion.winning_tier]?.border,
+                    )}>
+                      {weeklyChampion.winning_tier_label}
+                    </span>
+                  </p>
+                  {weeklyChampion.champion_story && (
+                    <p className="text-xs text-gray-600 mt-1 leading-relaxed line-clamp-2">
+                      {weeklyChampion.champion_story.slice(0, 160)}{weeklyChampion.champion_story.length > 160 ? '…' : ''}
+                    </p>
+                  )}
+                  <p className="text-xs text-amber-500 mt-1">
+                    Week of {new Date(weeklyChampion.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {(!challengeLoading || !grandLoading) && (weeklyChallenge || grandChallenge) && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
