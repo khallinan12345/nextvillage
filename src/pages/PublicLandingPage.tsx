@@ -16,6 +16,7 @@ import {
   Globe, ChevronDown, Brain, Code, ImagePlus, Briefcase, Heart,
   BookOpen, ExternalLink,
 } from "lucide-react";
+import { BookCard, BookModal } from "../components/BookModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -226,6 +227,7 @@ const PublicLandingPage: React.FC = () => {
   const [programs, setPrograms]   = useState<ResearchProgram[]>([]);
   const [questions, setQuestions] = useState<GuidingQuestion[]>([]);
   const [menuOpen, setMenuOpen]   = useState(false);
+  const [bookOpen, setBookOpen]   = useState(false);
 
   // ── Public aggregate view: one row per cohort_month ─────────────────────
   // One row per "visit rank" = nth month of use across all learners
@@ -1573,6 +1575,9 @@ const PublicLandingPage: React.FC = () => {
                 </div>
               </a>
 
+              {/* Book — in-page reader card */}
+              <BookCard onOpen={() => setBookOpen(true)} />
+
             </div>
           </div>
         </section>
@@ -2043,6 +2048,7 @@ const PublicLandingPage: React.FC = () => {
         </footer>
 
       </div>
+      <BookModal open={bookOpen} onClose={() => setBookOpen(false)} />
     </>
   );
 };
