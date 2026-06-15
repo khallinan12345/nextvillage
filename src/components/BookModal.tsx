@@ -152,8 +152,8 @@ export const BookModal: React.FC<{ open: boolean; onClose: () => void }> = ({ op
     if (!open || hasFetched.current) return;
     hasFetched.current = true;
     setLoading(true);
-    fetch("/book.json")
-      .then(r => {
+    fetch("https://wohmsbeygxrbwogrggkq.supabase.co/storage/v1/object/public/book/book.json")
+    .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json() as Promise<BookData>;
       })
