@@ -730,6 +730,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     const navEnrollment = (location.state as any)?.challengeEnrollment;
     if (navEnrollment?.enrollmentId) {
       setActiveChallenge(navEnrollment);
+      setMode('casebook-dashboard');
       return;
     }
 
@@ -786,8 +787,10 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
         if (enrollment) {
           setActiveChallenge(mapped);
+          setMode('casebook-dashboard');
         } else {
           setAvailableChallenge(mapped);
+          setMode('casebook-dashboard');
         }
       } finally {
         setChallengeLoading(false);
