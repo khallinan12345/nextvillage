@@ -37,6 +37,22 @@ const aiReadySkills = [
   },
 ];
 
+interface WeeklyChampion {
+  champion_name: string;
+  winning_tier: string;
+  winning_tier_label: string;
+  champion_story: string | null;
+  week_start: string;
+}
+
+interface ActiveChallenge {
+  title: string;
+  description: string;
+  community_impact_slug: string;
+  tier_target: string;
+  week_end: string;
+}
+
 const HomePage: React.FC = () => {
   const { user } = useAuth();
   const branding = useBranding();
@@ -60,6 +76,8 @@ const HomePage: React.FC = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [newsDismissed, setNewsDismissed] = useState(false);
   const [newsIndex, setNewsIndex] = useState(0);
+  const [weeklyChampion, setWeeklyChampion]   = useState<WeeklyChampion | null>(null);
+  const [activeChallenge, setActiveChallenge] = useState<ActiveChallenge | null>(null);
 
   useEffect(() => {
     const fetchOrgNews = async () => {
@@ -75,7 +93,15 @@ const HomePage: React.FC = () => {
           orgId = profileData?.organization_id ?? null;
         }
 
-        // organization_ids is UUID[] — empty [] = broadcast, [uuid,...] = org-scoped
+        // Resolve org slug for platform_news filtering (news uses slugs, not UUIDs)
+        let newsOrgSlug: string | null = null;
+        if (orgId) {
+          const { data: orgData } = await supabase
+            .from('organizations').select('name').eq('id', orgId).single();
+          const name = orgData?.name?.toLowerCase() ?? '';
+          newsOrgSlug = name.includes('ibiade') ? 'ibiade' : 'oloibiri';
+        }
+
         const { data } = await supabase
           .from('platform_news')
           .select('id,title,body,link,link_label,emoji,created_at,organization_ids')
@@ -86,9 +112,30 @@ const HomePage: React.FC = () => {
         if (data) {
           const filtered = data.filter((item: any) => {
             const ids: string[] = item.organization_ids ?? [];
-            return ids.length === 0 || (orgId && ids.includes(orgId));
+            return ids.length === 0 || (newsOrgSlug && ids.includes(newsOrgSlug));
           });
           setNewsItems(filtered as NewsItem[]);
+        }
+
+        // Fetch champion + active challenge scoped to org
+        if (newsOrgSlug) {
+          const [{ data: champ }, { data: challenge }] = await Promise.all([
+            supabase
+              .from('weekly_champions')
+              .select('champion_name, winning_tier, winning_tier_label, champion_story, week_start')
+              .eq('org_id', newsOrgSlug)
+              .order('week_start', { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            supabase
+              .from('community_challenges')
+              .select('title, description, community_impact_slug, tier_target, week_end')
+              .eq('org_id', newsOrgSlug)
+              .eq('active', true)
+              .maybeSingle(),
+          ]);
+          if (champ) setWeeklyChampion(champ as WeeklyChampion);
+          if (challenge) setActiveChallenge(challenge as ActiveChallenge);
         }
       } catch {
         // silent failure — banner is non-critical
@@ -465,6 +512,53 @@ const HomePage: React.FC = () => {
                       </div>
                     );
                   })()}
+                </div>
+              </div>
+            )}
+
+            {/* ── Weekly Champion Banner ── */}
+            {weeklyChampion && (
+              <div className="w-full max-w-4xl mb-4 animate-fade-in">
+                <div className="relative bg-gradient-to-r from-amber-500/20 to-yellow-500/20 backdrop-blur-md border border-amber-400/40 rounded-2xl px-5 py-4 shadow-xl text-left">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl leading-none flex-shrink-0">🏆</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-amber-300 uppercase tracking-widest mb-0.5">This Week's Community Champion</p>
+                      <p className="text-sm font-bold text-white">
+                        {weeklyChampion.champion_name}
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-200 align-middle">
+                          {weeklyChampion.winning_tier_label}
+                        </span>
+                      </p>
+                      {weeklyChampion.champion_story && (
+                        <p className="text-xs text-gray-300 mt-1 leading-relaxed line-clamp-2">
+                          {weeklyChampion.champion_story.slice(0, 140)}{weeklyChampion.champion_story.length > 140 ? '…' : ''}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Active Challenge Teaser ── */}
+            {activeChallenge && (
+              <div className="w-full max-w-4xl mb-8 animate-fade-in">
+                <div className="relative bg-gradient-to-r from-green-500/15 to-teal-500/15 backdrop-blur-md border border-green-400/30 rounded-2xl px-5 py-4 shadow-xl text-left">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl leading-none flex-shrink-0">🌍</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-green-300 uppercase tracking-widest mb-0.5">Active Community Challenge</p>
+                      <p className="text-sm font-bold text-white">{activeChallenge.title}</p>
+                      <p className="text-xs text-gray-300 mt-1 leading-relaxed line-clamp-2">{activeChallenge.description}</p>
+                      <a
+                        href="/dashboard"
+                        className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-green-300 hover:text-green-100 underline underline-offset-2 transition-colors"
+                      >
+                        Take the challenge →
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
