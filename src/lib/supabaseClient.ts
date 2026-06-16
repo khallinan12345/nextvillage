@@ -8,7 +8,6 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ||
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
                         import.meta.env.SUPABASE_ANON_KEY || 
                         '';
-console.log('SUPABASE KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY?.slice(0, 20));
 
 // Only warn, don't throw error (site was working before)
 if (!supabaseUrl || !supabaseAnonKey) {
