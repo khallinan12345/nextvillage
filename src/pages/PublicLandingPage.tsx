@@ -272,6 +272,41 @@ const PublicLandingPage: React.FC = () => {
   }
   const [bandRows, setBandRows] = useState<BandRow[]>([]);
 
+  // ── Community Challenge Impact ───────────────────────────────────────────
+  interface ChallengeImpactStory {
+    slug: string;
+    action_taken: string | null;
+    impact_observed: string | null;
+    community_member_role: string | null;
+    tier_awarded: string | null;
+  }
+  interface ChallengeSlugStats {
+    slug: string;
+    total: number;
+    awarded: number;
+  }
+  interface ImpactTier {
+    tier: string;
+    tier_label: string;
+    evidence_summary: string | null;
+    awarded_at: string;
+    slug: string | null;          // from joined community_challenges
+  }
+  interface WeeklyWinner {
+    winner_name: string;
+    winner_reason: string | null;
+    winner_tier: string | null;
+    week_start: string;
+    week_end: string;
+    title: string;
+    community_impact_slug: string;
+  }
+  const [impactStories, setImpactStories]       = useState<ChallengeImpactStory[]>([]);
+  const [slugStats, setSlugStats]               = useState<ChallengeSlugStats[]>([]);
+  const [totalEnrollments, setTotalEnrollments] = useState(0);
+  const [impactTiers, setImpactTiers]           = useState<ImpactTier[]>([]);
+  const [weeklyWinners, setWeeklyWinners]       = useState<WeeklyWinner[]>([]);
+
   useEffect(() => {
     (async () => {
       const COLS = [
@@ -325,6 +360,81 @@ const PublicLandingPage: React.FC = () => {
       setStreamRows((streamData as StreamRow[]) || []);
       setBandRows((bandData as BandRow[]) || []);
       setLongLoading(false);
+
+      // ── Community challenge impact stories, tiers, and weekly winners ──────
+      const [{ data: enrollData }, { data: tiersData }, { data: winnersData }] = await Promise.all([
+        // Enrollment stories (submitted or awarded, with impact text)
+        supabase
+          .from("challenge_enrollments")
+          .select(`
+            action_taken,
+            impact_observed,
+            community_member_role,
+            tier_awarded,
+            status,
+            community_challenges!inner(community_impact_slug)
+          `)
+          .in("status", ["awarded", "submitted"])
+          .not("impact_observed", "is", null)
+          .order("awarded_at", { ascending: false })
+          .limit(80),
+
+        // community_impact_tiers — richer, evaluated evidence summaries
+        supabase
+          .from("community_impact_tiers")
+          .select(`
+            tier,
+            tier_label,
+            evidence_summary,
+            awarded_at,
+            community_challenges(community_impact_slug)
+          `)
+          .not("evidence_summary", "is", null)
+          .order("awarded_at", { ascending: false })
+          .limit(40),
+
+        // Weekly winners from community_challenges
+        supabase
+          .from("community_challenges")
+          .select("winner_name, winner_reason, winner_tier, week_start, week_end, title, community_impact_slug")
+          .not("winner_name", "is", null)
+          .order("week_start", { ascending: false })
+          .limit(10),
+      ]);
+
+      if (enrollData) {
+        const stories: ChallengeImpactStory[] = (enrollData as any[]).map(r => ({
+          slug: r.community_challenges?.community_impact_slug ?? "unknown",
+          action_taken: r.action_taken,
+          impact_observed: r.impact_observed,
+          community_member_role: r.community_member_role,
+          tier_awarded: r.tier_awarded,
+        }));
+        setImpactStories(stories);
+
+        const counts: Record<string, { total: number; awarded: number }> = {};
+        stories.forEach(s => {
+          if (!counts[s.slug]) counts[s.slug] = { total: 0, awarded: 0 };
+          counts[s.slug].total++;
+          if (s.tier_awarded) counts[s.slug].awarded++;
+        });
+        setSlugStats(Object.entries(counts).map(([slug, v]) => ({ slug, ...v })));
+        setTotalEnrollments(stories.length);
+      }
+
+      if (tiersData) {
+        setImpactTiers((tiersData as any[]).map(r => ({
+          tier: r.tier,
+          tier_label: r.tier_label,
+          evidence_summary: r.evidence_summary,
+          awarded_at: r.awarded_at,
+          slug: r.community_challenges?.community_impact_slug ?? null,
+        })));
+      }
+
+      if (winnersData) {
+        setWeeklyWinners(winnersData as WeeklyWinner[]);
+      }
     })();
   }, []);
 
@@ -1343,6 +1453,341 @@ const PublicLandingPage: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* ── Community Impact Challenges ──────────────────────────────── */}
+        {(() => {
+          const DOMAINS: {
+            slug: string; label: string; emoji: string;
+            accent: string; accentDim: string; who: string; tagline: string;
+          }[] = [
+            { slug: "agriculture",      label: "Agriculture",     emoji: "🌾", accent: "#4ade80", accentDim: "rgba(74,222,128,0.12)",  who: "Help a Farmer",        tagline: "Young people use AI to solve real crop, pest, and yield problems for farmers in their community." },
+            { slug: "fishing",          label: "Fishing",         emoji: "🐟", accent: "#38bdf8", accentDim: "rgba(56,189,248,0.12)",  who: "Help a Fisher",        tagline: "AI-powered advice on fish seasons, weather, storage, and market prices — brought to the waterside." },
+            { slug: "animal-husbandry", label: "Animal Husbandry",emoji: "🐐", accent: "#fb923c", accentDim: "rgba(251,146,60,0.12)",  who: "Help an Animal Keeper",tagline: "Livestock health, feeding, and breeding guidance delivered in local language to animal raisers." },
+            { slug: "healthcare",       label: "Healthcare",      emoji: "🏥", accent: "#f472b6", accentDim: "rgba(244,114,182,0.12)", who: "AI-Assisted Triage",   tagline: "Community health navigators use AI to support first-level triage for families who can't reach a clinic." },
+            { slug: "entrepreneurship", label: "Entrepreneurship", emoji: "💡", accent: "#fbbf24", accentDim: "rgba(251,191,36,0.12)",  who: "Help an Entrepreneur", tagline: "Business plans, pricing, marketing, and grant proposals — built alongside micro-entrepreneurs." },
+            { slug: "ai-ambassadors",   label: "AI Ambassadors",  emoji: "📱", accent: "#a78bfa", accentDim: "rgba(167,139,250,0.12)", who: "Teach AI on Phones",   tagline: "Trained youth teach community members to use AI on their own phones — multiplying access person by person." },
+          ];
+
+          const tierColors: Record<string, string> = {
+            seed: "#4ade80", scout: "#38bdf8", bridge: "#fbbf24",
+            builder: "#fb923c", multiplier: "#a78bfa",
+          };
+
+          // Per-domain: prefer evidence_summary from community_impact_tiers (richer),
+          // fall back to impact_observed from challenge_enrollments
+          const bestStoryBySlug = new Map<string, { text: string; role?: string | null; tier?: string | null; source: "tier" | "enrollment" }>();
+          DOMAINS.forEach(d => {
+            // Try tier evidence first
+            const tierMatch = impactTiers
+              .filter(t => t.slug === d.slug && t.evidence_summary)
+              .sort((a, b) => (b.evidence_summary?.length ?? 0) - (a.evidence_summary?.length ?? 0))[0];
+            if (tierMatch) {
+              bestStoryBySlug.set(d.slug, { text: tierMatch.evidence_summary!, tier: tierMatch.tier, source: "tier" });
+              return;
+            }
+            // Fall back to enrollment impact_observed
+            const enrolMatch = impactStories
+              .filter(s => s.slug === d.slug && s.impact_observed)
+              .sort((a, b) => (b.impact_observed?.length ?? 0) - (a.impact_observed?.length ?? 0))[0];
+            if (enrolMatch) {
+              bestStoryBySlug.set(d.slug, {
+                text: enrolMatch.impact_observed!, role: enrolMatch.community_member_role,
+                tier: enrolMatch.tier_awarded, source: "enrollment",
+              });
+            }
+          });
+
+          const getCount = (slug: string) => slugStats.find(s => s.slug === slug)?.total ?? 0;
+
+          // Tier counts from community_impact_tiers
+          const tierTotals = impactTiers.reduce<Record<string, number>>((acc, t) => {
+            acc[t.tier] = (acc[t.tier] ?? 0) + 1; return acc;
+          }, {});
+
+          // Format week range for display
+          const fmtWeek = (ws: string, we: string) => {
+            const s = new Date(ws), e = new Date(we);
+            return `${s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${e.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}`;
+          };
+
+          const domainMeta: Record<string, { emoji: string; accent: string }> = Object.fromEntries(
+            DOMAINS.map(d => [d.slug, { emoji: d.emoji, accent: d.accent }])
+          );
+
+          return (
+            <section style={{ background: "linear-gradient(180deg,#080e06 0%,#0c160a 100%)", padding: "5rem 2rem" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+
+                {/* ── Header ──────────────────────────────────────────────── */}
+                <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+                  <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#4ade80", marginBottom: "0.6rem" }}>
+                    AI in Action · Community Impact Challenges
+                  </div>
+                  <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.7rem,4vw,2.7rem)", fontWeight: 700, color: "#fff", margin: "0 0 1rem", lineHeight: 1.25 }}>
+                    Young people bringing AI<br />into their community — every week
+                  </h2>
+                  <p style={{ color: "rgba(255,255,255,0.52)", maxWidth: 640, margin: "0 auto 2rem", lineHeight: 1.8, fontSize: "0.97rem" }}>
+                    vAI learners don't just study AI — they use it. Each week, youth accept a Community Impact
+                    Challenge: find a real person in Oloibiri with a real problem, use AI to help them, then
+                    return and report what happened. Every story earns a tier. The best earns the week.
+                  </p>
+
+                  {/* Aggregate pill row */}
+                  {(totalEnrollments > 0 || impactTiers.length > 0) && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "center" }}>
+                      {[
+                        { value: totalEnrollments, label: "community engagements", color: "#4ade80" },
+                        { value: impactTiers.length, label: "tiers earned", color: "#fbbf24" },
+                        { value: weeklyWinners.length, label: "weekly champions", color: "#a78bfa" },
+                        { value: DOMAINS.filter(d => getCount(d.slug) > 0).length, label: "active domains", color: "#38bdf8" },
+                      ].filter(p => p.value > 0).map(p => (
+                        <div key={p.label} style={{
+                          display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                          background: "rgba(255,255,255,0.06)", border: `1px solid ${p.color}33`,
+                          borderRadius: 99, padding: "0.35rem 1rem",
+                          fontSize: "0.82rem", color: "rgba(255,255,255,0.72)",
+                        }}>
+                          <span style={{ fontWeight: 800, color: p.color, fontSize: "0.95rem" }}>{p.value}</span>
+                          {p.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Weekly Champions spotlight ──────────────────────────── */}
+                {weeklyWinners.length > 0 && (
+                  <div style={{ marginBottom: "3rem" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1rem", textAlign: "center" }}>
+                      🏆 Weekly Champions
+                    </div>
+                    <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.5rem", scrollbarWidth: "none" }}>
+                      {weeklyWinners.map((w, i) => {
+                        const meta = domainMeta[w.community_impact_slug] ?? { emoji: "⭐", accent: "#fbbf24" };
+                        const isLatest = i === 0;
+                        return (
+                          <div key={`${w.week_start}-${w.winner_name}`} style={{
+                            flexShrink: 0, width: 260,
+                            background: isLatest ? "rgba(251,191,36,0.08)" : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${isLatest ? "#fbbf2440" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: 14, padding: "1.1rem 1.2rem",
+                            position: "relative", overflow: "hidden",
+                          }}>
+                            {isLatest && (
+                              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,#fbbf24,#f59e0b)" }} />
+                            )}
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.65rem" }}>
+                              <span style={{ fontSize: "1.2rem" }}>{meta.emoji}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 700, color: isLatest ? "#fef3c7" : "#fff", fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {w.winner_name}
+                                </div>
+                                <div style={{ fontSize: "0.65rem", color: isLatest ? "#fbbf24" : "rgba(255,255,255,0.35)", fontWeight: 600, marginTop: 1 }}>
+                                  {fmtWeek(w.week_start, w.week_end)}
+                                </div>
+                              </div>
+                              {w.winner_tier && (
+                                <span style={{
+                                  fontSize: "0.6rem", fontWeight: 700, textTransform: "capitalize",
+                                  color: tierColors[w.winner_tier] ?? "#fff",
+                                  background: `${tierColors[w.winner_tier] ?? "#fff"}18`,
+                                  border: `1px solid ${tierColors[w.winner_tier] ?? "#fff"}30`,
+                                  borderRadius: 6, padding: "0.12rem 0.4rem", flexShrink: 0,
+                                }}>
+                                  {w.winner_tier}
+                                </span>
+                              )}
+                            </div>
+                            {w.winner_reason && (
+                              <p style={{ fontSize: "0.77rem", color: isLatest ? "rgba(254,243,199,0.75)" : "rgba(255,255,255,0.45)", lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>
+                                "{w.winner_reason.length > 120 ? w.winner_reason.slice(0, 120).trimEnd() + "…" : w.winner_reason}"
+                              </p>
+                            )}
+                            {isLatest && (
+                              <div style={{ marginTop: "0.55rem", fontSize: "0.62rem", fontWeight: 700, color: "#fbbf24", letterSpacing: "0.08em" }}>
+                                THIS WEEK'S CHAMPION
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Domain cards ─────────────────────────────────────────── */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))",
+                  gap: "1.25rem",
+                }}>
+                  {DOMAINS.map(domain => {
+                    const story = bestStoryBySlug.get(domain.slug);
+                    const count = getCount(domain.slug);
+                    return (
+                      <div key={domain.slug} style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: `1px solid ${domain.accent}28`,
+                        borderRadius: 16, padding: "1.5rem",
+                        position: "relative", overflow: "hidden",
+                        transition: "transform 0.2s, box-shadow 0.2s",
+                      }}
+                        onMouseEnter={e => {
+                          (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
+                          (e.currentTarget as HTMLDivElement).style.boxShadow = `0 16px 40px ${domain.accent}18`;
+                        }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                          (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                        }}
+                      >
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: domain.accent }} />
+
+                        {/* Header */}
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "0.9rem", marginBottom: "0.9rem" }}>
+                          <div style={{
+                            width: 48, height: 48, borderRadius: 12,
+                            background: domain.accentDim,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: "1.5rem", flexShrink: 0,
+                          }}>
+                            {domain.emoji}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1rem", fontWeight: 700, color: "#fff", margin: 0 }}>
+                                {domain.label}
+                              </h3>
+                              {count > 0 && (
+                                <span style={{
+                                  fontSize: "0.65rem", fontWeight: 700, color: domain.accent,
+                                  background: domain.accentDim, border: `1px solid ${domain.accent}40`,
+                                  borderRadius: 99, padding: "0.15rem 0.55rem", letterSpacing: "0.06em",
+                                }}>
+                                  {count} {count === 1 ? "story" : "stories"}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: "0.72rem", color: domain.accent, fontWeight: 700, letterSpacing: "0.05em", marginTop: "0.18rem" }}>
+                              {domain.who}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Tagline */}
+                        <p style={{ fontSize: "0.83rem", color: "rgba(255,255,255,0.52)", lineHeight: 1.65, margin: "0 0 1rem" }}>
+                          {domain.tagline}
+                        </p>
+
+                        {/* Story block — tier evidence takes priority */}
+                        {story ? (
+                          <div style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${domain.accent}22`,
+                            borderRadius: 10, padding: "0.9rem 1rem",
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.45rem" }}>
+                              <div style={{ fontSize: "0.64rem", fontWeight: 700, color: domain.accent, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                                {story.source === "tier" ? "Recognised impact" : "Community story"}
+                              </div>
+                              {story.tier && (
+                                <span style={{
+                                  fontSize: "0.6rem", fontWeight: 700, textTransform: "capitalize",
+                                  color: tierColors[story.tier] ?? "#fff",
+                                  background: `${tierColors[story.tier] ?? "#fff"}18`,
+                                  border: `1px solid ${tierColors[story.tier] ?? "#fff"}28`,
+                                  borderRadius: 6, padding: "0.1rem 0.38rem",
+                                }}>
+                                  {story.tier}
+                                </span>
+                              )}
+                            </div>
+                            <p style={{ fontSize: "0.81rem", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: "0 0 0.5rem", fontStyle: "italic" }}>
+                              "{story.text.length > 200 ? story.text.slice(0, 200).trimEnd() + "…" : story.text}"
+                            </p>
+                            {story.role && (
+                              <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: "0.15rem 0.45rem" }}>
+                                {story.role}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{
+                            background: "rgba(255,255,255,0.025)",
+                            border: `1px dashed ${domain.accent}22`,
+                            borderRadius: 10, padding: "0.9rem 1rem",
+                            textAlign: "center",
+                          }}>
+                            <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.22)", lineHeight: 1.6 }}>
+                              Stories coming as youth complete their first challenges in this track.
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── Tier breakdown ────────────────────────────────────────── */}
+                <div style={{
+                  marginTop: "3rem",
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 14, padding: "1.6rem 2rem",
+                }}>
+                  <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(255,255,255,0.32)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.1rem" }}>
+                    How community impact is recognised
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {[
+                      { tier: "seed",       color: "#4ade80", desc: "Took the challenge out into the world — first community engagement." },
+                      { tier: "scout",      color: "#38bdf8", desc: "Brought back a real story — documented the impact with evidence." },
+                      { tier: "bridge",     color: "#fbbf24", desc: "Referred a new learner from the community they helped." },
+                      { tier: "builder",    color: "#fb923c", desc: "Completed a sustained series of community challenges across weeks." },
+                      { tier: "multiplier", color: "#a78bfa", desc: "A learner they mentored went on to complete their own challenge." },
+                    ].map(t => {
+                      const count = tierTotals[t.tier] ?? 0;
+                      const maxCount = Math.max(...Object.values(tierTotals), 1);
+                      return (
+                        <div key={t.tier} style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                          {/* Tier pill */}
+                          <div style={{
+                            width: 76, flexShrink: 0,
+                            fontSize: "0.68rem", fontWeight: 700, color: t.color,
+                            textTransform: "capitalize", textAlign: "right",
+                          }}>
+                            {t.tier}
+                          </div>
+                          {/* Progress bar */}
+                          <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.07)", borderRadius: 99, overflow: "hidden" }}>
+                            <div style={{
+                              height: "100%", borderRadius: 99,
+                              background: t.color,
+                              width: count > 0 ? `${Math.max(6, (count / maxCount) * 100)}%` : "0%",
+                              opacity: 0.75,
+                              transition: "width 1.2s cubic-bezier(0.16,1,0.3,1)",
+                            }} />
+                          </div>
+                          {/* Count */}
+                          {count > 0 && (
+                            <div style={{ fontSize: "0.72rem", fontWeight: 700, color: t.color, width: 24, textAlign: "right", flexShrink: 0 }}>
+                              {count}
+                            </div>
+                          )}
+                          {/* Description */}
+                          <div style={{ fontSize: "0.73rem", color: "rgba(255,255,255,0.35)", flex: "2 1 160px", lineHeight: 1.5 }}>
+                            {t.desc}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ── Video ──────────────────────────────────────────────────────── */}
         <section style={{ background: "#0c160a", padding: "4rem 2rem" }}>
