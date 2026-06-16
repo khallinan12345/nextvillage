@@ -1152,13 +1152,13 @@ Return ONLY the improved text. No explanation, no preamble.`
               <textarea
                 value={prompt}
                 onChange={e => { setPrompt(e.target.value); setPromptScore(null); setPromptEvaluated(false); }}
-                rows={4} maxLength={500} disabled={isGenerating}
+                rows={4} maxLength={1000} disabled={isGenerating}
                 placeholder={uiText.promptPlaceholder}
                 className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition disabled:opacity-50"
               />
               <div className="flex items-center justify-between mt-1 mb-3">
                 <p className="text-xs text-slate-500">{uiText.promptHint}</p>
-                <span className={classNames('text-xs', charCount > 450 ? 'text-amber-400' : 'text-slate-500')}>{charCount}/500</span>
+                <span className={classNames('text-xs', charCount > 900 ? 'text-amber-400' : 'text-slate-500')}>{charCount}/1000</span>
               </div>
 
               {/* Action buttons row */}

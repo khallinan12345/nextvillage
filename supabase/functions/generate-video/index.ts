@@ -89,7 +89,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const safePrompt    = prompt.trim().slice(0, 500);
+    const safePrompt    = prompt.trim().slice(0, 1000);
     const safeNegPrompt = (negative_prompt ?? 'low quality, blurry, distorted, watermark').slice(0, 300);
     const safeFrames    = Math.min(Math.max(num_frames ?? 121, 25), 129);
     const hasStart      = typeof image      === 'string' && image.length > 0;
