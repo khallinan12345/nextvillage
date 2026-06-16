@@ -20,14 +20,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [view, setView] = useState<'form' | 'magic-link-sent'>('form');
   const [similarMatch, setSimilarMatch] = useState<{ maskedEmail: string; rawEmail: string } | null>(null);
 
-  // ─── Active user tracking on component mount ──────────────────────────────
-  useEffect(() => {
-  }, []);
-
-  // ─── Visitor tracking ─────────────────────────────────────────────────────
-    }
-  };
-
   // ─── Duplicate email check ────────────────────────────────────────────────
   const emailAlreadyExists = async (email: string): Promise<boolean> => {
     const { data, error } = await supabase
