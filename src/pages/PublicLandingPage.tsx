@@ -545,12 +545,15 @@ const PublicLandingPage: React.FC = () => {
             </div>
 
             {/* Desktop links */}
-            <div className="hide-sm" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-              <a href="#impact"     className="nav-lnk">Impact</a>
-              <a href="#programmes" className="nav-lnk">Programmes</a>
-              <a href="#community"  className="nav-lnk">Join Us</a>
-              <a href="#research"   className="nav-lnk">Research</a>
-              <a href="#support"    className="nav-lnk">Support</a>
+            <div className="hide-sm" style={{ display: "flex", alignItems: "center", gap: "1.1rem" }}>
+              <a href="#impact"      className="nav-lnk">Impact</a>
+              <a href="#programmes"  className="nav-lnk">Programmes</a>
+              <a href="#challenges"  className="nav-lnk">Challenges</a>
+              <a href="#story"       className="nav-lnk">Our Story</a>
+              <a href="#voices"      className="nav-lnk">Voices</a>
+              <a href="#research"    className="nav-lnk">Research</a>
+              <a href="#community"   className="nav-lnk">Join Us</a>
+              <a href="#support"     className="nav-lnk">Support</a>
               <Link to="/login" className="pub-btn btn-amber" style={{ padding: "0.42rem 1.1rem", fontSize: "0.82rem" }}>
                 Log In / Sign Up
               </Link>
@@ -591,8 +594,11 @@ const PublicLandingPage: React.FC = () => {
               {[
                 { href: "#impact",     label: "Impact" },
                 { href: "#programmes", label: "Programmes" },
-                { href: "#community",  label: "Join Us" },
+                { href: "#challenges", label: "Challenges" },
+                { href: "#story",      label: "Our Story" },
+                { href: "#voices",     label: "Voices" },
                 { href: "#research",   label: "Research" },
+                { href: "#community",  label: "Join Us" },
                 { href: "#support",    label: "Support" },
               ].map(item => (
                 <a
@@ -1516,7 +1522,7 @@ const PublicLandingPage: React.FC = () => {
           );
 
           return (
-            <section style={{ background: "linear-gradient(180deg,#080e06 0%,#0c160a 100%)", padding: "5rem 2rem" }}>
+            <section id="challenges" style={{ background: "linear-gradient(180deg,#080e06 0%,#0c160a 100%)", padding: "5rem 2rem" }}>
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
 
                 {/* ── Header ──────────────────────────────────────────────── */}
@@ -1933,13 +1939,13 @@ const PublicLandingPage: React.FC = () => {
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "2rem" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#d97706", marginBottom: "0.6rem" }}>
-                See It In Action
+                Where we are going, one village at a time.
               </div>
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.7rem,4vw,2.5rem)", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>
-                AI learning, grounded in community
+                Our Vision
               </h2>
               <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.92rem", lineHeight: 1.7, maxWidth: 560, margin: "0 auto" }}>
-                A look at the Davidson AI Innovation Center platform and the communities it serves.
+                It starts in Oloibir. It moves one village at a time to help people in their communities.
               </p>
             </div>
             <div style={{
@@ -1960,7 +1966,7 @@ const PublicLandingPage: React.FC = () => {
         </section>
 
         {/* ── Origin Story ─────────────────────────────────────────────────────── */}
-        <section style={{ background: "#faf7f2", padding: "5rem 2rem" }}>
+        <section id="story" style={{ background: "#faf7f2", padding: "5rem 2rem" }}>
           <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
             <div style={{ textAlign: "center", marginBottom: "3rem" }}>
@@ -2080,7 +2086,7 @@ const PublicLandingPage: React.FC = () => {
         </section>
 
         {/* ── Voices from the Community ───────────────────────────────────── */}
-        <section style={{ background: "#0c160a", padding: "5rem 2rem" }}>
+        <section id="voices" style={{ background: "#0c160a", padding: "5rem 2rem" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "3rem" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#4ade80", marginBottom: "0.6rem" }}>
