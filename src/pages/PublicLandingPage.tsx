@@ -1527,40 +1527,20 @@ const PublicLandingPage: React.FC = () => {
                   <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.7rem,4vw,2.7rem)", fontWeight: 700, color: "#fff", margin: "0 0 1rem", lineHeight: 1.25 }}>
                     Young people bringing AI<br />into their community — every week
                   </h2>
-                  <p style={{ color: "rgba(255,255,255,0.52)", maxWidth: 640, margin: "0 auto 2rem", lineHeight: 1.8, fontSize: "0.97rem" }}>
-                    vAI learners don't just study AI — they use it. Each week, youth accept a Community Impact
-                    Challenge: find a real person in Oloibiri with a real problem, use AI to help them, then
-                    return and report what happened. Every story earns a tier. The best earns the week.
+                  <p style={{ color: "rgba(255,255,255,0.52)", maxWidth: 660, margin: "0 auto", lineHeight: 1.8, fontSize: "0.97rem" }}>
+                    vAI learners don't just study AI — they take it to their community to help farmers, fisher
+                    people, animal raisers, entrepreneurs, and more. Each week, youth accept a Community Impact
+                    Challenge: find a real person or people in their community with a real problem, use AI to
+                    help them, then return and report what happened. Every week the 'leader' receives a prize
+                    that will help them improve their outreach to the community.
                   </p>
-
-                  {/* Aggregate pill row */}
-                  {(totalEnrollments > 0 || impactTiers.length > 0) && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "center" }}>
-                      {[
-                        { value: totalEnrollments, label: "community engagements", color: "#4ade80" },
-                        { value: impactTiers.length, label: "tiers earned", color: "#fbbf24" },
-                        { value: weeklyWinners.length, label: "weekly champions", color: "#a78bfa" },
-                        { value: DOMAINS.filter(d => getCount(d.slug) > 0).length, label: "active domains", color: "#38bdf8" },
-                      ].filter(p => p.value > 0).map(p => (
-                        <div key={p.label} style={{
-                          display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                          background: "rgba(255,255,255,0.06)", border: `1px solid ${p.color}33`,
-                          borderRadius: 99, padding: "0.35rem 1rem",
-                          fontSize: "0.82rem", color: "rgba(255,255,255,0.72)",
-                        }}>
-                          <span style={{ fontWeight: 800, color: p.color, fontSize: "0.95rem" }}>{p.value}</span>
-                          {p.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* ── Weekly Champions spotlight ──────────────────────────── */}
                 {weeklyWinners.length > 0 && (
                   <div style={{ marginBottom: "3rem" }}>
-                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1rem", textAlign: "center" }}>
-                      🏆 Weekly Champions
+                    <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "rgba(255,255,255,0.55)", marginBottom: "1.1rem", textAlign: "center" }}>
+                      Here are some of the weekly winners
                     </div>
                     <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.5rem", scrollbarWidth: "none" }}>
                       {weeklyWinners.map((w, i) => {
@@ -1609,12 +1589,8 @@ const PublicLandingPage: React.FC = () => {
                               </p>
                             )}
 
-                            {/* Footer row: badge + Details button */}
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: "0.25rem" }}>
-                              {isLatest
-                                ? <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#fbbf24", letterSpacing: "0.08em" }}>THIS WEEK'S CHAMPION</div>
-                                : <div />
-                              }
+                            {/* Footer row: Details button */}
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: "auto", paddingTop: "0.25rem" }}>
                               {w.winner_reason && (
                                 <button
                                   onClick={() => setSelectedWinner(w)}
