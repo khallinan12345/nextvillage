@@ -87,7 +87,7 @@ const CERT_PAGES = new Set([
 const ANTHROPIC_HAIKU  = 'claude-haiku-4-5-20251001';
 const ANTHROPIC_SONNET = 'claude-sonnet-4-6';
 const GROQ_MODEL       = 'llama-3.3-70b-versatile';
-const CEREBRAS_MODEL   = 'llama3.1-8b';              // Cerebras — 2000+ t/s, free tier, fastest in chain
+const CEREBRAS_MODEL   = 'llama-3.1-8b';             // Cerebras — 2000+ t/s, free tier, fastest in chain
 const DEEPSEEK_MODEL   = 'deepseek-chat';          // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
 
 // ── Fallback provider models ───────────────────────────────────────────────────
@@ -108,7 +108,7 @@ const PRICING = {
   'meta-llama/Llama-3.3-70B-Instruct': { input: 0.00, output: 0.00, cacheWrite: 0.00, cacheRead: 0.00 },
   'meta-llama/llama-3.3-70b-instruct:free': { input: 0.00, output: 0.00, cacheWrite: 0.00, cacheRead: 0.00 },
   'mistral-small-latest':        { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
-  'llama3.1-8b':                 { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  }, // Cerebras free tier
+  'llama-3.1-8b':                { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  }, // Cerebras free tier
   'deepseek-chat':               { input: 0.28,  output: 0.42,  cacheWrite: 0.00,  cacheRead: 0.028 }, // V3.2 — ~71% cheaper than Haiku
 };
 
@@ -167,6 +167,23 @@ function isMissingKeyError(error) {
     message.includes('api key') ||
     message.includes('unauthorized') ||
     message.includes('authentication')
+  );
+}
+
+// 404 = model not found; daily quota exhausted = effectively permanent until reset.
+// Put the provider on a 6-hour cooldown so the chain skips it rather than
+// hammering it on every request.
+const PERMANENT_ERROR_COOLDOWN = 6 * 60 * 60 * 1000; // 6 hours
+
+function isPermanentError(error) {
+  const status = error?.status || error?.statusCode;
+  const message = error?.message?.toLowerCase() || '';
+  return (
+    status === 404 ||
+    message.includes('does not exist') ||
+    message.includes('model not found') ||
+    message.includes('daily free allocation') ||
+    message.includes('neurons')
   );
 }
 
@@ -727,6 +744,9 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature) 
         setCooldown(provider.name, COOLDOWN_DURATION);
       } else if (isMissingKeyError(error)) {
         setCooldown(provider.name, MISSING_KEY_COOLDOWN);
+      } else if (isPermanentError(error)) {
+        console.warn(`[chat.js] 🚫 ${provider.name} permanent error — cooldown 6h`);
+        setCooldown(provider.name, PERMANENT_ERROR_COOLDOWN);
       }
 
       continue;
