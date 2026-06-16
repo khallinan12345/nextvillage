@@ -5,13 +5,13 @@
 // always runs the latest published version of the public model.
 //
 // Modes:
-//   (1) text only     → wavespeedai/wan-2.1-t2v-720p
+//   (1) text only     → wavespeedai/wan-2.2-t2v-fast
 //   (2) text + image  → wavespeedai/wan-2.1-i2v-720p  (start frame pixel-locked)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const REPLICATE_I2V = 'https://api.replicate.com/v1/models/wavespeedai/wan-2.1-i2v-720p/predictions';
-const REPLICATE_T2V = 'https://api.replicate.com/v1/models/wavespeedai/wan-2.1-t2v-720p/predictions';
+const REPLICATE_T2V = 'https://api.replicate.com/v1/models/wavespeedai/wan-2.2-t2v-fast/predictions';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin':  '*',
