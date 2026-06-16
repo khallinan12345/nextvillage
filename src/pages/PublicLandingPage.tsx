@@ -306,6 +306,7 @@ const PublicLandingPage: React.FC = () => {
   const [totalEnrollments, setTotalEnrollments] = useState(0);
   const [impactTiers, setImpactTiers]           = useState<ImpactTier[]>([]);
   const [weeklyWinners, setWeeklyWinners]       = useState<WeeklyWinner[]>([]);
+  const [selectedWinner, setSelectedWinner]     = useState<WeeklyWinner | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -1475,14 +1476,14 @@ const PublicLandingPage: React.FC = () => {
 
           // Per-domain: prefer evidence_summary from community_impact_tiers (richer),
           // fall back to impact_observed from challenge_enrollments
-          const bestStoryBySlug = new Map<string, { text: string; role?: string | null; tier?: string | null; source: "tier" | "enrollment" }>();
+          const bestStoryBySlug = new Map<string, { text: string; role?: string | null; tier?: string | null; tierLabel?: string | null; source: "tier" | "enrollment" }>();
           DOMAINS.forEach(d => {
             // Try tier evidence first
             const tierMatch = impactTiers
               .filter(t => t.slug === d.slug && t.evidence_summary)
               .sort((a, b) => (b.evidence_summary?.length ?? 0) - (a.evidence_summary?.length ?? 0))[0];
             if (tierMatch) {
-              bestStoryBySlug.set(d.slug, { text: tierMatch.evidence_summary!, tier: tierMatch.tier, source: "tier" });
+              bestStoryBySlug.set(d.slug, { text: tierMatch.evidence_summary!, tier: tierMatch.tier, tierLabel: tierMatch.tier_label, source: "tier" });
               return;
             }
             // Fall back to enrollment impact_observed
@@ -1492,7 +1493,7 @@ const PublicLandingPage: React.FC = () => {
             if (enrolMatch) {
               bestStoryBySlug.set(d.slug, {
                 text: enrolMatch.impact_observed!, role: enrolMatch.community_member_role,
-                tier: enrolMatch.tier_awarded, source: "enrollment",
+                tier: enrolMatch.tier_awarded, tierLabel: null, source: "enrollment",
               });
             }
           });
@@ -1565,6 +1566,7 @@ const PublicLandingPage: React.FC = () => {
                       {weeklyWinners.map((w, i) => {
                         const meta = domainMeta[w.community_impact_slug] ?? { emoji: "⭐", accent: "#fbbf24" };
                         const isLatest = i === 0;
+                        const tc = tierColors[w.winner_tier ?? ""] ?? "#fff";
                         return (
                           <div key={`${w.week_start}-${w.winner_name}`} style={{
                             flexShrink: 0, width: 260,
@@ -1572,11 +1574,14 @@ const PublicLandingPage: React.FC = () => {
                             border: `1px solid ${isLatest ? "#fbbf2440" : "rgba(255,255,255,0.08)"}`,
                             borderRadius: 14, padding: "1.1rem 1.2rem",
                             position: "relative", overflow: "hidden",
+                            display: "flex", flexDirection: "column", gap: "0.55rem",
                           }}>
                             {isLatest && (
                               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,#fbbf24,#f59e0b)" }} />
                             )}
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.65rem" }}>
+
+                            {/* Name / week / tier row */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                               <span style={{ fontSize: "1.2rem" }}>{meta.emoji}</span>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontWeight: 700, color: isLatest ? "#fef3c7" : "#fff", fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -1589,31 +1594,177 @@ const PublicLandingPage: React.FC = () => {
                               {w.winner_tier && (
                                 <span style={{
                                   fontSize: "0.6rem", fontWeight: 700, textTransform: "capitalize",
-                                  color: tierColors[w.winner_tier] ?? "#fff",
-                                  background: `${tierColors[w.winner_tier] ?? "#fff"}18`,
-                                  border: `1px solid ${tierColors[w.winner_tier] ?? "#fff"}30`,
+                                  color: tc, background: `${tc}18`, border: `1px solid ${tc}30`,
                                   borderRadius: 6, padding: "0.12rem 0.4rem", flexShrink: 0,
                                 }}>
                                   {w.winner_tier}
                                 </span>
                               )}
                             </div>
+
+                            {/* Truncated reason */}
                             {w.winner_reason && (
                               <p style={{ fontSize: "0.77rem", color: isLatest ? "rgba(254,243,199,0.75)" : "rgba(255,255,255,0.45)", lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>
-                                "{w.winner_reason.length > 120 ? w.winner_reason.slice(0, 120).trimEnd() + "…" : w.winner_reason}"
+                                "{w.winner_reason.length > 100 ? w.winner_reason.slice(0, 100).trimEnd() + "…" : w.winner_reason}"
                               </p>
                             )}
-                            {isLatest && (
-                              <div style={{ marginTop: "0.55rem", fontSize: "0.62rem", fontWeight: 700, color: "#fbbf24", letterSpacing: "0.08em" }}>
-                                THIS WEEK'S CHAMPION
-                              </div>
-                            )}
+
+                            {/* Footer row: badge + Details button */}
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: "0.25rem" }}>
+                              {isLatest
+                                ? <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#fbbf24", letterSpacing: "0.08em" }}>THIS WEEK'S CHAMPION</div>
+                                : <div />
+                              }
+                              {w.winner_reason && (
+                                <button
+                                  onClick={() => setSelectedWinner(w)}
+                                  style={{
+                                    background: "rgba(255,255,255,0.08)",
+                                    border: "1px solid rgba(255,255,255,0.16)",
+                                    borderRadius: 7, padding: "0.28rem 0.7rem",
+                                    fontSize: "0.72rem", fontWeight: 700,
+                                    color: isLatest ? "#fef3c7" : "rgba(255,255,255,0.7)",
+                                    cursor: "pointer",
+                                    transition: "background 0.15s, border-color 0.15s",
+                                  }}
+                                  onMouseEnter={e => {
+                                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.14)";
+                                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)";
+                                  }}
+                                  onMouseLeave={e => {
+                                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)";
+                                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.16)";
+                                  }}
+                                >
+                                  Details →
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
+
+                {/* ── Winner detail modal ──────────────────────────────────── */}
+                {selectedWinner && (() => {
+                  const w = selectedWinner;
+                  const meta = domainMeta[w.community_impact_slug] ?? { emoji: "⭐", accent: "#fbbf24" };
+                  const tc = tierColors[w.winner_tier ?? ""] ?? "#fff";
+                  return (
+                    <div
+                      onClick={() => setSelectedWinner(null)}
+                      style={{
+                        position: "fixed", inset: 0, zIndex: 200,
+                        background: "rgba(0,0,0,0.72)", backdropFilter: "blur(6px)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        padding: "1.5rem",
+                      }}
+                    >
+                      <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          background: "#111a0f",
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          borderRadius: 18, padding: "2rem 2.25rem",
+                          maxWidth: 520, width: "100%",
+                          position: "relative",
+                          boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+                        }}
+                      >
+                        {/* Gold top bar */}
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "18px 18px 0 0", background: "linear-gradient(90deg,#fbbf24,#f59e0b)" }} />
+
+                        {/* Close */}
+                        <button
+                          onClick={() => setSelectedWinner(null)}
+                          style={{
+                            position: "absolute", top: "1rem", right: "1rem",
+                            background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+                            borderRadius: 8, width: 30, height: 30,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: "rgba(255,255,255,0.55)", fontSize: "1rem", cursor: "pointer",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.13)"}
+                          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)"}
+                        >
+                          ✕
+                        </button>
+
+                        {/* Header */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", marginBottom: "1.4rem" }}>
+                          <div style={{
+                            width: 52, height: 52, borderRadius: 13,
+                            background: `${meta.accent}18`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: "1.7rem", flexShrink: 0,
+                          }}>
+                            {meta.emoji}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "0.6rem", fontWeight: 700, color: "#fbbf24", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.2rem" }}>
+                              🏆 Weekly Champion
+                            </div>
+                            <div style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: "#fff", fontSize: "1.15rem", lineHeight: 1.2 }}>
+                              {w.winner_name}
+                            </div>
+                            <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "0.2rem" }}>
+                              {fmtWeek(w.week_start, w.week_end)}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Tier + domain row */}
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.2rem" }}>
+                          {w.winner_tier && (
+                            <span style={{
+                              fontSize: "0.72rem", fontWeight: 700, textTransform: "capitalize",
+                              color: tc, background: `${tc}18`, border: `1px solid ${tc}30`,
+                              borderRadius: 7, padding: "0.2rem 0.65rem",
+                            }}>
+                              {w.winner_tier} tier
+                            </span>
+                          )}
+                          <span style={{
+                            fontSize: "0.72rem", fontWeight: 600,
+                            color: meta.accent, background: `${meta.accent}12`,
+                            border: `1px solid ${meta.accent}28`,
+                            borderRadius: 7, padding: "0.2rem 0.65rem", textTransform: "capitalize",
+                          }}>
+                            {w.community_impact_slug.replace(/-/g, " ")}
+                          </span>
+                        </div>
+
+                        {/* Challenge title */}
+                        {w.title && (
+                          <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.35rem" }}>
+                            Challenge
+                          </div>
+                        )}
+                        {w.title && (
+                          <p style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.6)", margin: "0 0 1.2rem", lineHeight: 1.6 }}>
+                            {w.title}
+                          </p>
+                        )}
+
+                        {/* Full reason */}
+                        <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>
+                          Why they won
+                        </div>
+                        <p style={{
+                          fontSize: "0.92rem", color: "rgba(255,255,255,0.82)",
+                          lineHeight: 1.75, margin: 0, fontStyle: "italic",
+                          borderLeft: `3px solid ${tc}`,
+                          paddingLeft: "1rem",
+                        }}>
+                          "{w.winner_reason}"
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* ── Domain cards ─────────────────────────────────────────── */}
                 <div style={{
@@ -1686,7 +1837,7 @@ const PublicLandingPage: React.FC = () => {
                             border: `1px solid ${domain.accent}22`,
                             borderRadius: 10, padding: "0.9rem 1rem",
                           }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.45rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.45rem" }}>
                               <div style={{ fontSize: "0.64rem", fontWeight: 700, color: domain.accent, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                                 {story.source === "tier" ? "Recognised impact" : "Community story"}
                               </div>
@@ -1699,6 +1850,18 @@ const PublicLandingPage: React.FC = () => {
                                   borderRadius: 6, padding: "0.1rem 0.38rem",
                                 }}>
                                   {story.tier}
+                                </span>
+                              )}
+                              {story.tierLabel && (
+                                <span style={{
+                                  fontSize: "0.6rem", fontWeight: 700,
+                                  color: "rgba(255,255,255,0.55)",
+                                  background: "rgba(255,255,255,0.07)",
+                                  border: "1px solid rgba(255,255,255,0.1)",
+                                  borderRadius: 6, padding: "0.1rem 0.38rem",
+                                  fontStyle: "italic",
+                                }}>
+                                  {story.tierLabel}
                                 </span>
                               )}
                             </div>
