@@ -335,7 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[Auth] Cleaning up auth listener');
       subscription.unsubscribe();
     };
-  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-runs
+  }, []); // Register once only
 
   return (
     <AuthContext.Provider value={{
