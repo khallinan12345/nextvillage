@@ -891,7 +891,7 @@ export default async function handler(req, res) {
     const {
       messages,
       system,
-      max_tokens      = 500,
+      max_tokens      = 1000,
       temperature     = 0.7,
       page            = '',
       playgroundModel = null,
