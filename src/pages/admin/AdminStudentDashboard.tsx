@@ -639,7 +639,7 @@ const StudentLearnerTable: React.FC<{
   // Cohort-level aggregates for summary banner
   const cohortUsers = summaries.length;
   const cohortActivities = summaries.reduce((s, r) => s + r.totalEngaged + r.certAttempted, 0);
-  const cohortCompleted = summaries.reduce((s, r) => s + r.byCategory['Certification'] ?? 0, 0);
+  const cohortCompleted = summaries.reduce((s, r) => s + (r.byCategory['Certification'] ?? 0), 0);
   const cohortCertsCompleted = summaries.reduce((s, r) => s + r.certAchieved, 0);
   const cohortCertsAttempted = summaries.reduce((s, r) => s + r.certAttempted, 0);
 
