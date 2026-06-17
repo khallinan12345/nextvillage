@@ -20,58 +20,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [view, setView] = useState<'form' | 'magic-link-sent'>('form');
   const [similarMatch, setSimilarMatch] = useState<{ maskedEmail: string; rawEmail: string } | null>(null);
 
-  // ─── Active user tracking on component mount ──────────────────────────────
-  useEffect(() => {
-    const trackActiveUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        try {
-          const { error } = await supabase
-            .from('visitor_logs')
-            .upsert(
-              { id: session.user.id, email: session.user.email, created_at: new Date().toISOString() },
-              { onConflict: 'id' }
-            );
-          // Silently handle 404 or missing table (visitor_logs may not exist in all deployments)
-          if (error?.code === '404' || error?.message?.includes('relation') || error?.message?.includes('not found')) {
-            console.debug('[AuthForm] visitor_logs table unavailable (normal for some deployments)');
-          } else if (error) {
-            console.warn('[AuthForm] Tracking error:', error.message);
-          } else {
-            console.log("Unique visitor tracked!");
-          }
-        } catch (err) {
-          // Non-critical: visitor_logs may not exist
-          console.debug('[AuthForm] Tracking exception (non-critical):', err instanceof Error ? err.message : String(err));
-        }
-      }
-    };
-    trackActiveUser();
-  }, []);
-
-  // ─── Visitor tracking ─────────────────────────────────────────────────────
-  const logVisitor = async (userEmail: string, userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('visitor_logs')
-        .upsert(
-          { id: userId, email: userEmail, created_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
-      // Silently handle 404 or missing table (visitor_logs may not exist in all deployments)
-      if (error?.code === '404' || error?.message?.includes('relation') || error?.message?.includes('not found')) {
-        console.debug('[AuthForm logVisitor] visitor_logs table unavailable (normal for some deployments)');
-      } else if (error) {
-        console.warn('[AuthForm logVisitor] Tracking error:', error.message);
-      } else {
-        console.log("Unique visitor tracked successfully!");
-      }
-    } catch (err) {
-      // Non-critical: visitor_logs may not exist
-      console.debug('[AuthForm logVisitor] Tracking exception (non-critical):', err instanceof Error ? err.message : String(err));
-    }
-  };
-
   // ─── Duplicate email check ────────────────────────────────────────────────
   const emailAlreadyExists = async (email: string): Promise<boolean> => {
     const { data, error } = await supabase
@@ -239,7 +187,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         console.log('Login successful:', loginData);
         // Track unique visitor
         if (loginData.user?.email && loginData.user?.id) {
-          await logVisitor(loginData.user.email, loginData.user.id);
         }
         navigate('/home');
       }

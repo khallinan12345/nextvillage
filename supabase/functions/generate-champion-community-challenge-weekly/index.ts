@@ -70,51 +70,56 @@ Deno.serve(async (req) => {
     apiKey: Deno.env.get('ANTHROPIC_API_KEY')!,
   });
 
-  const now = new Date();
-  const weekEnd = new Date(now);
-  weekEnd.setUTCHours(0, 0, 0, 0);
-
-  const weekStart = new Date(weekEnd);
-  weekStart.setUTCDate(weekStart.getUTCDate() - 6);
-
-  const weekStartStr = weekStart.toISOString().split('T')[0];
-  const weekEndStr = weekEnd.toISOString().split('T')[0];
-
-  const results: Array<{ org: string; status: string; champion?: string; tiebreak?: boolean }> = [];
+  const results: Array<{ org: string; status: string; champion?: string; tiebreak?: boolean; challenge?: string }> = [];
 
   for (const orgSlug of ORG_SLUGS) {
     try {
-      // 1. Fetch awarded enrollments for this org this week
-      const { data: enrollments, error: enrollErr } = await supabase
-        .from('challenge_enrollments')
-        .select(`
-          id,
-          learner_id,
-          action_taken,
-          impact_observed,
-          extra_detail,
-          impact_evaluation,
-          tier_awarded,
-          awarded_at,
-          community_challenges!inner (
-            title,
-            description,
-            org_id,
-            week_start
-          )
-        `)
-        .eq('community_challenges.org_id', orgSlug)
-        .eq('status', 'awarded')
-        .gte('awarded_at', weekStart.toISOString())
-        .lt('awarded_at', new Date(weekEnd.getTime() + 86400000).toISOString());
+      // 1. Find the most recently active challenge for this org
+      //    (active=true first, then fall back to most recently ended)
+      const { data: recentChallenges } = await supabase
+        .from('community_challenges')
+        .select('id, title, description, week_start, week_end, active')
+        .eq('org_id', orgSlug)
+        .order('week_start', { ascending: false })
+        .limit(2);
 
-      if (enrollErr) throw new Error(`Enrollment query failed: ${enrollErr.message}`);
-      if (!enrollments || enrollments.length === 0) {
-        results.push({ org: orgSlug, status: 'no_submissions' });
+      const challenge = recentChallenges?.find(c => c.active) ?? recentChallenges?.[0] ?? null;
+
+      if (!challenge) {
+        results.push({ org: orgSlug, status: 'no_challenge' });
         continue;
       }
 
-      // 2. Fetch display names — profiles first, fall back to auth.users metadata
+      const weekStartStr = challenge.week_start;
+      const weekEndStr   = challenge.week_end;
+
+      // 2. Check if champion already declared for this challenge
+      const { data: existing } = await supabase
+        .from('weekly_champions')
+        .select('id')
+        .eq('org_id', orgSlug)
+        .eq('week_start', weekStartStr)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        results.push({ org: orgSlug, status: 'already_declared', challenge: challenge.title });
+        continue;
+      }
+
+      // 3. Fetch ALL awarded enrollments for this challenge (no date window)
+      const { data: enrollments, error: enrollErr } = await supabase
+        .from('challenge_enrollments')
+        .select('id, learner_id, action_taken, impact_observed, extra_detail, impact_evaluation, tier_awarded, awarded_at')
+        .eq('challenge_id', challenge.id)
+        .eq('status', 'awarded');
+
+      if (enrollErr) throw new Error(`Enrollment query failed: ${enrollErr.message}`);
+      if (!enrollments || enrollments.length === 0) {
+        results.push({ org: orgSlug, status: 'no_submissions', challenge: challenge.title });
+        continue;
+      }
+
+      // 4. Fetch display names — profiles first, fall back to auth.users metadata
       const learnerIds = [...new Set(enrollments.map((e) => e.learner_id))];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -123,7 +128,6 @@ Deno.serve(async (req) => {
 
       const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.name]));
 
-      // For any learner missing a profile row, pull name from auth.users metadata
       const missingIds = learnerIds.filter((id) => !profileMap.has(id));
       if (missingIds.length > 0) {
         const { data: authUsers } = await supabase
@@ -142,13 +146,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 3. Find the highest tier reached
+      // 5. Find the highest tier reached
       const highestRank = Math.max(
         ...enrollments.map((e) => TIER_ORDER[e.tier_awarded] ?? 0),
       );
 
       if (highestRank === 0) {
-        results.push({ org: orgSlug, status: 'no_valid_tiers' });
+        results.push({ org: orgSlug, status: 'no_valid_tiers', challenge: challenge.title });
         continue;
       }
 
@@ -156,7 +160,7 @@ Deno.serve(async (req) => {
         ([, rank]) => rank === highestRank,
       )![0];
 
-      // 4. Collect learners at the highest tier
+      // 6. Collect learners at the highest tier
       const topLearners: TiedLearner[] = enrollments
         .filter((e) => e.tier_awarded === highestTier)
         .map((e) => {
@@ -169,12 +173,12 @@ Deno.serve(async (req) => {
             tier_label: TIER_LABELS[e.tier_awarded] ?? e.tier_awarded,
             reflection_text: parts.join('\n\n'),
             impact_evaluation: e.impact_evaluation ?? {},
-            challenge_title: (e.community_challenges as any)?.title ?? '',
-            challenge_description: (e.community_challenges as any)?.description ?? '',
+            challenge_title: challenge.title,
+            challenge_description: challenge.description ?? '',
           };
         });
 
-      // 5. Clear winner or tiebreak
+      // 7. Clear winner or tiebreak
       let championUserId: string;
       let championName: string;
       let wasTiebreak = false;
@@ -191,90 +195,69 @@ Deno.serve(async (req) => {
         championName = topLearners.find((l) => l.user_id === championUserId)?.display_name ?? 'Unknown';
       }
 
-      // 6. Skip if already declared this week
-      const { data: existing } = await supabase
-        .from('weekly_champions')
-        .select('id')
-        .eq('org_id', orgSlug)
-        .eq('week_start', weekStartStr)
-        .limit(1);
-
-      if (existing && existing.length > 0) {
-        results.push({ org: orgSlug, status: 'already_declared' });
-        continue;
-      }
-
-      // 7. Write champion to DB
-      // Build champion story before insert so it's available in the DB too
+      // 8. Write champion to DB
       const championRecord = topLearners.find((l) => l.user_id === championUserId)!;
       const championStory = championRecord?.reflection_text ?? null;
 
       const { error: insertErr } = await supabase.from('weekly_champions').insert({
-        org_id: orgSlug,
-        week_start: weekStartStr,
-        week_end: weekEndStr,
-        champion_user_id: championUserId,
-        champion_name: championName,
-        winning_tier: highestTier,
+        org_id:             orgSlug,
+        week_start:         weekStartStr,
+        week_end:           weekEndStr,
+        champion_user_id:   championUserId,
+        champion_name:      championName,
+        winning_tier:       highestTier,
         winning_tier_label: TIER_LABELS[highestTier],
-        was_tiebreak: wasTiebreak,
+        was_tiebreak:       wasTiebreak,
         tiebreak_reasoning: tiebreakReasoning ?? null,
         tied_learner_count: wasTiebreak ? topLearners.length : null,
-        champion_story: championStory,
+        champion_story:     championStory,
       });
 
       if (insertErr) throw new Error(`Insert failed: ${insertErr.message}`);
 
-      // 8. Announce via platform-news
+      // 9. Announce via platform-news
       const tierLabel = TIER_LABELS[highestTier];
-      const champion = topLearners.find((l) => l.user_id === championUserId)!;
-
-      // Build a human-readable account of what the champion actually did
-      const whatTheyDid: string[] = [];
-      if ((champion.impact_evaluation as any)?.action_taken) {
-        whatTheyDid.push(`What they did: ${(champion.impact_evaluation as any).action_taken}`);
-      } else if (champion.reflection_text) {
-        // reflection_text is the concatenation of action_taken + impact_observed + extra_detail
-        whatTheyDid.push(champion.reflection_text);
-      }
-
-      const storyLine = whatTheyDid.length > 0
-        ? ` Here is what made their work stand out this week: "${whatTheyDid.join(' ')}"`
+      const storySnippet = championRecord?.reflection_text
+        ? ` Here is what made their work stand out: "${championRecord.reflection_text.slice(0, 300).trim()}${championRecord.reflection_text.length > 300 ? '…' : ''}"`
         : '';
 
+      const orgName = orgSlug === 'oloibiri' ? 'Oloibiri' : 'Ibiade';
       const announcementBody = wasTiebreak
-        ? `This week's Community Champion is ${championName}, earning the ${tierLabel} tier!${storyLine} ${tiebreakReasoning ?? ''} Congratulations — and to everyone who participated, your work matters to ${orgSlug === 'oloibiri' ? 'Oloibiri' : 'Ibiade'}.`
-        : `This week's Community Champion is ${championName}, earning the ${tierLabel} tier!${storyLine} Congratulations ${championName} — and thank you to every learner who took their skills into the community.`;
+        ? `This week's Community Champion is ${championName}, earning the ${tierLabel} tier!${storySnippet} ${tiebreakReasoning ?? ''} Congratulations — and to everyone who participated, your work matters to ${orgName}.`
+        : `This week's Community Champion is ${championName}, earning the ${tierLabel} tier!${storySnippet} Congratulations ${championName} — and thank you to every learner who took their skills into the community.`;
 
       try {
-        await fetch(
-          `${Deno.env.get('SUPABASE_URL')!.replace('supabase.co', 'vercel.app').replace('https://wohmsbeygxrbwogrggkq.', 'https://girls-aiing-and-vibing.')}/api/platform-news`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-news-secret': Deno.env.get('NEWS_API_SECRET')!,
-            },
-            body: JSON.stringify({
-              title: `Weekly Champion: ${championName}`,
-              body: announcementBody,
-              link: '/dashboard',
-              link_label: 'View the Leaderboard',
-              emoji: '🏆',
-              organization_ids: [orgSlug],
-            }),
+        const newsUrl = Deno.env.get('SUPABASE_URL')!
+          .replace('supabase.co', 'vercel.app')
+          .replace('https://wohmsbeygxrbwogrggkq.', 'https://girls-aiing-and-vibing.');
+
+        await fetch(`${newsUrl}/api/platform-news`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-news-secret': Deno.env.get('NEWS_API_SECRET')!,
           },
-        );
+          body: JSON.stringify({
+            title:            `🏆 ${championName} is this week's Community Champion`,
+            body:             announcementBody,
+            link:             '/dashboard',
+            link_label:       'View the Leaderboard',
+            emoji:            '🏆',
+            organization_ids: [orgSlug],
+          }),
+        });
       } catch (newsErr) {
         console.error(`platform-news announcement failed for ${orgSlug}:`, newsErr);
       }
 
       results.push({
-        org: orgSlug,
-        status: 'champion_declared',
-        champion: championName,
-        tiebreak: wasTiebreak,
+        org:       orgSlug,
+        status:    'champion_declared',
+        champion:  championName,
+        tiebreak:  wasTiebreak,
+        challenge: challenge.title,
       });
+
     } catch (err) {
       const msg = (err as Error).message;
       results.push({ org: orgSlug, status: `error: ${msg}` });
@@ -291,21 +274,18 @@ Deno.serve(async (req) => {
     await logEvent(supabase, {
       event_type: 'champion_generation_summary',
       severity:   failures === ORG_SLUGS.length ? 'critical' : 'warning',
-      details: {
-        orgs_attempted: ORG_SLUGS.length,
-        orgs_failed:    failures,
-        week_start:     weekStartStr,
-      },
+      details: { orgs_attempted: ORG_SLUGS.length, orgs_failed: failures },
     });
   }
 
   return new Response(
-    JSON.stringify({ week_start: weekStartStr, week_end: weekEndStr, results }),
+    JSON.stringify({ results }),
     { status: 200, headers: { 'Content-Type': 'application/json' } },
   );
 });
 
-// Tiebreak via Claude
+// ─── Tiebreak via Claude ──────────────────────────────────────────────────────
+
 async function runTiebreak(
   anthropic: Anthropic,
   learners: TiedLearner[],
@@ -313,20 +293,15 @@ async function runTiebreak(
 ): Promise<TiebreakResult> {
   const learnersText = learners
     .map((l, i) => {
-      const evalSummary = l.impact_evaluation?.summary
-        ? `AI evaluation summary: "${l.impact_evaluation.summary}"`
-        : '';
-      const reasoning = l.impact_evaluation?.tier_reasoning
-        ? `Tier reasoning: "${l.impact_evaluation.tier_reasoning}"`
-        : '';
-
+      const evalSummary  = (l.impact_evaluation as any)?.summary        ? `AI evaluation summary: "${(l.impact_evaluation as any).summary}"` : '';
+      const reasoning    = (l.impact_evaluation as any)?.tier_reasoning ? `Tier reasoning: "${(l.impact_evaluation as any).tier_reasoning}"` : '';
       return [
         `LEARNER ${i + 1}: ${l.display_name}`,
         `Challenge: ${l.challenge_title}`,
         l.challenge_description ? `Challenge description: ${l.challenge_description}` : '',
         `Tier earned: ${l.tier_label} (${l.tier})`,
         '',
-        'Their submission (action taken, impact observed, extra detail):',
+        'Their submission:',
         `"${l.reflection_text}"`,
         '',
         evalSummary,
@@ -337,57 +312,24 @@ async function runTiebreak(
 
   const location = orgSlug === 'oloibiri' ? 'Oloibiri, Bayelsa State, Nigeria' : 'Ibiade, Nigeria';
 
-  const systemPrompt = `You are a fair and thoughtful judge for a youth AI learning competition in ${location}.
-
-Each week, learners go into their community and use AI to help real people — farmers, fishers, traders, healthcare workers, and families. They earn impact tiers based on the depth and quality of their community action.
-
-This week, ${learners.length} learners have tied at the highest tier. Choose ONE weekly champion.
-
-Judging criteria (in order of priority):
-1. Depth of community impact — did they actually help someone solve a real problem?
-2. Quality of AI use — did they use AI thoughtfully, not just as a gimmick?
-3. Specificity — concrete details about who they helped and how, not vague generalities
-4. Initiative — did they go beyond the minimum?
-5. Community ripple — did their action benefit more than just the immediate person?
-
-Respond with ONLY a valid JSON object, no preamble, no markdown:
-{
-  "winner_user_id": "<user_id of the winner>",
-  "reasoning": "<2-3 sentences explaining why, in an encouraging tone that respects all participants>"
-}`;
-
-  const userMessage = `Here are the ${learners.length} tied learners. Choose the weekly champion.\n\n${learnersText}\n\nUser IDs for reference:\n${learners.map((l) => `${l.display_name}: ${l.user_id}`).join('\n')}`;
-
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 512,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userMessage }],
+    system: `You are a fair and thoughtful judge for a youth AI learning competition in ${location}. ${learners.length} learners tied at the highest tier. Choose ONE weekly champion based on: depth of community impact, quality of AI use, specificity, initiative, community ripple. Respond ONLY with valid JSON: {"winner_user_id":"<id>","reasoning":"<2-3 encouraging sentences>"}`,
+    messages: [{ role: 'user', content: `Choose the weekly champion.\n\n${learnersText}\n\nUser IDs:\n${learners.map(l => `${l.display_name}: ${l.user_id}`).join('\n')}` }],
   });
 
-  const raw = response.content
-    .filter((b) => b.type === 'text')
-    .map((b) => (b as { type: 'text'; text: string }).text)
-    .join('');
-
+  const raw   = response.content.filter(b => b.type === 'text').map(b => (b as any).text).join('');
   const clean = raw.replace(/```json|```/g, '').trim();
 
   let parsed: TiebreakResult;
-  try {
-    parsed = JSON.parse(clean);
-  } catch {
-    throw new Error(`Claude tiebreak response was not valid JSON: ${clean}`);
-  }
+  try { parsed = JSON.parse(clean); }
+  catch { throw new Error(`Claude tiebreak response was not valid JSON: ${clean}`); }
 
-  const validIds = new Set(learners.map((l) => l.user_id));
+  const validIds = new Set(learners.map(l => l.user_id));
   if (!validIds.has(parsed.winner_user_id)) {
-    const fallback = learners.reduce((a, b) =>
-      a.reflection_text.length >= b.reflection_text.length ? a : b,
-    );
-    return {
-      winner_user_id: fallback.user_id,
-      reasoning: `[Tiebreak fallback] ${parsed.reasoning ?? ''}`.trim(),
-    };
+    const fallback = learners.reduce((a, b) => a.reflection_text.length >= b.reflection_text.length ? a : b);
+    return { winner_user_id: fallback.user_id, reasoning: `[Tiebreak fallback] ${parsed.reasoning ?? ''}`.trim() };
   }
 
   return parsed;

@@ -221,7 +221,7 @@ const TIER_ROTATION: Array<'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier
 
 Deno.serve(async (req) => {
   // Allow manual POST for testing, cron sends GET
-  let body: { org_id?: string; dry_run?: boolean } = {};
+  let body: { org_id?: string; dry_run?: boolean; force_slug?: string } = {};
   if (req.method === 'POST') {
     try { body = await req.json(); } catch { /* empty body ok */ }
   }
@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
 
   for (const org of targetOrgs) {
     try {
-      results[org.id] = await generateForOrg(supabase, anthropic, org, body.dry_run ?? false);
+      results[org.id] = await generateForOrg(supabase, anthropic, org, body.dry_run ?? false, body.force_slug);
     } catch (err) {
       const msg = String(err);
       results[org.id] = { error: msg };
@@ -279,6 +279,7 @@ async function generateForOrg(
   anthropic: Anthropic,
   org: OrgConfig,
   dryRun: boolean,
+  forceSlug?: string,
 ): Promise<unknown> {
 
   // Compute next week's Monday–Sunday window

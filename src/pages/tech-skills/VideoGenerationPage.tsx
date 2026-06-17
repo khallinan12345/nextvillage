@@ -7,7 +7,7 @@
 //   • "Improve my English" button — polishes the prompt while keeping the idea
 //   • "Critique my Prompt" panel — step-by-step coaching on T2V prompt quality
 //   • Full generation + polling + history
-//   • DAILY LIMIT: 1 video per day, 5 seconds only (cost control)
+//   • WEEKLY LIMIT: per-user (profiles.videos_per_week); default 5, elevated to 50 for privileged users
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
@@ -225,9 +225,9 @@ const VideoGenerationPage: React.FC = () => {
   const [isSavingDash,   setIsSavingDash]   = useState(false);
   const [dashSaved,      setDashSaved]      = useState(false);
 
-  // ── Daily usage limit (replaces weekly) ───────────────────────────────────
-  const [dailyCount,     setDailyCount]     = useState<number>(0);
-  const DAILY_LIMIT = 1;
+  // ── Weekly usage limit (per-user; loaded from profiles.videos_per_week) ───
+  const [weeklyCount,    setWeeklyCount]    = useState<number>(0);
+  const [weeklyLimit,    setWeeklyLimit]    = useState<number>(5); // default until loaded
 
   // ── Critique state ────────────────────────────────────────────────────────
   const [showCritique,   setShowCritique]   = useState(false);
@@ -264,7 +264,7 @@ const VideoGenerationPage: React.FC = () => {
 
   const FRAMES: Record<number, number> = { 5: 121, 8: 193, 10: 241 };
 
-  // ── Fetch communication_level, continent, and DAILY usage on mount ────────
+  // ── Fetch communication_level, continent, weekly limit + usage on mount ───
   useEffect(() => {
     if (!user?.id) return;
 
@@ -272,15 +272,20 @@ const VideoGenerationPage: React.FC = () => {
         if (data?.communication_level != null) setCommunicationLevel(data.communication_level);
       });
 
-    supabase.from('profiles').select('continent').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('continent, videos_per_week').eq('id', user.id).single().then(({ data }) => {
         setContinent(data?.continent ?? null);
         setLoadingContinent(false);
+        if (data?.videos_per_week != null) setWeeklyLimit(data.videos_per_week);
       });
 
-    // Daily usage count (today only, non-failed jobs)
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    supabase.from('video_generations').select('id', { count: 'exact', head: true }).eq('user_id', user.id).neq('status', 'failed').gte('created_at', todayStart.toISOString()).then(({ count }) => setDailyCount(count ?? 0));
+    // Weekly usage count (Mon 00:00 local time → now, non-failed jobs)
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sun … 6 = Sat
+    const daysToMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - daysToMon);
+    weekStart.setHours(0, 0, 0, 0);
+    supabase.from('video_generations').select('id', { count: 'exact', head: true }).eq('user_id', user.id).neq('status', 'failed').gte('created_at', weekStart.toISOString()).then(({ count }) => setWeeklyCount(count ?? 0));
   }, [user?.id]);
 
   // ── Fetch recent generated images for frame picker ───────────────────────
@@ -498,11 +503,11 @@ const VideoGenerationPage: React.FC = () => {
   const handleGenerate = async () => {
     if (!prompt.trim() || isStarting || !user) return;
 
-    // Daily limit check
-    if (dailyCount >= DAILY_LIMIT) {
+    // Weekly limit check
+    if (weeklyCount >= weeklyLimit) {
       setError(lvl <= 1
-        ? 'You already made a video today. You can make another one tomorrow!'
-        : `Daily limit reached (${DAILY_LIMIT} video/day). Try again tomorrow.`);
+        ? 'You have used all your videos for this week. Come back next Monday!'
+        : `Weekly limit reached (${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'}/week). Resets every Monday.`);
       return;
     }
 
@@ -548,7 +553,7 @@ const VideoGenerationPage: React.FC = () => {
         video_url: null, error_message: null, created_at: new Date().toISOString(),
       };
       setActiveJob(newJob);
-      setDailyCount(c => c + 1);
+      setWeeklyCount(c => c + 1);
       startPolling(data.jobId, session.access_token);
       speakText(lvl <= 1
         ? 'OK! Your video is being made. This can take 2 to 5 minutes. Please wait and keep the page open.'
@@ -1016,14 +1021,14 @@ Return ONLY the improved text. No explanation, no preamble.`
               </h2>
               <p className="text-sm text-amber-100/90 leading-relaxed mb-3">
                 {lvl <= 1
-                  ? 'Making videos costs a lot of money for our platform. Right now, each person can only make 1 video per day, and videos are only 5 seconds long. We are working to make this better!'
-                  : 'AI video generation incurs significant compute costs that currently exceed what we can sustainably support. To keep this feature available for everyone, we have temporarily limited usage to 1 video per day per user, with a maximum duration of 5 seconds.'}
+                  ? `Making videos costs a lot of money for our platform. Right now, you can make up to ${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'} per week, and videos are only 5 seconds long. We are working to make this better!`
+                  : `AI video generation incurs significant compute costs that currently exceed what we can sustainably support. To keep this feature available for everyone, usage is limited to ${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'} per week per user, with a maximum duration of 5 seconds.`}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 bg-amber-900/40 border border-amber-500/30 rounded-lg px-3 py-1.5">
                   <Film size={14} className="text-amber-400 shrink-0" />
                   <span className="text-xs font-semibold text-amber-200">
-                    {lvl <= 1 ? '1 video per day' : 'Limit: 1 video / day'}
+                    {lvl <= 1 ? `${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'} per week` : `Limit: ${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'} / week`}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 bg-amber-900/40 border border-amber-500/30 rounded-lg px-3 py-1.5">
@@ -1116,24 +1121,26 @@ Return ONLY the improved text. No explanation, no preamble.`
         {view === 'generate' && (
           <div className="space-y-4">
 
-            {/* Daily usage indicator */}
+            {/* Weekly usage indicator */}
             <div className={classNames(
               'flex items-center gap-3 rounded-xl px-4 py-3 text-sm border',
-              dailyCount >= DAILY_LIMIT
+              weeklyCount >= weeklyLimit
                 ? 'bg-red-900/20 border-red-500/30 text-red-300'
+                : weeklyCount >= weeklyLimit - 1
+                ? 'bg-amber-900/20 border-amber-500/30 text-amber-300'
                 : 'bg-slate-800/60 border-slate-700/40 text-slate-400'
             )}>
-              {dailyCount >= DAILY_LIMIT
+              {weeklyCount >= weeklyLimit
                 ? <AlertTriangle size={16} className="shrink-0" />
                 : <Film size={16} className="shrink-0" />}
               <span>
-                {dailyCount >= DAILY_LIMIT
+                {weeklyCount >= weeklyLimit
                   ? (lvl <= 1
-                      ? 'You already made a video today. Come back tomorrow!'
-                      : 'Daily limit reached (1 video/day). Try again tomorrow.')
+                      ? 'You have used all your videos this week. Come back next Monday!'
+                      : `Weekly limit reached (${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'}/week). Resets Monday.`)
                   : (lvl <= 1
-                      ? `You can make ${DAILY_LIMIT - dailyCount} video today.`
-                      : `${dailyCount} / ${DAILY_LIMIT} video used today.`)}
+                      ? `You can make ${weeklyLimit - weeklyCount} more video${weeklyLimit - weeklyCount === 1 ? '' : 's'} this week.`
+                      : `${weeklyCount} / ${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'} used this week.`)}
               </span>
             </div>
 
@@ -1145,13 +1152,13 @@ Return ONLY the improved text. No explanation, no preamble.`
               <textarea
                 value={prompt}
                 onChange={e => { setPrompt(e.target.value); setPromptScore(null); setPromptEvaluated(false); }}
-                rows={4} maxLength={500} disabled={isGenerating}
+                rows={4} maxLength={1000} disabled={isGenerating}
                 placeholder={uiText.promptPlaceholder}
                 className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition disabled:opacity-50"
               />
               <div className="flex items-center justify-between mt-1 mb-3">
                 <p className="text-xs text-slate-500">{uiText.promptHint}</p>
-                <span className={classNames('text-xs', charCount > 450 ? 'text-amber-400' : 'text-slate-500')}>{charCount}/500</span>
+                <span className={classNames('text-xs', charCount > 900 ? 'text-amber-400' : 'text-slate-500')}>{charCount}/1000</span>
               </div>
 
               {/* Action buttons row */}
@@ -1613,7 +1620,7 @@ Return ONLY the improved text. No explanation, no preamble.`
               const scorePassed  = promptScore !== null && promptScore >= PROMPT_SCORE_THRESHOLD;
               const needsEval    = !promptEvaluated || promptScore === null;
               const scoreFailed  = promptEvaluated && promptScore !== null && promptScore < PROMPT_SCORE_THRESHOLD;
-              const limitReached = dailyCount >= DAILY_LIMIT;
+              const limitReached = weeklyCount >= weeklyLimit;
 
               return (
                 <div className="space-y-2">
@@ -1783,8 +1790,8 @@ Return ONLY the improved text. No explanation, no preamble.`
 
             <p className="text-sm text-amber-200 bg-amber-900/20 border border-amber-500/20 rounded-xl px-4 py-3">
               {lvl <= 1
-                ? 'Making a video uses AI computer power and costs real money. You can only make 1 video per day. Please make sure your prompt is exactly what you want!'
-                : 'Video generation consumes AI compute and has a real cost. You are limited to 1 video per day. Generation cannot be cancelled once started. Please confirm your prompt is final.'}
+                ? `Making a video uses AI computer power and costs real money. You have ${weeklyLimit - weeklyCount} video${weeklyLimit - weeklyCount === 1 ? '' : 's'} left this week. Please make sure your prompt is exactly what you want!`
+                : `Video generation consumes AI compute and has a real cost. You have ${weeklyLimit - weeklyCount} of ${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'} remaining this week. Generation cannot be cancelled once started. Please confirm your prompt is final.`}
             </p>
 
             <div className="flex gap-3 pt-1">
@@ -1802,8 +1809,8 @@ Return ONLY the improved text. No explanation, no preamble.`
 
             <p className="text-xs text-slate-500 text-center">
               {lvl <= 1
-                ? `This is your ${dailyCount === 0 ? 'only' : '1'} video for today. Make it count!`
-                : `Daily usage: ${dailyCount} / ${DAILY_LIMIT} video. This is your only generation for today.`}
+                ? `${weeklyCount} of ${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'} used this week. Limit resets every Monday.`
+                : `Weekly usage: ${weeklyCount} / ${weeklyLimit} video${weeklyLimit === 1 ? '' : 's'}. Resets Monday.`}
             </p>
           </div>
         </div>
