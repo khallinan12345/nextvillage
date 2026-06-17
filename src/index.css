@@ -33,6 +33,17 @@
   }
 }
 
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @layer components {
   /* Remove Tailwind’s container max‐width entirely (so it’s full-width) */
   .container {

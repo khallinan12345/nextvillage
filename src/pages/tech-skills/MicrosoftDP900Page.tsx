@@ -112,7 +112,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'OLTP (Online Transaction Processing) systems handle day-to-day operations — recording transactions as they happen, like a market sales system. OLAP (Online Analytical Processing) systems are designed for analysis — asking questions like "What were total fish sales by month for the past year?" These are fundamentally different workloads and require different database designs.',
-      question: 'The Davidson AI Innovation Center records each learner's quiz attempt in real time. At the end of each month, a report is generated showing completion rates by topic. Which part of this system is OLTP and which is OLAP — and what makes them different?',
+      question: 'The Davidson AI Innovation Center records each learner\'s quiz attempt in real time. At the end of each month, a report is generated showing completion rates by topic. Which part of this system is OLTP and which is OLAP — and what makes them different?',
     },
     {
       teaching: 'Batch processing collects data over a period and processes it all at once — like running a nightly report. Streaming (real-time) processing handles data the moment it arrives — like monitoring creek water quality second by second and alerting if contamination is detected.',
@@ -139,7 +139,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
       question: 'Design a simple relational structure for the Girls AIing platform: one table for learners and one for quiz_attempts. What would the primary key be in each table? What foreign key would link quiz_attempts back to learners — and why is this better than putting all the data in one table?',
     },
     {
-      teaching: 'Normalisation is the process of organising a database to reduce data duplication. Instead of repeating a learner's name in every quiz record, you store it once in a learners table and reference it by ID. This reduces errors, saves storage, and makes updates easier.',
+      teaching: 'Normalisation is the process of organising a database to reduce data duplication. Instead of repeating a learner\'s name in every quiz record, you store it once in a learners table and reference it by ID. This reduces errors, saves storage, and makes updates easier.',
       question: 'A spreadsheet records each quiz attempt with columns: learner_name, learner_location, topic, score, date. The learner\'s name and location appear in hundreds of rows. What problem does this cause — and how would a normalised relational database solve it?',
     },
     {

@@ -1,4 +1,3 @@
-// src/hooks/useAuth.tsx - Fixed version that prevents profile completion loop
 import React, { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
@@ -40,86 +39,129 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
-  
-  // Add protection against race conditions
+
+  // Protection refs
   const initializedRef = useRef(false);
   const fetchingRef = useRef(false);
-  const profileConfirmedRef = useRef(false); // NEW: Track if profile was confirmed to exist
+  const profileConfirmedRef = useRef(false);
+
+  /**
+   * Ensure a profile row exists for the given user id.
+   * If none exists, automatically insert/upsert a minimal row with role 'student'.
+   * Returns the profile row or null on failure.
+   */
+  const ensureProfileRow = useCallback(async (userId: string, email?: string) => {
+    try {
+      // Try to select single row
+      const selectResult = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (!selectResult.error && selectResult.data) {
+        profileConfirmedRef.current = true;
+        return selectResult.data as any;
+      }
+
+      // If error indicates no rows returned OR data is null -> create minimal profile
+      const selectErr: any = selectResult.error;
+      const noRows = selectErr && (selectErr.code === 'PGRST116' || String(selectErr.message).includes('No rows returned')) || !selectResult.data;
+
+      if (noRows) {
+        // Use upsert so concurrent inserts won't fail and role is lowercase 'student'
+        const payload = {
+          id: userId,
+          email: email ?? null,
+          role: 'student',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as any;
+
+        const upsertResult = await supabase
+          .from('profiles')
+          .upsert([payload], { onConflict: 'id' })
+          .select()
+          .single();
+
+        if (upsertResult.error) {
+          console.warn('[Auth] ensureProfileRow upsert failed:', upsertResult.error);
+          return null;
+        }
+
+        profileConfirmedRef.current = true;
+        return upsertResult.data as any;
+      }
+
+      // Other errors - log and return null
+      console.error('[Auth] ensureProfileRow unexpected select error:', selectErr);
+      return null;
+    } catch (err) {
+      console.error('[Auth] ensureProfileRow exception:', err);
+      return null;
+    }
+  }, []);
 
   const fetchUserProfile = async (userId: string) => {
-    // Prevent multiple simultaneous fetches
     if (fetchingRef.current) {
       console.log('[Auth] Profile fetch already in progress, skipping');
       return null;
     }
 
-    // If profile was already confirmed and user exists, don't re-fetch
+    // If profile already confirmed for same user, return existing state
     if (profileConfirmedRef.current && user?.id === userId) {
-      console.log('[Auth] Profile already confirmed for this user, skipping fetch');
+      console.log('[Auth] Profile already confirmed, returning cached user');
       return user;
     }
 
     try {
       fetchingRef.current = true;
       console.log('[Auth] fetchUserProfile for', userId);
-      
-      console.log('[Auth] Starting profile query with 15s timeout...');
-      
-      // Create timeout promise (15 seconds)
-      const timeoutPromise = new Promise<never>((_, reject) => 
+
+      // Timeout guard (15s)
+      const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Profile fetch timeout')), 15000)
       );
-  
-      // Create profile fetch promise
+
       const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-  
-      // Race them - whichever completes first wins
-      const result = await Promise.race([profilePromise, timeoutPromise]);
-      
-      console.log('[Auth] Profile query completed:', result);
-  
+
+      const result: any = await Promise.race([profilePromise, timeoutPromise]);
+
       if (result.error) {
-        if (result.error.code === 'PGRST116' || result.error.message?.includes('No rows returned')) {
-          console.log('[Auth] No profile found in database — new user');
+        // If no rows returned -> null (caller may call ensureProfileRow)
+        if (result.error.code === 'PGRST116' || String(result.error.message).includes('No rows returned')) {
+          console.log('[Auth] fetchUserProfile: no profile found');
           profileConfirmedRef.current = false;
           return null;
         }
-        // 401 or other auth error — do NOT treat as missing profile
-        if (result.error.message?.includes('JWT') ||
-            result.error.message?.includes('auth') ||
-            result.error.message?.includes('token') ||
-            String(result.error.code) === '401') {
-          console.warn('[Auth] Auth error fetching profile — session may not be ready:', result.error.message);
+
+        // Auth/session errors: return special token so caller can handle
+        if (result.error.message?.includes('JWT') || result.error.message?.includes('auth') || result.error.message?.includes('token') || String(result.error.code) === '401') {
+          console.warn('[Auth] fetchUserProfile auth error (session may not be ready):', result.error.message);
           return 'AUTH_ERROR' as any;
         }
-        console.error('[Auth] Error fetching profile:', result.error);
-        return 'AUTH_ERROR' as any;
-      }
-  
-      console.log('[Auth] fetched profile:', result.data);
-      profileConfirmedRef.current = true; // Mark profile as confirmed
-      return result.data;
-      
-    } catch (error) {
-      console.error('[Auth] Profile fetch failed:', error);
-      
-      // CRITICAL FIX: If timeout occurs but user already exists, don't override
-      if (error.message === 'Profile fetch timeout') {
-        console.warn('[Auth] Profile fetch timed out');
-        
-        if (user?.id === userId && profileConfirmedRef.current) {
-          console.log('[Auth] But profile was already confirmed, keeping existing state');
-          return user; // Return existing user instead of null
-        }
-        
-        console.warn('[Auth] User may need to complete profile again');
+
+        console.error('[Auth] fetchUserProfile error:', result.error);
         return null;
       }
-      
+
+      // Success
+      profileConfirmedRef.current = true;
+      return result.data as any;
+    } catch (err: any) {
+      console.error('[Auth] fetchUserProfile exception:', err);
+      if (err?.message === 'Profile fetch timeout') {
+        console.warn('[Auth] Profile fetch timed out');
+        // If already confirmed, return cached
+        if (user?.id === userId && profileConfirmedRef.current) {
+          return user;
+        }
+        return null;
+      }
       return null;
     } finally {
       fetchingRef.current = false;
@@ -132,45 +174,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[Auth] no session user, skipping refresh');
       return;
     }
-    
+
     try {
       const profile = await fetchUserProfile(session.user.id);
+
+      if (profile === 'AUTH_ERROR') {
+        console.warn('[Auth] refreshUserProfile aborted due to auth error');
+        return;
+      }
+
       if (profile) {
         setUser(profile);
-        setNeedsProfileCompletion(!profile.profile_completed);
+        // Consider profile_completed flag; fallback to true if explicit
+        setNeedsProfileCompletion(!(profile as any).profile_completed);
         profileConfirmedRef.current = true;
-      } else if (!profileConfirmedRef.current) {
-        // Only set needs completion if profile was never confirmed
-        console.log('[Auth] No profile found during refresh - needs completion');
-        const minimalUser: UserProfile = {
-          id: session.user.id,
-          name: '',
-          email: session.user.email || '',
-          role: 'student',
-          created_at: session.user.created_at || '',
-          updated_at: session.user.created_at || '',
-        };
-        setUser(minimalUser);
-        setNeedsProfileCompletion(true);
+      } else {
+        // Try to ensure profile exists by creating minimal row
+        const ensured = await ensureProfileRow(session.user.id, session.user.email ?? undefined);
+        if (ensured) {
+          setUser(ensured);
+          setNeedsProfileCompletion(!(ensured as any).profile_completed);
+        } else {
+          // Build minimal local user object to drive UI (forcing completion)
+          const minimalUser: UserProfile = {
+            id: session.user.id,
+            name: '',
+            email: session.user.email || '',
+            role: 'student',
+            created_at: session.user.created_at || '',
+            updated_at: session.user.created_at || '',
+          };
+          setUser(minimalUser);
+          setNeedsProfileCompletion(true);
+          profileConfirmedRef.current = false;
+        }
       }
+
       console.log('[Auth] refreshUserProfile done');
     } catch (error) {
       console.error('[Auth] refreshUserProfile error:', error);
     }
-  }, [session?.user?.id]); // Fixed dependency
+  }, [session?.user?.id, ensureProfileRow]);
 
   const markProfileCompleted = useCallback(async (userId: string) => {
     console.log('[Auth] markProfileCompleted for', userId);
     try {
-      // Mark locally — do NOT call refreshUserProfile here.
-      // refreshUserProfile causes a re-render that unmounts the popup
-      // before the join-code modal or "Got it" button can be shown.
-      // App.tsx's handleProfileCompletion will navigate after onComplete fires.
       setNeedsProfileCompletion(false);
       profileConfirmedRef.current = true;
-      console.log('[Auth] profile completion marked locally');
-
-      // Refresh in background without awaiting — state will update after navigation
+      // Fire a background refresh
       refreshUserProfile().catch(err =>
         console.warn('[Auth] background refresh after markProfileCompleted failed:', err)
       );
@@ -180,7 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [refreshUserProfile]);
 
-  // Main initialization effect - runs once
+  // Main initialization - runs once
   useEffect(() => {
     if (initializedRef.current) {
       console.log('[Auth] Already initialized, skipping');
@@ -190,49 +241,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializedRef.current = true;
     console.log('[Auth] initAuth start');
 
-    // Set a maximum timeout to ensure loading always resolves
     const timeoutId = setTimeout(() => {
       console.log('[Auth] TIMEOUT - forcing loading to false');
       setLoading(false);
-    }, 8000); // Increased timeout
+    }, 8000);
 
     const initAuth = async () => {
       try {
         console.log('[Auth] Getting session...');
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log('[Auth] got session:', !!currentSession);
-        
+
         setSession(currentSession);
-        
+
         if (currentSession?.user) {
           console.log('[Auth] Session user found, checking for profile...');
-          
-          try {
-            const profile = await fetchUserProfile(currentSession.user.id);
-            
-            if (profile) {
-              console.log('[Auth] Profile found, setting user state');
-              setUser(profile);
-              setNeedsProfileCompletion(!profile.profile_completed);
-              profileConfirmedRef.current = true;
-            } else {
-              console.log('[Auth] No profile found - user needs to complete profile');
-              // Create a minimal user object for the auth state
-              const minimalUser: UserProfile = {
-                id: currentSession.user.id,
-                name: '',
-                email: currentSession.user.email || '',
-                role: 'student', // Will be set during profile completion
-                created_at: currentSession.user.created_at || '',
-                updated_at: currentSession.user.created_at || '',
-              };
-              setUser(minimalUser);
-              setNeedsProfileCompletion(true); // Show profile completion popup
-              profileConfirmedRef.current = false;
-            }
-          } catch (profileError) {
-            console.error('[Auth] Error fetching profile:', profileError);
-            // If profile fetch fails, assume no profile exists
+
+          // Try fetch first
+          let profile = await fetchUserProfile(currentSession.user.id);
+
+          if (profile === 'AUTH_ERROR') {
+            // session not ready; treat as no profile but do not force insert
+            console.warn('[Auth] Auth error while fetching profile during init - deferring');
             const minimalUser: UserProfile = {
               id: currentSession.user.id,
               name: '',
@@ -244,6 +274,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(minimalUser);
             setNeedsProfileCompletion(true);
             profileConfirmedRef.current = false;
+          } else if (profile) {
+            console.log('[Auth] Profile found, setting user state');
+            setUser(profile);
+            setNeedsProfileCompletion(!profile.profile_completed);
+            profileConfirmedRef.current = true;
+          } else {
+            // No profile found -> create minimal row and set state
+            console.log('[Auth] No profile found - attempting auto-upsert');
+            const ensured = await ensureProfileRow(currentSession.user.id, currentSession.user.email ?? undefined);
+            if (ensured) {
+              setUser(ensured);
+              setNeedsProfileCompletion(!(ensured as any).profile_completed);
+              profileConfirmedRef.current = true;
+            } else {
+              // fallback minimal user to prompt completion UI
+              const minimalUser: UserProfile = {
+                id: currentSession.user.id,
+                name: '',
+                email: currentSession.user.email || '',
+                role: 'student',
+                created_at: currentSession.user.created_at || '',
+                updated_at: currentSession.user.created_at || '',
+              };
+              setUser(minimalUser);
+              setNeedsProfileCompletion(true);
+              profileConfirmedRef.current = false;
+            }
           }
         } else {
           console.log('[Auth] no session, user not logged in');
@@ -251,15 +308,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setNeedsProfileCompletion(false);
           profileConfirmedRef.current = false;
         }
-        
       } catch (error) {
         console.error('[Auth] initAuth error:', error);
-        // Even on error, clear user state
         setUser(null);
         setNeedsProfileCompletion(false);
         profileConfirmedRef.current = false;
       } finally {
-        // ALWAYS clear timeout and set loading to false
         clearTimeout(timeoutId);
         console.log('[Auth] Setting loading to false...');
         setLoading(false);
@@ -272,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       clearTimeout(timeoutId);
     };
-  }, []); // Remove fetchUserProfile dependency to prevent loops
+  }, [fetchUserProfile, ensureProfileRow]);
 
   // Auth state change listener
   useEffect(() => {
@@ -281,24 +335,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('[Auth] Setting up auth state listener');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log('[Auth] onAuthStateChange:', event, !!newSession);
-      
+
       if (event === 'INITIAL_SESSION') {
         console.log('[Auth] skipping INITIAL_SESSION');
         return;
       }
-      
+
       setSession(newSession);
-      
+
       if (event === 'SIGNED_IN' && newSession?.user) {
         console.log('[Auth] user signed in, checking for profile');
-        
-        // CRITICAL FIX: Don't re-fetch if profile already confirmed for this user
+
+        // Avoid redundant fetch if already confirmed for this same user
         if (profileConfirmedRef.current && user?.id === newSession.user.id) {
           console.log('[Auth] Profile already confirmed for this user, skipping fetch');
           return;
         }
-        
-        const profile = await fetchUserProfile(newSession.user.id);
+
+        let profile = await fetchUserProfile(newSession.user.id);
 
         if ((profile as any) === 'AUTH_ERROR') {
           console.warn('[Auth] Auth error in SIGNED_IN handler — skipping popup');
@@ -309,25 +363,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(profile);
           setNeedsProfileCompletion(profile.profile_completed === false);
           profileConfirmedRef.current = true;
-        } else if (!profileConfirmedRef.current) {
-          // Genuine new user with no profile row
-          console.log('[Auth] Signed in user has no profile - needs completion');
-          const minimalUser: UserProfile = {
-            id: newSession.user.id,
-            name: '',
-            email: newSession.user.email || '',
-            role: 'student',
-            created_at: newSession.user.created_at || '',
-            updated_at: newSession.user.created_at || '',
-          };
-          setUser(minimalUser);
-          setNeedsProfileCompletion(true);
+        } else {
+          // No profile found -> ensure one exists
+          console.log('[Auth] Signed in user has no profile - attempting auto-upsert');
+          const ensured = await ensureProfileRow(newSession.user.id, newSession.user.email ?? undefined);
+          if (ensured) {
+            setUser(ensured);
+            setNeedsProfileCompletion(!(ensured as any).profile_completed);
+            profileConfirmedRef.current = true;
+          } else {
+            const minimalUser: UserProfile = {
+              id: newSession.user.id,
+              name: '',
+              email: newSession.user.email || '',
+              role: 'student',
+              created_at: newSession.user.created_at || '',
+              updated_at: newSession.user.created_at || '',
+            };
+            setUser(minimalUser);
+            setNeedsProfileCompletion(true);
+            profileConfirmedRef.current = false;
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         console.log('[Auth] user signed out');
         setUser(null);
         setNeedsProfileCompletion(false);
-        profileConfirmedRef.current = false; // Reset on sign out
+        profileConfirmedRef.current = false;
       }
     });
 
@@ -335,7 +397,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[Auth] Cleaning up auth listener');
       subscription.unsubscribe();
     };
-  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-runs
+  }, [user?.id, fetchUserProfile, ensureProfileRow]);
 
   return (
     <AuthContext.Provider value={{

@@ -12,17 +12,22 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
+import { useToastQueue } from '../../hooks/useToastQueue';
 import {
   Users, ChevronDown, Loader2, AlertCircle, RefreshCw,
   Award, BookOpen, CheckCircle, Clock, Circle,
   ChevronUp, Trophy, User, BarChart2, Code, Brain,
   Target, Lightbulb, MessageSquare, Cpu,
   DollarSign, TrendingUp, Zap, Activity,
-  Server, Building2, Search, Globe, TrendingDown,
+  Server, Building2, Search, Globe, TrendingDown, Download, RotateCcw,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
 import NewsManager from '../../components/news/NewsManager';
+import ToastContainer from '../../components/ui/Toast';
+import ProficiencyDistributionChart from '../../components/ui/ProficiencyDistributionChart';
+import { cohortProficiencyCounts } from '../../utils/proficiencyHelpers';
+import { downloadCsv, deriveActivityStatus } from '../../utils/exportCsv';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    TYPES
@@ -35,6 +40,7 @@ interface Learner {
   grade_level: number | null;
   continent: string | null;
   country: string | null;
+  role?: string | null;
   organization_id?: string | null;
   join_code_used?: string | null;
 }
@@ -59,6 +65,10 @@ interface StudentSessionRow {
   activity: string | null;
   created_at: string | null;
   updated_at: string | null;
+  science_skills_evaluation?: unknown;
+  math_skills_evaluation?: unknown;
+  english_skills_evaluation?: unknown;
+  certification_evaluation_score?: number | null;
 }
 
 interface CostRow {
@@ -525,12 +535,14 @@ const StudentLearnerTable: React.FC<{
   selectedId: string;
   isPlatformAdmin?: boolean;
   canViewStudentDashboard?: boolean;
-}> = ({ learners, sessionRows, loading, error, onSelectLearner, selectedId, isPlatformAdmin, canViewStudentDashboard }) => {
+  onRefreshSummary?: () => void;
+}> = ({ learners, sessionRows, loading, error, onSelectLearner, selectedId, isPlatformAdmin, canViewStudentDashboard, onRefreshSummary }) => {
   const [search, setSearch] = useState('');
   const { startImpersonation } = useImpersonation();
   const navigate = useNavigate();
   const [sortKey, setSortKey] = useState<'name' | 'total' | 'monthTotal' | 'certAttempted' | 'certAchieved' | 'completionRate' | 'lastActive'>('total');
   const [sortAsc, setSortAsc] = useState(false);
+  const [resettingId, setResettingId] = useState<string | null>(null);
 
   // Time frame filter: 7d = last week, 30d = last month, 0 = all time (since beginning)
   const [timeFrame, setTimeFrame] = useState<7 | 30 | 0>(0);
@@ -639,11 +651,61 @@ const StudentLearnerTable: React.FC<{
   // Cohort-level aggregates for summary banner
   const cohortUsers = summaries.length;
   const cohortActivities = summaries.reduce((s, r) => s + r.totalEngaged + r.certAttempted, 0);
-  const cohortCompleted = summaries.reduce((s, r) => s + r.byCategory['Certification'] ?? 0, 0);
+  const cohortCompleted = summaries.reduce((s, r) => s + (r.byCategory['Certification'] ?? 0), 0);
   const cohortCertsCompleted = summaries.reduce((s, r) => s + r.certAchieved, 0);
   const cohortCertsAttempted = summaries.reduce((s, r) => s + r.certAttempted, 0);
 
   const timeFrameLabel = timeFrame === 7 ? 'Last Week' : timeFrame === 30 ? 'Last Month' : 'Since Beginning';
+
+  const completionRateMap = new Map(summaries.map(s => [s.id, s.completionRate]));
+  const proficiencyCounts = cohortProficiencyCounts(
+    summaries.map(s => s.id),
+    sessionRows as unknown as { user_id: string; [key: string]: unknown }[],
+    completionRateMap,
+  );
+
+  const handleExportCsv = () => {
+    const learnerMap = new Map(learners.map(l => [l.id, l]));
+    const csvRows = sorted.map(s => {
+      const learner = learnerMap.get(s.id);
+      return {
+        Name: s.name,
+        Email: s.email,
+        Country: learner?.country ?? '',
+        Continent: learner?.continent ?? '',
+        Role: learner?.role ?? 'student',
+        Status: deriveActivityStatus(s.lastActiveAt),
+        'Completion Rate': `${s.completionRate.toFixed(0)}%`,
+        'Sessions Engaged': s.totalEngaged,
+        'Certs Achieved': s.certAchieved,
+      };
+    });
+    downloadCsv(`student-roster-${new Date().toISOString().slice(0, 10)}.csv`, csvRows);
+  };
+
+  const handleResetMilestones = async (learnerId: string, learnerName: string) => {
+    if (!window.confirm(`Reset milestone progress for ${learnerName}? This clears evaluation cache for skills modules.`)) return;
+    setResettingId(learnerId);
+    try {
+      const { error: resetError } = await supabase
+        .from('dashboard')
+        .update({
+          progress: 'not started',
+          science_skills_evaluation: null,
+          math_skills_evaluation: null,
+          english_skills_evaluation: null,
+        } as Record<string, unknown>)
+        .eq('user_id', learnerId)
+        .in('activity', ['science_skills', 'math_skills', 'english_skills']);
+      if (resetError) throw resetError;
+      onRefreshSummary?.();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      alert('Reset failed: ' + msg);
+    } finally {
+      setResettingId(null);
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
@@ -665,10 +727,27 @@ const StudentLearnerTable: React.FC<{
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={sorted.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            <Download size={13} />
+            Export CSV
+          </button>
           <input type="text" placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="ml-auto w-full sm:w-60 border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500" />
         </div>
       </div>
+
+      {/* Proficiency distribution chart */}
+      {!loading && summaries.length > 0 && (
+        <ProficiencyDistributionChart
+          counts={proficiencyCounts}
+          totalLearners={summaries.length}
+        />
+      )}
 
       {/* Cohort summary banner — shown after time frame selection (always visible) */}
       {!loading && summaries.length > 0 && (
@@ -716,6 +795,7 @@ const StudentLearnerTable: React.FC<{
                 <th onClick={() => toggleSort('completionRate')} className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-purple-700">Completion Rate<SortMark keyName="completionRate" /></th>
                 <th onClick={() => toggleSort('lastActive')} className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-purple-700">Last Active<SortMark keyName="lastActive" /></th>
                 {canViewStudentDashboard && <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Dashboard</th>}
+                {canViewStudentDashboard && <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Reset</th>}
                 {isPlatformAdmin && <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Act As</th>}
               </tr>
             </thead>
@@ -768,6 +848,22 @@ const StudentLearnerTable: React.FC<{
                       </button>
                     </td>
                   )}
+                  {canViewStudentDashboard && (
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => handleResetMilestones(s.id, s.name)}
+                        disabled={resettingId === s.id}
+                        title={`Reset milestone cache for ${s.name}`}
+                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors whitespace-nowrap disabled:opacity-50"
+                      >
+                        {resettingId === s.id
+                          ? <Loader2 size={12} className="animate-spin" />
+                          : <RotateCcw size={12} />}
+                        Reset
+                      </button>
+                    </td>
+                  )}
                   {isPlatformAdmin && (
                     <td className="px-4 py-3">
                       <button onClick={() => handleActAs(s.id)} title={`Browse the platform as ${s.name}`}
@@ -780,7 +876,11 @@ const StudentLearnerTable: React.FC<{
               ))}
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={isPlatformAdmin ? (canViewStudentDashboard ? 10 : 9) : (canViewStudentDashboard ? 9 : 8)} className="px-4 py-10 text-center text-sm text-gray-400">
+                  <td colSpan={
+                    (isPlatformAdmin ? 1 : 0)
+                    + (canViewStudentDashboard ? 2 : 0)
+                    + 8
+                  } className="px-4 py-10 text-center text-sm text-gray-400">
                     {search ? 'No learners match that search.' : 'No student sessions found yet.'}
                   </td>
                 </tr>
@@ -797,6 +897,9 @@ const StudentLearnerTable: React.FC<{
                   <td className="px-4 py-2.5 text-[11px] font-bold text-gray-800 font-mono">{sorted.reduce((sum, row) => sum + row.certAchieved, 0)}</td>
                   <td className="px-4 py-2.5 text-[11px] font-bold text-gray-800">{sorted.length > 0 ? `${(sorted.reduce((sum, row) => sum + row.completionRate, 0) / sorted.length).toFixed(0)}%` : '—'}</td>
                   <td className="px-4 py-2.5 text-[11px] text-gray-500">—</td>
+                  {canViewStudentDashboard && <td className="px-4 py-2.5" />}
+                  {canViewStudentDashboard && <td className="px-4 py-2.5" />}
+                  {isPlatformAdmin && <td className="px-4 py-2.5" />}
                 </tr>
               </tfoot>
             )}
@@ -2775,6 +2878,7 @@ const PageAnalyticsPanel: React.FC = () => {
 const AdminStudentDashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userOrgId, setUserOrgId] = useState<string | null>(null);
@@ -2938,7 +3042,7 @@ const AdminStudentDashboard: React.FC = () => {
       try {
         let query = supabase
           .from('profiles')
-          .select('id, name, email, grade_level, continent, country, organization_id, join_code_used')
+          .select('id, name, email, grade_level, continent, country, role, organization_id, join_code_used')
           .order('name', { ascending: true });
 
         if (isLeader) {
@@ -2977,7 +3081,11 @@ const AdminStudentDashboard: React.FC = () => {
       const learnerIds = learners.map((l) => l.id);
       const { data, error } = await supabase
         .from('dashboard')
-        .select('user_id, category_activity, progress, activity, created_at, updated_at')
+        .select(`
+          user_id, category_activity, progress, activity, created_at, updated_at,
+          science_skills_evaluation, math_skills_evaluation, english_skills_evaluation,
+          certification_evaluation_score
+        `)
         .in('user_id', learnerIds)
         .order('updated_at', { ascending: false });
       if (error) throw error;
@@ -2994,6 +3102,40 @@ const AdminStudentDashboard: React.FC = () => {
     if (activeTab !== 'student') return;
     fetchStudentSummary();
   }, [activeTab, fetchStudentSummary]);
+
+  useEffect(() => {
+    if (!authChecked) return;
+
+    const channel = supabase
+      .channel('admin-profiles-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, (payload) => {
+        const p = payload.new as Record<string, unknown> | null;
+        if (!p) return;
+        const name = String(p.name ?? p.full_name ?? p.email ?? 'A user');
+        const country = String(p.country ?? 'unknown location');
+        pushToast({
+          type: 'success',
+          title: `${name} registered`,
+          subtitle: `New signup from ${country}`,
+        });
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        const p = payload.new as Record<string, unknown> | null;
+        if (!p) return;
+        const name = String(p.name ?? p.full_name ?? p.email ?? 'A user');
+        const country = String(p.country ?? 'unknown location');
+        pushToast({
+          type: 'info',
+          title: `${name} logged in`,
+          subtitle: `Active from ${country}`,
+        });
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [authChecked, pushToast]);
 
   const fetchCostData = useCallback(async (days: number) => {
     setLoadingCost(true);
@@ -3314,6 +3456,7 @@ const AdminStudentDashboard: React.FC = () => {
                   error={studentSummaryError || learnersError}
                   onSelectLearner={(id) => setSelectedId(id)} selectedId={selectedId}
                   isPlatformAdmin={isPlatformAdmin} canViewStudentDashboard={true}
+                  onRefreshSummary={fetchStudentSummary}
                 />
                 {renderLearnerSelector()}
                 {renderLearnerDetail()}
@@ -3355,6 +3498,7 @@ const AdminStudentDashboard: React.FC = () => {
                   error={studentSummaryError || learnersError}
                   onSelectLearner={(id) => setSelectedId(id)} selectedId={selectedId}
                   isPlatformAdmin={false} canViewStudentDashboard={true}
+                  onRefreshSummary={fetchStudentSummary}
                 />
                 {renderLearnerSelector()}
                 {renderLearnerDetail()}
@@ -3410,6 +3554,7 @@ const AdminStudentDashboard: React.FC = () => {
         )}
 
       </div>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </AppLayout>
   );
 };
