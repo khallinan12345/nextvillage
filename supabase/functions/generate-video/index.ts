@@ -12,7 +12,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const REPLICATE_T2V = 'https://api.replicate.com/v1/models/wan-video/wan-2.2-t2v-fast/predictions';
 const REPLICATE_I2V = 'https://api.replicate.com/v1/models/vidu/q3-pro/predictions';
-const FRAME_BUCKET  = 'ai-videos'; // Supabase Storage bucket — must be public
+const FRAME_BUCKET  = 'video-frames'; // Supabase Storage bucket — must be public
 
 const corsHeaders = {
   'Access-Control-Allow-Origin':  '*',
