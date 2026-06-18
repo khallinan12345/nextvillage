@@ -36,10 +36,13 @@ import {
   Sparkles,
   Newspaper,
   X as XIcon,
+  Flame,
 } from 'lucide-react';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/ui/Button';
+import CircularProgressRing from '../components/ui/CircularProgressRing';
 import { useAuth } from '../hooks/useAuth';
+import { useLoginStreak } from '../hooks/useLoginStreak';
 import classNames from 'classnames';
 
 // ─── Community AI Challenge types ────────────────────────────────────────────
@@ -524,6 +527,7 @@ const DashboardPage: React.FC = () => {
   const [monthlyAssessment, setMonthlyAssessment] = useState<MonthlyAssessment | null>(null);
   const [monthlyLoading, setMonthlyLoading] = useState(false);
   const [monthlySectionExpanded, setMonthlySectionExpanded] = useState(true);
+  const loginStreak = useLoginStreak(user?.id);
 
   // Leaderboard
   const [leaderboardMetric, setLeaderboardMetric] = useState<LeaderboardMetric>('sessions_thismonth');
@@ -1621,6 +1625,80 @@ ${prior.impact_arc}
   const filteredActivities = getFilteredActivities();
   const uniqueCategories = getUniqueCategories();
 
+  const activeModules = data.dashboardActivities.filter(
+    a => a.category_activity !== 'Certification' && a.activity !== 'english_skills',
+  );
+  const moduleCompleted = activeModules.filter(a => a.progress === 'completed').length;
+  const moduleTargets = activeModules.length;
+  const certTargets = data.certifications.reduce((s, c) => s + c.totalAssessments, 0);
+  const certCompleted = data.certifications.reduce((s, c) => s + c.completedAssessments, 0);
+  const totalMilestoneTargets = moduleTargets + certTargets;
+  const totalMilestonesCompleted = moduleCompleted + certCompleted;
+  const completionPct = totalMilestoneTargets > 0
+    ? Math.round((totalMilestonesCompleted / totalMilestoneTargets) * 100)
+    : 0;
+
+  const isStrongProficiency = (level: string | undefined): boolean =>
+    level === 'Proficient' || level === 'Advanced';
+
+  const hasProficientCertScore = (activity: DashboardActivity): boolean =>
+    Object.entries(activity).some(([k, v]) =>
+      k.startsWith('certification_') && k.endsWith('_score') && typeof v === 'number' && v >= 2,
+    );
+
+  const achievementBadges = [
+    {
+      id: 'science',
+      label: 'Science Mastery',
+      emoji: '🔬',
+      earned: data.dashboardActivities.some(a =>
+        isStrongProficiency((a as any).science_skills_evaluation?.overall_level),
+      ),
+    },
+    {
+      id: 'math',
+      label: 'Math Mastery',
+      emoji: '📐',
+      earned: data.dashboardActivities.some(a =>
+        isStrongProficiency((a as any).math_skills_evaluation?.overall_level),
+      ),
+    },
+    {
+      id: 'english',
+      label: 'English Mastery',
+      emoji: '🌍',
+      earned: data.dashboardActivities.some(a =>
+        isStrongProficiency((a as any).english_skills_evaluation?.overall_level),
+      ),
+    },
+    {
+      id: 'ai-proficiency',
+      label: 'AI Proficiency',
+      emoji: '🤖',
+      earned: data.dashboardActivities.some(a =>
+        a.category_activity === 'Certification' && hasProficientCertScore(a),
+      ),
+    },
+    {
+      id: 'vibe-coding',
+      label: 'Vibe Coding',
+      emoji: '💻',
+      earned: data.dashboardActivities.some(a =>
+        (a as any).certification_vibe_coding_problem_decomposition_score >= 2
+        || (a as any).certification_evaluation_vibe_coding_problem_decomposition_scor >= 2,
+      ),
+    },
+    {
+      id: 'critical-thinking',
+      label: 'Critical Thinking',
+      emoji: '🎯',
+      earned: data.dashboardActivities.some(a =>
+        (a as any).certification_critical_thinking_claim_evaluation_score >= 2
+        || (a as any).certification_evaluation_critical_thinking_logical_reasoning_sc >= 2,
+      ),
+    },
+  ];
+
   // ── Monthly Summary render helper ────────────────────────────────────────
   const renderMonthlySummary = () => {
     if (user?.role !== 'student') return null;
@@ -2006,11 +2084,22 @@ ${prior.impact_arc}
     <AppLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome, {user?.name || 'User'}!
-            </h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome, {user?.name || 'User'}!
+              </h1>
+              {user?.role === 'student' && loginStreak > 0 && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-orange-50 text-orange-700 border border-orange-200"
+                  aria-label={`${loginStreak} day login streak`}
+                >
+                  <Flame size={15} className="text-orange-500" />
+                  {loginStreak} day{loginStreak !== 1 ? 's' : ''} streak
+                </span>
+              )}
+            </div>
             <p className="text-gray-600">
               {user?.role === 'facilitator'
                 ? 'Manage your teams and monitor student progress'
@@ -2035,6 +2124,58 @@ ${prior.impact_arc}
           </div>
         ) : (
           <div className="space-y-8">
+
+            {/* ── Module Progress Ring + Achievements ─────────────────────── */}
+            {user?.role === 'student' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6 flex flex-col items-center justify-center">
+                  <CircularProgressRing
+                    percentage={completionPct}
+                    label="Overall Module Progress"
+                    sublabel={`${totalMilestonesCompleted} / ${totalMilestoneTargets} milestones`}
+                  />
+                </div>
+                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="px-5 py-4 border-b bg-gradient-to-r from-amber-50 to-yellow-50">
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <Award className="h-5 w-5 text-amber-600" />
+                      Achievements
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Earn badges by reaching Proficient or Advanced in each skill area
+                    </p>
+                  </div>
+                  <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {achievementBadges.map(badge => (
+                      <div
+                        key={badge.id}
+                        aria-label={`${badge.label}${badge.earned ? ' — Mastery Achieved' : ' — Locked'}`}
+                        className={classNames(
+                          'relative flex flex-col items-center text-center rounded-xl border p-4 transition-all',
+                          badge.earned
+                            ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-300 shadow-sm'
+                            : 'bg-gray-50 border-gray-200 opacity-50 grayscale',
+                        )}
+                      >
+                        <span className="text-3xl mb-2" aria-hidden="true">{badge.emoji}</span>
+                        <span className={classNames(
+                          'text-xs font-bold',
+                          badge.earned ? 'text-amber-900' : 'text-gray-500',
+                        )}>
+                          {badge.label}
+                        </span>
+                        {badge.earned && (
+                          <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                            <CheckCircle size={10} />
+                            Mastery Achieved
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ── News Banner ─────────────────────────────────────────────── */}
             {!newsDismissed && newsItems.length > 0 && (

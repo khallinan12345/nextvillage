@@ -18,6 +18,7 @@ import { setChatIdentity } from './lib/chatClient';
 import { supabase } from './lib/supabaseClient';
 import { ImpersonationProvider, ImpersonationBanner } from './contexts/ImpersonationContext';
 import ProfileCompletionPopup from './components/profile/ProfileCompletionPopup';
+import { AuthProvider } from './hooks/useAuth';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -299,12 +300,14 @@ function App() {
   }, []);
 
   return (
-    <ImpersonationProvider>
-      <BrowserRouter>
-        <ImpersonationBanner />
-        <AppContent />
-      </BrowserRouter>
-    </ImpersonationProvider>
+    <AuthProvider>
+      <ImpersonationProvider>
+        <BrowserRouter>
+          <ImpersonationBanner />
+          <AppContent />
+        </BrowserRouter>
+      </ImpersonationProvider>
+    </AuthProvider>
   );
 }
 
