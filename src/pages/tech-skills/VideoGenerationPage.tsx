@@ -850,7 +850,7 @@ End with one improved version of the full prompt if the score is below 7.
 ${commGuidance}`
         }],
         system: 'You are a helpful AI video prompt coach. Give honest, specific feedback. Always include SCORE: X/10 on its own line.',
-        max_tokens: 600,
+        max_tokens: 1200,
         temperature: 0.5,
       });
 
