@@ -13,7 +13,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { callAI } from '../lib/aiService'; // your existing fallback-chain service
+import { chatText } from '../lib/chatClient';
 import {
   PlusCircle, Bot, Play, Save, Share2, Lock,
   Trash2, ChevronLeft, Send, Loader2, Settings2,
@@ -39,7 +39,6 @@ interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  provider_used?: string;
 }
 
 interface Conversation {
@@ -238,24 +237,24 @@ export default function CoworkPage() {
     setInput('');
     setThinking(true);
 
-    // Build messages array for the AI call
-    const aiMessages = [
-      { role: 'system' as const, content: activeAgent.system_prompt },
-      ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-    ];
+    // Build messages array for the AI call (system prompt passed separately)
+    const aiMessages = history.map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }));
 
     try {
-      // callAI is your existing service — pass model_pref as a hint
-      const { content, provider } = await callAI({
+      const content = await chatText({
         messages: aiMessages,
-        modelPref: activeAgent.model_pref,
+        system:   activeAgent.system_prompt,
+        max_tokens: 1000,
+        page:     activeAgent.model_pref !== 'auto' ? activeAgent.model_pref : 'agent-builder',
       });
 
       const assistantMsg: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
         content,
-        provider_used: provider,
       };
 
       const updatedMessages = [...history, assistantMsg];
@@ -265,7 +264,7 @@ export default function CoworkPage() {
       if (conversation.id !== 'preview') {
         await supabase.from('agent_messages').insert([
           { conversation_id: conversation.id, role: 'user',      content: userMsg.content },
-          { conversation_id: conversation.id, role: 'assistant', content, provider_used: provider },
+          { conversation_id: conversation.id, role: 'assistant', content },
         ]);
 
         // Auto-title the conversation from the first user message
@@ -739,11 +738,7 @@ function ChatBubble({ message }: { message: Message }) {
           : 'bg-gray-900 border border-gray-800 rounded-tl-sm text-gray-100'
       }`}>
         {message.content}
-        {message.provider_used && (
-          <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-800">
-            via {message.provider_used}
-          </div>
-        )}
+
       </div>
     </div>
   );
