@@ -1575,7 +1575,7 @@ const AIPlaygroundPage: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-sm font-bold text-purple-700 px-3 py-1.5 rounded-lg bg-purple-100 hover:bg-purple-200 transition-colors border border-purple-200">
+              <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1.5 text-sm font-bold text-purple-700 px-3 py-1.5 rounded-lg bg-purple-100 hover:bg-purple-200 transition-colors border border-purple-200">
                 <Home size={15} />Home
               </button>
               <button
