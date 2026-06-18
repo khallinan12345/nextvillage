@@ -7,7 +7,7 @@ import {
   Code, Database, Layers, ImagePlus, Video, Mic, PenLine, Zap,
   Briefcase, Code2, Film, ImagePlus as ImagePlusIcon, Mic as MicIcon,
   Cpu, Wand2, ChevronDown, ChevronUp, ShieldCheck, Users, Sprout, Fish, Heart,
-  GitBranch, PawPrint, FlaskConical, Tree, Leaf
+  GitBranch, PawPrint, FlaskConical, Tree, Leaf, Bot
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -159,6 +159,20 @@ const Sidebar: React.FC = () => {
       sectionBg: 'bg-teal-50/40',
       headerText: 'text-teal-600',
       items: [], // populated dynamically from research_programs
+    },
+    {
+      id: 'claude',
+      label: 'Claude',
+      emoji: '🤖',
+      fromGradient: 'from-violet-300',
+      toGradient: 'to-purple-300',
+      activeBg: 'bg-violet-100',
+      activeText: 'text-violet-700',
+      sectionBg: 'bg-violet-50/40',
+      headerText: 'text-violet-600',
+      items: [
+        { name: 'Agent Builder', path: '/claude/agents', icon: <Bot size={20} /> },
+      ],
     },
   ];
 

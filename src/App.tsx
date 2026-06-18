@@ -94,6 +94,9 @@ import ResearchAILearningLab from './pages/research/ResearchAILearningLab';
 import ResearchNewProjectPage from './pages/research/ResearchNewProjectPage';
 import IGiTREEResearchPage from './pages/research/ResearchIGiTREE';
 
+// Claude / Agent Builder
+import CoworkPage from './pages/CoworkPage';
+
 const AppContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -252,6 +255,9 @@ const AppContent: React.FC = () => {
         <Route path="/research/ai-learning-lab" element={<ResearchAILearningLab />} />
         <Route path="/research/new" element={<ResearchNewProjectPage />} />
         <Route path="/research/igitree" element={<IGiTREEResearchPage />} />
+
+        {/* Claude / Agent Builder */}
+        <Route path="/claude/agents" element={<CoworkPage />} />
 
         {/* Legacy Route Redirects */}
         <Route path="/ai-proficiency" element={<Navigate to="/certifications/ai-proficiency" replace />} />
