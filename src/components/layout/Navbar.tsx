@@ -131,10 +131,10 @@ const Navbar: React.FC = () => {
       shorthand: 'Claude',
       dropdown: [
         { name: 'Agent Builder', path: '/claude/agents' },
+        { name: 'Use Claude',    path: '/playground'    },
       ],
     },
     { name: 'Dashboard', path: '/dashboard', shorthand: 'Dashboard' },
-    { name: 'AI Playground', path: '/playground', shorthand: 'AI Playground' },
     { name: 'About', path: '/about', shorthand: 'About' },
   ];
 
