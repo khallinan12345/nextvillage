@@ -12,22 +12,16 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
-import { useToastQueue } from '../../hooks/useToastQueue';
 import {
   Users, ChevronDown, Loader2, AlertCircle, RefreshCw,
   Award, BookOpen, CheckCircle, Clock, Circle,
   ChevronUp, Trophy, User, BarChart2, Code, Brain,
   Target, Lightbulb, MessageSquare, Cpu,
   DollarSign, TrendingUp, Zap, Activity,
-  Server, Building2, Search, Globe, TrendingDown, Download, RotateCcw,
+  Server, Building2, Search, Globe,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
-import NewsManager from '../../components/news/NewsManager';
-import ToastContainer from '../../components/ui/Toast';
-import ProficiencyDistributionChart from '../../components/ui/ProficiencyDistributionChart';
-import { cohortProficiencyCounts } from '../../utils/proficiencyHelpers';
-import { downloadCsv, deriveActivityStatus } from '../../utils/exportCsv';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    TYPES
@@ -40,7 +34,6 @@ interface Learner {
   grade_level: number | null;
   continent: string | null;
   country: string | null;
-  role?: string | null;
   organization_id?: string | null;
   join_code_used?: string | null;
 }
@@ -65,10 +58,6 @@ interface StudentSessionRow {
   activity: string | null;
   created_at: string | null;
   updated_at: string | null;
-  science_skills_evaluation?: unknown;
-  math_skills_evaluation?: unknown;
-  english_skills_evaluation?: unknown;
-  certification_evaluation_score?: number | null;
 }
 
 interface CostRow {
@@ -535,14 +524,12 @@ const StudentLearnerTable: React.FC<{
   selectedId: string;
   isPlatformAdmin?: boolean;
   canViewStudentDashboard?: boolean;
-  onRefreshSummary?: () => void;
-}> = ({ learners, sessionRows, loading, error, onSelectLearner, selectedId, isPlatformAdmin, canViewStudentDashboard, onRefreshSummary }) => {
+}> = ({ learners, sessionRows, loading, error, onSelectLearner, selectedId, isPlatformAdmin, canViewStudentDashboard }) => {
   const [search, setSearch] = useState('');
   const { startImpersonation } = useImpersonation();
   const navigate = useNavigate();
   const [sortKey, setSortKey] = useState<'name' | 'total' | 'monthTotal' | 'certAttempted' | 'certAchieved' | 'completionRate' | 'lastActive'>('total');
   const [sortAsc, setSortAsc] = useState(false);
-  const [resettingId, setResettingId] = useState<string | null>(null);
 
   // Time frame filter: 7d = last week, 30d = last month, 0 = all time (since beginning)
   const [timeFrame, setTimeFrame] = useState<7 | 30 | 0>(0);
@@ -657,56 +644,6 @@ const StudentLearnerTable: React.FC<{
 
   const timeFrameLabel = timeFrame === 7 ? 'Last Week' : timeFrame === 30 ? 'Last Month' : 'Since Beginning';
 
-  const completionRateMap = new Map(summaries.map(s => [s.id, s.completionRate]));
-  const proficiencyCounts = cohortProficiencyCounts(
-    summaries.map(s => s.id),
-    sessionRows as unknown as { user_id: string; [key: string]: unknown }[],
-    completionRateMap,
-  );
-
-  const handleExportCsv = () => {
-    const learnerMap = new Map(learners.map(l => [l.id, l]));
-    const csvRows = sorted.map(s => {
-      const learner = learnerMap.get(s.id);
-      return {
-        Name: s.name,
-        Email: s.email,
-        Country: learner?.country ?? '',
-        Continent: learner?.continent ?? '',
-        Role: learner?.role ?? 'student',
-        Status: deriveActivityStatus(s.lastActiveAt),
-        'Completion Rate': `${s.completionRate.toFixed(0)}%`,
-        'Sessions Engaged': s.totalEngaged,
-        'Certs Achieved': s.certAchieved,
-      };
-    });
-    downloadCsv(`student-roster-${new Date().toISOString().slice(0, 10)}.csv`, csvRows);
-  };
-
-  const handleResetMilestones = async (learnerId: string, learnerName: string) => {
-    if (!window.confirm(`Reset milestone progress for ${learnerName}? This clears evaluation cache for skills modules.`)) return;
-    setResettingId(learnerId);
-    try {
-      const { error: resetError } = await supabase
-        .from('dashboard')
-        .update({
-          progress: 'not started',
-          science_skills_evaluation: null,
-          math_skills_evaluation: null,
-          english_skills_evaluation: null,
-        } as Record<string, unknown>)
-        .eq('user_id', learnerId)
-        .in('activity', ['science_skills', 'math_skills', 'english_skills']);
-      if (resetError) throw resetError;
-      onRefreshSummary?.();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      alert('Reset failed: ' + msg);
-    } finally {
-      setResettingId(null);
-    }
-  };
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-gray-100">
@@ -727,27 +664,10 @@ const StudentLearnerTable: React.FC<{
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            disabled={sorted.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            <Download size={13} />
-            Export CSV
-          </button>
           <input type="text" placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="ml-auto w-full sm:w-60 border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500" />
         </div>
       </div>
-
-      {/* Proficiency distribution chart */}
-      {!loading && summaries.length > 0 && (
-        <ProficiencyDistributionChart
-          counts={proficiencyCounts}
-          totalLearners={summaries.length}
-        />
-      )}
 
       {/* Cohort summary banner — shown after time frame selection (always visible) */}
       {!loading && summaries.length > 0 && (
@@ -795,7 +715,6 @@ const StudentLearnerTable: React.FC<{
                 <th onClick={() => toggleSort('completionRate')} className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-purple-700">Completion Rate<SortMark keyName="completionRate" /></th>
                 <th onClick={() => toggleSort('lastActive')} className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-purple-700">Last Active<SortMark keyName="lastActive" /></th>
                 {canViewStudentDashboard && <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Dashboard</th>}
-                {canViewStudentDashboard && <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Reset</th>}
                 {isPlatformAdmin && <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Act As</th>}
               </tr>
             </thead>
@@ -848,22 +767,6 @@ const StudentLearnerTable: React.FC<{
                       </button>
                     </td>
                   )}
-                  {canViewStudentDashboard && (
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => handleResetMilestones(s.id, s.name)}
-                        disabled={resettingId === s.id}
-                        title={`Reset milestone cache for ${s.name}`}
-                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors whitespace-nowrap disabled:opacity-50"
-                      >
-                        {resettingId === s.id
-                          ? <Loader2 size={12} className="animate-spin" />
-                          : <RotateCcw size={12} />}
-                        Reset
-                      </button>
-                    </td>
-                  )}
                   {isPlatformAdmin && (
                     <td className="px-4 py-3">
                       <button onClick={() => handleActAs(s.id)} title={`Browse the platform as ${s.name}`}
@@ -876,11 +779,7 @@ const StudentLearnerTable: React.FC<{
               ))}
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={
-                    (isPlatformAdmin ? 1 : 0)
-                    + (canViewStudentDashboard ? 2 : 0)
-                    + 8
-                  } className="px-4 py-10 text-center text-sm text-gray-400">
+                  <td colSpan={isPlatformAdmin ? (canViewStudentDashboard ? 10 : 9) : (canViewStudentDashboard ? 9 : 8)} className="px-4 py-10 text-center text-sm text-gray-400">
                     {search ? 'No learners match that search.' : 'No student sessions found yet.'}
                   </td>
                 </tr>
@@ -897,9 +796,6 @@ const StudentLearnerTable: React.FC<{
                   <td className="px-4 py-2.5 text-[11px] font-bold text-gray-800 font-mono">{sorted.reduce((sum, row) => sum + row.certAchieved, 0)}</td>
                   <td className="px-4 py-2.5 text-[11px] font-bold text-gray-800">{sorted.length > 0 ? `${(sorted.reduce((sum, row) => sum + row.completionRate, 0) / sorted.length).toFixed(0)}%` : '—'}</td>
                   <td className="px-4 py-2.5 text-[11px] text-gray-500">—</td>
-                  {canViewStudentDashboard && <td className="px-4 py-2.5" />}
-                  {canViewStudentDashboard && <td className="px-4 py-2.5" />}
-                  {isPlatformAdmin && <td className="px-4 py-2.5" />}
                 </tr>
               </tfoot>
             )}
@@ -1861,512 +1757,6 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   LongitudinalGlobalPanel
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-interface LongRow {
-  learner_token: string;
-  cohort_month: string;
-  snapshot_date: string;
-  site: string;
-  session_count: number;
-  is_persistent_learner: boolean;
-  reasoning_level_0: number | null;
-  reasoning_level_1: number | null;
-  reasoning_level_2: number | null;
-  reasoning_level_3: number | null;
-  scaffold_clarification_per_session: number;
-  scaffold_convergence_trend: string;
-  role_teaching_intent_count: number;
-  role_community_application_count: number;
-  role_enterprise_orientation_count: number;
-  role_intergenerational_count: number;
-  certifications_earned_total: number;
-  cognitive_score: number | null;
-  critical_thinking_score: number | null;
-  problem_solving_score: number | null;
-  creativity_score: number | null;
-  pue_score: number | null;
-}
-
-// Mentor presence calendar (mirrors site_mentor_presence table)
-const MENTOR_CALENDAR = [
-  { start: '2025-07-01', end: '2025-10-31', present: true  },
-  { start: '2025-11-01', end: '2026-02-28', present: false },
-  { start: '2026-03-01', end: '2099-12-31', present: true  },
-];
-
-function mentorPresentForMonth(cohortMonth: string): boolean {
-  const d = new Date(cohortMonth);
-  for (const p of MENTOR_CALENDAR) {
-    if (d >= new Date(p.start) && d <= new Date(p.end)) return p.present;
-  }
-  return true;
-}
-
-const LongitudinalGlobalPanel: React.FC = () => {
-  const [rows, setRows]       = useState<LongRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        // Paginate — Supabase caps at 1000 rows per request
-        const FIELDS = [
-          'learner_token', 'cohort_month', 'site', 'session_count',
-          'snapshot_date', 'is_persistent_learner',
-          'reasoning_level_0', 'reasoning_level_1', 'reasoning_level_2', 'reasoning_level_3',
-          'scaffold_clarification_per_session', 'scaffold_convergence_trend',
-          'role_teaching_intent_count', 'role_community_application_count',
-          'role_enterprise_orientation_count', 'role_intergenerational_count',
-          'certifications_earned_total',
-          'cognitive_score', 'critical_thinking_score', 'problem_solving_score',
-          'creativity_score', 'pue_score',
-        ].join(',');
-
-        const PAGE = 1000;
-        let allData: LongRow[] = [];
-        let from = 0;
-        let keepGoing = true;
-
-        while (keepGoing) {
-          const { data, error } = await supabase
-            .from('dashboard_stats')
-            .select(FIELDS)
-            .order('cohort_month', { ascending: true })
-            .range(from, from + PAGE - 1);
-
-          if (error) throw error;
-          const batch = (data || []) as LongRow[];
-          allData = allData.concat(batch);
-          if (batch.length < PAGE) {
-            keepGoing = false;
-          } else {
-            from += PAGE;
-            if (allData.length >= 20000) keepGoing = false; // safety cap
-          }
-        }
-
-        console.log(`[LongitudinalPanel] fetched ${allData.length} rows, months:`,
-          [...new Set(allData.map(r => r.cohort_month))].sort());
-
-        setRows(allData);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) return (
-    <div className="flex items-center gap-2 py-6 text-gray-400 text-sm">
-      <Loader2 size={16} className="animate-spin" /> Loading longitudinal data…
-    </div>
-  );
-  if (error) return (
-    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 mb-4">
-      Longitudinal data unavailable: {error}
-    </div>
-  );
-  if (rows.length === 0) return null;
-
-  // ── Deduplicate to one row per learner per cohort_month ─────────────────
-  // dashboard_stats has one row per learner per activity_date (daily), but all
-  // scored fields (session_count, cognitive scores, certs, etc.) are monthly
-  // aggregates that repeat identically on every daily row within a cohort_month.
-  // First-seen wins — any row within a learner+month is representative.
-  const seenKeys = new Set<string>();
-  const dedupedRows: LongRow[] = [];
-  rows.forEach(r => {
-    const key = `${r.learner_token}|${r.cohort_month}`;
-    if (!seenKeys.has(key)) {
-      seenKeys.add(key);
-      dedupedRows.push(r);
-    }
-  });
-
-  // ── Compute assessment_cycle client-side ───────────────────────────────────
-  // Rank each learner's unique months chronologically → cycle number
-  const monthsByLearner: Record<string, string[]> = {};
-  dedupedRows.forEach(r => {
-    if (!monthsByLearner[r.learner_token]) monthsByLearner[r.learner_token] = [];
-    if (!monthsByLearner[r.learner_token].includes(r.cohort_month))
-      monthsByLearner[r.learner_token].push(r.cohort_month);
-  });
-  Object.values(monthsByLearner).forEach(months => months.sort());
-
-  const rowsWithCycle = dedupedRows.map(r => ({
-    ...r,
-    assessment_cycle: (monthsByLearner[r.learner_token]?.indexOf(r.cohort_month) ?? 0) + 1,
-    mentor_present:   mentorPresentForMonth(r.cohort_month),
-  }));
-
-  // ── Persistent = learner has >= 2 months ───────────────────────────────────
-  const persistent = rowsWithCycle.filter(r =>
-    (monthsByLearner[r.learner_token]?.length ?? 0) >= 2
-  );
-
-  // All rows for hero stats (not just persistent)
-  const allRows = rowsWithCycle;
-
-  // ── Group persistent rows by assessment cycle ──────────────────────────────
-  const byCycle: Record<number, typeof rowsWithCycle> = {};
-  persistent.forEach(r => {
-    const c = r.assessment_cycle;
-    if (!byCycle[c]) byCycle[c] = [];
-    byCycle[c].push(r);
-  });
-  const maxCycle = Math.max(...persistent.map(r => r.assessment_cycle), 0);
-  const cycles = Array.from({ length: maxCycle }, (_, i) => i + 1).filter(c => byCycle[c]?.length > 0);
-
-  const avg = (arr: typeof rowsWithCycle, key: keyof typeof rowsWithCycle[0]) => {
-    const vals = arr.map(r => Number(r[key])).filter(v => !isNaN(v) && v !== 0);
-    return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
-  };
-  const pct = (n: number, total: number) => total ? Math.round((n / total) * 100) : 0;
-
-  // ── Reasoning — only show when data exists ─────────────────────────────────
-  const hasReasoningData = persistent.some(r =>
-    r.reasoning_level_3 !== null && r.reasoning_level_3 !== undefined && Number(r.reasoning_level_3) > 0
-  );
-  const totalSessions = (arr: typeof rowsWithCycle) =>
-    arr.reduce((s, r) => s + (Number(r.session_count) || 0), 0);
-
-  const reasoning = hasReasoningData ? cycles.map(c => ({
-    cycle: c, n: byCycle[c].length,
-    sessions: totalSessions(byCycle[c]),
-    l0: avg(byCycle[c], 'reasoning_level_0'),
-    l1: avg(byCycle[c], 'reasoning_level_1'),
-    l2: avg(byCycle[c], 'reasoning_level_2'),
-    l3: avg(byCycle[c], 'reasoning_level_3'),
-  })) : [];
-
-  // ── Scaffolding by cycle ───────────────────────────────────────────────────
-  // convergingPct excludes 'insufficient_data' rows from denominator
-  const scaffolding = cycles.map(c => {
-    const rows = byCycle[c];
-    const validTrend = rows.filter(r => r.scaffold_convergence_trend !== 'insufficient_data');
-    return {
-      cycle: c, n: rows.length,
-      sessions: totalSessions(rows),
-      clarf: avg(rows, 'scaffold_clarification_per_session'),
-      convergingPct: validTrend.length
-        ? pct(validTrend.filter(r => r.scaffold_convergence_trend === 'converging').length, validTrend.length)
-        : null,  // null = all insufficient_data
-    };
-  });
-  const maxClarf = Math.max(...scaffolding.map(s => s.clarf), 1);
-
-  // ── Role readiness by cycle ────────────────────────────────────────────────
-  const hasSig = (arr: typeof rowsWithCycle, key: keyof typeof rowsWithCycle[0]) =>
-    pct(arr.filter(r => (Number(r[key]) || 0) > 0).length, arr.length);
-  const roleReadiness = cycles.map(c => ({
-    cycle: c,
-    sessions: totalSessions(byCycle[c]),
-    teaching:          hasSig(byCycle[c], 'role_teaching_intent_count'),
-    community:         hasSig(byCycle[c], 'role_community_application_count'),
-    enterprise:        hasSig(byCycle[c], 'role_enterprise_orientation_count'),
-    intergenerational: hasSig(byCycle[c], 'role_intergenerational_count'),
-  }));
-
-  // ── Natural experiment ─────────────────────────────────────────────────────
-  // Absent = Nov 2025–Feb 2026 rows; treat session_count=0 as valid data point
-  const mentorAbsent  = allRows.filter(r => !r.mentor_present);
-  const mentorPresent = allRows.filter(r => r.mentor_present);
-  // Use sum/count directly so zero sessions count (not avg() which skips zeros)
-  const sumSessions = (arr: typeof allRows) =>
-    arr.reduce((s, r) => s + (Number(r.session_count) || 0), 0);
-  const avgAbsent  = mentorAbsent.length  ? sumSessions(mentorAbsent)  / mentorAbsent.length  : 0;
-  const avgPresent = mentorPresent.length ? sumSessions(mentorPresent) / mentorPresent.length : 0;
-  // Show ratio even when absent avg is 0 — that IS the finding
-  const ratio = mentorAbsent.length > 0
-    ? avgAbsent > 0
-      ? (avgPresent / avgAbsent).toFixed(1)
-      : `${avgPresent.toFixed(1)} vs 0`
-    : null;
-
-  // ── Hero stats ─────────────────────────────────────────────────────────────
-  const cycle1L3    = reasoning.find(r => r.cycle === 1)?.l3 ?? 0;
-  const lastCycleL3 = reasoning[reasoning.length - 1]?.l3 ?? 0;
-  const l3Growth    = cycle1L3 > 0 ? (lastCycleL3 / cycle1L3).toFixed(1) : null;
-
-  // Scaffolding: only compare cycles with meaningful n (>=5 rows)
-  const validScafCycles = scaffolding.filter(s => s.n >= 5);
-  const cycle1Clarf  = validScafCycles[0]?.clarf ?? 0;
-  const lastValidClarf = validScafCycles[validScafCycles.length - 1]?.clarf ?? 0;
-  const clarfDecline = cycle1Clarf > 0 && validScafCycles.length > 1
-    ? Math.round((1 - lastValidClarf / cycle1Clarf) * 100)
-    : null;
-
-  // Certifications: Supabase returns numbers but coerce defensively
-  const totalCerts = allRows.reduce((s, r) => {
-    const v = r.certifications_earned_total;
-    return s + (v !== null && v !== undefined ? Number(v) : 0);
-  }, 0);
-
-  const uniqueMonths   = new Set(allRows.map(r => r.cohort_month)).size;
-  const uniqueLearners = new Set(allRows.map(r => r.learner_token)).size;
-
-  // Converging: exclude 'insufficient_data' from denominator
-  const validScafRows = (arr: typeof rowsWithCycle) =>
-    arr.filter(r => r.scaffold_convergence_trend !== 'insufficient_data');
-  const convergingPctValid = (arr: typeof rowsWithCycle) => {
-    const valid = validScafRows(arr);
-    return valid.length
-      ? pct(valid.filter(r => r.scaffold_convergence_trend === 'converging').length, valid.length)
-      : 0;
-  };
-
-  const roleColors = ['#ddd6fe', '#a78bfa', '#7c3aed'];
-  const roleKeys = [
-    { key: 'teaching'          as const, label: 'Teaching intent'        },
-    { key: 'community'         as const, label: 'Community application'  },
-    { key: 'enterprise'        as const, label: 'Enterprise orientation' },
-    { key: 'intergenerational' as const, label: 'Intergenerational'      },
-  ];
-
-  return (
-    <div className="mb-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <div className="flex items-center gap-2 mb-0.5">
-            <TrendingUp size={15} className="text-teal-600" />
-            <span className="text-xs font-bold text-teal-700 uppercase tracking-wider">
-              Longitudinal evidence · persistent learners
-            </span>
-          </div>
-          <p className="text-[11px] text-gray-400">
-            Hallinan, Hao, Davidson &amp; Clergy (2026) · World Development ·{' '}
-            {uniqueLearners} learners · {persistent.length} with 2+ months · {uniqueMonths} month{uniqueMonths !== 1 ? 's' : ''}
-          </p>
-          <p className="text-[10px] text-gray-300 mt-0.5">
-            Cycle = one monthly assessment period. Learners appear in multiple cycles as they return month after month.
-          </p>
-        </div>
-        <span className="text-[10px] text-gray-400 italic">Jul 2025 – present · zero prior computer access</span>
-      </div>
-
-      {/* Hero stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          {
-            label: l3Growth ? 'L3 reasoning growth' : 'Learners tracked',
-            value: l3Growth ? `${l3Growth}×` : uniqueLearners,
-            sub:   l3Growth ? `cycle 1 → ${cycles.length}` : `across ${uniqueMonths} month${uniqueMonths !== 1 ? 's' : ''}`,
-            color: 'text-teal-700', bg: 'bg-teal-50', border: 'border-teal-100',
-          },
-          {
-            label: clarfDecline !== null && clarfDecline > 0 ? 'Less AI scaffolding' : 'Avg clarifications/session',
-            value: clarfDecline !== null && clarfDecline > 0 ? `${clarfDecline}%` : cycle1Clarf > 0 ? cycle1Clarf.toFixed(1) : '—',
-            sub:   'clarifications/session',
-            color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-100',
-          },
-          {
-            label: 'Certifications earned',
-            value: totalCerts > 0 ? totalCerts : '—',
-            sub:   `${uniqueLearners} learners`,
-            color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-100',
-          },
-          {
-            label: 'Mentor effect',
-            value: ratio ? (ratio.includes('vs') ? ratio : `${ratio}×`) : '—',
-            sub:   ratio ? 'avg sessions: present vs absent' : 'no absence period rows yet',
-            color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-100',
-          },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-3.5`}>
-            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-            <p className="text-[11px] font-semibold text-gray-600 mt-0.5">{s.label}</p>
-            <p className="text-[10px] text-gray-400">{s.sub}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Three-column panels */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-        {/* Reasoning OR cognitive scores fallback */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          {hasReasoningData ? (
-            <>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Reasoning level composition</p>
-              {reasoning.map(r => (
-                <div key={r.cycle} className="mb-2">
-                  <div className="flex justify-between mb-0.5">
-                    <span className="text-[10px] text-gray-400">Cycle {r.cycle} · {r.n} learner{r.n !== 1 ? 's' : ''}</span>
-                    <span className="text-[10px] font-mono text-gray-400">{r.sessions} sessions</span>
-                  </div>
-                  <div className="flex h-5 rounded overflow-hidden w-full mt-1">
-                    <div style={{ width: `${r.l0}%`, background: '#e5e7eb' }} title={`L0: ${r.l0.toFixed(0)}%`} />
-                    <div style={{ width: `${r.l1}%`, background: '#1a4a6e' }} title={`L1: ${r.l1.toFixed(0)}%`} className="flex items-center justify-center">
-                      {r.l1 > 10 && <span className="text-[8px] text-blue-200 font-bold">L1 {r.l1.toFixed(0)}%</span>}
-                    </div>
-                    <div style={{ width: `${r.l2}%`, background: '#1a5c5c' }} title={`L2: ${r.l2.toFixed(0)}%`} className="flex items-center justify-center">
-                      {r.l2 > 10 && <span className="text-[8px] text-teal-200 font-bold">{r.l2.toFixed(0)}%</span>}
-                    </div>
-                    <div style={{ width: `${r.l3}%`, background: r.cycle === cycles[cycles.length - 1] ? '#1D9E75' : '#0F6E56' }} title={`L3: ${r.l3.toFixed(0)}%`} className="flex items-center justify-center">
-                      {r.l3 > 8 && <span className="text-[8px] text-green-100 font-bold">L3 {r.l3.toFixed(0)}%</span>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div className="flex gap-3 mt-2 flex-wrap">
-                {[{ bg: '#e5e7eb', label: 'L0' }, { bg: '#1a4a6e', label: 'L1' }, { bg: '#1a5c5c', label: 'L2' }, { bg: '#1D9E75', label: 'L3 ↑' }].map(l => (
-                  <span key={l.label} className="flex items-center gap-1 text-[10px] text-gray-400">
-                    <span style={{ background: l.bg, width: 8, height: 8, borderRadius: 2, display: 'inline-block' }} />{l.label}
-                  </span>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Cognitive skill scores (0–100)</p>
-              <p className="text-[10px] text-gray-400 mb-3 italic">Reasoning level data not yet available — showing cognitive scores. Score shifts across cycles reflect changing cohort composition (new learners joining), not individual decline.</p>
-              {cycles.map(c => {
-                const scores = [
-                  { label: 'Cognitive',        val: avg(byCycle[c], 'cognitive_score')         },
-                  { label: 'Critical thinking', val: avg(byCycle[c], 'critical_thinking_score') },
-                  { label: 'Problem solving',   val: avg(byCycle[c], 'problem_solving_score')   },
-                  { label: 'Creativity',        val: avg(byCycle[c], 'creativity_score')        },
-                ];
-                return (
-                  <div key={c} className="mb-3">
-                    <div className="flex justify-between mb-1.5">
-                      <span className="text-[10px] text-gray-400">Cycle {c} · {byCycle[c].length} learner{byCycle[c].length !== 1 ? 's' : ''}</span>
-                      <span className="text-[10px] font-mono text-gray-400">{totalSessions(byCycle[c])} sessions</span>
-                    </div>
-                    {scores.map(s => (
-                      <div key={s.label} className="mb-1.5">
-                        <div className="flex justify-between text-[10px] mb-0.5">
-                          <span className="text-gray-500">{s.label}</span>
-                          <span className="font-mono text-teal-700 font-bold">{s.val.toFixed(0)}</span>
-                        </div>
-                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-teal-400 rounded-full" style={{ width: `${Math.min(s.val, 100)}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </>
-          )}
-        </div>
-
-        {/* Scaffolding + role readiness */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-4">
-          <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">AI scaffolding demand</p>
-            <p className="text-[10px] text-gray-400 mb-2 italic"><strong className="text-gray-500">Clarif/session</strong> = avg number of times per session the AI needed to re-prompt, simplify, or redirect the learner. High values indicate dependence on AI guidance; falling values indicate the learner is forming their own questions and directing the conversation.</p>
-            {scaffolding.map(s => (
-              <div key={s.cycle} className="mb-2">
-                <div className="flex justify-between mb-1 text-[10px]">
-                  <span className="text-gray-400">Cycle {s.cycle} · {s.n} learner{s.n !== 1 ? 's' : ''} · <span className="font-mono">{s.sessions} sessions</span></span>
-                  <span className="font-mono text-teal-700 font-bold">
-                    {s.clarf.toFixed(1)}{s.convergingPct !== null
-                      ? <span className="text-green-600"> · {s.convergingPct}% converging</span>
-                      : <span className="text-gray-300"> · insufficient data</span>
-                    }
-                  </span>
-                </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-teal-500 rounded-full" style={{ width: `${(s.clarf / maxClarf) * 100}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Role readiness signals</p>
-            <p className="text-[10px] text-gray-400 mb-1 italic">% of learners per cycle whose AI conversations contain evidence of applying learning beyond the platform. Detected automatically via transcript analysis — the AI counts unprompted mentions of each behaviour.</p>
-            <p className="text-[10px] text-gray-400 mb-2 italic"><strong className="text-gray-500">Teaching intent</strong> = mentioned plans or actions to teach peers, family, or neighbours. <strong className="text-gray-500">Community application</strong> = applied AI to a real local problem. <strong className="text-gray-500">Enterprise orientation</strong> = referenced a business or income plan. <strong className="text-gray-500">Intergenerational</strong> = knowledge shared across age groups.</p>
-            {roleKeys.map(item => (
-              <div key={item.key} className="mb-2">
-                <p className="text-[10px] text-gray-400 mb-1">{item.label}</p>
-                <div className="flex gap-1 items-end h-6">
-                  {roleReadiness.map((r, i) => (
-                    <div key={r.cycle} className="flex-1 rounded-sm"
-                      style={{ height: `${Math.max(4, r[item.key])}%`, background: roleColors[Math.min(i, 2)] }}
-                      title={`Cycle ${r.cycle}: ${r[item.key]}% (${r.sessions} sessions, n=${r.n})`} />
-                  ))}
-                </div>
-                <div className="flex mt-0.5">
-                  {roleReadiness.map((r, i) => (
-                    <span key={r.cycle} className="flex-1 text-center text-[9px]"
-                      style={{ color: i === roleReadiness.length - 1 ? '#7c3aed' : '#9ca3af', fontWeight: i === roleReadiness.length - 1 ? 700 : 400 }}>
-                      {r[item.key]}%
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Natural experiment */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Natural experiment · mentor presence</p>
-          <p className="text-[10px] text-gray-400 mb-3 italic">Nov 2025–Feb 2026: Davidson's daily presence was interrupted. Technology, Starlink, curriculum, and join codes were unchanged. Session counts tracked engagement against a single variable: the facilitator.</p>
-          {ratio ? (
-            <div className="text-center mb-4">
-              <p className="text-4xl font-black text-gray-900">
-                {ratio.includes('vs') ? ratio : `${ratio}×`}
-              </p>
-              <p className="text-[11px] text-gray-500 mt-1">
-                {ratio.includes('vs')
-                  ? <>avg sessions/learner/month<br/>present vs. absent period</>
-                  : <>sessions/learner/month<br/>present vs. absent period</>}
-              </p>
-              <p className="text-[10px] text-gray-400 mt-1 italic">
-                Note: associative finding — no formal significance test. Single site, single absence event. Directionally strong.
-              </p>
-            </div>
-          ) : (
-            <div className="text-center mb-4 py-2">
-              <p className="text-[11px] text-gray-400 italic">No absence period rows in dataset yet</p>
-            </div>
-          )}
-          <div className="space-y-2">
-            {[
-              { dot: '#2A7B88', strong: 'Jul–Oct 2025',      text: 'Launch. Davidson present daily.' },
-              { dot: '#E65100', strong: 'Nov 2025–Feb 2026', text: 'Davidson absent. Engagement near-zero despite live technology.' },
-              { dot: '#2E7D32', strong: 'Mar 2026+',              text: 'Davidson returns. Record session month.' },
-            ].map(e => (
-              <div key={e.strong} className="flex gap-2 items-start">
-                <div style={{ background: e.dot, width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 4 }} />
-                <p className="text-[11px] text-gray-500 leading-relaxed">
-                  <strong className="text-gray-700">{e.strong}:</strong> {e.text}
-                </p>
-              </div>
-            ))}
-          </div>
-          {mentorAbsent.length > 0 && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="bg-red-50 border border-red-100 rounded-lg p-2.5 text-center">
-                <p className="text-xs font-bold text-red-700">{avgAbsent.toFixed(1)}</p>
-                <p className="text-[10px] text-red-400">sessions/learner<br/>absent</p>
-              </div>
-              <div className="bg-green-50 border border-green-100 rounded-lg p-2.5 text-center">
-                <p className="text-xs font-bold text-green-700">{avgPresent.toFixed(1)}</p>
-                <p className="text-[10px] text-green-400">sessions/learner<br/>present</p>
-              </div>
-            </div>
-          )}
-          <p className="text-[10px] text-gray-400 mt-3 italic">
-            Technology, connectivity, and curriculum unchanged. The facilitator is the mechanism.
-          </p>
-        </div>
-
-      </div>
-      <div className="border-t border-gray-100 pt-1" />
-    </div>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════════════════════════════
    PlatformGlobalPanel
    ═══════════════════════════════════════════════════════════════════════════════ */
 
@@ -2524,353 +1914,6 @@ const PlatformGlobalPanel: React.FC<{
   );
 };
 
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   PAGE ANALYTICS PANEL
-   — Drop-off visibility: page views, engagement rate, exit destinations
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-interface PageStat {
-  page: string;
-  views: number;
-  engaged: number;
-  exits: number;
-  engagement_pct: number;
-}
-
-interface ExitDestination {
-  went_to: string;
-  count: number;
-}
-
-const PAGE_LABELS: Record<string, string> = {
-  english_skills:         'English Skills',
-  ai_learning:            'AI Learning',
-  vibe_coding:            'Vibe Coding',
-  web_development:        'Web Development',
-  full_stack_development: 'Full Stack Dev',
-  ai_image_creation:      'AI Image Creation',
-  ai_voice_creation:      'AI Voice Creation',
-  ai_video_creation:      'AI Video Creation',
-  ai_video_studio:        'AI Video Studio',
-  ai_content_creation:    'AI Content Creation',
-  ai_workflow_dev:        'AI Workflow Dev',
-  ai_for_business:        'AI for Business',
-  tech_skills_hub:        'Tech Skills Hub',
-  ci_ai_ambassadors:      'CI · AI Ambassadors',
-  ci_agriculture:         'CI · Agriculture',
-  ci_fishing:             'CI · Fishing',
-  ci_healthcare:          'CI · Healthcare',
-  ci_entrepreneurship:    'CI · Entrepreneurship',
-  ci_animal_husbandry:    'CI · Animal Husbandry',
-  home:                   'Home',
-  dashboard:              'Dashboard',
-  public_landing:         'Landing Page',
-  ai_playground:          'AI Playground',
-  math_skills:            'Math Skills',
-  science_skills:         'Science Skills',
-};
-
-const friendlyPage = (p: string) =>
-  PAGE_LABELS[p] ?? p.replace(/^other:/, '').replace(/_/g, ' ');
-
-const engagementColor = (pct: number) => {
-  if (pct >= 60) return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-  if (pct >= 35) return 'text-amber-700 bg-amber-50 border-amber-200';
-  return 'text-red-700 bg-red-50 border-red-200';
-};
-
-const PageAnalyticsPanel: React.FC = () => {
-  const [days, setDays] = useState<7 | 14 | 30 | 90>(30);
-  const [stats, setStats] = useState<PageStat[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedPage, setSelectedPage] = useState<string | null>(null);
-  const [exits, setExits] = useState<ExitDestination[]>([]);
-  const [loadingExits, setLoadingExits] = useState(false);
-  const [lastFetched, setLastFetched] = useState<Date | null>(null);
-
-  const fetchStats = useCallback(async (d: number) => {
-    setLoading(true);
-    setError(null);
-    setSelectedPage(null);
-    setExits([]);
-    try {
-      const { data, error: err } = await supabase.rpc('page_engagement_stats', { days_back: d });
-      if (err) throw err;
-      setStats((data as PageStat[]) ?? []);
-      setLastFetched(new Date());
-    } catch (e: any) {
-      // Fallback: query system_events directly if RPC doesn't exist yet
-      try {
-        const since = new Date(Date.now() - d * 86400_000).toISOString();
-        const { data: raw, error: rawErr } = await supabase
-          .from('system_events')
-          .select('function_name, event_type')
-          .in('event_type', ['page_view', 'page_engaged', 'page_exit'])
-          .gte('created_at', since);
-        if (rawErr) throw rawErr;
-
-        const map = new Map<string, PageStat>();
-        (raw ?? []).forEach(r => {
-          const page = r.function_name;
-          if (!page) return;
-          const s = map.get(page) ?? { page, views: 0, engaged: 0, exits: 0, engagement_pct: 0 };
-          if (r.event_type === 'page_view')    s.views++;
-          if (r.event_type === 'page_engaged') s.engaged++;
-          if (r.event_type === 'page_exit')    s.exits++;
-          map.set(page, s);
-        });
-        const result = [...map.values()].map(s => ({
-          ...s,
-          engagement_pct: s.views > 0 ? Math.round((s.engaged / s.views) * 100) : 0,
-        })).sort((a, b) => b.views - a.views);
-        setStats(result);
-        setLastFetched(new Date());
-      } catch (fallbackErr: any) {
-        setError(fallbackErr?.message ?? 'Failed to load page analytics.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchExits = useCallback(async (page: string) => {
-    setLoadingExits(true);
-    setExits([]);
-    const since = new Date(Date.now() - days * 86400_000).toISOString();
-    const { data, error: err } = await supabase
-      .from('system_events')
-      .select('payload')
-      .eq('event_type', 'page_exit')
-      .eq('function_name', page)
-      .gte('created_at', since);
-    if (!err && data) {
-      const counts = new Map<string, number>();
-      data.forEach(r => {
-        const dest = (r.payload as any)?.next_page;
-        if (dest) counts.set(dest, (counts.get(dest) ?? 0) + 1);
-      });
-      setExits([...counts.entries()]
-        .map(([went_to, count]) => ({ went_to, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 8));
-    }
-    setLoadingExits(false);
-  }, [days]);
-
-  // Load on mount
-  useEffect(() => { fetchStats(days); }, []);
-
-  const handleSelectPage = (page: string) => {
-    if (selectedPage === page) {
-      setSelectedPage(null);
-      setExits([]);
-    } else {
-      setSelectedPage(page);
-      fetchExits(page);
-    }
-  };
-
-  const totalViews    = stats.reduce((s, r) => s + r.views, 0);
-  const totalEngaged  = stats.reduce((s, r) => s + r.engaged, 0);
-  const overallPct    = totalViews > 0 ? Math.round((totalEngaged / totalViews) * 100) : 0;
-  const worstPages    = [...stats].sort((a, b) => a.engagement_pct - b.engagement_pct).slice(0, 3);
-
-  return (
-    <div className="space-y-5">
-
-      {/* Header + controls */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <TrendingDown size={16} className="text-purple-600" />
-          <span className="text-sm font-bold text-gray-700">Page Drop-off Analytics</span>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          {([7, 14, 30, 90] as const).map(d => (
-            <button
-              key={d}
-              onClick={() => { setDays(d); fetchStats(d); }}
-              className={classNames(
-                'px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors',
-                days === d
-                  ? 'bg-purple-600 text-white border-purple-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
-              )}
-            >{d}d</button>
-          ))}
-          <button
-            onClick={() => fetchStats(days)}
-            className="ml-1 p-1.5 text-gray-400 hover:text-purple-600 border border-gray-200 rounded-lg transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          </button>
-        </div>
-      </div>
-
-      {lastFetched && (
-        <p className="text-[11px] text-gray-400 -mt-3">
-          Last fetched {lastFetched.toLocaleTimeString()} · click a row to see where learners went next
-        </p>
-      )}
-
-      {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          <AlertCircle size={15} /> {error}
-        </div>
-      )}
-
-      {loading && (
-        <div className="flex items-center justify-center gap-2 py-16 text-gray-400">
-          <Loader2 size={20} className="animate-spin" /> Loading page analytics…
-        </div>
-      )}
-
-      {!loading && !error && stats.length === 0 && (
-        <div className="text-center py-16 text-sm text-gray-400">
-          No page tracking data yet. Deploy the tracking code and visit some pages first.
-        </div>
-      )}
-
-      {!loading && stats.length > 0 && (
-        <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
-              <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Page Views</p>
-              <p className="text-2xl font-bold text-gray-900">{totalViews.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">last {days} days</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
-              <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Overall Engagement</p>
-              <p className={classNames('text-2xl font-bold', overallPct >= 50 ? 'text-emerald-700' : overallPct >= 30 ? 'text-amber-700' : 'text-red-700')}>
-                {overallPct}%
-              </p>
-              <p className="text-xs text-gray-400">stayed 30+ seconds</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
-              <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Pages Tracked</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.length}</p>
-              <p className="text-xs text-gray-400">unique pages visited</p>
-            </div>
-          </div>
-
-          {/* Lowest engagement callout */}
-          {worstPages.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-              <p className="text-xs font-bold text-amber-700 mb-2 flex items-center gap-1.5">
-                <TrendingDown size={13} /> Highest drop-off pages (lowest engagement)
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {worstPages.map(p => (
-                  <button
-                    key={p.page}
-                    onClick={() => handleSelectPage(p.page)}
-                    className="text-xs px-2.5 py-1 bg-white border border-amber-200 rounded-lg text-amber-800 font-medium hover:border-amber-400 transition-colors"
-                  >
-                    {friendlyPage(p.page)} — {p.engagement_pct}%
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Main table */}
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Page</th>
-                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Views</th>
-                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Engaged</th>
-                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Exits</th>
-                  <th className="text-right px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">Engagement</th>
-                  <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase w-32">Rate</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {stats.map(row => (
-                  <React.Fragment key={row.page}>
-                    <tr
-                      onClick={() => handleSelectPage(row.page)}
-                      className={classNames(
-                        'cursor-pointer transition-colors',
-                        selectedPage === row.page
-                          ? 'bg-purple-50'
-                          : 'hover:bg-gray-50'
-                      )}
-                    >
-                      <td className="px-4 py-2.5 font-medium text-gray-900">
-                        {friendlyPage(row.page)}
-                        {selectedPage === row.page && (
-                          <span className="ml-2 text-[10px] text-purple-500 font-normal">▲ exit destinations below</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5 text-right text-gray-700 font-mono text-xs">{row.views}</td>
-                      <td className="px-4 py-2.5 text-right text-gray-700 font-mono text-xs">{row.engaged}</td>
-                      <td className="px-4 py-2.5 text-right text-gray-700 font-mono text-xs">{row.exits}</td>
-                      <td className="px-4 py-2.5 text-right">
-                        <span className={classNames(
-                          'text-xs px-2 py-0.5 rounded-full border font-semibold',
-                          engagementColor(row.engagement_pct)
-                        )}>
-                          {row.engagement_pct}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div
-                            className={classNames(
-                              'h-1.5 rounded-full transition-all',
-                              row.engagement_pct >= 60 ? 'bg-emerald-500' :
-                              row.engagement_pct >= 35 ? 'bg-amber-500' : 'bg-red-400'
-                            )}
-                            style={{ width: `${Math.min(row.engagement_pct, 100)}%` }}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* Exit destinations inline */}
-                    {selectedPage === row.page && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-3 bg-purple-50 border-t border-purple-100">
-                          {loadingExits ? (
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <Loader2 size={12} className="animate-spin" /> Loading exit destinations…
-                            </div>
-                          ) : exits.length === 0 ? (
-                            <p className="text-xs text-gray-400">No exit data for this page yet.</p>
-                          ) : (
-                            <div>
-                              <p className="text-[10px] font-bold text-purple-600 uppercase mb-2">
-                                Where learners went after {friendlyPage(row.page)}
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {exits.map(e => (
-                                  <div key={e.went_to} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-purple-200 rounded-lg text-xs">
-                                    <span className="font-medium text-gray-700">{friendlyPage(e.went_to)}</span>
-                                    <span className="text-purple-600 font-bold">{e.count}×</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
 /* ═══════════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════════════════════ */
@@ -2878,7 +1921,6 @@ const PageAnalyticsPanel: React.FC = () => {
 const AdminStudentDashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userOrgId, setUserOrgId] = useState<string | null>(null);
@@ -2903,7 +1945,7 @@ const AdminStudentDashboard: React.FC = () => {
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
   const isLeader = userRole === 'leader' && !isPlatformAdmin;
 
-  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'page-analytics'>(
+  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'model-overview' | 'cost-overview' | 'cost-learner'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
   );
 
@@ -3017,10 +2059,7 @@ const AdminStudentDashboard: React.FC = () => {
     })();
   }, [isLeader, user?.id]);
 
-  // Compute admin org join codes inline
-  const adminOrgJoinCodes: string[] = adminSelectedOrgId && adminSelectedOrgId !== '__all__'
-    ? getJoinCodesForOrg(allOrgs, adminSelectedOrgId)
-    : [];
+  // (adminOrgJoinCodes removed - unused)
 
   // Effective org for learner fetch — either Student Activity selection or Per-Learner Cost selection
   const effectiveOrgId = adminSelectedOrgId || costOrgId;
@@ -3042,7 +2081,7 @@ const AdminStudentDashboard: React.FC = () => {
       try {
         let query = supabase
           .from('profiles')
-          .select('id, name, email, grade_level, continent, country, role, organization_id, join_code_used')
+          .select('id, name, email, grade_level, continent, country, organization_id, join_code_used')
           .order('name', { ascending: true });
 
         if (isLeader) {
@@ -3071,7 +2110,7 @@ const AdminStudentDashboard: React.FC = () => {
         setLoadingLearners(false);
       }
     })();
-  }, [authChecked, isLeader, isPlatformAdmin, leaderJoinCodes, selectedOrgId, userOrgId, effectiveOrgId, effectiveOrgJoinCodes.join(',')]);
+  }, [authChecked, isLeader, isPlatformAdmin, leaderJoinCodes.join(','), selectedOrgId, userOrgId, effectiveOrgId, effectiveOrgJoinCodes.join(',')]);
 
   const fetchStudentSummary = useCallback(async () => {
     if (!learners.length) { setStudentSessionRows([]); return; }
@@ -3081,11 +2120,7 @@ const AdminStudentDashboard: React.FC = () => {
       const learnerIds = learners.map((l) => l.id);
       const { data, error } = await supabase
         .from('dashboard')
-        .select(`
-          user_id, category_activity, progress, activity, created_at, updated_at,
-          science_skills_evaluation, math_skills_evaluation, english_skills_evaluation,
-          certification_evaluation_score
-        `)
+        .select('user_id, category_activity, progress, activity, created_at, updated_at')
         .in('user_id', learnerIds)
         .order('updated_at', { ascending: false });
       if (error) throw error;
@@ -3102,40 +2137,6 @@ const AdminStudentDashboard: React.FC = () => {
     if (activeTab !== 'student') return;
     fetchStudentSummary();
   }, [activeTab, fetchStudentSummary]);
-
-  useEffect(() => {
-    if (!authChecked) return;
-
-    const channel = supabase
-      .channel('admin-profiles-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, (payload) => {
-        const p = payload.new as Record<string, unknown> | null;
-        if (!p) return;
-        const name = String(p.name ?? p.full_name ?? p.email ?? 'A user');
-        const country = String(p.country ?? 'unknown location');
-        pushToast({
-          type: 'success',
-          title: `${name} registered`,
-          subtitle: `New signup from ${country}`,
-        });
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
-        const p = payload.new as Record<string, unknown> | null;
-        if (!p) return;
-        const name = String(p.name ?? p.full_name ?? p.email ?? 'A user');
-        const country = String(p.country ?? 'unknown location');
-        pushToast({
-          type: 'info',
-          title: `${name} logged in`,
-          subtitle: `Active from ${country}`,
-        });
-      })
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [authChecked, pushToast]);
 
   const fetchCostData = useCallback(async (days: number) => {
     setLoadingCost(true);
@@ -3391,22 +2392,6 @@ const AdminStudentDashboard: React.FC = () => {
           <div className="flex items-center gap-3 mb-1">
             <Users size={22} className="text-purple-600" />
             <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            {authChecked && (isPlatformAdmin || isLeader) && (
-              <div className="ml-auto">
-                <NewsManager
-                  isPlatformAdmin={isPlatformAdmin}
-                  userOrgId={userOrgId}
-                  userOrgName={
-                    isPlatformAdmin
-                      ? null
-                      : (allOrgs.find(o => o.id === userOrgId)?.name
-                          ?? leaderOrgs.find(o => o.id === userOrgId)?.name
-                          ?? null)
-                  }
-                  allOrgs={allOrgs}
-                />
-              </div>
-            )}
           </div>
           <p className="text-sm text-gray-500 ml-9">Student activity, certification scores, and API cost analytics.</p>
         </div>
@@ -3418,7 +2403,6 @@ const AdminStudentDashboard: React.FC = () => {
             { id: 'model-overview' as const, label: 'Model Overview', icon: <Server size={14} />, show: isPlatformAdmin },
             { id: 'cost-overview' as const, label: 'Cost Overview', icon: <DollarSign size={14} />, show: isPlatformAdmin },
             { id: 'cost-learner' as const, label: 'Per-Learner Cost', icon: <Activity size={14} />, show: isPlatformAdmin },
-            { id: 'page-analytics' as const, label: 'Page Dropoffs', icon: <TrendingDown size={14} />, show: isPlatformAdmin },
           ]).filter(t => t.show).map(tab => (
             <button
               key={tab.id}
@@ -3456,7 +2440,6 @@ const AdminStudentDashboard: React.FC = () => {
                   error={studentSummaryError || learnersError}
                   onSelectLearner={(id) => setSelectedId(id)} selectedId={selectedId}
                   isPlatformAdmin={isPlatformAdmin} canViewStudentDashboard={true}
-                  onRefreshSummary={fetchStudentSummary}
                 />
                 {renderLearnerSelector()}
                 {renderLearnerDetail()}
@@ -3498,7 +2481,6 @@ const AdminStudentDashboard: React.FC = () => {
                   error={studentSummaryError || learnersError}
                   onSelectLearner={(id) => setSelectedId(id)} selectedId={selectedId}
                   isPlatformAdmin={false} canViewStudentDashboard={true}
-                  onRefreshSummary={fetchStudentSummary}
                 />
                 {renderLearnerSelector()}
                 {renderLearnerDetail()}
@@ -3508,15 +2490,12 @@ const AdminStudentDashboard: React.FC = () => {
         )}
 
         {activeTab === 'platform-global' && (
-          <>
-            <LongitudinalGlobalPanel />
-            <PlatformGlobalPanel
-              onSelectOrg={(orgId, orgName) => {
-                setAdminSelectedOrgId(orgId);
-                setActiveTab('student');
-              }}
-            />
-          </>
+          <PlatformGlobalPanel
+            onSelectOrg={(orgId) => {
+              setAdminSelectedOrgId(orgId);
+              setActiveTab('student');
+            }}
+          />
         )}
 
         {activeTab === 'model-overview' && (
@@ -3549,12 +2528,7 @@ const AdminStudentDashboard: React.FC = () => {
           />
         )}
 
-        {activeTab === 'page-analytics' && (
-          <PageAnalyticsPanel />
-        )}
-
       </div>
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </AppLayout>
   );
 };
