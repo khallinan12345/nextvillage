@@ -17,7 +17,7 @@ import { chatText } from '../lib/chatClient';
 import {
   PlusCircle, Bot, Play, Save, Share2, Lock,
   Trash2, ChevronLeft, Send, Loader2, Settings2,
-  Copy, Check, Globe, AlertCircle
+  Copy, Check, Globe, AlertCircle, Home
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────
@@ -346,13 +346,22 @@ export default function CoworkPage() {
                 Build, run, and share your own AI agents
               </p>
             </div>
-            <button
-              onClick={openNewBuilder}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              <PlusCircle className="w-4 h-4" />
-              New Agent
-            </button>
+            <div className="flex items-center gap-2">
+              <a
+                href="/dashboard"
+                className="flex items-center gap-2 border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </a>
+              <button
+                onClick={openNewBuilder}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                <PlusCircle className="w-4 h-4" />
+                New Agent
+              </button>
+            </div>
           </div>
         </div>
 
