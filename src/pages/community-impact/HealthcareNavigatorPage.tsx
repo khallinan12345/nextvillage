@@ -82,7 +82,7 @@ interface ChallengeEvalResult {
 }
 
 interface Patient {
-  id: string;
+  patient_id: string;
   youth_user_id: string;
   patient_name: string;
   village: string;
@@ -1195,7 +1195,7 @@ const HealthcareNavigatorPage: React.FC = () => {
         .from('health_assessments')
         .insert({
           youth_user_id: user.id,
-          patient_id: (selectedPatient as any).patient_id ?? selectedPatient.id,
+          patient_id: selectedPatient.patient_id,
           assessment_data: assessment,
           probe_notes: probeNotes,
           triage_level: triageResult.level,
@@ -1212,7 +1212,7 @@ const HealthcareNavigatorPage: React.FC = () => {
       if (!error && data) {
         setAssessmentSaved(true);
         await loadPatients();
-        await loadAssessments((selectedPatient as any).patient_id ?? selectedPatient.id);
+        await loadAssessments(selectedPatient.patient_id);
       }
     } finally { setSavingAssessment(false); }
   };
@@ -1381,7 +1381,7 @@ const HealthcareNavigatorPage: React.FC = () => {
 
   const markResolved = async (assessId: string) => {
     await supabase.from('health_assessments').update({ resolved: true }).eq('id', assessId);
-    if (selectedPatient) loadAssessments((selectedPatient as any).patient_id ?? selectedPatient.id);
+    if (selectedPatient) loadAssessments(selectedPatient.patient_id);
     await loadPatients();
   };
 
@@ -1693,8 +1693,8 @@ const HealthcareNavigatorPage: React.FC = () => {
               {patients.map(patient => {
                 const pg = PATIENT_GROUPS[patient.patient_group];
                 return (
-                  <button key={patient.id}
-                    onClick={() => { setSelectedPatient(patient); loadAssessments(patient.id); setMode('patient-detail'); }}
+                  <button key={patient.patient_id}
+                    onClick={() => { setSelectedPatient(patient); loadAssessments(patient.patient_id); setMode('patient-detail'); }}
                     className="w-full bg-white/90 backdrop-blur-sm rounded-2xl p-4 text-left hover:bg-white active:bg-white transition-colors border border-transparent hover:border-blue-300 active:border-blue-300">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-3 min-w-0">
@@ -1872,7 +1872,7 @@ const HealthcareNavigatorPage: React.FC = () => {
               <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <ClipboardList size={16} className="text-blue-600"/> Assessment History
               </h3>
-              <button onClick={() => loadAssessments(patient.id)} className="text-gray-400 hover:text-gray-700 p-1"><RefreshCw size={14}/></button>
+              <button onClick={() => loadAssessments(patient.patient_id)} className="text-gray-400 hover:text-gray-700 p-1"><RefreshCw size={14}/></button>
             </div>
             {loadingAssessments ? (
               <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin text-blue-600"/></div>
