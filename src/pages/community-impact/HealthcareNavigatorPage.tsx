@@ -599,6 +599,49 @@ YOUR ROLE — GUIDED FOLLOW-UP COACH:
 Start with your FIRST question, which should determine the most critical thing: has the patient's primary presenting concern (${baseAssessment.assessment_data.chiefComplaint || 'the chief complaint'}) improved, worsened, or stayed the same?`;
 }
 
+// ─── Build FOLLOW-UP RE-TRIAGE prompt (updated classification after a guided follow-up) ──
+
+function buildFollowupTriagePrompt(
+  patient: Patient,
+  baseAssessment: Assessment,
+  followupTranscript: string,
+): string {
+  const pg = PATIENT_GROUPS[patient.patient_group];
+  const tc = TRIAGE_CONFIG[baseAssessment.triage_level];
+
+  return `You are a clinical decision support system for a trained Community Health Navigator in Oloibiri, Bayelsa State, Nigeria. The navigator has just completed a guided follow-up conversation on an existing case and needs an UPDATED triage classification based on what has changed since the original assessment.
+
+${CLINICAL_CONTEXT}
+
+${KIT_CONTEXT}
+
+PATIENT: ${patient.patient_name}, ${pg.label}, ${patient.village}
+
+ORIGINAL ASSESSMENT (for context — do not re-triage this, only the current state below):
+Chief complaint: ${baseAssessment.assessment_data.chiefComplaint || 'not recorded'}
+Original triage: ${tc.label}
+Original AI summary: ${baseAssessment.ai_triage_summary?.slice(0, 800) || 'not available'}
+
+FOLLOW-UP CONVERSATION JUST CONDUCTED (this is the new information):
+${followupTranscript}
+
+YOUR TASK — provide an UPDATED structured triage response based on the follow-up:
+1. **UPDATED TRIAGE CLASSIFICATION**: State clearly — RED / YELLOW / GREEN — and whether this is an improvement, worsening, or unchanged from the original triage
+2. **WHAT CHANGED**: List the 2–4 most clinically significant changes reported in the follow-up
+3. **IMMEDIATE ACTIONS**: What the navigator must do RIGHT NOW given this update
+4. **REFERRAL GUIDANCE** (if RED or YELLOW): Where to go, what to say, what pre-referral actions to take
+5. **HOME CARE / NEXT STEPS**: What the patient/caregiver should do until the next check-in, and clear warning signs to watch for
+6. **NEXT FOLLOW-UP**: When to check in again
+
+IMPORTANT CONSTRAINTS:
+- You are supporting a trained navigator, NOT replacing clinical judgement
+- If any new danger sign has appeared, classify RED regardless of the original triage level
+- Always err on the side of caution in this resource-limited high-risk context
+- End with one sentence the navigator can say directly to the patient/caregiver
+
+⚠️ DISCLAIMER: This is clinical decision SUPPORT only. The navigator must follow their training and supervision protocols. This does not replace a doctor's assessment.`;
+}
+
 // ─── Build NEW ASSESSMENT RAG context prompt ───────────────────────────────────
 
 function buildNewAssessmentContextBlock(priorAssessments: Assessment[]): string {
@@ -880,6 +923,8 @@ const HealthcareNavigatorPage: React.FC = () => {
   const [priorFollowupSending, setPriorFollowupSending] = useState(false);
   const [priorFollowupIndex, setPriorFollowupIndex] = useState(0);
   const [priorFollowupComplete, setPriorFollowupComplete] = useState(false);
+  const [followupTriaging, setFollowupTriaging] = useState(false);
+  const [followupTriageResult, setFollowupTriageResult] = useState<{ level: TriageLevel; summary: string } | null>(null);
 
   // ── Community AI Challenge state ─────────────────────────────────────────
   const [availableChallenge, setAvailableChallenge] = useState<ActiveChallenge | null>(null);
@@ -1313,6 +1358,8 @@ const HealthcareNavigatorPage: React.FC = () => {
     setPriorFollowupInput('');
     setPriorFollowupSending(false);
     setPriorFollowupComplete(false);
+    setFollowupTriageResult(null);
+    setFollowupTriaging(false);
     // How many follow-ups have already happened on this case?
     const followupCount = (assess.follow_up_notes || '').split('---FOLLOWUP---').filter(Boolean).length;
     setPriorFollowupIndex(followupCount);
@@ -1365,6 +1412,39 @@ const HealthcareNavigatorPage: React.FC = () => {
       setPriorFollowupMessages(p => [...p, { id: crypto.randomUUID(), role: 'assistant', content: 'Technical issue — please try again.', timestamp: new Date() }]);
     } finally { setPriorFollowupSending(false); }
   }, [priorFollowupInput, priorFollowupSending, priorFollowupMessages, selectedPatient, selectedAssessment, patientPriorHistory, priorFollowupIndex]);
+
+  // ─── Perform updated triage from the guided follow-up conversation ────────
+  const runFollowupTriage = useCallback(async () => {
+    if (!selectedPatient || !selectedAssessment || priorFollowupMessages.length === 0 || followupTriaging) return;
+    setFollowupTriaging(true);
+    try {
+      const transcript = priorFollowupMessages
+        .map(m => `${m.role === 'assistant' ? 'AI Follow-up Guide' : 'Navigator'}: ${m.content}`)
+        .join('\n');
+      const systemPrompt = buildFollowupTriagePrompt(selectedPatient, selectedAssessment, transcript);
+      const reply = await chatText({
+        page: 'HealthcareNavigatorPage',
+        messages: [{ role: 'user', content: 'Based on this follow-up conversation, provide an updated triage classification.' }],
+        system: systemPrompt,
+        max_tokens: 700,
+      });
+      const level = detectTriage(reply);
+      setFollowupTriageResult({ level, summary: reply });
+
+      const stamp = `\n\n--- FOLLOW-UP RE-TRIAGE (${new Date().toLocaleString('en-NG')}) ---\n${reply}`;
+      const updatedSummary = (selectedAssessment.ai_triage_summary || '') + stamp;
+
+      await supabase.from('health_assessments')
+        .update({ triage_level: level, ai_triage_summary: updatedSummary })
+        .eq('id', selectedAssessment.id);
+
+      setSelectedAssessment(prev => prev ? { ...prev, triage_level: level, ai_triage_summary: updatedSummary } : prev);
+      await loadAssessments(selectedPatient.patient_id);
+      await loadPatients();
+    } catch {
+      setFollowupTriageResult({ level: 'yellow', summary: 'Unable to complete updated triage. Please use your clinical training and contact your supervising health worker.' });
+    } finally { setFollowupTriaging(false); }
+  }, [selectedPatient, selectedAssessment, priorFollowupMessages, followupTriaging, loadAssessments, loadPatients]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const formatDate = (iso: string) =>
@@ -2442,6 +2522,27 @@ const HealthcareNavigatorPage: React.FC = () => {
             </div>
           )}
 
+          {userTurns > 0 && (
+            <div className="mb-4">
+              <button onClick={runFollowupTriage} disabled={followupTriaging}
+                className={classNames('w-full py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all',
+                  followupTriaging ? 'bg-gray-100 text-gray-400' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90')}>
+                {followupTriaging ? <><Loader2 size={16} className="animate-spin"/> Re-evaluating…</> : <><Stethoscope size={16}/> Perform Updated Triage</>}
+              </button>
+              {followupTriageResult && (
+                <div className={classNames('mt-3 rounded-xl border px-4 py-3', TRIAGE_CONFIG[followupTriageResult.level].bg, TRIAGE_CONFIG[followupTriageResult.level].border)}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Updated Triage</span>
+                    {triageBadge(followupTriageResult.level)}
+                  </div>
+                  <div className="text-sm text-gray-800 max-h-56 overflow-y-auto">
+                    <MarkdownText text={followupTriageResult.summary}/>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl shadow-lg mb-4 flex flex-col" style={{ height: 'min(460px, calc(100dvh - 300px))' }}>
             <div className="flex items-center justify-between px-5 py-3 border-b bg-teal-50 rounded-t-2xl text-xs text-gray-500">
               <span className="font-semibold text-teal-800 flex items-center gap-1.5">🔄 AI Follow-up Guide</span>
@@ -2572,7 +2673,7 @@ const HealthcareNavigatorPage: React.FC = () => {
               {a.ai_triage_summary && (
                 <div>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">AI Triage Summary</p>
-                  <div className={classNames('text-sm text-gray-800 rounded-lg px-3 py-2 max-h-48 overflow-y-auto border', tc.bg, tc.border)}>
+                  <div className={classNames('text-sm text-gray-800 rounded-lg px-3 py-2 max-h-48 overflow-y-auto border whitespace-pre-wrap', tc.bg, tc.border)}>
                     <MarkdownText text={a.ai_triage_summary}/>
                   </div>
                 </div>
@@ -2583,12 +2684,27 @@ const HealthcareNavigatorPage: React.FC = () => {
                   <p className="text-sm text-gray-800 bg-blue-50 rounded-lg px-3 py-2">{a.navigator_actions}</p>
                 </div>
               )}
-              {a.follow_up_needed && (
+              {(a.follow_up_needed || a.follow_up_notes) && (
                 <div className="flex items-start gap-2 text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
                   <Calendar size={14} className="mt-0.5 flex-shrink-0"/>
-                  <div>
-                    <p className="text-sm font-semibold">Follow-up{a.follow_up_date ? `: ${formatDate(a.follow_up_date)}` : ' needed'}</p>
-                    {a.follow_up_notes && <p className="text-xs mt-0.5">{a.follow_up_notes}</p>}
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">Follow-up{a.follow_up_date ? `: ${formatDate(a.follow_up_date)}` : a.follow_up_needed ? ' needed' : ''}</p>
+                    {a.follow_up_notes && <p className="text-xs mt-0.5 whitespace-pre-wrap leading-relaxed">{a.follow_up_notes}</p>}
+                  </div>
+                </div>
+              )}
+              {/* Saved conversation — from either "Evaluate My Case History" or "Follow-up Prior Assessment" chats */}
+              {a.conversation_history && a.conversation_history.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Saved Conversation</p>
+                  <div className="space-y-2 max-h-72 overflow-y-auto bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    {a.conversation_history.map(msg => (
+                      <div key={msg.id} className={classNames('rounded-lg px-3 py-2 text-xs leading-relaxed',
+                        msg.role === 'user' ? 'bg-teal-600 text-white ml-6' : 'bg-white text-gray-800 border border-gray-200 mr-6')}>
+                        <p className="text-[10px] font-bold mb-0.5 opacity-60">{msg.role === 'user' ? 'Navigator' : 'AI'}</p>
+                        <MarkdownText text={msg.content}/>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
