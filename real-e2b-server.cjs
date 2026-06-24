@@ -214,7 +214,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Chat endpoint — Real OpenAI or Developer Mock Mode
+const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
+
+// Chat endpoint — Real Groq or Developer Mock Mode
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages, system, max_tokens = 800, temperature = 0.7, page, playgroundModel, userId, city } = req.body;
@@ -223,14 +225,14 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'messages array is required' });
     }
 
-    const openaiKey = process.env.OPENAI_API_KEY;
+    const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY || process.env.OPENAI_API_KEY;
 
-    // ── REAL OPENAI MODE ───────────────────────────────────────────────────────
-    if (openaiKey) {
-      console.log('[/api/chat] ✅ Using REAL OpenAI API (key found)');
+    // ── REAL GROQ MODE ───────────────────────────────────────────────────────
+    if (groqKey) {
+      console.log('[/api/chat] ✅ Using REAL Groq API (key found)');
       
       try {
-        // Strongly sanitize incoming messages: OpenAI accepts only {role, content}
+        // Strongly sanitize incoming messages: OpenAI-compatible providers accept only {role, content}
         const sanitizedClientMessages = messages
           .map(msg => ({
             role: msg && msg.role,
@@ -245,15 +247,15 @@ app.post('/api/chat', async (req, res) => {
         }
         oaiMessages.push(...sanitizedClientMessages);
 
-        // Call OpenAI completions endpoint
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Call Groq chat completions endpoint
+        const response = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${openaiKey}`,
+            'Authorization': `Bearer ${groqKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',  // or 'gpt-3.5-turbo' if you prefer cheaper model
+            model: 'llama-3.1-8b-instant',
             messages: oaiMessages,
             max_tokens,
             temperature,
@@ -263,9 +265,9 @@ app.post('/api/chat', async (req, res) => {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error('[/api/chat] OpenAI API error:', data.error);
+          console.error('[/api/chat] Groq API error:', data.error);
           return res.status(response.status).json({
-            error: data.error?.message || 'OpenAI API error',
+            error: data.error?.message || 'Groq API error',
           });
         }
 
@@ -273,9 +275,9 @@ app.post('/api/chat', async (req, res) => {
         return res.json(data);
 
       } catch (oaiError) {
-        console.error('[/api/chat] OpenAI call failed:', oaiError);
+        console.error('[/api/chat] Groq call failed:', oaiError);
         return res.status(500).json({
-          error: `OpenAI request failed: ${oaiError.message}`,
+          error: `Groq request failed: ${oaiError.message}`,
         });
       }
     }
