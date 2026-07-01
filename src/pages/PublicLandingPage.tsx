@@ -513,11 +513,28 @@ const PublicLandingPage: React.FC = () => {
           50%      { transform: translateX(-50%) translateY(8px); }
         }
 
+        .vision-g {
+          display: grid;
+          grid-template-columns: 1.05fr 0.95fr;
+          gap: 3rem;
+          align-items: center;
+        }
+        .vision-video {
+          width: 100%; max-width: 340px; margin: 0 auto;
+          aspect-ratio: 9 / 16;
+          border-radius: 20px; overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.14);
+          box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+          background: #000;
+        }
+        .vision-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
         @media (max-width: 640px) {
           .hide-sm { display: none !important; }
           .show-sm { display: flex !important; }
           .stat-g  { grid-template-columns: 1fr 1fr !important; }
           .score-g { grid-template-columns: 1fr !important; }
+          .vision-g { grid-template-columns: 1fr !important; gap: 2.25rem !important; }
         }
       `}</style>
 
@@ -550,6 +567,7 @@ const PublicLandingPage: React.FC = () => {
               <a href="#programmes"  className="nav-lnk">Programmes</a>
               <a href="#challenges"  className="nav-lnk">Challenges</a>
               <a href="#story"       className="nav-lnk">Our Story</a>
+              <a href="#vision"      className="nav-lnk">Their Vision</a>
               <a href="#voices"      className="nav-lnk">Voices</a>
               <a href="#research"    className="nav-lnk">Research</a>
               <a href="#community"   className="nav-lnk">Join Us</a>
@@ -596,6 +614,7 @@ const PublicLandingPage: React.FC = () => {
                 { href: "#programmes", label: "Programmes" },
                 { href: "#challenges", label: "Challenges" },
                 { href: "#story",      label: "Our Story" },
+                { href: "#vision",     label: "Their Vision" },
                 { href: "#voices",     label: "Voices" },
                 { href: "#research",   label: "Research" },
                 { href: "#community",  label: "Join Us" },
@@ -2082,6 +2101,47 @@ const PublicLandingPage: React.FC = () => {
               </div>
             </div>
 
+          </div>
+        </section>
+
+        {/* ── Their Vision for 2030 ───────────────────────────────────────── */}
+        <section id="vision" style={{ background: "linear-gradient(180deg,#0a120a 0%,#0c160a 100%)", padding: "5rem 2rem" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div className="vision-g">
+
+              <div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#5eead4", marginBottom: "0.6rem" }}>
+                  What They See Ahead
+                </div>
+                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.8rem,4vw,2.8rem)", fontWeight: 700, color: "#fff", margin: "0 0 1.1rem", lineHeight: 1.15 }}>
+                  Their vision for 2030 — in their own words
+                </h2>
+                <p style={{ color: "rgba(255,255,255,0.62)", fontSize: "1.02rem", lineHeight: 1.85, margin: "0 0 1.5rem" }}>
+                  Every child in this video walked into a vacant room with no prior digital access.
+                  Here, they describe — in their own voices, holding their own drawings — what they
+                  imagine for their community five years from now: solar farms, clean water systems,
+                  businesses, and a future they intend to help build themselves.
+                </p>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", lineHeight: 1.7, margin: 0, fontStyle: "italic" }}>
+                  This is the counter-narrative to conventional aid: not a future done for them,
+                  but one they are already designing.
+                </p>
+              </div>
+
+              <div className="vision-video">
+                <video
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/youth_vision_poster.jpg"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                >
+                  <source src="/OurYouthsFuture.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+            </div>
           </div>
         </section>
 
