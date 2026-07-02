@@ -87,7 +87,7 @@ const CERT_PAGES = new Set([
 const ANTHROPIC_HAIKU  = 'claude-haiku-4-5-20251001';
 const ANTHROPIC_SONNET = 'claude-sonnet-4-6';
 const GROQ_MODEL       = 'llama-3.3-70b-versatile';
-const CEREBRAS_MODEL   = 'llama-3.1-8b';             // Cerebras — 2000+ t/s, free tier, fastest in chain
+const CEREBRAS_MODEL   = 'gpt-oss-120b';             // Cerebras — llama3.1-8b was deprecated/removed (confirmed via /v1/models, Jul 2026); chose 120B for quality over gemma-4-31b's speed/quota headroom
 const DEEPSEEK_MODEL   = 'deepseek-chat';          // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
 
 // ── Fallback provider models ───────────────────────────────────────────────────
@@ -108,7 +108,7 @@ const PRICING = {
   'meta-llama/Llama-3.3-70B-Instruct': { input: 0.00, output: 0.00, cacheWrite: 0.00, cacheRead: 0.00 },
   'meta-llama/llama-3.3-70b-instruct:free': { input: 0.00, output: 0.00, cacheWrite: 0.00, cacheRead: 0.00 },
   'mistral-small-latest':        { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
-  'llama-3.1-8b':                { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  }, // Cerebras free tier
+  'gpt-oss-120b':                { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  }, // Cerebras free tier
   'deepseek-chat':               { input: 0.28,  output: 0.42,  cacheWrite: 0.00,  cacheRead: 0.028 }, // V3.2 — ~71% cheaper than Haiku
 };
 
@@ -122,6 +122,25 @@ function estimateCost(model, inputTokens, outputTokens, cacheHitTokens = 0, cach
     (cacheHitTokens   / MTok) * p.cacheRead   +
     (outputTokens     / MTok) * p.output
   );
+}
+
+// ── Request size estimation (Groq TPM guard) ───────────────────────────────────
+// Groq's on-demand tier caps llama-3.3-70b-versatile at 12,000 tokens/minute
+// PER REQUEST — this is a hard ceiling, not a transient rate condition, so
+// retrying an oversized request against Groq is guaranteed to fail every time.
+// Pre-estimate size and skip Groq outright for payloads that would exceed it,
+// rather than eating a doomed round-trip on every call.
+
+const GROQ_TPM_LIMIT      = 12000;
+const TOKEN_SAFETY_MARGIN = 1500; // headroom for estimation error + max_tokens completion
+
+function estimateRequestTokens(messages, system, max_tokens) {
+  const text =
+    (system || '') +
+    messages.map(m => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content))).join('');
+  // Rough heuristic: ~4 characters per token for English text.
+  // This is an estimate, not exact — the safety margin absorbs the error.
+  return Math.ceil(text.length / 4) + (max_tokens || 0);
 }
 
 // ── Cooldown tracker ──────────────────────────────────────────────────────────
@@ -617,7 +636,7 @@ async function callDeepSeek(model, messages, system, max_tokens, temperature) {
 }
 
 // ── Cerebras call (OpenAI-compatible, wafer-scale inference) ─────────────────
-// llama3.1-8b runs at 2000+ tokens/sec — fastest provider in the chain.
+// gpt-oss-120b — OpenAI open-weight model on Cerebras, free tier, no credit card required.
 // Free tier: 30 RPM, 1M tokens/day, no credit card required.
 
 async function callCerebras(model, messages, system, max_tokens, temperature) {
@@ -664,12 +683,17 @@ async function callCerebras(model, messages, system, max_tokens, temperature) {
 
 // ── Free-tier fallback chain ───────────────────────────────────────────────────
 
-async function callWithFallbackChain(messages, system, max_tokens, temperature) {
+async function callWithFallbackChain(messages, system, max_tokens, temperature, page = '') {
+  const estTokens = estimateRequestTokens(messages, system, max_tokens);
+  console.log(`[chat.js] fallback chain start page="${page}" estTokens=${estTokens} messageCount=${messages.length}`);
+
   const chain = [
     {
       name:     'groq',
       model:    GROQ_MODEL,
       keyEnv:   'GROQ_API_KEY',
+      skipIf:   () => estimateRequestTokens(messages, system, max_tokens) > (GROQ_TPM_LIMIT - TOKEN_SAFETY_MARGIN),
+      skipReason: 'estimated request size exceeds Groq TPM limit (12000)',
       fn:       () => callGroq(GROQ_MODEL, messages, system, max_tokens, temperature),
     },
     {
@@ -722,6 +746,12 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature) 
     if (isOnCooldown(provider.name)) {
       console.log(`[chat.js] ⏭️  Skipping ${provider.name} (on cooldown)`);
       errors.push({ provider: provider.name, error: 'on cooldown' });
+      continue;
+    }
+
+    if (provider.skipIf && provider.skipIf()) {
+      console.log(`[chat.js] ⏭️  Skipping ${provider.name} (${provider.skipReason})`);
+      errors.push({ provider: provider.name, error: provider.skipReason });
       continue;
     }
 
@@ -946,7 +976,7 @@ export default async function handler(req, res) {
     // FREE-TIER-ROUTED → use full fallback chain
     if (provider === 'groq') {
       const { result, actualProvider, actualModel, wasFallback } =
-        await callWithFallbackChain(messages, system, max_tokens, temperature);
+        await callWithFallbackChain(messages, system, max_tokens, temperature, page);
 
       logCost({
         page,
