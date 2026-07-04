@@ -632,7 +632,7 @@ Return JSON with exactly these fields:
 }`;
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1024,
     system: systemPrompt,
     messages: [{ role: 'user', content: userPrompt }],
@@ -678,7 +678,7 @@ async function runTiebreak(
   ].filter(Boolean).join('\n')).join('\n\n---\n\n');
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 512,
     system: `You are a fair judge for a youth AI learning competition in ${location}. ${learners.length} learners tied at the highest tier. Choose ONE weekly champion based on: depth of community impact, quality of AI use, specificity, initiative, community ripple. Respond ONLY with valid JSON: {"winner_user_id":"<id>","reasoning":"<2-3 encouraging sentences>"}`,
     messages: [{ role: 'user', content: `Choose the weekly champion.\n\n${learnersText}\n\nUser IDs:\n${learners.map(l => `${l.display_name}: ${l.user_id}`).join('\n')}` }],

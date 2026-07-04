@@ -234,7 +234,14 @@ const TIER_ROTATION: Array<'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier
 
 Deno.serve(async (req) => {
   // Allow manual POST for testing, cron sends GET
-  let body: { org_id?: string; dry_run?: boolean; force_slug?: string; force?: boolean } = {};
+  let body: {
+    org_id?: string;
+    dry_run?: boolean;
+    force_slug?: string;
+    force?: boolean;
+    admin_topic?: string;
+    force_tier?: 'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier';
+  } = {};
   if (req.method === 'POST') {
     try { body = await req.json(); } catch { /* empty body ok */ }
   }
@@ -255,7 +262,11 @@ Deno.serve(async (req) => {
 
   for (const org of targetOrgs) {
     try {
-      results[org.id] = await generateForOrg(supabase, anthropic, org, body.dry_run ?? false, body.force_slug, body.force ?? false);
+      results[org.id] = await generateForOrg(
+        supabase, anthropic, org,
+        body.dry_run ?? false, body.force_slug, body.force ?? false,
+        body.admin_topic, body.force_tier,
+      );
     } catch (err) {
       const msg = String(err);
       results[org.id] = { error: msg };
@@ -294,6 +305,8 @@ async function generateForOrg(
   dryRun: boolean,
   forceSlug?: string,
   force = false,
+  adminTopic?: string,
+  forceTier?: 'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier',
 ): Promise<unknown> {
 
   // Compute the next Monday–Sunday+7 (14-day) window
@@ -370,13 +383,23 @@ async function generateForOrg(
     (nextMonday.getTime() - new Date('2025-01-06').getTime()) /
     (14 * 24 * 60 * 60 * 1000),
   );
-  const template = candidateTemplates[cycleNumber % candidateTemplates.length];
+  // If an admin explicitly requested a topic (forceSlug), honor it as long
+  // as it's a real, non-excluded template for this org. Previously this
+  // parameter was accepted but silently ignored — every call fell through
+  // to rotation regardless. Now it actually pins the template when given.
+  const forcedTemplate = forceSlug
+    ? candidateTemplates.find(t => t.slug === forceSlug)
+    : undefined;
+  const template = forcedTemplate ?? candidateTemplates[cycleNumber % candidateTemplates.length];
 
-  // Step 4: Choose tier for this cycle
-  const tier = chooseTier(org.id, cycleNumber, template);
+  // Step 4: Choose tier for this cycle — an explicit forceTier wins, as
+  // long as it's actually valid for the chosen template's tier_options.
+  const tier = (forceTier && template.tier_options.includes(forceTier))
+    ? forceTier
+    : chooseTier(org.id, cycleNumber, template);
 
   // Step 5: Generate challenge content with Claude
-  const generated = await generateChallengeContent(anthropic, org, template, tier, weekStart);
+  const generated = await generateChallengeContent(anthropic, org, template, tier, weekStart, adminTopic);
 
   if (dryRun) {
     return { dry_run: true, weekStart, weekEnd, template: template.slug, tier, generated };
@@ -451,6 +474,7 @@ async function generateChallengeContent(
   template: ChallengeTemplate,
   tier: string,
   weekStart: string,
+  adminTopic?: string,
 ): Promise<GeneratedChallenge> {
 
   const tierDescriptions: Record<string, string> = {
@@ -484,6 +508,13 @@ ${template.domain_context}
 
 Example actions on this page:
 ${template.example_actions.map(a => `- ${a}`).join('\n')}
+${adminTopic ? `
+
+An administrator has specified this cycle's challenge should focus on the
+following real, current situation — prioritize this over the generic
+example actions above, while keeping the same tone, structure, and
+grounding in ${org.location}:
+"${adminTopic}"` : ''}
 
 You MUST respond with ONLY a valid JSON object. No markdown, no preamble, no explanation.`;
 
@@ -508,7 +539,7 @@ Return a JSON object with exactly these fields:
 }`;
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1024,
     messages: [{ role: 'user', content: userPrompt }],
     system: systemPrompt,

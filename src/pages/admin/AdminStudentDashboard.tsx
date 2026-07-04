@@ -18,7 +18,7 @@ import {
   ChevronUp, Trophy, User, BarChart2, Code, Brain,
   Target, Lightbulb, MessageSquare, Cpu,
   DollarSign, TrendingUp, Zap, Activity,
-  Server, Building2, Search, Globe,
+  Server, Building2, Search, Globe, Sparkles, Send, Eye,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
@@ -1760,6 +1760,292 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
    PlatformGlobalPanel
    ═══════════════════════════════════════════════════════════════════════════════ */
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CREATE CHALLENGE PANEL — platform_administrator override for
+// generate-weekly-challenges. Two-step flow: Preview (dry_run, writes
+// nothing) then Publish (the real insert). The 14-day timing gate is
+// respected by default — checking "override normal timing" sends force:true
+// and bypasses it, for when an admin genuinely wants an out-of-cycle
+// challenge rather than just steering the next scheduled one.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CHALLENGE_TEMPLATE_OPTIONS = [
+  { slug: 'ai-ambassadors',    label: 'AI Ambassadors' },
+  { slug: 'agriculture',       label: 'Agriculture Consultant' },
+  { slug: 'fishing',           label: 'Fishing Consultant' },
+  { slug: 'healthcare',        label: 'Healthcare Navigator' },
+  { slug: 'entrepreneurship',  label: 'Entrepreneurship Consultant' },
+  { slug: 'animal-husbandry',  label: 'Animal Husbandry' },
+];
+
+const CHALLENGE_TIER_OPTIONS = [
+  { value: 'seed',       label: 'Seed — Community Teacher' },
+  { value: 'scout',      label: 'Scout — Problem Finder' },
+  { value: 'bridge',     label: 'Bridge — Community Connector' },
+  { value: 'builder',    label: 'Builder — AI for Good' },
+  { value: 'multiplier', label: 'Multiplier — Village Leader' },
+];
+
+type GeneratedPreview = {
+  title: string;
+  description: string;
+  challenge_mode_intro: string;
+  challenge_instruction: string;
+  return_question_1: string;
+  return_question_2: string;
+  return_question_3: string | null;
+  community_role: string;
+};
+
+const CreateChallengePanel: React.FC = () => {
+  const [orgId, setOrgId] = useState<'oloibiri' | 'ibiade'>('oloibiri');
+  const [templateSlug, setTemplateSlug] = useState<string>('');
+  const [tier, setTier] = useState<string>('');
+  const [adminTopic, setAdminTopic] = useState('');
+  const [overrideTiming, setOverrideTiming] = useState(false);
+
+  const [previewing, setPreviewing] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [preview, setPreview] = useState<GeneratedPreview | null>(null);
+  const [previewMeta, setPreviewMeta] = useState<{ weekStart: string; weekEnd: string; slug: string; tier: string } | null>(null);
+  const [skipped, setSkipped] = useState<string | null>(null);
+  const [publishResult, setPublishResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const buildPayload = (dryRun: boolean) => ({
+    org_id: orgId,
+    dry_run: dryRun,
+    force: overrideTiming,
+    ...(templateSlug ? { force_slug: templateSlug } : {}),
+    ...(tier ? { force_tier: tier } : {}),
+    ...(adminTopic.trim() ? { admin_topic: adminTopic.trim() } : {}),
+  });
+
+  const handlePreview = async () => {
+    setPreviewing(true);
+    setError(null);
+    setSkipped(null);
+    setPreview(null);
+    setPublishResult(null);
+    try {
+      const { data, error: invokeErr } = await supabase.functions.invoke('generate-weekly-challenges', {
+        body: buildPayload(true),
+      });
+      if (invokeErr) throw invokeErr;
+      const orgResult = data?.results?.[orgId];
+      if (orgResult?.skipped) {
+        setSkipped(orgResult.reason ?? 'Skipped — too soon since the last challenge.');
+      } else if (orgResult?.generated) {
+        setPreview(orgResult.generated);
+        setPreviewMeta({
+          weekStart: orgResult.weekStart, weekEnd: orgResult.weekEnd,
+          slug: orgResult.template, tier: orgResult.tier,
+        });
+      } else if (orgResult?.error) {
+        setError(orgResult.error);
+      } else {
+        setError('Unexpected response — check the function logs.');
+      }
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    setPublishing(true);
+    setError(null);
+    try {
+      const { data, error: invokeErr } = await supabase.functions.invoke('generate-weekly-challenges', {
+        body: buildPayload(false),
+      });
+      if (invokeErr) throw invokeErr;
+      const orgResult = data?.results?.[orgId];
+      if (orgResult?.skipped) {
+        setSkipped(orgResult.reason ?? 'Skipped — too soon since the last challenge.');
+      } else if (orgResult?.inserted) {
+        setPublishResult({ ok: true, message: `Published: "${orgResult.title}" (${orgResult.weekStart} → runs 14 days)` });
+        setPreview(null);
+      } else if (orgResult?.error) {
+        setError(orgResult.error);
+      }
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-indigo-50">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-purple-600" />
+            Create Community Challenge
+          </h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Steer or fully override the next generated challenge. Leave a field blank to let the normal rotation decide it.
+          </p>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Org */}
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">Organization</label>
+            <div className="inline-flex rounded-full border border-gray-200 bg-gray-50 p-0.5">
+              {(['oloibiri', 'ibiade'] as const).map(o => (
+                <button key={o} onClick={() => setOrgId(o)}
+                  className={classNames(
+                    'px-4 py-1.5 rounded-full text-sm font-semibold transition-colors capitalize',
+                    orgId === o ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  )}>
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Template slug */}
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">
+              Challenge topic <span className="font-normal normal-case text-gray-400">(optional — blank lets rotation choose)</span>
+            </label>
+            <select value={templateSlug} onChange={e => setTemplateSlug(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+              <option value="">— Let rotation decide —</option>
+              {CHALLENGE_TEMPLATE_OPTIONS.map(t => (
+                <option key={t.slug} value={t.slug}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tier */}
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">
+              Tier <span className="font-normal normal-case text-gray-400">(optional — blank lets rotation choose)</span>
+            </label>
+            <select value={tier} onChange={e => setTier(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+              <option value="">— Let rotation decide —</option>
+              {CHALLENGE_TIER_OPTIONS.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Admin topic / direction */}
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">
+              Direction for this challenge <span className="font-normal normal-case text-gray-400">(optional)</span>
+            </label>
+            <textarea value={adminTopic} onChange={e => setAdminTopic(e.target.value)}
+              rows={3} placeholder="e.g. There's a cholera risk after the recent flooding — focus the challenge on that."
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none" />
+            <p className="text-xs text-gray-400 mt-1">
+              Claude still writes the actual challenge — same voice and grounding as every other challenge — but will prioritize this over the generic examples.
+            </p>
+          </div>
+
+          {/* Override timing */}
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={overrideTiming} onChange={e => setOverrideTiming(e.target.checked)}
+              className="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-400" />
+            <span className="text-sm text-gray-700">
+              <span className="font-semibold">Override normal 14-day timing.</span>{' '}
+              <span className="text-gray-400">Off by default — leave unchecked to create what would be the next scheduled challenge, just with your inputs. Check this only if you want a challenge outside the normal cycle.</span>
+            </span>
+          </label>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-2">
+            <button onClick={handlePreview} disabled={previewing || publishing}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-colors">
+              {previewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+              Preview
+            </button>
+            <button onClick={handlePublish} disabled={publishing || previewing}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors">
+              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Publish
+            </button>
+            {(preview || previewMeta) && (
+              <span className="text-xs text-gray-400">Preview shown below — nothing published yet.</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Skipped */}
+      {skipped && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-amber-800">Skipped — timing gate</p>
+            <p className="text-xs text-amber-700 mt-0.5">{skipped}</p>
+            <p className="text-xs text-amber-600 mt-1">Check "Override normal 14-day timing" above if you want to publish anyway.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Publish confirmation */}
+      {publishResult && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4 flex items-start gap-3">
+          <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-emerald-700 font-semibold">{publishResult.message}</p>
+        </div>
+      )}
+
+      {/* Preview content */}
+      {preview && previewMeta && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b bg-gray-50 flex items-center justify-between flex-wrap gap-2">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              Preview — {previewMeta.slug} · {previewMeta.tier}
+            </span>
+            <span className="text-xs text-gray-400">{previewMeta.weekStart} → {previewMeta.weekEnd}</span>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-1">Title</p>
+              <p className="text-sm font-bold text-gray-900">{preview.title}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-1">Dashboard description</p>
+              <p className="text-sm text-gray-700">{preview.description}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-1">Mission briefing</p>
+              <p className="text-sm text-gray-700">{preview.challenge_mode_intro}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-1">Instruction</p>
+              <p className="text-sm text-gray-700">{preview.challenge_instruction}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-1">Return questions</p>
+              <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                <li>{preview.return_question_1}</li>
+                <li>{preview.return_question_2}</li>
+                {preview.return_question_3 && <li>{preview.return_question_3}</li>}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PlatformGlobalPanel: React.FC<{
   onSelectOrg: (orgId: string, orgName: string) => void;
 }> = ({ onSelectOrg }) => {
@@ -1945,7 +2231,7 @@ const AdminStudentDashboard: React.FC = () => {
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
   const isLeader = userRole === 'leader' && !isPlatformAdmin;
 
-  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'model-overview' | 'cost-overview' | 'cost-learner'>(
+  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
   );
 
@@ -2399,6 +2685,7 @@ const AdminStudentDashboard: React.FC = () => {
         <div className="flex gap-1 mb-5 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
           {([
             { id: 'platform-global' as const, label: 'Global Overview', icon: <Globe size={14} />, show: isPlatformAdmin },
+            { id: 'create-challenge' as const, label: 'Create Challenge', icon: <Sparkles size={14} />, show: isPlatformAdmin },
             { id: 'student' as const, label: 'Student Activity', icon: <BookOpen size={14} />, show: true },
             { id: 'model-overview' as const, label: 'Model Overview', icon: <Server size={14} />, show: isPlatformAdmin },
             { id: 'cost-overview' as const, label: 'Cost Overview', icon: <DollarSign size={14} />, show: isPlatformAdmin },
@@ -2488,6 +2775,8 @@ const AdminStudentDashboard: React.FC = () => {
             )}
           </div>
         )}
+
+        {activeTab === 'create-challenge' && <CreateChallengePanel />}
 
         {activeTab === 'platform-global' && (
           <PlatformGlobalPanel

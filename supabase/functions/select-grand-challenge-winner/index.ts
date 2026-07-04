@@ -335,7 +335,7 @@ Action: ${e.action_taken}
 Change: ${e.change_observed}`.trim()).join('\n\n');
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1000,
     system: `You are evaluating a Grand Challenge submission. Respond ONLY with valid JSON. No markdown.`,
     messages: [{
@@ -397,7 +397,7 @@ Evidence strength: ${s.evidence_strength}
 `.trim()).join('\n\n---\n\n');
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1200,
     system: `You are selecting the winner of the ${quarter} Grand Challenge at the Davidson AI Innovation Center in ${orgId}, Nigeria (nextvillage.community).
 
