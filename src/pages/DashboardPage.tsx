@@ -2315,11 +2315,12 @@ ${prior.impact_arc}
                   )}>
                     <div className="px-4 py-3 border-b border-black/5 flex items-center gap-2">
                       <Globe2 size={15} className="text-blue-600 flex-shrink-0" />
-                      <span className="text-xs font-bold uppercase tracking-wide text-blue-600">Weekly Challenge</span>
+                      <span className="text-xs font-bold uppercase tracking-wide text-blue-600">Community Challenge</span>
                       {(() => {
                         const daysLeft = Math.ceil((new Date(weeklyChallenge.week_end).getTime() - Date.now()) / 86400000);
+                        const endDateLabel = new Date(weeklyChallenge.week_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         return daysLeft > 0
-                          ? <span className="ml-auto text-xs text-gray-400">{daysLeft}d left</span>
+                          ? <span className="ml-auto text-xs text-gray-400">{daysLeft}d left · ends {endDateLabel}</span>
                           : null;
                       })()}
                     </div>
