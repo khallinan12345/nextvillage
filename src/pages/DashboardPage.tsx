@@ -43,6 +43,8 @@ import Button from '../components/ui/Button';
 import CircularProgressRing from '../components/ui/CircularProgressRing';
 import { useAuth } from '../hooks/useAuth';
 import { useLoginStreak } from '../hooks/useLoginStreak';
+import { useReflectionStreak } from '../hooks/useReflectionStreak';
+import ReflectionCard from '../components/dashboard/ReflectionCard';
 import classNames from 'classnames';
 
 // ─── Community AI Challenge types ────────────────────────────────────────────
@@ -528,6 +530,7 @@ const DashboardPage: React.FC = () => {
   const [monthlyLoading, setMonthlyLoading] = useState(false);
   const [monthlySectionExpanded, setMonthlySectionExpanded] = useState(true);
   const loginStreak = useLoginStreak(user?.id);
+  const reflectionStreak = useReflectionStreak(user?.id);
 
   // Leaderboard
   const [leaderboardMetric, setLeaderboardMetric] = useState<LeaderboardMetric>('sessions_thismonth');
@@ -2099,6 +2102,15 @@ ${prior.impact_arc}
                   {loginStreak} day{loginStreak !== 1 ? 's' : ''} streak
                 </span>
               )}
+              {user?.role === 'student' && reflectionStreak > 0 && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"
+                  aria-label={`${reflectionStreak} day reflection streak`}
+                >
+                  <Flame size={15} className="text-indigo-500" />
+                  {reflectionStreak} day{reflectionStreak !== 1 ? 's' : ''} reflecting
+                </span>
+              )}
             </div>
             <p className="text-gray-600">
               {user?.role === 'facilitator'
@@ -2175,6 +2187,11 @@ ${prior.impact_arc}
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* ── Daily Reflection ─────────────────────────────────────────── */}
+            {user?.role === 'student' && (
+              <ReflectionCard userId={user!.id} />
             )}
 
             {/* ── News Banner ─────────────────────────────────────────────── */}
