@@ -74,6 +74,22 @@ interface WeeklyChampion {
   week_end: string;
 }
 
+interface CurrentChallengeLeaderEntry {
+  challenge_id: string;
+  learner_id: string;
+  org_id: string;
+  name: string;
+  avatar_url: string | null;
+  tier_awarded: string;
+  tier_label: string;
+  status: string;
+  action_taken: string | null;
+  impact_observed: string | null;
+  submitted_at: string | null;
+  awarded_at: string | null;
+  rank: number;
+}
+
 interface CommunityLeaderEntry {
   learner_id: string;
   name: string;
@@ -545,6 +561,9 @@ const DashboardPage: React.FC = () => {
   const [, setEnrollmentId]                           = useState<string | null>(null);
   const [enrolling, setEnrolling]                     = useState(false);
   const [communityLeaderboard, setCommunityLeaderboard] = useState<CommunityLeaderEntry[]>([]);
+  const [currentChallengeLeaderboard, setCurrentChallengeLeaderboard] = useState<CurrentChallengeLeaderEntry[]>([]);
+  const [currentChallengeLbLoading, setCurrentChallengeLbLoading] = useState(false);
+  const [leaderboardScope, setLeaderboardScope] = useState<'current' | 'alltime'>('current');
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
   const [learnerActionsModal, setLearnerActionsModal] = useState<{ entry: CommunityLeaderEntry; actions: LearnerAction[] | null } | null>(null);
   const [learnerActionsLoading, setLearnerActionsLoading] = useState(false);
@@ -925,6 +944,16 @@ const DashboardPage: React.FC = () => {
             setEnrollmentStatus(enrollment.status as any);
             setEnrollmentId(enrollment.id);
           }
+
+          // Fetch THIS challenge's leaderboard — scoped, not all-time
+          setCurrentChallengeLbLoading(true);
+          const { data: currentLb } = await supabase
+            .from('current_challenge_leaderboard')
+            .select('*')
+            .eq('challenge_id', challenge.id)
+            .order('rank', { ascending: true });
+          if (currentLb) setCurrentChallengeLeaderboard(currentLb as CurrentChallengeLeaderEntry[]);
+          setCurrentChallengeLbLoading(false);
         }
 
         // Fetch community impact leaderboard
@@ -2538,7 +2567,30 @@ ${prior.impact_arc}
                     Community Impact Leaderboard
                   </h2>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500">ranked by highest tier · then total actions</span>
+                    <div className="inline-flex rounded-full border border-emerald-200 bg-white p-0.5">
+                      <button
+                        onClick={() => setLeaderboardScope('current')}
+                        className={classNames(
+                          'px-3 py-1 rounded-full text-xs font-semibold transition-colors',
+                          leaderboardScope === 'current'
+                            ? 'bg-emerald-600 text-white'
+                            : 'text-emerald-700 hover:bg-emerald-50'
+                        )}
+                      >
+                        This Week
+                      </button>
+                      <button
+                        onClick={() => setLeaderboardScope('alltime')}
+                        className={classNames(
+                          'px-3 py-1 rounded-full text-xs font-semibold transition-colors',
+                          leaderboardScope === 'alltime'
+                            ? 'bg-emerald-600 text-white'
+                            : 'text-emerald-700 hover:bg-emerald-50'
+                        )}
+                      >
+                        All-Time
+                      </button>
+                    </div>
                     {pastChallenges.length > 0 && (
                       <button
                         onClick={() => setShowPastChallenges(v => !v)}
@@ -2579,7 +2631,58 @@ ${prior.impact_arc}
                   </div>
                 </div>
 
-                {communityLbLoading ? (
+                {leaderboardScope === 'current' ? (
+                  currentChallengeLbLoading ? (
+                    <div className="flex items-center justify-center py-10">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400" />
+                    </div>
+                  ) : currentChallengeLeaderboard.length === 0 ? (
+                    <div className="px-6 py-10 text-center">
+                      <div className="text-4xl mb-3">🌍</div>
+                      <p className="text-sm font-semibold text-gray-700 mb-1">No community actions yet this week</p>
+                      <p className="text-xs text-gray-400">Complete this week's challenge to appear on the leaderboard.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {currentChallengeLeaderboard.map(entry => {
+                        const isMe = entry.learner_id === user?.id;
+                        const medal = MEDAL[entry.rank];
+                        const tc = TIER_COLOURS[entry.tier_awarded] ?? TIER_COLOURS.seed;
+                        return (
+                          <div key={entry.learner_id}
+                            className={classNames(
+                              'flex items-start gap-4 px-6 py-4 transition-colors',
+                              isMe && 'bg-emerald-50/60'
+                            )}
+                          >
+                            <div className="w-8 flex-shrink-0 text-center">
+                              {medal ? (
+                                <span className="text-xl leading-none">{medal}</span>
+                              ) : (
+                                <span className="text-sm font-bold text-gray-400">{entry.rank}</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className={classNames('text-sm font-semibold', isMe ? 'text-emerald-900' : 'text-gray-900')}>
+                                  {entry.name}{isMe && <span className="text-xs font-normal text-emerald-600 ml-1">(you)</span>}
+                                </p>
+                                <span className={classNames('inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold border', tc.bg, tc.text, tc.border)}>
+                                  <span className={classNames('w-1.5 h-1.5 rounded-full', tc.dot)} />
+                                  {entry.tier_label}
+                                </span>
+                              </div>
+                              {entry.action_taken && (
+                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{entry.action_taken}</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )
+                ) : (
+                communityLbLoading ? (
                   <div className="flex items-center justify-center py-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400" />
                   </div>
@@ -2720,7 +2823,7 @@ ${prior.impact_arc}
                       </div>
                     );
                   })()
-                }
+                )}
 
                 {/* ── Past Challenge Winners ── */}
                 {showPastChallenges && pastChallenges.length > 0 && (
