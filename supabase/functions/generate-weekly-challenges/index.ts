@@ -1,21 +1,34 @@
 // supabase/functions/generate-weekly-challenges/index.ts
 //
-// Weekly Community AI Challenge Generator
+// Bi-Weekly Community AI Challenge Generator
 // ─────────────────────────────────────────
-// Runs every Sunday at 21:00 WAT (20:00 UTC) via pg_cron or
-// Supabase Dashboard → Edge Functions → Cron trigger.
+// pg_cron fires this every Sunday at 20:15 UTC (see cron.job id 14) — but
+// the function only actually generates a new challenge every OTHER Sunday.
+// This is deliberate: pg_cron has no native "every 2 weeks" schedule, so
+// rather than fight its syntax (and lose the "always starts on a Monday"
+// guarantee), the function checks the most recent challenge's week_start
+// on every run and skips generation if fewer than 14 days have passed.
+// This self-corrects even if a run is missed or someone triggers it
+// manually — it reads real history instead of counting invocations.
 //
 // For each active org it:
-//   1. Expires any stale enrollments from the previous week
-//   2. Deactivates last week's challenge
-//   3. Selects a challenge template (rotating, never repeating
-//      the same page two weeks in a row)
-//   4. Calls Claude to generate rich, localised challenge content
-//   5. Inserts the new challenge row
+//   1. Checks whether 14 days have passed since the last challenge started
+//      — if not, skips (unless dry_run or force is set)
+//   2. Expires any stale enrollments from the previous cycle
+//   3. Deactivates the previous challenge
+//   4. Selects a challenge template (rotating, never repeating
+//      the same page two cycles in a row)
+//   5. Calls Claude to generate rich, localised challenge content
+//   6. Inserts the new challenge row, spanning a 14-day window
 //
 // Invoke manually for testing:
 //   supabase functions invoke generate-weekly-challenges \
 //     --body '{"org_id":"oloibiri","dry_run":true}'
+//
+// Invoke manually to FORCE a real generation outside the normal cycle
+// (bypasses the 14-day gate, still writes to the database):
+//   supabase functions invoke generate-weekly-challenges \
+//     --body '{"org_id":"oloibiri","force":true}'
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.3';
@@ -221,7 +234,7 @@ const TIER_ROTATION: Array<'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier
 
 Deno.serve(async (req) => {
   // Allow manual POST for testing, cron sends GET
-  let body: { org_id?: string; dry_run?: boolean; force_slug?: string } = {};
+  let body: { org_id?: string; dry_run?: boolean; force_slug?: string; force?: boolean } = {};
   if (req.method === 'POST') {
     try { body = await req.json(); } catch { /* empty body ok */ }
   }
@@ -242,7 +255,7 @@ Deno.serve(async (req) => {
 
   for (const org of targetOrgs) {
     try {
-      results[org.id] = await generateForOrg(supabase, anthropic, org, body.dry_run ?? false, body.force_slug);
+      results[org.id] = await generateForOrg(supabase, anthropic, org, body.dry_run ?? false, body.force_slug, body.force ?? false);
     } catch (err) {
       const msg = String(err);
       results[org.id] = { error: msg };
@@ -280,28 +293,24 @@ async function generateForOrg(
   org: OrgConfig,
   dryRun: boolean,
   forceSlug?: string,
+  force = false,
 ): Promise<unknown> {
 
-  // Compute next week's Monday–Sunday window
+  // Compute the next Monday–Sunday+7 (14-day) window
   const now = new Date();
   const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon…
   const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7 || 7;
   const nextMonday = new Date(now);
   nextMonday.setUTCDate(now.getUTCDate() + daysUntilMonday);
   nextMonday.setUTCHours(0, 0, 0, 0);
-  const nextSunday = new Date(nextMonday);
-  nextSunday.setUTCDate(nextMonday.getUTCDate() + 6);
+  const cycleEnd = new Date(nextMonday);
+  cycleEnd.setUTCDate(nextMonday.getUTCDate() + 13); // 14-day span, not 7
 
   const weekStart = nextMonday.toISOString().slice(0, 10);
-  const weekEnd   = nextSunday.toISOString().slice(0, 10);
+  const weekEnd   = cycleEnd.toISOString().slice(0, 10);
 
-  // Step 1: Expire stale enrollments
-  if (!dryRun) {
-    const { error: expireErr } = await supabase.rpc('expire_old_enrollments');
-    if (expireErr) throw new Error(`expire_old_enrollments: ${expireErr.message}`);
-  }
-
-  // Step 2: Find what slug was used last week (avoid repeating)
+  // Step 0: Find the most recent challenge for this org — used both for
+  // the 14-day gate below AND for slug-rotation exclusion further down.
   const { data: lastChallenge } = await supabase
     .from('community_challenges')
     .select('community_impact_slug, week_start')
@@ -311,6 +320,33 @@ async function generateForOrg(
     .single();
 
   const lastSlug = lastChallenge?.community_impact_slug ?? null;
+
+  // Step 0b: Bi-weekly gate. pg_cron fires this every Sunday, but a new
+  // challenge should only actually be generated every OTHER Sunday. Rather
+  // than trust an invocation counter (which drifts if a run is missed),
+  // check real history: has a full 14 days passed since the last challenge
+  // started? If not, skip — unless this is a dry run (safe, writes
+  // nothing) or an explicit force (manual override for testing).
+  if (!dryRun && !force && lastChallenge?.week_start) {
+    const daysSinceLast = Math.floor(
+      (nextMonday.getTime() - new Date(lastChallenge.week_start).getTime()) /
+      (24 * 60 * 60 * 1000),
+    );
+    if (daysSinceLast < 14) {
+      return {
+        skipped: true,
+        reason: `Only ${daysSinceLast} day(s) since the last challenge started ` +
+          `(${lastChallenge.week_start}) — waiting for the full 14-day cycle.`,
+        last_challenge_week_start: lastChallenge.week_start,
+      };
+    }
+  }
+
+  // Step 1: Expire stale enrollments from the previous cycle
+  if (!dryRun) {
+    const { error: expireErr } = await supabase.rpc('expire_old_enrollments');
+    if (expireErr) throw new Error(`expire_old_enrollments: ${expireErr.message}`);
+  }
 
   // Step 3: Choose template — rotate, skip last week's slug, and respect
   //         this org's excluded_slugs list so irrelevant challenges never surface.
@@ -324,14 +360,20 @@ async function generateForOrg(
     );
   }
 
-  const weekNumber = Math.floor(
+  // Counts 14-day cycles since the epoch, not calendar weeks — if this
+  // still divided by 7 days, a cadence that only runs every OTHER week
+  // would silently skip every other index in the rotation arrays below,
+  // quietly cutting the visible variety of challenge templates and tiers
+  // in half. Dividing by 14 keeps the rotation stepping by exactly 1 each
+  // time this function actually generates something.
+  const cycleNumber = Math.floor(
     (nextMonday.getTime() - new Date('2025-01-06').getTime()) /
-    (7 * 24 * 60 * 60 * 1000),
+    (14 * 24 * 60 * 60 * 1000),
   );
-  const template = candidateTemplates[weekNumber % candidateTemplates.length];
+  const template = candidateTemplates[cycleNumber % candidateTemplates.length];
 
-  // Step 4: Choose tier for this week
-  const tier = chooseTier(org.id, weekNumber, template);
+  // Step 4: Choose tier for this cycle
+  const tier = chooseTier(org.id, cycleNumber, template);
 
   // Step 5: Generate challenge content with Claude
   const generated = await generateChallengeContent(anthropic, org, template, tier, weekStart);
@@ -386,10 +428,10 @@ async function generateForOrg(
 
 function chooseTier(
   orgId: string,
-  weekNumber: number,
+  cycleNumber: number,
   template: ChallengeTemplate,
 ): 'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier' {
-  const rotation = TIER_ROTATION[weekNumber % TIER_ROTATION.length];
+  const rotation = TIER_ROTATION[cycleNumber % TIER_ROTATION.length];
   // If the rotation tier isn't available for this page, pick the highest
   // available that doesn't exceed it
   if (template.tier_options.includes(rotation)) return rotation;
