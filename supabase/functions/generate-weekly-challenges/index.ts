@@ -529,13 +529,13 @@ Return a JSON object with exactly these fields:
 
 {
   "title": "4-8 word challenge title — action-oriented, e.g. 'Find a Farming Problem This Week'",
+  "community_role": "REQUIRED, no matter what else you write — pick exactly one: farmer | fisher | entrepreneur | family | health | animal-keeper | general",
   "description": "2-3 sentences for the dashboard banner. What will the learner do? Why does it matter to the community?",
   "challenge_mode_intro": "2-3 sentences shown at the top of the ${template.label} page when challenge mode is active. Should feel like a mission briefing — specific, motivating, localised.",
   "challenge_instruction": "1-2 sentences of specific instruction. Exactly what should the learner do before coming back? Be concrete — name the type of person to talk to, the type of problem to find, or the action to take.",
   "return_question_1": "Question asking what they DID. Start with 'What did you do?' or similar. e.g. 'What did you do — who did you talk to, and what did you say to them?'",
   "return_question_2": "Question asking what HAPPENED or what they OBSERVED. e.g. 'What did the farmer say? What problem did they describe?'",
-  "return_question_3": "Optional third question (null if not needed) — only include if there's a third meaningful dimension to capture. e.g. for builder tier: 'What changed for the community member after the AI session?'",
-  "community_role": "one of: farmer | fisher | entrepreneur | family | health | animal-keeper | general"
+  "return_question_3": "Optional third question (null if not needed) — only include if there's a third meaningful dimension to capture. e.g. for builder tier: 'What changed for the community member after the AI session?'"
 }`;
 
   const response = await anthropic.messages.create({
@@ -563,10 +563,23 @@ Return a JSON object with exactly these fields:
   // Validate required fields
   const required: Array<keyof GeneratedChallenge> = [
     'title', 'description', 'challenge_mode_intro', 'challenge_instruction',
-    'return_question_1', 'return_question_2', 'community_role',
+    'return_question_1', 'return_question_2',
   ];
   for (const field of required) {
     if (!parsed[field]) throw new Error(`Missing required field: ${field}`);
+  }
+
+  // community_role is validated separately with a fallback rather than a
+  // hard failure — this field has been dropped by the model twice in a
+  // row on real admin-directed generations, regardless of topic or which
+  // template's role list was in play. An otherwise-good challenge
+  // shouldn't get blocked over one categorical field the model skipped.
+  if (!parsed.community_role || !template.community_roles.includes(parsed.community_role)) {
+    console.warn(
+      `community_role missing or invalid ("${parsed.community_role}") — ` +
+      `defaulting to "${template.community_roles[0]}"`
+    );
+    parsed.community_role = template.community_roles[0];
   }
 
   return parsed;
