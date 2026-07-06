@@ -16,7 +16,7 @@
 //   });
 //   <HelpMeAnswerPopup {...helpMe} onUseDraft={draft => setPrompt(draft)} />
 
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -242,7 +242,7 @@ export function useHelpMeAnswer({
       setMessages(withReply);
       if (isReady) await generateDraft(withReply);
     } catch {
-      setMessages(prev => [
+      setMessages((prev: HelpMeAnswerMessage[]) => [
         ...prev,
         { role: 'assistant', text: 'Sorry, something went wrong. Please try again.' },
       ]);

@@ -32,37 +32,62 @@ export async function chatText({
   page,
   playgroundModel,
 }: BaseArgs): Promise<string> {
+  const requestBody = JSON.stringify({
+    messages, system, max_tokens, temperature,
+    page:            page            ?? '',
+    playgroundModel: playgroundModel ?? null,
+    userId:          _chatUserId,
+    city:            _chatCity,
+  });
+
   const r = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages, system, max_tokens, temperature,
-      page:            page            ?? '',
-      playgroundModel: playgroundModel ?? null,
-      userId:          _chatUserId,
-      city:            _chatCity,
-    }),
+    body: requestBody,
   });
-  let data: any;
+
+  const responseText = await r.text();
+  let data: any = null;
   try {
-    data = await r.json();
-  } catch (err) {
-    // If the proxy returned non-JSON (HTML error page), try to extract a helpful message
-    const text = await r.text().catch(() => '');
-    const lowered = (text || '').toLowerCase();
+    data = responseText ? JSON.parse(responseText) : null;
+  } catch (parseError) {
+    console.error('[chatClient] /api/chat returned non-JSON body', {
+      status: r.status,
+      statusText: r.statusText,
+      body: responseText,
+      request: { page, system, messages },
+      parseError,
+    });
+    const lowered = (responseText || '').toLowerCase();
     if (lowered.includes('api key') || lowered.includes('no ai provider') || lowered.includes('not configured')) {
-      throw new Error('Missing API Key');
+      throw Object.assign(new Error('Missing API Key'), {
+        status: r.status,
+        statusText: r.statusText,
+        body: responseText,
+      });
     }
-    throw new Error(`Chat proxy returned non-JSON response (status ${r.status})`);
+    throw Object.assign(new Error(`Chat proxy returned non-JSON response (status ${r.status} ${r.statusText})`), {
+      status: r.status,
+      statusText: r.statusText,
+      body: responseText,
+    });
   }
 
   if (!r.ok) {
-    const errMsg = data?.error || data?.message || `Chat proxy error ${r.status}`;
+    const errMsg = data?.error || data?.message || `Chat proxy error ${r.status} ${r.statusText}`;
     const lowered = String(errMsg).toLowerCase();
     if (lowered.includes('api key') || lowered.includes('no ai provider') || lowered.includes('not configured')) {
-      throw new Error('Missing API Key');
+      throw Object.assign(new Error('Missing API Key'), {
+        status: r.status,
+        statusText: r.statusText,
+        body: responseText,
+      });
     }
-    throw new Error(errMsg || `Chat proxy error ${r.status}`);
+    throw Object.assign(new Error(errMsg || `Chat proxy error ${r.status} ${r.statusText}`), {
+      status: r.status,
+      statusText: r.statusText,
+      body: responseText,
+    });
   }
 
   // OpenAI-like response passthrough; return the assistant text

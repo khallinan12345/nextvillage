@@ -9,6 +9,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Navbar from '../components/layout/Navbar';
+import { PidginTooltip } from '../components/PidginTooltip';
 import { supabase } from '../lib/supabaseClient';
 import {
   PenLine, Sparkles, Loader2, Save, FolderOpen, Download,

@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Sprout, ArrowLeft, Send, Save, Loader2, Plus, User,
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
@@ -1162,6 +1163,12 @@ const AgricultureConsultantPage: React.FC = () => {
                 <div>
                   <h1 className="text-xl font-bold text-white">Agriculture Advisor</h1>
                   <p className="text-sm text-green-200">Your farmer casebook · Oloibiri & Ibiade</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="Your farmer casebook · Oloibiri & Ibiade"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">

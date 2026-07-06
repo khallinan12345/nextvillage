@@ -31,6 +31,7 @@ import {
 import classNames from 'classnames';
 import { useAuth } from '../hooks/useAuth';
 import { useVoice } from '../hooks/useVoice';
+import { PidginTooltip } from '../components/PidginTooltip';
 import { VoiceFallback } from '../components/VoiceFallback';
 // Helper function to check and trigger baseline assessment
 // Helper function to check and trigger baseline assessment

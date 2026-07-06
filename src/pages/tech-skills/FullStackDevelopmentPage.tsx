@@ -200,6 +200,12 @@ const FullStackOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete 
         the front-end and <strong className="text-white">Supabase</strong> (PostgreSQL) as your backend — the exact
         same stack used by startups and professional developers worldwide.
       </p>
+      <div className="mt-3">
+        <PidginTooltip
+          originalText="You're going to build a real, database-connected app using React on the front-end and Supabase (PostgreSQL) as your backend — the exact same stack used by startups and professional developers worldwide."
+          hintText="Tap here to translate the full-stack workshop intro into Nigerian Pidgin."
+        />
+      </div>
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">Your Full-Stack Architecture</p>
       <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-0.5 mb-3">
         <div className="text-sky-300">🌐 Browser (React + Vite)</div>

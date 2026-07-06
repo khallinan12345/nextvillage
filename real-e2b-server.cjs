@@ -214,6 +214,103 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.post('/api/pidgin-tts', async (req, res) => {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'nigerian_native';
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'ELEVENLABS_API_KEY is not configured on the server' });
+  }
+
+  const { text } = req.body || {};
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.65,
+          similarity_boost: 0.85,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      console.error('[pidgin-tts] ElevenLabs response failed', response.status, errorBody);
+      return res.status(response.status).json({ error: errorBody?.error?.message || 'ElevenLabs TTS request failed' });
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).send(buffer);
+  } catch (error) {
+    console.error('[pidgin-tts] Error:', error);
+    return res.status(500).json({ error: 'Internal server error while generating Pidgin audio' });
+  }
+});
+
+app.post('/api/pidgin-translate', async (req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not configured on the server' });
+  }
+
+  const { text } = req.body || {};
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+
+  const systemPrompt = `You are an expert Nigerian Pidgin translator. Translate the exact input into simple, clear Nigerian Pidgin. Output only the raw translated text with no explanation, no labels, and no additional punctuation or quotes.`;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: `Translate this English text into Nigerian Pidgin: ${text.trim()}` },
+  ];
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 300,
+        messages,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('[pidgin-translate] Anthropic error', data);
+      return res.status(response.status).json({ error: data?.error?.message || 'Translation provider error' });
+    }
+
+    const translation = data?.content?.[0]?.text?.trim?.();
+    if (!translation) {
+      return res.status(500).json({ error: 'Translation failed to return valid text' });
+    }
+
+    return res.status(200).json({ translation });
+  } catch (error) {
+    console.error('[pidgin-translate] Error:', error);
+    return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
+  }
+});
+
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 
 // Chat endpoint — Real Groq or Developer Mock Mode

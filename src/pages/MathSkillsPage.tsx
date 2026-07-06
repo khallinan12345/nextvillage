@@ -12,7 +12,9 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON } from '../lib/chatClient';
 import { useVoice } from '../hooks/useVoice';
+import { PidginTooltip } from '../components/PidginTooltip';
 import { VoiceFallback } from '../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -1160,6 +1162,12 @@ LANGUAGE RULES:
             <p className="text-xl md:text-2xl text-slate-200 max-w-2xl mx-auto">
               Build mathematical mastery from counting to algebra — one stage at a time, with an AI coach who meets you where you are.
             </p>
+            <div className="mt-4">
+              <PidginTooltip
+                originalText="Build mathematical mastery from counting to algebra — one stage at a time, with an AI coach who meets you where you are."
+                hintText="Tap to translate this introduction into Nigerian Pidgin."
+              />
+            </div>
 
             {/* Voice selector */}
             <div className="mt-5 inline-flex flex-col items-center gap-2">
@@ -1555,6 +1563,9 @@ LANGUAGE RULES:
                       : 'bg-slate-900 border border-slate-600 text-slate-100 rounded-tl-sm'}`}
                   >
                     <MessageContent content={msg.content} />
+                    {msg.role === 'assistant' && (
+                      <AIPidginCoachWrapper englishText={msg.content} />
+                    )}
                   </div>
                 </div>
               ))}

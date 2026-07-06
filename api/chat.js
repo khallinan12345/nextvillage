@@ -58,6 +58,7 @@ const FREE_TIER_PAGES = new Set([
   'HealthcareNavigatorPage',
   'EntrepreneurshipConsultantPage',
   'AIAmbassadorsPage',
+  'PidginTranslationModule',
 ]);
 
 // Pages that use Sonnet for coding tasks, free-tier for non-coding tasks
@@ -1015,6 +1016,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[chat.js] Error:', error);
+    console.error('[chat.js] Error stack:', error?.stack);
     try { console.error('[chat.js] Error (stringified):', JSON.stringify(error)); } catch (e) { /* ignore */ }
 
     // Log to system_events and send triage alert email

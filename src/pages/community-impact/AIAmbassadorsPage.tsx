@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Users, MessageSquare, Volume2, VolumeX, ArrowLeft, Send,
   Mic, MicOff, CheckCircle, Star, Loader2,
@@ -1136,6 +1137,14 @@ Respond ONLY as valid JSON:
                 ? 'Learn how to teach others in your community about AI — by practising with a real community member.'
                 : 'Develop the skills to explain AI accessibly, handle skepticism, and connect technology to real community needs in Oloibiri.'}
             </p>
+            <div className="mt-3">
+              <PidginTooltip
+                originalText={communicationLevel <= 1
+                  ? 'Learn how to teach others in your community about AI — by practising with a real community member.'
+                  : 'Develop the skills to explain AI accessibly, handle skepticism, and connect technology to real community needs in Oloibiri.'}
+                hintText="Tap here to translate the page intro into Nigerian Pidgin."
+              />
+            </div>
           </div>
 
           {/* ── Challenge Banner — available (not enrolled) ── */}

@@ -7,7 +7,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  server: {                    // ← ADD THIS SECTION
+  server: {
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -15,5 +15,5 @@ export default defineConfig({
         secure: false,
       }
     }
-  }                           // ← END OF NEW SECTION
+  }
 });

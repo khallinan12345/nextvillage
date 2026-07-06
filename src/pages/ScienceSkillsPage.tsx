@@ -22,7 +22,9 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON } from '../lib/chatClient';
 import { useVoice } from '../hooks/useVoice';
+import { PidginTooltip } from '../components/PidginTooltip';
 import { VoiceFallback } from '../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -565,24 +567,7 @@ const LEVEL_CONFIG: Record<ProficiencyLevel, { color: string; bg: string; border
   Emerging:   { color: 'text-slate-300',  bg: 'bg-slate-700/50',  border: 'border-slate-500', emoji: '🌱' },
   Developing: { color: 'text-blue-300',   bg: 'bg-blue-900/40',   border: 'border-blue-500',  emoji: '📈' },
   Proficient: { color: 'text-green-300',  bg: 'bg-green-900/40',  border: 'border-green-500', emoji: '✅' },
-  Advanced:   { color: 'text-yellow-300', bg: 'bg-yellow-900/40', border: 'border-yellow-500',emoji: '🏆' },
-};
-
-const isStrongLevel = (level: ProficiencyLevel) => level === 'Proficient' || level === 'Advanced';
-const isWeakLevel = (level: ProficiencyLevel) => level === 'Emerging' || level === 'Developing';
-
-const normalizeEvaluation = (evaluation: SessionEvaluation): SessionEvaluation => {
-  const allSubAdvanced = evaluation.sub_categories.length > 0 &&
-    evaluation.sub_categories.every(s => s.level === 'Advanced');
-
-  const canAdvance = evaluation.overall_level === 'Proficient' || evaluation.overall_level === 'Advanced';
-  const isComplete = allSubAdvanced;
-
-  return {
-    ...evaluation,
-    can_advance: canAdvance,
-    is_complete: isComplete,
-  };
+  Advanced:   { color: 'text-yellow-300', bg: 'bg-yellow-900/40', border: 'border-yellow-500', emoji: '🏆' },
 };
 
 const evaluateSession = async (
@@ -1409,6 +1394,12 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
             <p className="text-xl md:text-2xl text-slate-200 max-w-2xl mx-auto">
               Build scientific reasoning first — then unlock Life Sciences and Physical Sciences pathways.
             </p>
+            <div className="mt-4">
+              <PidginTooltip
+                originalText="Build scientific reasoning first — then unlock Life Sciences and Physical Sciences pathways."
+                hintText="Tap to translate this introduction into Nigerian Pidgin."
+              />
+            </div>
 
             {/* Voice selector */}
             <div className="mt-5 inline-flex flex-col items-center gap-2">
@@ -1821,6 +1812,9 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   <div className={`max-w-[80%] rounded-2xl px-5 py-4 text-lg leading-relaxed
                     ${msg.role === 'user' ? 'bg-slate-700 text-white rounded-tr-sm' : 'bg-slate-900 border border-slate-600 text-slate-100 rounded-tl-sm'}`}>
                     <MessageContent content={msg.content} />
+                    {msg.role === 'assistant' && (
+                      <AIPidginCoachWrapper englishText={msg.content} />
+                    )}
                   </div>
                 </div>
               ))}

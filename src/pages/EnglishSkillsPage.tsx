@@ -12,7 +12,9 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON } from '../lib/chatClient';
 import { useVoice } from '../hooks/useVoice';
+import { PidginTooltip } from '../components/PidginTooltip';
 import { VoiceFallback } from '../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -1234,6 +1236,12 @@ Respond ONLY with valid JSON:
                 Grow your English communication through real conversations with an AI coach.
                 Complete each stage to unlock the next — at your own pace.
               </p>
+              <div className="mt-4">
+                <PidginTooltip
+                  originalText="Grow your English communication through real conversations with an AI coach. Complete each stage to unlock the next — at your own pace."
+                  hintText="Tap to translate this introduction into Nigerian Pidgin."
+                />
+              </div>
               {/* ── Coach Voice Selector ──────────────────────────────── */}
               <div className="mt-5 inline-flex flex-col items-center gap-2">
                 <div className="flex items-center gap-2 text-base text-white font-medium">
@@ -1624,6 +1632,9 @@ Respond ONLY with valid JSON:
                         : 'bg-slate-900 border border-slate-600 text-slate-100 rounded-tl-sm'}`}
                     >
                       <MessageContent content={msg.content} />
+                      {msg.role === 'assistant' && (
+                        <AIPidginCoachWrapper englishText={msg.content} />
+                      )}
                     </div>
                   </div>
                 ))}

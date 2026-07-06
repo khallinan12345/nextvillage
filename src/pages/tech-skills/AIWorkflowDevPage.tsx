@@ -17,6 +17,7 @@ import { supabase } from '../../lib/supabaseClient';
 import Editor from '@monaco-editor/react';
 import GitHubPanel from '../../components/GitHubPanel';
 import { useVoice } from '../../hooks/useVoice';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import {
   Cpu, Sparkles, Loader2, Save, FolderOpen, Download,
@@ -337,6 +338,12 @@ const WorkflowOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
       <p className="text-sm text-gray-300 leading-relaxed mb-3">
         You are going to build a <strong className="text-white">complete full-stack app</strong> — with a real database, user authentication, and an AI agent that interacts with your visitors. This is not a demo. It is a real app you will deploy and share.
       </p>
+      <div className="mt-3">
+        <PidginTooltip
+          originalText="You are going to build a complete full-stack app — with a real database, user authentication, and an AI agent that interacts with your visitors. This is not a demo. It is a real app you will deploy and share."
+          hintText="Tap here to translate the onboarding intro into Nigerian Pidgin."
+        />
+      </div>
       <p className="text-sm text-gray-300 leading-relaxed">
         The AI agent is not a chatbot bolted on at the end. It is a core feature of your app — planned in Phase 1, built alongside the database in Phase 2, and secured and deployed in Phase 3.
       </p>
