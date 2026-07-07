@@ -32,6 +32,7 @@ import classNames from 'classnames';
 import { useAuth } from '../hooks/useAuth';
 import { useVoice } from '../hooks/useVoice';
 import { PidginTooltip } from '../components/PidginTooltip';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import { VoiceFallback } from '../components/VoiceFallback';
 // Helper function to check and trigger baseline assessment
 // Helper function to check and trigger baseline assessment
@@ -3611,7 +3612,10 @@ Respond ONLY with valid JSON:
                         )}>
                           <div className="text-base leading-relaxed">
                             {message.role === 'assistant' ? (
-                              <MarkdownText text={message.content} />
+                              <>
+                                <MarkdownText text={message.content} />
+                                <AIPidginCoachWrapper englishText={message.content} />
+                              </>
                             ) : (
                               <p>{message.content}</p>
                             )}

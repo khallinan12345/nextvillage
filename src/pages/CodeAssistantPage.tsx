@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import SpellCheckTextarea from '../components/ui/SpellCheckTextarea';
 import { useVoice } from '../hooks/useVoice';
 import { VoiceFallback } from '../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import Editor from '@monaco-editor/react';
 // Import the chat client functions
 import { chatText, chatJSON, generateImageViaServer } from '../lib/chatClient';
@@ -2220,6 +2221,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                           >
                             {message.content}
                           </ReactMarkdown>
+                          {message.role === 'assistant' && <AIPidginCoachWrapper englishText={message.content} />}
                         </div>
                         
                         {message.codeExecution && renderCodeExecution(message.codeExecution)}

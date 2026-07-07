@@ -32,6 +32,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import {
   Fish, ArrowLeft, Send, Save, Loader2, Plus, User,
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
@@ -556,6 +557,7 @@ const ProbePanel: React.FC<ProbePanelProps> = ({
                 {msg.role === 'assistant' && <p className="text-xs font-bold text-teal-400 mb-1">AI Interview Coach</p>}
                 {msg.role === 'user' && <p className="text-xs font-bold text-cyan-200 mb-1">Client's answer</p>}
                 <MarkdownText text={msg.content}/>
+                {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
               </div>
             </div>
           ))}
@@ -1965,6 +1967,7 @@ const FishingConsultantPage: React.FC = () => {
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Fishing Advisor</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && (
                     <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-cyan-600 flex items-center justify-center">

@@ -26,6 +26,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import {
   Users, MessageSquare, Volume2, VolumeX, ArrowLeft, Send,
   Mic, MicOff, CheckCircle, Star, Loader2,
@@ -578,6 +579,7 @@ const PrepPanel: React.FC<PrepPanelProps> = ({
               {msg.role === 'assistant' && <p className="text-xs font-bold text-emerald-400 mb-1">Prep Coach</p>}
               {msg.role === 'user' && <p className="text-xs font-bold text-emerald-200 mb-1">Your answer</p>}
               <MarkdownText text={msg.content}/>
+              {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
             </div>
           </div>
         ))}
@@ -1687,7 +1689,7 @@ Respond ONLY as valid JSON:
                   <div className={classNames('max-w-[75%] rounded-2xl px-4 py-3 text-base leading-relaxed',
                     msg.role === 'user' ? 'bg-emerald-600 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-tl-sm')}>
                     {msg.role === 'assistant'
-                      ? <><p className="text-xs font-bold mb-1 opacity-60">{selectedPersona.name}</p><MarkdownText text={msg.content} /></>
+                      ? <><p className="text-xs font-bold mb-1 opacity-60">{selectedPersona.name}</p><MarkdownText text={msg.content} />{msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}</>
                       : <><p className="text-xs font-bold mb-1 opacity-75">You (Ambassador)</p><MarkdownText text={msg.content} /></>}
                   </div>
                   {msg.role === 'user' && (
@@ -1800,6 +1802,7 @@ Respond ONLY as valid JSON:
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">Debrief Coach</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && (
                     <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center">

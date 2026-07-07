@@ -14,6 +14,7 @@ import { VibeCodingWorkflow } from '../../components/learning/VibeCodingWorkflow
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import {
   Bot, User, Send, Mic, Wand2, Save, CheckCircle,
   Volume2, VolumeX, Code, FolderOpen, Plus, X, ChevronDown, Edit3, Check,
@@ -713,6 +714,7 @@ Respond with ONLY valid JSON:
                       message.role === 'assistant' ? 'bg-gray-100 text-gray-900' : 'bg-purple-600 text-white'
                     )}>
                       <MarkdownText text={message.content} />
+                      {message.role === 'assistant' && <AIPidginCoachWrapper englishText={message.content} />}
                     </div>
                     {message.role === 'user' && (
                       <div className="flex-shrink-0 h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center">

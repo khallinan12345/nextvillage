@@ -14,6 +14,7 @@ import SpellCheckTextarea from '../components/ui/SpellCheckTextarea';
 import { chatText, chatJSON } from '../lib/chatClient';
 
 import Navbar from '../components/layout/Navbar';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import { Bot, User, Send, Scissors, Lightbulb, CheckCircle, AlertCircle, Code, List, Hash, Plus, Users, Star, Briefcase, FolderPlus, Mic } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -1767,7 +1768,10 @@ Remember: Be a project mentor that uses age-appropriate language, guide effectiv
                 )}>
                   <div className="text-sm">
                     {message.role === 'assistant' ? (
-                      <MarkdownText text={message.content} />
+                      <>
+                        <MarkdownText text={message.content} />
+                        <AIPidginCoachWrapper englishText={message.content} />
+                      </>
                     ) : (
                       <p>{message.content}</p>
                     )}

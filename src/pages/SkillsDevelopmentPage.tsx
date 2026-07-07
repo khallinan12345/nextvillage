@@ -51,6 +51,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
 import AppLayout from '../components/layout/AppLayout';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import Button from '../components/ui/Button';
 import {
   Monitor,
@@ -4095,6 +4096,7 @@ Provide assessment now:`;
                       )}
                     >
                       <MarkdownText text={message.content} />
+                      {message.role === 'assistant' && <AIPidginCoachWrapper englishText={message.content} />}
                     </div>
                     {message.role === 'user' && (
                       <div className="flex-shrink-0 h-12 w-12 rounded-full bg-purple-600 flex items-center justify-center">

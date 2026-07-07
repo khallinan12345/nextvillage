@@ -24,6 +24,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import {
   ArrowLeft, Send, Loader2, Plus, User, FileText,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
@@ -1871,6 +1872,7 @@ const AnimalHusbandryPage: React.FC = () => {
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Animal Health Advisor</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && (
                     <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center">

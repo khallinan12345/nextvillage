@@ -26,6 +26,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import {
   Sprout, ArrowLeft, Send, Save, Loader2, Plus, User,
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
@@ -1988,6 +1989,7 @@ const AgricultureConsultantPage: React.FC = () => {
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Agriculture Advisor</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && (
                     <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center">

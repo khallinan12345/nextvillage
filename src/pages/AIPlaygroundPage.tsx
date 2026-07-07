@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useVoice } from '../hooks/useVoice';
 import { VoiceFallback } from '../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import { useBranding } from '../lib/useBranding';
 import {
   Plus, Search, Trash2, Download, Send, Paperclip,
@@ -1642,11 +1643,14 @@ const AIPlaygroundPage: React.FC = () => {
                     <div className={`rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'}`}>
                       {msg.role === 'assistant'
                         ? (
-                          <MessageContent
-                            text={msg.content}
-                            parsedBlocks={parsedBlocks}
-                            onOpenBlock={(blockIdx) => openBlockInPanel(parsedBlocks[blockIdx], msgIdx, blockIdx)}
-                          />
+                          <>
+                            <MessageContent
+                              text={msg.content}
+                              parsedBlocks={parsedBlocks}
+                              onOpenBlock={(blockIdx) => openBlockInPanel(parsedBlocks[blockIdx], msgIdx, blockIdx)}
+                            />
+                            <AIPidginCoachWrapper englishText={msg.content} />
+                          </>
                         )
                         : <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       }

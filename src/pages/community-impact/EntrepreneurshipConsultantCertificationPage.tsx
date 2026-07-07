@@ -24,6 +24,7 @@ import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { useBranding } from '../../lib/useBranding';
 import {
   Briefcase, Award, Trophy, Loader2, Download, AlertCircle,
@@ -630,6 +631,7 @@ Return valid JSON only (no markdown, no code fences):
                   <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-amber-600 text-white rounded-tr-sm' : 'bg-gray-700 text-gray-100 rounded-tl-sm'}`}>
                     <p className="text-[10px] font-bold mb-1 opacity-60">{msg.role === 'user' ? 'You (Advisor)' : activePersona.name}</p>
                     {msg.content}
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center flex-shrink-0"><Briefcase size={14} className="text-white" /></div>}
                 </div>

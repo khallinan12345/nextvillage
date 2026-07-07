@@ -28,6 +28,7 @@ import {
   PenLine, MessageSquare, Lightbulb, ShieldCheck, Globe2,
   Send, Mic, MicOff, X, ChevronRight, BookOpen, Heart,
 } from 'lucide-react';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 
 // ─── Background — cursor-driven ripple distortion (no sidebar offset) ─────────
 // Cert page uses Navbar only (no AppLayout sidebar), so background spans
@@ -861,6 +862,9 @@ Return valid JSON only (no markdown, no code fences):
                     <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-emerald-600 text-white rounded-tr-sm' : 'bg-gray-700 text-gray-100 rounded-tl-sm'}`}>
                       <p className="text-[10px] font-bold mb-1 opacity-60">{msg.role === 'user' ? 'You (Ambassador)' : activePersona.name}</p>
                       {msg.content}
+                      {msg.role === 'assistant' && (
+                        <AIPidginCoachWrapper englishText={msg.content} />
+                      )}
                     </div>
                     {msg.role === 'user' && (
                       <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center flex-shrink-0">

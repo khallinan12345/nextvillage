@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient'; 
 import SpellCheckTextarea from '../components/ui/SpellCheckTextarea';
 import Navbar from '../components/layout/Navbar';
+import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import { Bot, User, Send, Lightbulb, CheckCircle, AlertCircle, Code, List, Hash, Plus, Users, Star, Palette, Mic } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -1477,7 +1478,10 @@ Remember: Be a creativity coach, use humor appropriately, ask clarifying questio
                 )}>
                   <div className="text-sm">
                     {message.role === 'assistant' ? (
-                      <MarkdownText text={message.content} />
+                      <>
+                        <MarkdownText text={message.content} />
+                        <AIPidginCoachWrapper englishText={message.content} />
+                      </>
                     ) : (
                       <p>{message.content}</p>
                     )}

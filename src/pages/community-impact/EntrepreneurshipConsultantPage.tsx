@@ -26,6 +26,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import {
   Briefcase, BookOpen, Users, ArrowLeft, Send, Mic, MicOff,
   Volume2, VolumeX, Save, Star, Loader2, X, ChevronRight,
@@ -1953,6 +1954,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Business Advisor</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-amber-600 flex items-center justify-center"><Briefcase size={15} className="text-white"/></div>}
                 </div>
@@ -2241,6 +2243,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                     {msg.role==='assistant'&&<p className="text-xs font-bold mb-1 opacity-60">{isConsultChat?selectedPersona?.name:'Business Tutor'}</p>}
                     {msg.role==='user'&&<p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role==='assistant'&&<AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role==='user'&&<div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center"><Briefcase size={18} className="text-white"/></div>}
                 </div>

@@ -26,6 +26,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { useAuth } from '../../hooks/useAuth';
 import {
   Heart, ArrowLeft, Send, Save, Loader2, Plus, User,
@@ -809,6 +810,7 @@ const ProbePanel: React.FC<ProbePanelProps> = ({
               {msg.role === 'assistant' && <p className="text-xs font-bold text-indigo-400 mb-1">AI Coach</p>}
               {msg.role === 'user' && <p className="text-xs font-bold text-blue-200 mb-1">Navigator answer</p>}
               <MarkdownText text={msg.content}/>
+              {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
             </div>
           </div>
         ))}
@@ -2443,6 +2445,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Clinical Advisor</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Navigator)</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && (
                     <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-600 flex items-center justify-center">
@@ -2559,6 +2562,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Follow-up Guide</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Navigator)</p>}
                     <MarkdownText text={msg.content}/>
+                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
                   {msg.role === 'user' && (
                     <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-teal-600 flex items-center justify-center">

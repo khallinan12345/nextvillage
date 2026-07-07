@@ -25,6 +25,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { VibeCodingWorkflow } from '../../components/learning/VibeCodingWorkflow';
 import {
   Code, Award, Trophy, Loader2, Download, Globe,
@@ -825,7 +826,10 @@ Respond ONLY in this JSON format:
                       )}
                       <div className={`max-w-xs rounded-lg px-3 py-2 text-xs leading-relaxed ${msg.role === 'assistant' ? 'bg-gray-800 text-gray-200' : 'bg-pink-600 text-white'}`}>
                         {msg.role === 'assistant' ? (
-                          <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
+                          <>
+                            <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
+                            <AIPidginCoachWrapper englishText={msg.content} />
+                          </>
                         ) : (
                           msg.content
                         )}
