@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Volume2, RefreshCw, Languages, AlertCircle } from 'lucide-react';
 import { chatText } from '../lib/chatClient';
 import { usePidginSpeech } from '../hooks/usePidginSpeech';
+import { speakEnglish, stopBrowserSpeech } from '../lib/speechCoordination';
 
 interface AIPidginCoachWrapperProps {
   englishText: string;
@@ -91,33 +92,25 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
   };
 
   const handleListen = async () => {
-    const textToSpeak = pidginText || englishText;
-    if (!textToSpeak.trim()) return;
-
     if (speaking) {
       cancelSpeech();
       return;
     }
 
     setErrorMessage('');
-    try {
-      await speakPidginText(textToSpeak);
-    } catch (err) {
-      console.error('[AIPidginCoachWrapper] speakPidginText failed', err);
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(
-          v =>
-            v.lang.includes('en-NG') ||
-            v.name.toLowerCase().includes('nigerian') ||
-            v.lang.includes('en-GB') ||
-            v.lang.includes('en-US')
-        );
-        if (preferredVoice) utterance.voice = preferredVoice;
-        window.speechSynthesis.speak(utterance);
+    stopBrowserSpeech();
+
+    if (showPidgin && pidginText.trim()) {
+      try {
+        await speakPidginText(pidginText);
+      } catch (err) {
+        console.error('[AIPidginCoachWrapper] speakPidginText failed', err);
       }
+      return;
+    }
+
+    if (englishText.trim()) {
+      speakEnglish(englishText);
     }
   };
 

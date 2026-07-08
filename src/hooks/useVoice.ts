@@ -36,6 +36,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { prepareForBrowserSpeech, registerEnglishSpeak } from '../lib/speechCoordination';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -185,8 +186,8 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
       return;
     }
 
-    // Cancel anything currently playing
-    window.speechSynthesis.cancel();
+    // Stop Pidgin SpeechGen audio and any browser speech before starting
+    prepareForBrowserSpeech();
 
     const utterance = new SpeechSynthesisUtterance(text);
 
@@ -253,19 +254,20 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
   // ── cancel() ──────────────────────────────────────────────────────────────
   const cancel = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    prepareForBrowserSpeech();
     setSpeaking(false);
   }, []);
+
+  // Register so AIPidginCoachWrapper can route English playback through this hook
+  useEffect(() => {
+    return registerEnglishSpeak(speak);
+  }, [speak]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      prepareForBrowserSpeech();
     };
   }, []);
 

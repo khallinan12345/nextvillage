@@ -214,20 +214,86 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.post('/api/pidgin-tts', async (req, res) => {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'nigerian_native';
+const SPEECHGEN_API_URL = 'https://speechgen.io/index.php?r=api/text';
+const DEFAULT_SPEECHGEN_VOICE = 'Chioma';
 
-  if (!apiKey) {
-    return res.status(500).json({ error: 'ELEVENLABS_API_KEY is not configured on the server' });
+async function generateSpeechGenAudio(text) {
+  const token = process.env.SPEECHGEN_TOKEN;
+  const email = process.env.SPEECHGEN_EMAIL;
+  const voice = process.env.SPEECHGEN_VOICE || DEFAULT_SPEECHGEN_VOICE;
+
+  if (!token || !email) {
+    return {
+      error: 'SpeechGen credentials are not configured on the server (SPEECHGEN_TOKEN, SPEECHGEN_EMAIL).',
+      statusCode: 500,
+    };
   }
 
+  const response = await fetch(SPEECHGEN_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      token,
+      email,
+      voice,
+      text,
+      format: 'mp3',
+      speed: 1,
+      sample_rate: 24000,
+      bitrate: 192,
+    }),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!data) {
+    return { error: 'SpeechGen returned an invalid response.', statusCode: 502 };
+  }
+
+  if (data.status === -1) {
+    console.error('[pidgin-tts] SpeechGen error', data.error);
+    return { error: data.error || 'SpeechGen TTS request failed.', statusCode: 502 };
+  }
+
+  if (data.status !== 1) {
+    return { error: 'SpeechGen TTS request failed with an unexpected status.', statusCode: 502 };
+  }
+
+  const audioUrl = data.file_cors || data.file;
+  if (!audioUrl) {
+    return { error: 'SpeechGen response did not include an audio URL.', statusCode: 502 };
+  }
+
+  return { audioUrl };
+}
+
+app.post('/api/pidgin-tts', async (req, res) => {
   const { text } = req.body || {};
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ error: 'text is required' });
   }
 
   try {
+    const result = await generateSpeechGenAudio(text);
+
+    if (result.error) {
+      return res.status(result.statusCode || 502).json({ error: result.error });
+    }
+
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json({ audioUrl: result.audioUrl });
+
+    // ElevenLabs fallback (commented out — restore if reverting from SpeechGen)
+    /*
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+    const voiceId = process.env.ELEVENLABS_VOICE_ID || 'nigerian_native';
+
+    if (!apiKey) {
+      return res.status(500).json({ error: 'ELEVENLABS_API_KEY is not configured on the server' });
+    }
+
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: {
@@ -254,6 +320,7 @@ app.post('/api/pidgin-tts', async (req, res) => {
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(buffer);
+    */
   } catch (error) {
     console.error('[pidgin-tts] Error:', error);
     return res.status(500).json({ error: 'Internal server error while generating Pidgin audio' });
