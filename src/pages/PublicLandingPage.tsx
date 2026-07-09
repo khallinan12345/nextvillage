@@ -520,14 +520,14 @@ const PublicLandingPage: React.FC = () => {
           align-items: center;
         }
         .vision-video {
-          width: 100%; max-width: 340px; margin: 0 auto;
-          aspect-ratio: 9 / 16;
+          width: 100%; max-width: 480px; margin: 0 auto;
+          aspect-ratio: 16 / 9;
           border-radius: 20px; overflow: hidden;
           border: 1px solid rgba(255,255,255,0.14);
           box-shadow: 0 24px 60px rgba(0,0,0,0.45);
           background: #000;
         }
-        .vision-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .vision-video iframe { width: 100%; height: 100%; border: none; display: block; }
 
         @media (max-width: 640px) {
           .hide-sm { display: none !important; }
@@ -2111,16 +2111,16 @@ const PublicLandingPage: React.FC = () => {
 
               <div>
                 <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#5eead4", marginBottom: "0.6rem" }}>
-                  What They See Ahead
+                  In Their Own Words
                 </div>
                 <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.8rem,4vw,2.8rem)", fontWeight: 700, color: "#fff", margin: "0 0 1.1rem", lineHeight: 1.15 }}>
-                  Their vision for 2030 — in their own words
+                  What AI has taught them — and where they see it taking them
                 </h2>
                 <p style={{ color: "rgba(255,255,255,0.62)", fontSize: "1.02rem", lineHeight: 1.85, margin: "0 0 1.5rem" }}>
                   Every child in this video walked into a vacant room with no prior digital access.
-                  Here, they describe — in their own voices, holding their own drawings — what they
-                  imagine for their community five years from now: solar farms, clean water systems,
-                  businesses, and a future they intend to help build themselves.
+                  Here, in their own voices, they talk about what AI has taught them so far, how it
+                  has changed the way they think and learn, and the future they now imagine for
+                  themselves and their community because of it.
                 </p>
                 <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", lineHeight: 1.7, margin: 0, fontStyle: "italic" }}>
                   This is the counter-narrative to conventional aid: not a future done for them,
@@ -2129,16 +2129,13 @@ const PublicLandingPage: React.FC = () => {
               </div>
 
               <div className="vision-video">
-                <video
-                  controls
-                  playsInline
-                  preload="metadata"
-                  poster="/youth_vision_poster.jpg"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                >
-                  <source src="/OurYouthsFuture.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                <iframe
+                  src="https://www.youtube.com/embed/076mwoD7_to"
+                  title="Youth vision for AI futures — in their own words"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                />
               </div>
 
             </div>
