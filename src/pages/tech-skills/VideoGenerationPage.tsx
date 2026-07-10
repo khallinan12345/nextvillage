@@ -240,9 +240,13 @@ const VideoGenerationPage: React.FC = () => {
   const [isImprovingStep, setIsImprovingStep] = useState(false);
 
   // ── Prompt quality gate ───────────────────────────────────────────────────
-  const PROMPT_SCORE_THRESHOLD = 7;
+  const PROMPT_SCORE_THRESHOLD = 6;
   const [promptScore,      setPromptScore]      = useState<number | null>(null);
   const [promptEvaluated,  setPromptEvaluated]  = useState(false);
+  const [improvedPromptSuggestion, setImprovedPromptSuggestion] = useState<string | null>(null);
+
+  // ── Simple transition mode (start → end frame, no prompt evaluation needed) ─
+  const [isSimpleTransition, setIsSimpleTransition] = useState(false);
 
   // ── Confirmation dialog ───────────────────────────────────────────────────
   const [showConfirm,    setShowConfirm]    = useState(false);
@@ -463,6 +467,7 @@ const VideoGenerationPage: React.FC = () => {
     setEndImage(null);
     if (endImagePreview) URL.revokeObjectURL(endImagePreview);
     setEndImagePreview(null);
+    setIsSimpleTransition(false);
   };
 
   const applyUrlAsStartImage = useCallback(async (url: string, label: string) => {
@@ -494,6 +499,22 @@ const VideoGenerationPage: React.FC = () => {
     setEndImage(null);
     if (endImagePreview) URL.revokeObjectURL(endImagePreview);
     setEndImagePreview(null);
+    setIsSimpleTransition(false);
+  };
+
+  // ── Simple transition — auto-prompt for a plain start→end frame morph ────
+  const handleSimpleTransition = () => {
+    if (!startImage || !endImage || isGenerating) return;
+    const autoPrompt =
+      'A smooth, natural cinematic transition that begins exactly at the start image and gradually ' +
+      'transforms into the end image. Steady camera, continuous soft motion, and consistent lighting ' +
+      'throughout — no new subjects or scene changes, just a clean transition between the two frames.';
+    setPrompt(autoPrompt);
+    setIsSimpleTransition(true);
+    setPromptScore(null);
+    setPromptEvaluated(false);
+    setImprovedPromptSuggestion(null);
+    setShowCritique(false);
   };
 
   const imageMode: 'text' | 'start' | 'start-end' =
@@ -570,6 +591,8 @@ const VideoGenerationPage: React.FC = () => {
     setActiveJob(null); setVideoUrl(null); setError(null);
     setSavedUrl(null); setSaveError(null); setDashSaved(false);
     clearStartImage();
+    setIsSimpleTransition(false);
+    setPromptScore(null); setPromptEvaluated(false); setImprovedPromptSuggestion(null);
     stopSpeaking();
   };
 
@@ -813,7 +836,7 @@ Return ONLY the improved prompt text. No explanation, no preamble.`
   const handleFullCritique = async () => {
     if (!prompt.trim() || isCritiquing) return;
     setIsCritiquing(true); setCritiqueStep('full'); setShowCritique(true);
-    setPromptScore(null); setPromptEvaluated(false);
+    setPromptScore(null); setPromptEvaluated(false); setImprovedPromptSuggestion(null);
 
     const commGuidance = lvl <= 1
       ? 'Write in short, simple sentences. One idea per sentence. Use familiar examples. Max 80 words.'
@@ -842,10 +865,20 @@ For each area: say what is good, what is missing, and give a one-line example of
 Then give an overall SCORE out of 10. The score must appear on its own line in this exact format:
 SCORE: X/10
 
-A score of 7 or higher means the prompt is strong enough to generate a video.
-A score below 7 means the student must improve their prompt before generating.
+A score of ${PROMPT_SCORE_THRESHOLD} or higher means the prompt is strong enough to generate a video.
+A score below ${PROMPT_SCORE_THRESHOLD} means the student must improve their prompt before generating.
 
-End with one improved version of the full prompt if the score is below 7.
+If the score is below ${PROMPT_SCORE_THRESHOLD}, end your entire response with an improved version of the
+prompt, introduced on its own line by exactly this marker (all caps, nothing else on that line):
+IMPROVED PROMPT:
+
+Strict rules for the improved prompt:
+- Preserve the student's original subject, setting, and idea EXACTLY — never invent a new scene, change
+  who or what is in it, or change the setting.
+- Only ADD the missing visual details you identified above (lighting, camera, mood, movement) and fix
+  grammar/clarity. Never replace or remove the original concept.
+- If the student's idea is simple, keep it simple — enrich it, don't rewrite it into something else.
+- Keep it under 120 words.
 
 ${commGuidance}`
         }],
@@ -857,7 +890,12 @@ ${commGuidance}`
       const scoreMatch = critique.match(/SCORE:\s*(\d+)\s*\/\s*10/i);
       const parsedScore = scoreMatch ? parseInt(scoreMatch[1], 10) : null;
 
-      setCritiqueText(critique);
+      const improvedMatch = critique.match(/IMPROVED PROMPT:\s*([\s\S]*)/i);
+      const suggestion = improvedMatch ? improvedMatch[1].trim() : null;
+      const critiqueDisplay = improvedMatch ? critique.slice(0, improvedMatch.index).trim() : critique;
+
+      setCritiqueText(critiqueDisplay);
+      setImprovedPromptSuggestion(suggestion);
       setPromptScore(parsedScore);
       setPromptEvaluated(true);
 
@@ -1151,7 +1189,11 @@ Return ONLY the improved text. No explanation, no preamble.`
               </label>
               <textarea
                 value={prompt}
-                onChange={e => { setPrompt(e.target.value); setPromptScore(null); setPromptEvaluated(false); }}
+                onChange={e => {
+                  setPrompt(e.target.value);
+                  setPromptScore(null); setPromptEvaluated(false);
+                  setImprovedPromptSuggestion(null); setIsSimpleTransition(false);
+                }}
                 rows={4} maxLength={1000} disabled={isGenerating}
                 placeholder={uiText.promptPlaceholder}
                 className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition disabled:opacity-50"
@@ -1338,6 +1380,34 @@ Return ONLY the improved text. No explanation, no preamble.`
                 </p>
               )}
 
+              {imageMode === 'start-end' && (
+                <div className="border-t border-slate-700/40 pt-4 space-y-1.5">
+                  <button
+                    onClick={handleSimpleTransition}
+                    disabled={isGenerating}
+                    className={classNames(
+                      'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed',
+                      isSimpleTransition
+                        ? 'bg-cyan-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-300 border border-slate-600/60 hover:bg-slate-700'
+                    )}>
+                    <Sparkles size={14} />
+                    {lvl <= 1 ? '✨ Just move from picture 1 to picture 2' : '✨ Simple Transition (Start → End)'}
+                  </button>
+                  <p className="text-xs text-slate-500">
+                    {lvl <= 1
+                      ? 'Skip writing a prompt — this makes a simple video that moves from your first picture to your second picture.'
+                      : 'Auto-generates a minimal transition prompt and skips prompt evaluation — ideal for a quick morph between two exact frames.'}
+                  </p>
+                  {isSimpleTransition && (
+                    <p className="text-xs text-cyan-400 flex items-center gap-1">
+                      <CheckCircle size={12} />
+                      {lvl <= 1 ? 'Simple transition ready — you can make your video now!' : 'Simple transition mode active — prompt evaluation bypassed.'}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Recent images from AI Image Generation */}
               {recentFrameImages.length > 0 && (
                 <div className="border-t border-slate-700/40 pt-4">
@@ -1416,9 +1486,33 @@ Return ONLY the improved text. No explanation, no preamble.`
                         <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
                         {lvl <= 1 ? 'Checking your prompt…' : 'Analysing your prompt…'}
                       </div>
-                    : <div className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
-                        {critiqueText}
-                      </div>
+                    : <>
+                        <div className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+                          {critiqueText}
+                        </div>
+                        {improvedPromptSuggestion && (
+                          <div className="mt-4 pt-4 border-t border-amber-500/20 space-y-2">
+                            <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
+                              <Sparkles size={12} />
+                              {lvl <= 1 ? 'Suggested better prompt (keeps your idea)' : 'AI-suggested improved prompt — keeps your original intent'}
+                            </p>
+                            <p className="text-sm text-slate-200 bg-slate-800/60 rounded-lg px-3 py-2 leading-relaxed">
+                              {improvedPromptSuggestion}
+                            </p>
+                            <button
+                              onClick={() => {
+                                setPrompt(improvedPromptSuggestion);
+                                setPromptScore(null);
+                                setPromptEvaluated(false);
+                                setImprovedPromptSuggestion(null);
+                                setIsSimpleTransition(false);
+                              }}
+                              className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-full px-3 py-1.5 text-xs font-semibold transition-colors">
+                              <Wand2 size={12} /> {lvl <= 1 ? 'Use this prompt' : 'Use this improved prompt'}
+                            </button>
+                          </div>
+                        )}
+                      </>
                 )}
 
                 {critiqueStep === 'step' && (
@@ -1617,14 +1711,31 @@ Return ONLY the improved text. No explanation, no preamble.`
 
             {/* Generate button */}
             {!activeJob && (() => {
-              const scorePassed  = promptScore !== null && promptScore >= PROMPT_SCORE_THRESHOLD;
-              const needsEval    = !promptEvaluated || promptScore === null;
-              const scoreFailed  = promptEvaluated && promptScore !== null && promptScore < PROMPT_SCORE_THRESHOLD;
-              const limitReached = weeklyCount >= weeklyLimit;
+              const scorePassed    = promptScore !== null && promptScore >= PROMPT_SCORE_THRESHOLD;
+              const needsEval      = !promptEvaluated || promptScore === null;
+              const scoreFailed    = promptEvaluated && promptScore !== null && promptScore < PROMPT_SCORE_THRESHOLD;
+              const limitReached   = weeklyCount >= weeklyLimit;
+              const readyToGenerate = scorePassed || isSimpleTransition;
 
               return (
                 <div className="space-y-2">
-                  {!limitReached && (
+                  {!limitReached && isSimpleTransition && (
+                    <div className="rounded-xl px-4 py-3 text-sm border flex items-start gap-3 bg-cyan-900/20 border-cyan-500/30 text-cyan-300">
+                      <span className="shrink-0 mt-0.5">✨</span>
+                      <div>
+                        <p className="font-semibold">
+                          {lvl <= 1 ? 'Simple transition ready!' : 'Simple transition mode — ready to generate'}
+                        </p>
+                        <p className="text-xs opacity-80 mt-0.5">
+                          {lvl <= 1
+                            ? 'You do not need to check this prompt. Click below to make your video.'
+                            : 'Auto-generated transition prompt — prompt evaluation is not required for this mode.'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!limitReached && !isSimpleTransition && (
                     <div className={classNames(
                       'rounded-xl px-4 py-3 text-sm border flex items-start gap-3',
                       scorePassed
@@ -1679,10 +1790,10 @@ Return ONLY the improved text. No explanation, no preamble.`
 
                   <button
                     onClick={() => setShowConfirm(true)}
-                    disabled={!prompt.trim() || isStarting || !scorePassed || limitReached}
+                    disabled={!prompt.trim() || isStarting || !readyToGenerate || limitReached}
                     className={classNames(
                       'w-full flex items-center justify-center gap-3 rounded-xl py-3.5 font-semibold text-base transition-all',
-                      prompt.trim() && !isStarting && scorePassed && !limitReached
+                      prompt.trim() && !isStarting && readyToGenerate && !limitReached
                         ? 'bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.01]'
                         : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                     )}>
