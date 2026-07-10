@@ -1209,6 +1209,12 @@ Return ONLY the improved text. No explanation, no preamble.`
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 {uiText.promptLabel}
               </label>
+              <p className="flex items-start gap-1.5 text-xs text-cyan-300/80 bg-cyan-950/20 border border-cyan-800/30 rounded-lg px-3 py-2 mb-3">
+                <Sparkles size={12} className="shrink-0 mt-0.5" />
+                {lvl <= 1
+                  ? 'Just want your video to move between two pictures? You do not need to fill this in. Add a start image and an end image below, then click the "Simple Transition" button.'
+                  : 'Just need a simple transition between a static start frame and end frame? You can skip writing a prompt — upload a start image and an end image below, then click the "Simple Transition" button that appears.'}
+              </p>
               <textarea
                 value={prompt}
                 onChange={e => {
