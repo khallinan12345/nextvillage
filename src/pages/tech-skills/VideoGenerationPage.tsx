@@ -14,6 +14,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import {
   Film, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
@@ -370,8 +371,8 @@ const VideoGenerationPage: React.FC = () => {
   }, [availableVoices, voiceMode]);
 
   // ── Speak text ────────────────────────────────────────────────────────────
-  const speakText = useCallback((text: string) => {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const stripped = text.replace(/\*\*/g, '').replace(/#{1,3} /g, '').slice(0, 600);
     const utterance = new SpeechSynthesisUtterance(stripped);
@@ -384,10 +385,29 @@ const VideoGenerationPage: React.FC = () => {
     utterance.onend   = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
-  }, [voiceEnabled, selectedVoice, voiceMode]);
+  }, [selectedVoice, voiceMode]);
+
+  const speakText = useCallback((text: string) => {
+    if (!voiceEnabled) return;
+
+    if (voiceMode === 'pidgin') {
+      setIsSpeaking(true);
+      void playPidginVoice(text, {
+        onEnd: () => setIsSpeaking(false),
+        onError: (err) => {
+          console.warn('[VideoGenerationPage] SpeechGen TTS failed, falling back to browser voice:', err);
+          speakBrowser(text);
+        },
+      });
+      return;
+    }
+
+    speakBrowser(text);
+  }, [voiceEnabled, voiceMode, speakBrowser]);
 
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
+    stopPidginSpeech();
     setIsSpeaking(false);
   };
 
@@ -1135,8 +1155,10 @@ Return ONLY the improved text. No explanation, no preamble.`
                     </button>
                   </div>
                 )}
-                {voiceEnabled && selectedVoice && (
-                  <span className="text-xs text-slate-500 hidden sm:inline">{selectedVoice.name}</span>
+                {voiceEnabled && (voiceMode === 'pidgin' || selectedVoice) && (
+                  <span className="text-xs text-slate-500 hidden sm:inline">
+                    {voiceMode === 'pidgin' ? 'Ezinne' : selectedVoice?.name}
+                  </span>
                 )}
               </div>
             </div>

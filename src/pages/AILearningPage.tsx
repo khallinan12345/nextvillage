@@ -3716,9 +3716,11 @@ Respond ONLY with valid JSON:
                       🇳🇬 Nigerian Pidgin
                     </button>
                   </div>
-                  {selectedVoice && (
+                  {(voiceMode === 'pidgin' || selectedVoice) && (
                     <span className="text-xs text-gray-500 italic">
-                      {selectedVoice.name} ({selectedVoice.lang}){selectedVoice.localService ? ' · offline' : ''}
+                      {voiceMode === 'pidgin'
+                        ? 'Ezinne'
+                        : `${selectedVoice!.name} (${selectedVoice!.lang})${selectedVoice!.localService ? ' · offline' : ''}`}
                     </span>
                   )}
                 </div>

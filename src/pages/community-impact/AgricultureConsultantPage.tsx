@@ -27,6 +27,7 @@ import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import {
   Sprout, ArrowLeft, Send, Save, Loader2, Plus, User,
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
@@ -715,8 +716,8 @@ const AgricultureConsultantPage: React.FC = () => {
     return () => window.speechSynthesis.removeEventListener('voiceschanged', load);
   }, []);
 
-  const speak = useCallback((text: string) => {
-    if (!speechOn || !window.speechSynthesis) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text.slice(0, 400));
     const voice = voiceMode === 'pidgin'
@@ -725,7 +726,21 @@ const AgricultureConsultantPage: React.FC = () => {
     if (voice) { utt.voice = voice; utt.lang = voice.lang; }
     utt.rate = 0.87; utt.pitch = 1.0;
     window.speechSynthesis.speak(utt);
-  }, [speechOn, voices, voiceMode]);
+  }, [voices, voiceMode]);
+
+  const speak = useCallback((text: string) => {
+    if (!speechOn) return;
+    if (voiceMode === 'pidgin') {
+      void playPidginVoice(text.slice(0, 400), {
+        onError: (err) => {
+          console.warn('[AgricultureConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
+          speakBrowser(text);
+        },
+      });
+      return;
+    }
+    speakBrowser(text);
+  }, [speechOn, voiceMode, speakBrowser]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isSending]);
   useEffect(() => { probeChatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [probeMessages, probeLoading]);
@@ -1960,7 +1975,7 @@ const AgricultureConsultantPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                <button onClick={() => { setSpeechOn(s => !s); if (speechOn) window.speechSynthesis.cancel(); }}
+                <button onClick={() => { setSpeechOn(s => !s); if (speechOn) { window.speechSynthesis.cancel(); stopPidginSpeech(); } }}
                   className={classNames('p-2 rounded-lg', speechOn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400')}>
                   {speechOn ? <Volume2 size={15}/> : <VolumeX size={15}/>}
                 </button>

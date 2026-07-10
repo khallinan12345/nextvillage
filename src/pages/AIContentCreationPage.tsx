@@ -10,6 +10,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Navbar from '../components/layout/Navbar';
 import { PidginTooltip } from '../components/PidginTooltip';
+import { playPidginVoice, stopPidginSpeech } from '../lib/speechCoordination';
 import { supabase } from '../lib/supabaseClient';
 import {
   PenLine, Sparkles, Loader2, Save, FolderOpen, Download,
@@ -324,8 +325,8 @@ const AIContentCreationPage: React.FC = () => {
   }, [availableVoices, voiceMode]);
 
   const speakTextRef = useRef<(t: string) => void>(() => {});
-  const speakText = useCallback((text: string) => {
-    if (!voiceOutputEnabled || !('speechSynthesis' in window) || !text.trim()) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text.slice(0, 400));
     if (selectedVoice) { u.voice = selectedVoice; u.lang = selectedVoice.lang; } else u.lang = 'en-GB';
@@ -335,7 +336,20 @@ const AIContentCreationPage: React.FC = () => {
     if      (userGradeLevel === 1) { u.rate = Math.min(u.rate, 0.75); u.pitch = 1.2; }
     else if (userGradeLevel === 2) { u.rate = Math.min(u.rate, 0.80); }
     window.speechSynthesis.speak(u);
-  }, [voiceOutputEnabled, selectedVoice, voiceMode, userGradeLevel]);
+  }, [selectedVoice, voiceMode, userGradeLevel]);
+  const speakText = useCallback((text: string) => {
+    if (!voiceOutputEnabled || !text.trim()) return;
+    if (voiceMode === 'pidgin') {
+      void playPidginVoice(text.slice(0, 400), {
+        onError: (err) => {
+          console.warn('[AIContentCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);
+          speakBrowser(text);
+        },
+      });
+      return;
+    }
+    speakBrowser(text);
+  }, [voiceOutputEnabled, voiceMode, speakBrowser]);
   useEffect(() => { speakTextRef.current = speakText; }, [speakText]);
 
   // ── Session ──────────────────────────────────────────────────────────

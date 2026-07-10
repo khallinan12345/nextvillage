@@ -373,9 +373,11 @@ Return ONLY valid JSON: { "improved_text": "..." }`
           🇳🇬 Nigerian Pidgin
         </button>
       </div>
-      {selectedVoice && (
+      {(voiceMode === 'pidgin' || selectedVoice) && (
         <span className="text-xs text-gray-400 italic hidden sm:inline">
-          {selectedVoice.name} ({selectedVoice.lang}){selectedVoice.localService ? ' · offline' : ''}
+          {voiceMode === 'pidgin'
+            ? 'Ezinne'
+            : `${selectedVoice!.name} (${selectedVoice!.lang})${selectedVoice!.localService ? ' · offline' : ''}`}
         </span>
       )}
       <button

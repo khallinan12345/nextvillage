@@ -27,6 +27,7 @@ import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import {
   Users, MessageSquare, Volume2, VolumeX, ArrowLeft, Send,
   Mic, MicOff, CheckCircle, Star, Loader2,
@@ -855,8 +856,8 @@ const AIAmbassadorsPage: React.FC = () => {
     }
   };
 
-  const speak = useCallback((text: string) => {
-    if (!speechOn || !window.speechSynthesis) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text.slice(0, 350));
     const voice = voiceMode === 'pidgin'
@@ -866,9 +867,25 @@ const AIAmbassadorsPage: React.FC = () => {
     utt.rate = 0.86; utt.pitch = 1.0;
     setIsSpeaking(true); utt.onend = () => setIsSpeaking(false); utt.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utt);
-  }, [speechOn, voices, voiceMode]);
+  }, [voices, voiceMode]);
 
-  const stopSpeaking = () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
+  const speak = useCallback((text: string) => {
+    if (!speechOn) return;
+    if (voiceMode === 'pidgin') {
+      setIsSpeaking(true);
+      void playPidginVoice(text.slice(0, 350), {
+        onEnd: () => setIsSpeaking(false),
+        onError: (err) => {
+          console.warn('[AIAmbassadorsPage] SpeechGen TTS failed, falling back to browser voice:', err);
+          speakBrowser(text);
+        },
+      });
+      return;
+    }
+    speakBrowser(text);
+  }, [speechOn, voiceMode, speakBrowser]);
+
+  const stopSpeaking = () => { window.speechSynthesis.cancel(); stopPidginSpeech(); setIsSpeaking(false); };
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { debriefEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [debriefMessages, isDebriefSending]);
