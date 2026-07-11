@@ -20,26 +20,15 @@ interface SpeechGenErrorResponse {
 type SpeechGenResponse = SpeechGenSuccessResponse | SpeechGenErrorResponse;
 
 async function generateSpeechGenAudio(text: string): Promise<{ audioUrl: string } | { error: string; statusCode?: number }> {
-  const token = process.env.SPEECHGEN_TOKEN;
-  const email = process.env.SPEECHGEN_EMAIL;
-  const voice = process.env.SPEECHGEN_VOICE || DEFAULT_SPEECHGEN_VOICE;
-
-  if (!token || !email) {
-    return {
-      error: 'SpeechGen credentials are not configured on the server (SPEECHGEN_TOKEN, SPEECHGEN_EMAIL).',
-      statusCode: 500,
-    };
-  }
-
   const response = await fetch(SPEECHGEN_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      token,
-      email,
-      voice,
+      token: process.env.SPEECHGEN_TOKEN || '2817806e-6b14-4ae0-943c-7006439cddee',
+      email: process.env.SPEECHGEN_EMAIL || 'khallinan1@udayton.edu',
+      voice: 'ClergyPidgin clone',
       text,
       format: 'mp3',
       speed: 1,
