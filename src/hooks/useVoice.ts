@@ -1,7 +1,13 @@
 /**
  * useVoice — Nigeria-aware text-to-speech hook
  *
- * Voice priority chain (Africa / Nigeria users):
+ * Africa / Pidgin mode (isAfrica = true):
+ *   Routes speak() through the SpeechGen API (/api/pidgin-tts, Ezinne voice)
+ *   for a real Nigerian voice. If that request fails (offline, API error,
+ *   rate limit), falls back to the browser voice priority chain below so
+ *   narration still works on slow/offline connections.
+ *
+ * Browser voice priority chain (fallback for Africa / Nigeria users):
  *   1. en-NG  — Nigerian English (local, installed on Chromebook)
  *   2. en-ZA  — South African English (closest available local accent)
  *   3. Any local en-* voice  (localService = true — works offline / low bandwidth)
@@ -9,7 +15,7 @@
  *   5. Any en-* voice
  *   6. Silent text-fallback  — displays spoken text on screen instead
  *
- * Voice priority chain (non-Africa users):
+ * Voice priority chain (non-Africa users, always browser-based):
  *   1. en-GB  female
  *   2. en-GB
  *   3. Google en-* (network, clearest quality)
@@ -36,7 +42,14 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { prepareForBrowserSpeech, registerEnglishSpeak } from '../lib/speechCoordination';
+import {
+  prepareForBrowserSpeech,
+  prepareForPidginSpeech,
+  clearActivePidginCancel,
+  registerEnglishSpeak,
+} from '../lib/speechCoordination';
+
+const PIDGIN_TTS_API_PATH = '/api/pidgin-tts';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +72,8 @@ export interface UseVoiceReturn {
   selectedVoice: SpeechSynthesisVoice | null;
   /** Whether TTS is available at all in this browser. */
   ttsAvailable: boolean;
+  /** True while a SpeechGen (Pidgin) audio clip is being generated. */
+  audioLoading: boolean;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -115,8 +130,11 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
   const [speaking, setSpeaking] = useState(false);
   const [fallbackText, setFallbackText] = useState<string | null>(null);
   const [ttsAvailable, setTtsAvailable] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cancelSpeechGenRef = useRef<() => void>(() => {});
 
   // Recognition language — Nigerian English understands Nigerian-accented speech
   // far better than en-US
@@ -173,13 +191,25 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
     }
   }, [isAfrica, voiceReady, ttsAvailable]);
 
-  // ── speak() ───────────────────────────────────────────────────────────────
-  const speak = useCallback((text: string) => {
-    if (!text.trim()) return;
+  // ── SpeechGen (Pidgin) audio cleanup / cancel ──────────────────────────────
+  const cleanupAudio = useCallback((): void => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
+  }, []);
 
-    // Clear any previous fallback
-    setFallbackText(null);
+  const cancelSpeechGen = useCallback((): void => {
+    cleanupAudio();
+    clearActivePidginCancel(cancelSpeechGenRef.current);
+    setAudioLoading(false);
+    setSpeaking(false);
+  }, [cleanupAudio]);
 
+  cancelSpeechGenRef.current = cancelSpeechGen;
+
+  // ── speakBrowser() — OS/browser speechSynthesis ────────────────────────────
+  const speakBrowser = useCallback((text: string) => {
     // If TTS not available at all → show text immediately
     if (!ttsAvailable || typeof window === 'undefined' || !('speechSynthesis' in window)) {
       setFallbackText(text);
@@ -251,12 +281,74 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
     }
   }, [ttsAvailable, selectedVoice, isAfrica]);
 
+  // ── speakSpeechGen() — Pidgin voice via SpeechGen, falls back to browser ──
+  const speakSpeechGen = useCallback(async (text: string): Promise<void> => {
+    cancelSpeechGen();
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setAudioLoading(true);
+
+    try {
+      const response = await fetch(PIDGIN_TTS_API_PATH, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      const data = (await response.json().catch(() => null)) as
+        | { audioUrl?: string; error?: string }
+        | null;
+
+      if (!response.ok || !data?.audioUrl) {
+        throw new Error(data?.error || 'Pidgin TTS request failed.');
+      }
+
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
+      audioRef.current.src = data.audioUrl;
+
+      audioRef.current.onended = () => {
+        clearActivePidginCancel(cancelSpeechGenRef.current);
+        setSpeaking(false);
+        setFallbackText(null);
+      };
+      audioRef.current.onerror = () => {
+        clearActivePidginCancel(cancelSpeechGenRef.current);
+        setSpeaking(false);
+      };
+
+      prepareForPidginSpeech(() => cancelSpeechGenRef.current());
+      await audioRef.current.play();
+      setSpeaking(true);
+    } catch (err) {
+      console.warn('[useVoice] SpeechGen TTS failed, falling back to browser voice:', err);
+      speakBrowser(text);
+    } finally {
+      setAudioLoading(false);
+    }
+  }, [cancelSpeechGen, speakBrowser]);
+
+  // ── speak() — routes Pidgin/Africa mode through SpeechGen, else browser ──
+  const speak = useCallback((text: string) => {
+    if (!text.trim()) return;
+
+    setFallbackText(null);
+
+    if (isAfrica) {
+      void speakSpeechGen(text);
+      return;
+    }
+
+    speakBrowser(text);
+  }, [isAfrica, speakSpeechGen, speakBrowser]);
+
   // ── cancel() ──────────────────────────────────────────────────────────────
   const cancel = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    cancelSpeechGen();
     prepareForBrowserSpeech();
     setSpeaking(false);
-  }, []);
+  }, [cancelSpeechGen]);
 
   // Register so AIPidginCoachWrapper can route English playback through this hook
   useEffect(() => {
@@ -267,9 +359,10 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      cleanupAudio();
       prepareForBrowserSpeech();
     };
-  }, []);
+  }, [cleanupAudio]);
 
   return {
     speak,
@@ -281,5 +374,6 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
     recognitionLang,
     selectedVoice,
     ttsAvailable,
+    audioLoading,
   };
 }

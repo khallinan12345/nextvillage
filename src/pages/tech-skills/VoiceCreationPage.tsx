@@ -21,6 +21,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import {
   Mic, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
@@ -335,8 +336,8 @@ const VoiceCreationPage: React.FC = () => {
     setSelectedVoice(voice || null);
   }, [availableVoices, voiceMode]);
 
-  const speakText = useCallback((text: string) => {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const stripped = text.replace(/\*\*/g, '').slice(0, 500);
     const u = new SpeechSynthesisUtterance(stripped);
@@ -349,9 +350,25 @@ const VoiceCreationPage: React.FC = () => {
     u.onend   = () => setIsSpeaking(false);
     u.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(u);
-  }, [voiceEnabled, selectedVoice, voiceMode]);
+  }, [selectedVoice, voiceMode]);
 
-  const stopSpeaking = () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
+  const speakText = useCallback((text: string) => {
+    if (!voiceEnabled) return;
+    if (voiceMode === 'pidgin') {
+      setIsSpeaking(true);
+      void playPidginVoice(text.replace(/\*\*/g, '').slice(0, 500), {
+        onEnd: () => setIsSpeaking(false),
+        onError: (err) => {
+          console.warn('[VoiceCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);
+          speakBrowser(text);
+        },
+      });
+      return;
+    }
+    speakBrowser(text);
+  }, [voiceEnabled, voiceMode, speakBrowser]);
+
+  const stopSpeaking = () => { window.speechSynthesis.cancel(); stopPidginSpeech(); setIsSpeaking(false); };
 
   // ── Load history ──────────────────────────────────────────────────────────
   const loadHistory = useCallback(async () => {

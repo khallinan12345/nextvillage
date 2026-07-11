@@ -2293,13 +2293,13 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     <span className="text-black font-medium">Enable Voice Output</span>
                   </label>
 
-                  {selectedVoice && voiceOutputEnabled && (
+                  {(voiceMode === 'pidgin' || selectedVoice) && voiceOutputEnabled && (
                     <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md text-sm">
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                       <span className="text-blue-800 font-medium">
-                        Voice: {selectedVoice.name.split(' ')[0]}
+                        Voice: {voiceMode === 'pidgin' ? 'Ezinne' : selectedVoice!.name.split(' ')[0]}
                         <span className="text-blue-600 ml-1">
-                          {isAfrica ? '🇳🇬 NG' : '🌐'}{selectedVoice.localService ? ' · offline' : ''}
+                          {voiceMode === 'pidgin' ? '🇳🇬 NG' : '🌐'}{voiceMode !== 'pidgin' && selectedVoice!.localService ? ' · offline' : ''}
                         </span>
                       </span>
                     </div>
