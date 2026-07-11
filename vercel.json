@@ -6,6 +6,14 @@
     {
       "path": "/api/assess-monthly?mode=orchestrate",
       "schedule": "0 2 1 * *"
+    },
+    {
+      "path": "/api/daily-report",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/playground-context-cleanup",
+      "schedule": "0 0 * * *"
     }
   ]
 }
