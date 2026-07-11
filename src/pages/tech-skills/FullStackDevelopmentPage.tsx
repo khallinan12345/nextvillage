@@ -772,11 +772,11 @@ const FullStackDevelopmentPage: React.FC = () => {
 
   useEffect(() => {
     if (!userId) return;
-    supabase.from('profiles').select('grade_level, continent').eq('id', userId).single()
+    supabase.from('profiles').select('grade_level, continent, country').eq('id', userId).single()
       .then(({ data }) => {
         if (data?.grade_level) setUserGradeLevel(data.grade_level);
         // Default Nigerian voice for Africa; British for everyone else
-        setVoiceMode(data?.continent === 'Africa' ? 'pidgin' : 'english');
+        setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english');
       });
   }, [userId]);
 

@@ -339,16 +339,12 @@ const AIContentCreationPage: React.FC = () => {
   }, [selectedVoice, voiceMode, userGradeLevel]);
   const speakText = useCallback((text: string) => {
     if (!voiceOutputEnabled || !text.trim()) return;
-    if (voiceMode === 'pidgin') {
-      void playPidginVoice(text.slice(0, 400), {
-        onError: (err) => {
-          console.warn('[AIContentCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);
-          speakBrowser(text);
-        },
-      });
-      return;
-    }
-    speakBrowser(text);
+    void playPidginVoice(text.slice(0, 400), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+      onError: (err) => {
+        console.warn('[AIContentCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
   }, [voiceOutputEnabled, voiceMode, speakBrowser]);
   useEffect(() => { speakTextRef.current = speakText; }, [speakText]);
 

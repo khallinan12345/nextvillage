@@ -544,11 +544,12 @@ const WebDevelopmentPage: React.FC = () => {
     if (!userId) return;
     supabase
       .from('profiles')
-      .select('grade_level, continent')
+      .select('grade_level, continent, country')
       .eq('id', userId)
       .single()
       .then(({ data }) => {
-        if (data?.continent)   { setUserContinent(data.continent); setVoiceMode(data.continent === 'Africa' ? 'pidgin' : 'english'); }
+        if (data?.continent)   { setUserContinent(data.continent); }
+        if (data?.country) setVoiceMode(data.country === 'Nigeria' ? 'pidgin' : 'english');
         if (data?.grade_level) setUserGradeLevel(data.grade_level);
         console.log('[ReactDev] ✅ Profile loaded — continent:', data?.continent, 'grade:', data?.grade_level);
       });

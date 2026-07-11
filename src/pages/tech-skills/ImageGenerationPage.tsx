@@ -211,12 +211,12 @@ const ImageGenerationPage: React.FC = () => {
       .eq('user_id', user.id).single()
       .then(({ data }) => { if (data?.communication_level != null) setCommunicationLevel(data.communication_level); });
 
-    supabase.from('profiles').select('continent')
+    supabase.from('profiles').select('continent, country')
       .eq('id', user.id).single()
       .then(({ data }) => {
         setContinent(data?.continent ?? null);
         setLoadingContinent(false);
-        setVoiceMode(data?.continent === 'Africa' ? 'pidgin' : 'english');
+        setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english');
       });
 
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -565,9 +565,9 @@ const ImageGenerationPage: React.FC = () => {
                     </button>
                   </div>
                 )}
-                {voiceEnabled && (voiceMode === 'pidgin' || selectedVoice) && (
+                {voiceEnabled && (
                   <span className="text-xs text-slate-500 hidden sm:inline">
-                    {voiceMode === 'pidgin' ? 'Ezinne' : `${selectedVoice!.name}${selectedVoice!.localService ? ' · offline' : ''}`}
+                    {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
                   </span>
                 )}
               </div>

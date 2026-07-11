@@ -885,23 +885,24 @@ const CodeAssistantPage: React.FC = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('grade_level, continent')
+        .select('grade_level, continent, country')
         .eq('id', userId)
         .single();
 
       if (error) {
         console.error('[Code Profile] Error fetching profile:', error);
-        return { gradeLevel: null, continent: null };
+        return { gradeLevel: null, continent: null, country: null };
       }
 
       console.log('[Code Profile] Profile fetched:', data);
       return {
         gradeLevel: data?.grade_level || null,
-        continent: data?.continent || null
+        continent: data?.continent || null,
+        country: data?.country || null
       };
     } catch (err) {
       console.error('[Code Profile] Error fetching user profile:', err);
-      return { gradeLevel: null, continent: null };
+      return { gradeLevel: null, continent: null, country: null };
     }
   };
 
@@ -1641,7 +1642,7 @@ Help them brainstorm and refine their ideas before they start coding.`;
       const profile = await fetchUserProfile(user.id);
       setUserGradeLevel(profile.gradeLevel);
       setUserContinent(profile.continent);
-      if (profile.continent === 'Africa') setVoiceMode('pidgin');
+      if (profile.country === 'Nigeria') setVoiceMode('pidgin');
       else setVoiceMode('english');
     }
     
@@ -1907,7 +1908,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
       ]).then(([_, profile]) => {
         setUserGradeLevel(profile.gradeLevel);
         setUserContinent(profile.continent);
-        if (profile.continent === 'Africa') setVoiceMode('pidgin');
+        if (profile.country === 'Nigeria') setVoiceMode('pidgin');
         else setVoiceMode('english');
 
         fetchPersonalityBaseline(user.id);
@@ -2293,13 +2294,13 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     <span className="text-black font-medium">Enable Voice Output</span>
                   </label>
 
-                  {(voiceMode === 'pidgin' || selectedVoice) && voiceOutputEnabled && (
+                  {voiceOutputEnabled && (
                     <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md text-sm">
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                       <span className="text-blue-800 font-medium">
-                        Voice: {voiceMode === 'pidgin' ? 'Ezinne' : selectedVoice!.name.split(' ')[0]}
+                        Voice: {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
                         <span className="text-blue-600 ml-1">
-                          {voiceMode === 'pidgin' ? '🇳🇬 NG' : '🌐'}{voiceMode !== 'pidgin' && selectedVoice!.localService ? ' · offline' : ''}
+                          {voiceMode === 'pidgin' ? '🇳🇬 NG' : '🌐'}
                         </span>
                       </span>
                     </div>

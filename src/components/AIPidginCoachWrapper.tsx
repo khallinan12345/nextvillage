@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Volume2, RefreshCw, Languages, AlertCircle } from 'lucide-react';
 import { chatText } from '../lib/chatClient';
 import { usePidginSpeech } from '../hooks/usePidginSpeech';
 import { speakEnglish, stopBrowserSpeech } from '../lib/speechCoordination';
+import { useAuth } from '../hooks/useAuth';
 
 interface AIPidginCoachWrapperProps {
   englishText: string;
 }
 
 export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ englishText }) => {
+  const { user } = useAuth();
+  const isNigerian = user?.country === 'Nigeria';
+
   const [pidginText, setPidginText] = useState<string>('');
   const [showPidgin, setShowPidgin] = useState<boolean>(false);
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const autoTranslatedFor = useRef<string | null>(null);
 
   const { speakPidginText, speaking, loading: isAudioLoading, error: audioError, cancelSpeech } = usePidginSpeech();
   const displayError = errorMessage || audioError;
@@ -26,13 +31,14 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
     };
   }, [cancelSpeech, englishText]);
 
-  const handleTranslate = async () => {
-    if (pidginText) {
-      setShowPidgin(!showPidgin);
-      setErrorMessage('');
-      return;
-    }
+  // Reset per-message translation state when a new response arrives
+  useEffect(() => {
+    setPidginText('');
+    setShowPidgin(false);
+    setErrorMessage('');
+  }, [englishText]);
 
+  const runTranslate = useCallback(async (): Promise<void> => {
     setIsTranslating(true);
     setErrorMessage('');
     try {
@@ -89,7 +95,24 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
     } finally {
       setIsTranslating(false);
     }
+  }, [englishText]);
+
+  const handleTranslate = async () => {
+    if (pidginText) {
+      setShowPidgin(!showPidgin);
+      setErrorMessage('');
+      return;
+    }
+    await runTranslate();
   };
+
+  // Nigerian users see the Pidgin translation automatically, without clicking
+  useEffect(() => {
+    if (!isNigerian || !englishText.trim()) return;
+    if (autoTranslatedFor.current === englishText) return;
+    autoTranslatedFor.current = englishText;
+    void runTranslate();
+  }, [isNigerian, englishText, runTranslate]);
 
   const handleListen = async () => {
     if (speaking) {
@@ -149,7 +172,7 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all bg-slate-800 text-slate-300 border border-slate-700/60 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Volume2 size={12} />
-          {isAudioLoading ? 'Generating audio...' : speaking ? 'Stop audio' : 'Listen in Pidgin'}
+          {isAudioLoading ? 'Generating audio...' : speaking ? 'Stop audio' : (showPidgin && pidginText ? 'Listen in Pidgin' : 'Listen in English')}
         </button>
       </div>
     </div>

@@ -707,16 +707,12 @@ const FishingConsultantPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    if (voiceMode === 'pidgin') {
-      void playPidginVoice(text.slice(0, 400), {
-        onError: (err) => {
-          console.warn('[FishingConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
-          speakBrowser(text);
-        },
-      });
-      return;
-    }
-    speakBrowser(text);
+    void playPidginVoice(text.slice(0, 400), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+      onError: (err) => {
+        console.warn('[FishingConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
   }, [speechOn, voiceMode, speakBrowser]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isSending]);

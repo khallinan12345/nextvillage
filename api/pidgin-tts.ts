@@ -1,7 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const SPEECHGEN_API_URL = 'https://speechgen.io/index.php?r=api/text';
-const DEFAULT_SPEECHGEN_VOICE = 'Chioma';
+
+type VoiceMode = 'pidgin' | 'english';
+
+const VOICE_BY_MODE: Record<VoiceMode, string> = {
+  pidgin: 'ClergyPidgin clone',
+  english: 'Ezinne',
+};
 
 // ElevenLabs fallback (commented out — restore if reverting from SpeechGen)
 // const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
@@ -19,7 +25,7 @@ interface SpeechGenErrorResponse {
 
 type SpeechGenResponse = SpeechGenSuccessResponse | SpeechGenErrorResponse;
 
-async function generateSpeechGenAudio(text: string): Promise<{ audioUrl: string } | { error: string; statusCode?: number }> {
+async function generateSpeechGenAudio(text: string, mode: VoiceMode): Promise<{ audioUrl: string } | { error: string; statusCode?: number }> {
   const response = await fetch(SPEECHGEN_API_URL, {
     method: 'POST',
     headers: {
@@ -28,7 +34,7 @@ async function generateSpeechGenAudio(text: string): Promise<{ audioUrl: string 
     body: JSON.stringify({
       token: process.env.SPEECHGEN_TOKEN || '2817806e-6b14-4ae0-943c-7006439cddee',
       email: process.env.SPEECHGEN_EMAIL || 'khallinan1@udayton.edu',
-      voice: 'ClergyPidgin clone',
+      voice: VOICE_BY_MODE[mode],
       text,
       format: 'mp3',
       speed: 1,
@@ -66,13 +72,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { text } = req.body as { text?: string };
+  const { text, mode } = req.body as { text?: string; mode?: VoiceMode };
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ error: 'text is required' });
   }
+  const voiceMode: VoiceMode = mode === 'english' ? 'english' : 'pidgin';
 
   try {
-    const result = await generateSpeechGenAudio(text);
+    const result = await generateSpeechGenAudio(text, voiceMode);
 
     if ('error' in result) {
       return res.status(result.statusCode || 502).json({ error: result.error });

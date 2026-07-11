@@ -808,11 +808,12 @@ const MathSkillsPage: React.FC = () => {
   // ── Fetch continent ───────────────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('profiles').select('continent').eq('id', user.id).single()
+    supabase.from('profiles').select('continent, country').eq('id', user.id).single()
       .then(({ data }) => {
         const c = data?.continent ?? null;
         setContinent(c);
-        setVoiceMode(c === 'Africa' ? 'pidgin' : 'english');
+        const isNigerian = data?.country === 'Nigeria';
+        setVoiceMode(isNigerian ? 'pidgin' : 'english');
       });
   }, [user?.id]);
 

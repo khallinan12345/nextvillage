@@ -354,18 +354,14 @@ const VoiceCreationPage: React.FC = () => {
 
   const speakText = useCallback((text: string) => {
     if (!voiceEnabled) return;
-    if (voiceMode === 'pidgin') {
-      setIsSpeaking(true);
-      void playPidginVoice(text.replace(/\*\*/g, '').slice(0, 500), {
-        onEnd: () => setIsSpeaking(false),
-        onError: (err) => {
-          console.warn('[VoiceCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);
-          speakBrowser(text);
-        },
-      });
-      return;
-    }
-    speakBrowser(text);
+    setIsSpeaking(true);
+    void playPidginVoice(text.replace(/\*\*/g, '').slice(0, 500), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+      onEnd: () => setIsSpeaking(false),
+      onError: (err) => {
+        console.warn('[VoiceCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
   }, [voiceEnabled, voiceMode, speakBrowser]);
 
   const stopSpeaking = () => { window.speechSynthesis.cancel(); stopPidginSpeech(); setIsSpeaking(false); };

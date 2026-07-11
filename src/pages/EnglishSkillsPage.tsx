@@ -789,12 +789,13 @@ const EnglishSkillsPage: React.FC = () => {
   // ── Fetch continent to set default voice mode ─────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('profiles').select('continent').eq('id', user.id).single()
+    supabase.from('profiles').select('continent, country').eq('id', user.id).single()
       .then(({ data }) => {
         const c = data?.continent ?? null;
         setContinent(c);
+        const isNigerian = data?.country === 'Nigeria';
         // Default to Nigerian voice for Africa users; British for everyone else
-        setVoiceMode(c === 'Africa' ? 'pidgin' : 'english');
+        setVoiceMode(isNigerian ? 'pidgin' : 'english');
       });
   }, [user?.id]);
 

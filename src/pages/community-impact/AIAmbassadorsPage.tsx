@@ -871,18 +871,14 @@ const AIAmbassadorsPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    if (voiceMode === 'pidgin') {
-      setIsSpeaking(true);
-      void playPidginVoice(text.slice(0, 350), {
-        onEnd: () => setIsSpeaking(false),
-        onError: (err) => {
-          console.warn('[AIAmbassadorsPage] SpeechGen TTS failed, falling back to browser voice:', err);
-          speakBrowser(text);
-        },
-      });
-      return;
-    }
-    speakBrowser(text);
+    setIsSpeaking(true);
+    void playPidginVoice(text.slice(0, 350), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+      onEnd: () => setIsSpeaking(false),
+      onError: (err) => {
+        console.warn('[AIAmbassadorsPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
   }, [speechOn, voiceMode, speakBrowser]);
 
   const stopSpeaking = () => { window.speechSynthesis.cancel(); stopPidginSpeech(); setIsSpeaking(false); };

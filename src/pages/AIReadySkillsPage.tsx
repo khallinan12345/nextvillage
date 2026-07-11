@@ -373,13 +373,9 @@ Return ONLY valid JSON: { "improved_text": "..." }`
           🇳🇬 Nigerian Pidgin
         </button>
       </div>
-      {(voiceMode === 'pidgin' || selectedVoice) && (
-        <span className="text-xs text-gray-400 italic hidden sm:inline">
-          {voiceMode === 'pidgin'
-            ? 'Ezinne'
-            : `${selectedVoice!.name} (${selectedVoice!.lang})${selectedVoice!.localService ? ' · offline' : ''}`}
-        </span>
-      )}
+      <span className="text-xs text-gray-400 italic hidden sm:inline">
+        {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+      </span>
       <button
         onClick={() => isSpeaking ? stopSpeaking() : speak(textToRead)}
         className={`ml-auto flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all

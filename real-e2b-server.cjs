@@ -215,9 +215,13 @@ app.get('/api/health', (req, res) => {
 });
 
 const SPEECHGEN_API_URL = 'https://speechgen.io/index.php?r=api/text';
-const DEFAULT_SPEECHGEN_VOICE = 'Chioma';
+const VOICE_BY_MODE = {
+  pidgin: 'ClergyPidgin clone',
+  english: 'Ezinne',
+};
 
-async function generateSpeechGenAudio(text) {
+async function generateSpeechGenAudio(text, mode) {
+    const voice = VOICE_BY_MODE[mode] || VOICE_BY_MODE.pidgin;
     const response = await fetch(SPEECHGEN_API_URL, {
       method: 'POST',
       headers: {
@@ -226,7 +230,7 @@ async function generateSpeechGenAudio(text) {
       body: JSON.stringify({
         token: process.env.SPEECHGEN_TOKEN || '2817806e-6b14-4ae0-943c-7006439cddee',
         email: process.env.SPEECHGEN_EMAIL || 'khallinan1@udayton.edu',
-        voice: 'ClergyPidgin clone',
+        voice,
         text,
         format: 'mp3',
         speed: 1,
@@ -259,13 +263,14 @@ async function generateSpeechGenAudio(text) {
 }
 
 app.post('/api/pidgin-tts', async (req, res) => {
-  const { text } = req.body || {};
+  const { text, mode } = req.body || {};
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ error: 'text is required' });
   }
+  const voiceMode = mode === 'english' ? 'english' : 'pidgin';
 
   try {
-    const result = await generateSpeechGenAudio(text);
+    const result = await generateSpeechGenAudio(text, voiceMode);
 
     if (result.error) {
       return res.status(result.statusCode || 502).json({ error: result.error });

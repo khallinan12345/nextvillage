@@ -390,19 +390,14 @@ const VideoGenerationPage: React.FC = () => {
   const speakText = useCallback((text: string) => {
     if (!voiceEnabled) return;
 
-    if (voiceMode === 'pidgin') {
-      setIsSpeaking(true);
-      void playPidginVoice(text, {
-        onEnd: () => setIsSpeaking(false),
-        onError: (err) => {
-          console.warn('[VideoGenerationPage] SpeechGen TTS failed, falling back to browser voice:', err);
-          speakBrowser(text);
-        },
-      });
-      return;
-    }
-
-    speakBrowser(text);
+    setIsSpeaking(true);
+    void playPidginVoice(text, voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+      onEnd: () => setIsSpeaking(false),
+      onError: (err) => {
+        console.warn('[VideoGenerationPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
   }, [voiceEnabled, voiceMode, speakBrowser]);
 
   const stopSpeaking = () => {
@@ -1155,9 +1150,9 @@ Return ONLY the improved text. No explanation, no preamble.`
                     </button>
                   </div>
                 )}
-                {voiceEnabled && (voiceMode === 'pidgin' || selectedVoice) && (
+                {voiceEnabled && (
                   <span className="text-xs text-slate-500 hidden sm:inline">
-                    {voiceMode === 'pidgin' ? 'Ezinne' : selectedVoice?.name}
+                    {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
                   </span>
                 )}
               </div>

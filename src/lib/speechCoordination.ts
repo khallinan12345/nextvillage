@@ -49,9 +49,18 @@ export function prepareForBrowserSpeech(): void {
   stopBrowserSpeech();
 }
 
-export function speakEnglish(text: string): void {
+/**
+ * Speaks English text — tries SpeechGen (Ezinne voice) first, falling back to
+ * a registered useVoice() instance, then raw browser speechSynthesis, if
+ * SpeechGen fails for any reason.
+ */
+export async function speakEnglish(text: string): Promise<void> {
   if (!text.trim()) return;
   prepareForBrowserSpeech();
+
+  const ok = await playPidginVoice(text, 'english');
+  if (ok) return;
+
   if (englishSpeak) {
     englishSpeak(text);
   } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -59,14 +68,18 @@ export function speakEnglish(text: string): void {
   }
 }
 
+export type SpeechGenVoiceMode = 'pidgin' | 'english';
+
 /**
- * Plays Pidgin narration through SpeechGen (Ezinne voice) via /api/pidgin-tts.
- * Returns false (without throwing) on any failure, so callers can fall back
- * to browser speechSynthesis. This is the one place that talks to SpeechGen
- * for pages that don't use the useVoice/usePidginSpeech hooks.
+ * Plays narration through SpeechGen via /api/pidgin-tts — the Clergy Pidgin
+ * clone voice for mode 'pidgin', Ezinne for mode 'english'. Returns false
+ * (without throwing) on any failure, so callers can fall back to browser
+ * speechSynthesis. This is the one place that talks to SpeechGen for pages
+ * that don't use the useVoice/usePidginSpeech hooks.
  */
 export async function playPidginVoice(
   text: string,
+  mode: SpeechGenVoiceMode = 'pidgin',
   callbacks: { onStart?: () => void; onEnd?: () => void; onError?: (err: unknown) => void } = {}
 ): Promise<boolean> {
   if (!text.trim()) return false;
@@ -75,7 +88,7 @@ export async function playPidginVoice(
     const response = await fetch(PIDGIN_TTS_API_PATH, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, mode }),
     });
 
     const data = (await response.json().catch(() => null)) as

@@ -162,9 +162,9 @@ const VibeCodingPage: React.FC = () => {
     if (!user?.id) return;
 
     // Continent → voice mode
-    supabase.from('profiles').select('continent, grade_level').eq('id', user.id).single()
+    supabase.from('profiles').select('continent, grade_level, country').eq('id', user.id).single()
       .then(({ data }) => {
-        if (data?.continent) setVoiceMode(data.continent === 'Africa' ? 'pidgin' : 'english');
+        if (data?.country) setVoiceMode(data.country === 'Nigeria' ? 'pidgin' : 'english');
       });
 
     // Personality baseline + communication level

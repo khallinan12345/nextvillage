@@ -505,8 +505,8 @@ const MicrosoftAB730Page: React.FC = () => {
   const [voiceMode, setVoiceMode]                   = useState<'english' | 'pidgin'>('pidgin');
   useEffect(() => {
     if (!userId) return;
-    supabase.from('profiles').select('continent').eq('id', userId).single()
-      .then(({ data }) => { setVoiceMode(data?.continent === 'Africa' ? 'pidgin' : 'english'); });
+    supabase.from('profiles').select('continent, country').eq('id', userId).single()
+      .then(({ data }) => { setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'); });
   }, [userId]);
 
   const { speak: hookSpeak, cancel: cancelSpeech, fallbackText, clearFallback } = useVoice(voiceMode === 'pidgin');

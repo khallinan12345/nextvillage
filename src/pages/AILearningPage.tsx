@@ -1071,7 +1071,7 @@ const AILearningPage: React.FC = () => {
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('grade_level, continent, city')
+        .select('grade_level, continent, city, country')
         .eq('id', userId)
         .single();
   
@@ -3061,7 +3061,7 @@ Respond ONLY with valid JSON:
         setUserContinent(profile.continent);
         setUserCity(profile.city);
         // Default Nigerian voice for Africa users; British for everyone else
-        if (profile.continent === 'Africa') setVoiceMode('pidgin');
+        if (profile.country === 'Nigeria') setVoiceMode('pidgin');
         else setVoiceMode('english');
         if (profile.communicationStrategy) setCommunicationStrategy(profile.communicationStrategy);
         if (profile.learningStrategy)       setLearningStrategy(profile.learningStrategy);
@@ -3716,13 +3716,9 @@ Respond ONLY with valid JSON:
                       🇳🇬 Nigerian Pidgin
                     </button>
                   </div>
-                  {(voiceMode === 'pidgin' || selectedVoice) && (
-                    <span className="text-xs text-gray-500 italic">
-                      {voiceMode === 'pidgin'
-                        ? 'Ezinne'
-                        : `${selectedVoice!.name} (${selectedVoice!.lang})${selectedVoice!.localService ? ' · offline' : ''}`}
-                    </span>
-                  )}
+                  <span className="text-xs text-gray-500 italic">
+                    {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+                  </span>
                 </div>
               )}
             </div>

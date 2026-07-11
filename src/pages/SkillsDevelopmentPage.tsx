@@ -1529,7 +1529,7 @@ const SkillsPage: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('grade_level, continent, city')
+        .select('grade_level, continent, city, country')
         .eq('id', userId)
         .single();
 
@@ -1539,6 +1539,7 @@ const SkillsPage: React.FC = () => {
         gradeLevel: data?.grade_level || null,
         continent: data?.continent || null,
         city: data?.city || null,
+        country: data?.country || null,
       };
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -1546,6 +1547,7 @@ const SkillsPage: React.FC = () => {
         gradeLevel: null,
         continent: null,
         city: null,
+        country: null,
       };
     }
   };
@@ -1733,7 +1735,7 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
         setUserGradeLevel(profile.gradeLevel);
         setUserContinent(profile.continent);
         setUserCity(profile.city);
-        if (profile.continent === 'Africa') setVoiceMode('pidgin');
+        if (profile.country === 'Nigeria') setVoiceMode('pidgin');
         else setVoiceMode('english');
         return loadDashboardActivities(profile.city);
       });
@@ -4231,13 +4233,9 @@ Provide assessment now:`;
                             🇳🇬 Nigerian Pidgin
                           </button>
                         </div>
-                        {(voiceMode === 'pidgin' || selectedVoice) && (
-                          <span className="text-base text-gray-400 italic hidden sm:inline">
-                            {voiceMode === 'pidgin'
-                              ? 'Ezinne'
-                              : `${selectedVoice!.name} (${selectedVoice!.lang})${selectedVoice!.localService ? ' · offline' : ''}`}
-                          </span>
-                        )}
+                        <span className="text-base text-gray-400 italic hidden sm:inline">
+                          {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+                        </span>
                       </div>
                     )}
                     
