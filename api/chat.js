@@ -592,7 +592,12 @@ async function callMistral(model, messages, system, max_tokens, temperature) {
   const data = await upstream.json();
 
   if (!upstream.ok) {
-    const err = new Error(data.error?.message || 'Mistral API error');
+    // Mistral doesn't always use the OpenAI-style {error:{message}} shape —
+    // auth failures (and some validation errors) come back as {detail: "..."}
+    const message = data.error?.message
+      || (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail))
+      || 'Mistral API error';
+    const err = new Error(message);
     err.status = upstream.status;
     throw err;
   }
