@@ -355,7 +355,7 @@ const VoiceCreationPage: React.FC = () => {
   const speakText = useCallback((text: string) => {
     if (!voiceEnabled) return;
     setIsSpeaking(true);
-    void playPidginVoice(text.replace(/\*\*/g, '').slice(0, 500), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+    void playPidginVoice(text.replace(/\*\*/g, '').slice(0, 500), 'english', {
       onEnd: () => setIsSpeaking(false),
       onError: (err) => {
         console.warn('[VoiceCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);

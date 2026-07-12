@@ -1,10 +1,12 @@
 /**
  * useVoice — Nigeria-aware text-to-speech hook
  *
- * speak() always tries SpeechGen first (/api/pidgin-tts) — the Clergy Pidgin
- * clone voice when isAfrica is true, Ezinne otherwise. If that request fails
- * (offline, API error, low balance), it falls back to the browser voice
- * priority chain below so narration still works.
+ * speak() always tries SpeechGen first (/api/pidgin-tts) using the Ezinne
+ * voice — regardless of isAfrica/Pidgin mode. The Clergy Pidgin clone voice
+ * costs far more per call, so it's reserved for the explicit "Listen in
+ * Pidgin" button (usePidginSpeech) rather than automatic narration. If the
+ * SpeechGen request fails (offline, API error, low balance), speak() falls
+ * back to the browser voice priority chain below so narration still works.
  *
  * Browser voice priority chain (fallback for Africa / Nigeria users):
  *   1. en-NG  — Nigerian English (local, installed on Chromebook)
@@ -275,13 +277,16 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
     setAudioLoading(false);
   }, [speakBrowser]);
 
-  // ── speak() — always tries SpeechGen first, falls back to browser ─────────
+  // ── speak() — always tries SpeechGen (Ezinne) first, falls back to browser ─
+  // Note: always 'english' mode here — Clergy Pidgin is reserved for the
+  // explicit "Listen in Pidgin" button (usePidginSpeech), not automatic
+  // narration, since it costs far more per call.
   const speak = useCallback((text: string) => {
     if (!text.trim()) return;
 
     setFallbackText(null);
-    void speakSpeechGen(text, isAfrica ? 'pidgin' : 'english');
-  }, [isAfrica, speakSpeechGen]);
+    void speakSpeechGen(text, 'english');
+  }, [speakSpeechGen]);
 
   // ── cancel() ──────────────────────────────────────────────────────────────
   const cancel = useCallback(() => {

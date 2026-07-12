@@ -872,7 +872,7 @@ const AIAmbassadorsPage: React.FC = () => {
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
     setIsSpeaking(true);
-    void playPidginVoice(text.slice(0, 350), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+    void playPidginVoice(text.slice(0, 350), 'english', {
       onEnd: () => setIsSpeaking(false),
       onError: (err) => {
         console.warn('[AIAmbassadorsPage] SpeechGen TTS failed, falling back to browser voice:', err);

@@ -2298,7 +2298,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md text-sm">
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                       <span className="text-blue-800 font-medium">
-                        Voice: {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+                        Voice: {'Ezinne'}
                         <span className="text-blue-600 ml-1">
                           {voiceMode === 'pidgin' ? '🇳🇬 NG' : '🌐'}
                         </span>

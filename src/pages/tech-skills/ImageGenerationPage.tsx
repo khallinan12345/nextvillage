@@ -567,7 +567,7 @@ const ImageGenerationPage: React.FC = () => {
                 )}
                 {voiceEnabled && (
                   <span className="text-xs text-slate-500 hidden sm:inline">
-                    {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+                    {'Ezinne'}
                   </span>
                 )}
               </div>

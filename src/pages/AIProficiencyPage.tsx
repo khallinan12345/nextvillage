@@ -321,7 +321,7 @@ const AIProficiencyPage: React.FC = () => {
         </button>
       </div>
       <span className="text-xs text-gray-400 italic hidden sm:inline">
-        {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+        {'Ezinne'}
       </span>
       <button
         onClick={() => isSpeaking ? stopSpeaking() : speak(textToRead)}

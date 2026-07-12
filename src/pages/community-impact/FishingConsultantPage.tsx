@@ -707,7 +707,7 @@ const FishingConsultantPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    void playPidginVoice(text.slice(0, 400), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+    void playPidginVoice(text.slice(0, 400), 'english', {
       onError: (err) => {
         console.warn('[FishingConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
         speakBrowser(text);

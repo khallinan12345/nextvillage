@@ -3717,7 +3717,7 @@ Respond ONLY with valid JSON:
                     </button>
                   </div>
                   <span className="text-xs text-gray-500 italic">
-                    {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+                    {'Ezinne'}
                   </span>
                 </div>
               )}

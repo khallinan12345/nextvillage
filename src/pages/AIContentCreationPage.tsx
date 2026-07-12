@@ -339,7 +339,7 @@ const AIContentCreationPage: React.FC = () => {
   }, [selectedVoice, voiceMode, userGradeLevel]);
   const speakText = useCallback((text: string) => {
     if (!voiceOutputEnabled || !text.trim()) return;
-    void playPidginVoice(text.slice(0, 400), voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+    void playPidginVoice(text.slice(0, 400), 'english', {
       onError: (err) => {
         console.warn('[AIContentCreationPage] SpeechGen TTS failed, falling back to browser voice:', err);
         speakBrowser(text);

@@ -391,7 +391,7 @@ const VideoGenerationPage: React.FC = () => {
     if (!voiceEnabled) return;
 
     setIsSpeaking(true);
-    void playPidginVoice(text, voiceMode === 'pidgin' ? 'pidgin' : 'english', {
+    void playPidginVoice(text, 'english', {
       onEnd: () => setIsSpeaking(false),
       onError: (err) => {
         console.warn('[VideoGenerationPage] SpeechGen TTS failed, falling back to browser voice:', err);
@@ -1152,7 +1152,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                 )}
                 {voiceEnabled && (
                   <span className="text-xs text-slate-500 hidden sm:inline">
-                    {voiceMode === 'pidgin' ? 'Clergy Pidgin' : 'Ezinne'}
+                    {'Ezinne'}
                   </span>
                 )}
               </div>

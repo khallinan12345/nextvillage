@@ -1820,7 +1820,7 @@ const AIPlaygroundPage: React.FC = () => {
                       ? `You've reached your session quota 💛 — resets at ${resetStr ?? '…'}`
                       : pct > 0
                         ? `You've used ${pct}% of your 3-hour session quota${resetStr ? ` · resets at ${resetStr}` : ''}`
-                        : `Enter to send · Shift+Enter for new line${voiceOutputEnabled ? ` · 🔊 ${isAfrica ? 'Clergy Pidgin' : 'Ezinne'}` : ''}`}
+                        : `Enter to send · Shift+Enter for new line${voiceOutputEnabled ? ' · 🔊 Ezinne' : ''}`}
                   </p>
                 </div>
               );
