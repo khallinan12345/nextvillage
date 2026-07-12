@@ -25,6 +25,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import {
   ArrowLeft, Send, Loader2, Plus, User, FileText,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
@@ -88,6 +89,11 @@ interface Consultation {
   follow_up_notes: string | null;
   resolved: boolean;
   resolved_at: string | null;
+  resolution_outcome: 'applied' | 'partially_applied' | 'not_applied' | null;
+  resolution_narrative: string | null;
+  resolution_value_amount: number | null;
+  resolution_value_unit: string | null;
+  resolution_value_label: string | null;
   created_at: string;
 }
 
@@ -1022,10 +1028,22 @@ const AnimalHusbandryPage: React.FC = () => {
     setNewFarmerAnimals(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const markResolved = async (consultId: string) => {
-    await supabase.from('animal_husbandry_consultations').update({ resolved: true }).eq('id', consultId);
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+
+  const handleResolutionSubmit = async (consultId: string, data: ResolutionSubmitData) => {
+    await supabase.from('animal_husbandry_consultations').update({
+      resolved: true,
+      resolved_at: new Date().toISOString(),
+      resolution_outcome: data.outcome,
+      resolution_narrative: data.narrative,
+      resolution_value_amount: data.valueAmount,
+      resolution_value_unit: data.valueUnit,
+      resolution_value_label: data.valueLabel,
+    }).eq('id', consultId);
+    setSelectedConsultation(prev => prev ? { ...prev, resolved: true } : prev);
     if (selectedFarmer) loadConsultations(selectedFarmer.id);
     await loadFarmers();
+    setShowResolutionModal(false);
   };
 
   const formatDate = (iso: string) =>
@@ -1978,14 +1996,37 @@ const AnimalHusbandryPage: React.FC = () => {
                   Ask AI Follow-up
                 </button>
                 {!c.resolved && (
-                  <button onClick={async () => { await markResolved(c.id); setSelectedConsultation({ ...c, resolved: true }); }}
+                  <button onClick={() => setShowResolutionModal(true)}
                     className="flex-1 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-green-600 to-teal-600 hover:opacity-90">
                     Mark Resolved ✓
                   </button>
                 )}
               </div>
+              {c.resolved && c.resolution_narrative && (
+                <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 space-y-1.5">
+                  <p className="text-xs font-bold text-teal-700 uppercase tracking-wide">
+                    Outcome: {c.resolution_outcome === 'applied' ? 'Advice applied fully' : c.resolution_outcome === 'partially_applied' ? 'Partially applied' : 'Not applied'}
+                  </p>
+                  <p className="text-sm text-teal-800">{c.resolution_narrative}</p>
+                  {c.resolution_value_amount != null && (
+                    <p className="text-xs font-semibold text-teal-700">
+                      {c.resolution_value_label}: {c.resolution_value_unit === 'NGN' ? '₦' : ''}{c.resolution_value_amount}{c.resolution_value_unit && c.resolution_value_unit !== 'NGN' ? ` ${c.resolution_value_unit}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+
+          <ResolutionModal
+            isOpen={showResolutionModal}
+            consultationSummary={c.symptom_summary}
+            defaultUnit="animals_saved"
+            defaultValueLabel="Animals recovered/saved"
+            accent="teal"
+            onClose={() => setShowResolutionModal(false)}
+            onSubmit={(data) => handleResolutionSubmit(c.id, data)}
+          />
 
           {c.conversation_history?.length > 0 && (
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">

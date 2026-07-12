@@ -27,6 +27,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import {
   Briefcase, BookOpen, Users, ArrowLeft, Send, Mic, MicOff,
   Volume2, VolumeX, Save, Star, Loader2, X, ChevronRight,
@@ -117,6 +118,11 @@ interface Consultation {
   follow_up_notes: string | null;
   resolved: boolean;
   resolved_at: string | null;
+  resolution_outcome: 'applied' | 'partially_applied' | 'not_applied' | null;
+  resolution_narrative: string | null;
+  resolution_value_amount: number | null;
+  resolution_value_unit: string | null;
+  resolution_value_label: string | null;
   created_at: string;
 }
 
@@ -1155,10 +1161,22 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
   const resetAddClient = () => { setNewName(''); setNewVillage(''); setNewPhone(''); setNewBusinessType(''); setNewBusinessStage(''); setNewNotes(''); };
 
-  const markResolved = async (consultId: string) => {
-    await supabase.from('entrepreneurship_consultations').update({ resolved: true, resolved_at: new Date().toISOString() }).eq('id', consultId);
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+
+  const handleResolutionSubmit = async (consultId: string, data: ResolutionSubmitData) => {
+    await supabase.from('entrepreneurship_consultations').update({
+      resolved: true,
+      resolved_at: new Date().toISOString(),
+      resolution_outcome: data.outcome,
+      resolution_narrative: data.narrative,
+      resolution_value_amount: data.valueAmount,
+      resolution_value_unit: data.valueUnit,
+      resolution_value_label: data.valueLabel,
+    }).eq('id', consultId);
+    setSelectedConsultation(prev => prev ? { ...prev, resolved: true } : prev);
     if (selectedClient) loadConsultations(selectedClient.id);
     await loadClients();
+    setShowResolutionModal(false);
   };
 
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -2040,14 +2058,36 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <div className="flex gap-2">
                 <button onClick={() => openFollowupChat(selectedClient, c)} className="flex-1 py-2.5 text-sm font-bold rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100">Ask AI Follow-up</button>
                 {!c.resolved && (
-                  <button onClick={async () => { await markResolved(c.id); setSelectedConsultation({ ...c, resolved: true }); }}
+                  <button onClick={() => setShowResolutionModal(true)}
                     className="flex-1 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-90">
                     Mark Resolved ✓
                   </button>
                 )}
               </div>
+              {c.resolved && c.resolution_narrative && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1.5">
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">
+                    Outcome: {c.resolution_outcome === 'applied' ? 'Advice applied fully' : c.resolution_outcome === 'partially_applied' ? 'Partially applied' : 'Not applied'}
+                  </p>
+                  <p className="text-sm text-amber-800">{c.resolution_narrative}</p>
+                  {c.resolution_value_amount != null && (
+                    <p className="text-xs font-semibold text-amber-700">
+                      {c.resolution_value_label}: {c.resolution_value_unit === 'NGN' ? '₦' : ''}{c.resolution_value_amount}{c.resolution_value_unit && c.resolution_value_unit !== 'NGN' ? ` ${c.resolution_value_unit}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+          <ResolutionModal
+            isOpen={showResolutionModal}
+            consultationSummary={c.problem_summary}
+            defaultUnit="NGN"
+            defaultValueLabel="Estimated ₦ value (income earned or cost saved)"
+            accent="amber"
+            onClose={() => setShowResolutionModal(false)}
+            onSubmit={(data) => handleResolutionSubmit(c.id, data)}
+          />
         </div>
       </AppLayout>
     );

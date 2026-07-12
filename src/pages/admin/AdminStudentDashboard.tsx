@@ -18,7 +18,7 @@ import {
   ChevronUp, Trophy, User, BarChart2, Code, Brain,
   Target, Lightbulb, MessageSquare, Cpu,
   DollarSign, TrendingUp, Zap, Activity,
-  Server, Building2, Search, Globe, Sparkles, Send, Eye,
+  Server, Building2, Search, Globe, Sparkles, Send, Eye, Sprout,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
@@ -36,6 +36,21 @@ interface Learner {
   country: string | null;
   organization_id?: string | null;
   join_code_used?: string | null;
+}
+
+interface CommunityImpactRow {
+  domain: string;
+  id: string;
+  youth_user_id: string;
+  organization_id: string | null;
+  city: string | null;
+  resolved: boolean;
+  resolution_outcome: 'applied' | 'partially_applied' | 'not_applied' | null;
+  resolution_value_amount: number | null;
+  resolution_value_unit: 'NGN' | 'kg' | 'days_averted' | 'animals_saved' | 'other' | null;
+  resolution_value_label: string | null;
+  created_at: string;
+  resolved_at: string | null;
 }
 
 interface ActivityRow {
@@ -2231,7 +2246,7 @@ const AdminStudentDashboard: React.FC = () => {
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
   const isLeader = userRole === 'leader' && !isPlatformAdmin;
 
-  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner'>(
+  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'community-impact'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
   );
 
@@ -2397,6 +2412,36 @@ const AdminStudentDashboard: React.FC = () => {
       }
     })();
   }, [authChecked, isLeader, isPlatformAdmin, leaderJoinCodes.join(','), selectedOrgId, userOrgId, effectiveOrgId, effectiveOrgJoinCodes.join(',')]);
+
+  // ── Community Impact rollup ("47 consultations this quarter, ~₦380,000...") ─
+  const [communityImpactRows, setCommunityImpactRows] = useState<CommunityImpactRow[]>([]);
+  const [loadingCommunityImpact, setLoadingCommunityImpact] = useState(false);
+  const [communityImpactError, setCommunityImpactError] = useState<string | null>(null);
+
+  const communityImpactOrgId = isPlatformAdmin ? effectiveOrgId : (selectedOrgId || userOrgId);
+
+  useEffect(() => {
+    if (activeTab !== 'community-impact' || !authChecked) return;
+    if (isPlatformAdmin && !communityImpactOrgId) { setCommunityImpactRows([]); return; }
+
+    (async () => {
+      setLoadingCommunityImpact(true);
+      setCommunityImpactError(null);
+      try {
+        let query = supabase.from('community_impact_resolutions').select('*');
+        if (communityImpactOrgId && communityImpactOrgId !== '__all__') {
+          query = query.eq('organization_id', communityImpactOrgId);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        setCommunityImpactRows((data || []) as CommunityImpactRow[]);
+      } catch (err: any) {
+        setCommunityImpactError(err.message || 'Failed to load community impact data');
+      } finally {
+        setLoadingCommunityImpact(false);
+      }
+    })();
+  }, [activeTab, authChecked, isPlatformAdmin, communityImpactOrgId]);
 
   const fetchStudentSummary = useCallback(async () => {
     if (!learners.length) { setStudentSessionRows([]); return; }
@@ -2687,6 +2732,7 @@ const AdminStudentDashboard: React.FC = () => {
             { id: 'platform-global' as const, label: 'Global Overview', icon: <Globe size={14} />, show: isPlatformAdmin },
             { id: 'create-challenge' as const, label: 'Create Challenge', icon: <Sparkles size={14} />, show: isPlatformAdmin },
             { id: 'student' as const, label: 'Student Activity', icon: <BookOpen size={14} />, show: true },
+            { id: 'community-impact' as const, label: 'Community Impact', icon: <Sprout size={14} />, show: isPlatformAdmin || isLeader },
             { id: 'model-overview' as const, label: 'Model Overview', icon: <Server size={14} />, show: isPlatformAdmin },
             { id: 'cost-overview' as const, label: 'Cost Overview', icon: <DollarSign size={14} />, show: isPlatformAdmin },
             { id: 'cost-learner' as const, label: 'Per-Learner Cost', icon: <Activity size={14} />, show: isPlatformAdmin },
@@ -2773,6 +2819,115 @@ const AdminStudentDashboard: React.FC = () => {
                 {renderLearnerDetail()}
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === 'community-impact' && (
+          <div>
+            {isPlatformAdmin && !adminSelectedOrgId && (
+              <OrgSelectorGrid
+                orgs={allOrgs}
+                onSelectOrg={(orgId) => setAdminSelectedOrgId(orgId)}
+                onSelectAll={() => setAdminSelectedOrgId('__all__')}
+                loading={loadingOrgs}
+              />
+            )}
+
+            {(!isPlatformAdmin || adminSelectedOrgId) && (() => {
+              const rows = communityImpactRows;
+              const total = rows.length;
+              const resolvedRows = rows.filter(r => r.resolved);
+              const resolvedCount = resolvedRows.length;
+              const resolutionRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
+
+              const unitLabels: Record<string, string> = {
+                NGN: '₦ estimated value', kg: 'kg', days_averted: 'days of illness avoided',
+                animals_saved: 'animals saved', other: 'other value',
+              };
+              const unitSums: Record<string, number> = {};
+              resolvedRows.forEach(r => {
+                if (r.resolution_value_unit && r.resolution_value_amount != null) {
+                  unitSums[r.resolution_value_unit] = (unitSums[r.resolution_value_unit] || 0) + r.resolution_value_amount;
+                }
+              });
+
+              const domains = ['agriculture', 'fishing', 'healthcare', 'entrepreneurship', 'animal_husbandry'];
+              const domainStats = domains.map(d => {
+                const domainRows = rows.filter(r => r.domain === d);
+                const domainResolved = domainRows.filter(r => r.resolved).length;
+                return { domain: d, total: domainRows.length, resolved: domainResolved };
+              }).filter(d => d.total > 0);
+
+              return (
+                <>
+                  {isPlatformAdmin && (
+                    <OrgBanner orgName={adminSelectedOrgName} onBack={() => setAdminSelectedOrgId('')} />
+                  )}
+
+                  {loadingCommunityImpact ? (
+                    <div className="flex items-center justify-center py-16 text-gray-400">
+                      <Loader2 size={24} className="animate-spin" />
+                    </div>
+                  ) : communityImpactError ? (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+                      {communityImpactError} — make sure the community_impact_resolutions view was created.
+                    </div>
+                  ) : total === 0 ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center text-sm text-gray-500">
+                      No consultations recorded yet for this org.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-gray-900">{total}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Total consultations</p>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-emerald-600">{resolvedCount}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Resolved</p>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-indigo-600">{resolutionRate}%</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Resolution rate</p>
+                        </div>
+                        {Object.entries(unitSums).map(([unit, sum]) => (
+                          <div key={unit} className="bg-white rounded-xl border border-gray-200 p-4">
+                            <p className="text-2xl font-black text-amber-600">
+                              {unit === 'NGN' ? `₦${sum.toLocaleString()}` : sum.toLocaleString()}
+                            </p>
+                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{unitLabels[unit] || unit}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                              <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Domain</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Total</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Resolved</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Rate</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {domainStats.map(d => (
+                              <tr key={d.domain} className="border-b border-gray-100 last:border-0">
+                                <td className="px-4 py-2.5 capitalize text-gray-800">{d.domain.replace('_', ' ')}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-800">{d.total}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-800">{d.resolved}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-800">{d.total > 0 ? Math.round((d.resolved / d.total) * 100) : 0}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 

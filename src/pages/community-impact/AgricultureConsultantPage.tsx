@@ -28,6 +28,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
+import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import {
   Sprout, ArrowLeft, Send, Save, Loader2, Plus, User,
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
@@ -119,6 +120,11 @@ interface Consultation {
   follow_up_notes: string | null;
   resolved: boolean;
   resolved_at: string | null;
+  resolution_outcome: 'applied' | 'partially_applied' | 'not_applied' | null;
+  resolution_narrative: string | null;
+  resolution_value_amount: number | null;
+  resolution_value_unit: string | null;
+  resolution_value_label: string | null;
   created_at: string;
 }
 
@@ -1146,10 +1152,22 @@ const AgricultureConsultantPage: React.FC = () => {
   const toggleCrop = (c: CropType) =>
     setNewCrops(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
-  const markResolved = async (consultId: string) => {
-    await supabase.from('agriculture_consultations').update({ resolved: true, resolved_at: new Date().toISOString() }).eq('id', consultId);
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+
+  const handleResolutionSubmit = async (consultId: string, data: ResolutionSubmitData) => {
+    await supabase.from('agriculture_consultations').update({
+      resolved: true,
+      resolved_at: new Date().toISOString(),
+      resolution_outcome: data.outcome,
+      resolution_narrative: data.narrative,
+      resolution_value_amount: data.valueAmount,
+      resolution_value_unit: data.valueUnit,
+      resolution_value_label: data.valueLabel,
+    }).eq('id', consultId);
+    setSelectedConsultation(prev => prev ? { ...prev, resolved: true } : prev);
     if (selectedClient) loadConsultations(selectedClient.id);
     await loadClients();
+    setShowResolutionModal(false);
   };
 
   const formatDate = (iso: string) =>
@@ -2106,14 +2124,37 @@ const AgricultureConsultantPage: React.FC = () => {
                   Ask AI Follow-up
                 </button>
                 {!c.resolved && (
-                  <button onClick={async () => { await markResolved(c.id); setSelectedConsultation({ ...c, resolved: true }); }}
+                  <button onClick={() => setShowResolutionModal(true)}
                     className="flex-1 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90">
                     Mark Resolved ✓
                   </button>
                 )}
               </div>
+              {c.resolved && c.resolution_narrative && (
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 space-y-1.5">
+                  <p className="text-xs font-bold text-green-700 uppercase tracking-wide">
+                    Outcome: {c.resolution_outcome === 'applied' ? 'Advice applied fully' : c.resolution_outcome === 'partially_applied' ? 'Partially applied' : 'Not applied'}
+                  </p>
+                  <p className="text-sm text-green-800">{c.resolution_narrative}</p>
+                  {c.resolution_value_amount != null && (
+                    <p className="text-xs font-semibold text-green-700">
+                      {c.resolution_value_label}: {c.resolution_value_unit === 'NGN' ? '₦' : ''}{c.resolution_value_amount}{c.resolution_value_unit && c.resolution_value_unit !== 'NGN' ? ` ${c.resolution_value_unit}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+
+          <ResolutionModal
+            isOpen={showResolutionModal}
+            consultationSummary={c.problem_summary}
+            defaultUnit="NGN"
+            defaultValueLabel="Estimated ₦ value (income earned or cost saved)"
+            accent="green"
+            onClose={() => setShowResolutionModal(false)}
+            onSubmit={(data) => handleResolutionSubmit(c.id, data)}
+          />
 
           {c.conversation_history?.length > 0 && (
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">

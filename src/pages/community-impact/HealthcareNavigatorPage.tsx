@@ -27,6 +27,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { useAuth } from '../../hooks/useAuth';
 import {
   Heart, ArrowLeft, Send, Save, Loader2, Plus, User,
@@ -177,6 +178,11 @@ interface Assessment {
   follow_up_notes: string | null;
   resolved: boolean;
   resolved_at: string | null;
+  resolution_outcome: 'applied' | 'partially_applied' | 'not_applied' | null;
+  resolution_narrative: string | null;
+  resolution_value_amount: number | null;
+  resolution_value_unit: string | null;
+  resolution_value_label: string | null;
   created_at: string;
 }
 
@@ -1461,10 +1467,22 @@ const HealthcareNavigatorPage: React.FC = () => {
     );
   };
 
-  const markResolved = async (assessId: string) => {
-    await supabase.from('health_assessments').update({ resolved: true }).eq('id', assessId);
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+
+  const handleResolutionSubmit = async (assessId: string, data: ResolutionSubmitData) => {
+    await supabase.from('health_assessments').update({
+      resolved: true,
+      resolved_at: new Date().toISOString(),
+      resolution_outcome: data.outcome,
+      resolution_narrative: data.narrative,
+      resolution_value_amount: data.valueAmount,
+      resolution_value_unit: data.valueUnit,
+      resolution_value_label: data.valueLabel,
+    }).eq('id', assessId);
+    setSelectedAssessment(prev => prev ? { ...prev, resolved: true } : prev);
     if (selectedPatient) loadAssessments(selectedPatient.patient_id);
     await loadPatients();
+    setShowResolutionModal(false);
   };
 
   const hasDangerSign = () =>
@@ -2718,14 +2736,36 @@ const HealthcareNavigatorPage: React.FC = () => {
                   Evaluate My Case History
                 </button>
                 {!a.resolved && (
-                  <button onClick={async () => { await markResolved(a.id); setSelectedAssessment({ ...a, resolved: true }); }}
+                  <button onClick={() => setShowResolutionModal(true)}
                     className="flex-1 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90">
                     Mark Resolved ✓
                   </button>
                 )}
               </div>
+              {a.resolved && a.resolution_narrative && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 space-y-1.5">
+                  <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">
+                    Outcome: {a.resolution_outcome === 'applied' ? 'Advice applied fully' : a.resolution_outcome === 'partially_applied' ? 'Partially applied' : 'Not applied'}
+                  </p>
+                  <p className="text-sm text-blue-800">{a.resolution_narrative}</p>
+                  {a.resolution_value_amount != null && (
+                    <p className="text-xs font-semibold text-blue-700">
+                      {a.resolution_value_label}: {a.resolution_value_unit === 'NGN' ? '₦' : ''}{a.resolution_value_amount}{a.resolution_value_unit && a.resolution_value_unit !== 'NGN' ? ` ${a.resolution_value_unit}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+          <ResolutionModal
+            isOpen={showResolutionModal}
+            consultationSummary={a.ai_triage_summary ?? undefined}
+            defaultUnit="days_averted"
+            defaultValueLabel="Estimated days of illness avoided"
+            accent="blue"
+            onClose={() => setShowResolutionModal(false)}
+            onSubmit={(data) => handleResolutionSubmit(a.id, data)}
+          />
         </div>
       </AppLayout>
     );
