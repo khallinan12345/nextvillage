@@ -41,6 +41,96 @@ const TIER_RANK: Record<string, number> = {
   seed:       1,
 };
 
+// ─── Evidence linking ──────────────────────────────────────────────────────────
+// Learners can attach their own resolved consultations as verified evidence
+// instead of (or alongside) writing the same story into impact_arc prose. See
+// consultation_evidence_links + community_impact_resolutions (migrations).
+
+const DOMAIN_TABLES: Record<string, string> = {
+  agriculture:       'agriculture_consultations',
+  fishing:           'fishing_consultations',
+  healthcare:        'health_assessments',
+  entrepreneurship:  'entrepreneurship_consultations',
+  animal_husbandry:  'animal_husbandry_consultations',
+};
+
+const DOMAIN_SUMMARY_FIELD: Record<string, string> = {
+  agriculture:       'problem_summary',
+  fishing:           'problem_summary',
+  healthcare:        'ai_triage_summary',
+  entrepreneurship:  'problem_summary',
+  animal_husbandry:  'symptom_summary',
+};
+
+interface LinkedEvidence {
+  domain: string;
+  summary: string | null;
+  resolution_outcome: string | null;
+  resolution_narrative: string | null;
+  resolution_value_amount: number | null;
+  resolution_value_unit: string | null;
+  resolution_value_label: string | null;
+  created_at: string;
+}
+
+async function fetchLinkedEvidence(
+  supabase: ReturnType<typeof createClient>,
+  sourceType: 'challenge_enrollment' | 'grand_challenge_submission',
+  sourceId: string,
+): Promise<LinkedEvidence[]> {
+  const { data: links } = await supabase
+    .from('consultation_evidence_links')
+    .select('consultation_domain, consultation_id')
+    .eq('source_type', sourceType)
+    .eq('source_id', sourceId);
+
+  if (!links || links.length === 0) return [];
+
+  const evidence: LinkedEvidence[] = [];
+  for (const link of links) {
+    const table = DOMAIN_TABLES[link.consultation_domain];
+    const summaryField = DOMAIN_SUMMARY_FIELD[link.consultation_domain];
+    if (!table) continue;
+
+    const { data: row } = await supabase
+      .from(table)
+      .select(`${summaryField}, resolution_outcome, resolution_narrative, resolution_value_amount, resolution_value_unit, resolution_value_label, created_at`)
+      .eq('id', link.consultation_id)
+      .single();
+
+    if (row) {
+      evidence.push({
+        domain: link.consultation_domain,
+        summary: row[summaryField] ?? null,
+        resolution_outcome: row.resolution_outcome,
+        resolution_narrative: row.resolution_narrative,
+        resolution_value_amount: row.resolution_value_amount,
+        resolution_value_unit: row.resolution_value_unit,
+        resolution_value_label: row.resolution_value_label,
+        created_at: row.created_at,
+      });
+    }
+  }
+  return evidence;
+}
+
+function formatEvidenceForPrompt(evidence: LinkedEvidence[]): string {
+  if (evidence.length === 0) return '';
+  const items = evidence.map((e, i) => {
+    const date = new Date(e.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const outcome = e.resolution_outcome === 'applied' ? 'advice applied fully'
+      : e.resolution_outcome === 'partially_applied' ? 'partially applied'
+      : e.resolution_outcome === 'not_applied' ? 'not applied'
+      : 'outcome not recorded';
+    const value = e.resolution_value_amount != null
+      ? ` Estimated value: ${e.resolution_value_unit === 'NGN' ? '₦' : ''}${e.resolution_value_amount}${e.resolution_value_unit && e.resolution_value_unit !== 'NGN' ? ` ${e.resolution_value_unit}` : ''} (${e.resolution_value_label}).`
+      : '';
+    return `${i + 1}. [${e.domain}] Resolved ${date} — ${outcome}. "${e.resolution_narrative || e.summary || 'No narrative recorded.'}"${value}`;
+  }).join('\n');
+
+  return `\n\nVERIFIED EVIDENCE ATTACHED across the quarter (from the learner's own dated consultation records — not self-reported prose):\n${items}\n\nTreat this as credible, verified proof of sustained real community impact and weight it heavily — especially for community_depth_score and the overall tier. Multiple resolved consultations with captured outcomes across different weeks are strong evidence of "sustained_engagement"; a captured before/after change is strong evidence for "builder" tier.`;
+}
+
 interface GrandChallengeEvaluation {
   tier: 'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier';
   tier_label: string;
@@ -182,7 +272,8 @@ async function evaluateSubmission(
   }
 
   // ── 5. Call Claude ────────────────────────────────────────────────────────
-  const evaluation = await callClaude(anthropic, { learnerName, submission, quarter });
+  const evidence = await fetchLinkedEvidence(supabase, 'grand_challenge_submission', submissionId);
+  const evaluation = await callClaude(anthropic, { learnerName, submission, quarter, evidence });
 
   // ── 6. Write evaluation back to submission ────────────────────────────────
   const now = new Date().toISOString();
@@ -241,9 +332,10 @@ async function callClaude(
     learnerName: string;
     submission:  Record<string, any>;
     quarter:     Record<string, any>;
+    evidence:    LinkedEvidence[];
   },
 ): Promise<GrandChallengeEvaluation> {
-  const { learnerName, submission, quarter } = ctx;
+  const { learnerName, submission, quarter, evidence } = ctx;
 
   const systemPrompt = `You are evaluating a Quarterly Grand Challenge submission from a youth learner at the Davidson AI Innovation Center in Oloibiri, Nigeria (nextvillage.community).
 
@@ -284,6 +376,7 @@ WEEKS DOCUMENTED: ${submission.weeks_documented}
 
 IMPACT ARC (learner's summary of their quarterly journey):
 ${submission.impact_arc ?? '(no impact arc provided)'}
+${formatEvidenceForPrompt(evidence)}
 
 Return a JSON object with exactly these fields:
 {

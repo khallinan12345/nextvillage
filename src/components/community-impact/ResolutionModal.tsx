@@ -15,7 +15,7 @@ export interface ResolutionSubmitData {
 
 export type ResolutionAccent = 'green' | 'cyan' | 'blue' | 'amber' | 'teal';
 
-const ACCENT_CLASSES: Record<ResolutionAccent, { ring: string; button: string; activeOption: string }> = {
+export const ACCENT_CLASSES: Record<ResolutionAccent, { ring: string; button: string; activeOption: string }> = {
   green: { ring: 'focus:ring-green-400', button: 'bg-green-600 hover:bg-green-700', activeOption: 'bg-green-50 border-green-400 text-green-800' },
   cyan:  { ring: 'focus:ring-cyan-400',  button: 'bg-cyan-600 hover:bg-cyan-700',   activeOption: 'bg-cyan-50 border-cyan-400 text-cyan-800' },
   blue:  { ring: 'focus:ring-blue-400',  button: 'bg-blue-600 hover:bg-blue-700',   activeOption: 'bg-blue-50 border-blue-400 text-blue-800' },

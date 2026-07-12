@@ -28,6 +28,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
+import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import { useAuth } from '../../hooks/useAuth';
 import {
   Heart, ArrowLeft, Send, Save, Loader2, Plus, User,
@@ -1667,6 +1668,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                             className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none leading-relaxed"/>
                         </div>
                       )}
+                      <EvidencePicker sourceType="challenge_enrollment" sourceId={activeChallenge.enrollmentId} accent="blue" />
                     </div>
                     <button
                       onClick={handleSubmitChallengeReflection}

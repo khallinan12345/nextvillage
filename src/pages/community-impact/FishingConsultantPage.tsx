@@ -35,6 +35,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
+import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import {
   Fish, ArrowLeft, Send, Save, Loader2, Plus, User,
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
@@ -1335,6 +1336,7 @@ const FishingConsultantPage: React.FC = () => {
                             className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 resize-none leading-relaxed"/>
                         </div>
                       )}
+                      <EvidencePicker sourceType="challenge_enrollment" sourceId={activeChallenge.enrollmentId} accent="cyan" />
                     </div>
                     <button
                       onClick={handleSubmitChallengeReflection}

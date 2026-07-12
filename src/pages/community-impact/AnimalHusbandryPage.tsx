@@ -26,6 +26,7 @@ import { chatText } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
+import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import {
   ArrowLeft, Send, Loader2, Plus, User, FileText,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
@@ -1236,6 +1237,7 @@ const AnimalHusbandryPage: React.FC = () => {
                             className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none leading-relaxed"/>
                         </div>
                       )}
+                      <EvidencePicker sourceType="challenge_enrollment" sourceId={activeChallenge.enrollmentId} accent="teal" />
                     </div>
                     <button
                       onClick={handleSubmitChallengeReflection}

@@ -45,6 +45,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useLoginStreak } from '../hooks/useLoginStreak';
 import { useReflectionStreak } from '../hooks/useReflectionStreak';
 import ReflectionCard from '../components/dashboard/ReflectionCard';
+import { EvidencePicker } from '../components/community-impact/EvidencePicker';
 import classNames from 'classnames';
 
 // ─── Community AI Challenge types ────────────────────────────────────────────
@@ -2512,6 +2513,8 @@ ${prior.impact_arc}
                               className="w-full px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-amber-400 resize-none leading-relaxed"
                             />
                           </div>
+
+                          <EvidencePicker sourceType="grand_challenge_submission" sourceId={grandSubmission?.id} accent="amber" />
 
                           {/* Carryover from prior quarters */}
                           {priorSubmissions.length > 0 && (
