@@ -236,14 +236,26 @@ function applyCacheToLastAssistant(messages) {
   if (lastAssistantIdx === -1) return messages;
   return messages.map((msg, idx) => {
     if (idx !== lastAssistantIdx) return msg;
-    const content = typeof msg.content === 'string'
-      ? [{ type: 'text', text: msg.content, cache_control: { type: 'ephemeral' } }]
-      : Array.isArray(msg.content)
-        ? msg.content.map((c, ci) =>
-            ci === msg.content.length - 1 ? { ...c, cache_control: { type: 'ephemeral' } } : c
-          )
-        : msg.content;
-    return { ...msg, content };
+
+    // Anthropic rejects cache_control on empty text blocks — skip caching
+    // this turn rather than sending a request that fails validation.
+    if (typeof msg.content === 'string') {
+      if (!msg.content.trim()) return msg;
+      return { ...msg, content: [{ type: 'text', text: msg.content, cache_control: { type: 'ephemeral' } }] };
+    }
+
+    if (Array.isArray(msg.content)) {
+      const lastIdx = msg.content.length - 1;
+      if (lastIdx < 0) return msg;
+      const lastBlock = msg.content[lastIdx];
+      if (lastBlock?.type === 'text' && !lastBlock.text?.trim()) return msg;
+      const content = msg.content.map((c, ci) =>
+        ci === lastIdx ? { ...c, cache_control: { type: 'ephemeral' } } : c
+      );
+      return { ...msg, content };
+    }
+
+    return msg;
   });
 }
 
