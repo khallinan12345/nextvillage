@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import Sidebar from "../../components/layout/Sidebar";
 
 // ─── DESIGN TOKENS — iGiTREE palette ─────────────────────────────────────────
@@ -625,7 +626,7 @@ const css = `
   }
   .ig-bubble.ai {
     background: ${C.white}; border: 1px solid ${C.sand};
-    color: ${C.charcoal}; border-radius: 2px 10px 10px 10px; white-space: pre-wrap;
+    color: ${C.charcoal}; border-radius: 2px 10px 10px 10px;
   }
   .ig-bubble.user { background: ${C.forest}; color: white; border-radius: 10px 2px 10px 10px; }
   .ig-bubble.typing { background: ${C.white}; border: 1px solid ${C.sand}; color: ${C.muted}; font-style: italic; }
@@ -817,17 +818,31 @@ Keep responses to 2–4 short paragraphs. Write accessibly for 18–26 year olds
 }
 
 // ─── PARSED AI MESSAGE ────────────────────────────────────────────────────────
+const markdownComponents = {
+  h1: ({ node, ...props }) => <h1 style={{ fontSize: 16, fontWeight: 700, color: C.ink, margin: "0 0 8px" }} {...props} />,
+  h2: ({ node, ...props }) => <h2 style={{ fontSize: 15, fontWeight: 700, color: C.ink, margin: "10px 0 6px" }} {...props} />,
+  h3: ({ node, ...props }) => <h3 style={{ fontSize: 14, fontWeight: 700, color: C.ink, margin: "10px 0 6px" }} {...props} />,
+  p: ({ node, ...props }) => <p style={{ margin: "0 0 8px" }} {...props} />,
+  strong: ({ node, ...props }) => <strong style={{ fontWeight: 700, color: C.forest }} {...props} />,
+  em: ({ node, ...props }) => <em {...props} />,
+  ul: ({ node, ...props }) => <ul style={{ margin: "0 0 8px", paddingLeft: 20 }} {...props} />,
+  ol: ({ node, ...props }) => <ol style={{ margin: "0 0 8px", paddingLeft: 20 }} {...props} />,
+  li: ({ node, ...props }) => <li style={{ margin: "2px 0" }} {...props} />,
+  code: ({ node, ...props }) => <code style={{ background: C.parchment, padding: "1px 4px", borderRadius: 4, fontSize: 12 }} {...props} />,
+  a: ({ node, ...props }) => <a style={{ color: C.forestLt, textDecoration: "underline" }} target="_blank" rel="noopener noreferrer" {...props} />,
+};
+
 function IGMessage({ text, onUseDraft }) {
   const draftMatch = text.match(/<<DRAFT START>>([\s\S]*?)<<DRAFT END>>/);
   const draft = draftMatch ? draftMatch[1].trim() : null;
   const clean = text.replace(/<<DRAFT START>>[\s\S]*?<<DRAFT END>>/, "").trim();
   return (
     <div>
-      <div style={{ whiteSpace: "pre-wrap" }}>{clean}</div>
+      <ReactMarkdown components={markdownComponents}>{clean}</ReactMarkdown>
       {draft && (
         <div className="ig-draft">
           <div className="ig-draft-label">Suggested Draft</div>
-          <div>{draft}</div>
+          <div><ReactMarkdown components={markdownComponents}>{draft}</ReactMarkdown></div>
           <div className="ig-draft-actions">
             <button className="use-draft-btn" onClick={() => onUseDraft(draft)}>Use This</button>
             <span style={{ fontSize: 11, color: C.muted, alignSelf: "center" }}>Edit before saving</span>
