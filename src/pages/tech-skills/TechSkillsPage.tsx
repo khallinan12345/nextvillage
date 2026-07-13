@@ -1,14 +1,17 @@
 // src/pages/tech-skills/TechSkillsPage.tsx
 // Route: /tech-skills
-// This roadmap page uses localStorage for diagnostic answers
-// and phase task completion persistence.
+// Real AI-administered evaluation, backed by Supabase (tech_skills_progress).
+// Gated behind the AI Proficiency Certification — visible to everyone, but
+// locked until earned.
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
 import {
   CheckCircle2, Circle, ChevronDown, ChevronUp,
   Terminal, GitBranch, FlaskConical, Layers, Trophy, Zap,
-  ExternalLink, BookOpen, Lock, Send, ClipboardList
+  ExternalLink, BookOpen, Lock, Send, ClipboardList, AlertCircle
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -19,7 +22,7 @@ interface Task {
   def: { label: string; text: string };
   how: string;
   platform: string;
-  submitPrompt: string; // what to paste / what evidence is expected
+  submitPrompt: string;
 }
 
 interface Track {
@@ -47,15 +50,26 @@ interface DiagItem {
   submitPrompt: string;
 }
 
-interface DiagnosticAnswerState {
-  text: string;
-  submitted: boolean;
+type ItemStatus = 'not_started' | 'submitted' | 'pass' | 'needs_work';
+
+interface ProgressRecord {
+  status: ItemStatus;
+  submission_text: string;
+  ai_feedback: string | null;
+  attempt_count: number;
 }
 
-type DiagnosticAnswers = Record<string, DiagnosticAnswerState>;
-type PhaseTaskProgress = Record<string, Record<string, boolean>>;
+type ProgressMap = Record<string, ProgressRecord>;
+
+function progressKey(phaseId: string, taskName: string): string {
+  return `${phaseId}::${taskName}`;
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
+// {{MENTOR}} / {{REPO}} are substituted at render time from the learner's
+// organization record (mentor_name / mentor_repo_url), falling back to
+// generic phrasing when unset. nextvillage.community stays literal — that's
+// the platform itself, not per-org.
 
 const DIAGNOSTICS: DiagItem[] = [
   {
@@ -90,7 +104,7 @@ const PHASES: Phase[] = [
     color: '#6c4fd4',
     colorBg: 'rgba(108,79,212,0.07)',
     colorBorder: 'rgba(108,79,212,0.22)',
-    milestone: 'Submit a PR to the vAI repo that Kevin reviews. You can explain every line — and why it was written that way — without looking at notes.',
+    milestone: 'Submit a PR to {{REPO}} that {{MENTOR}} reviews. You can explain every line — and why it was written that way — without looking at notes.',
     tracks: [
       {
         label: 'Git & Collaboration',
@@ -104,12 +118,12 @@ const PHASES: Phase[] = [
             submitPrompt: "Paste the output of `git log --oneline -10` from your repo showing at least 5 conventional commits (feat:, fix:, refactor:, etc.). Each commit message should follow the format type(scope): description.",
           },
           {
-            name: 'Set up PR workflow on the vAI repo',
-            short: 'Submit PRs to Kevin; he reviews before merge to main',
+            name: 'Set up PR workflow on your repo',
+            short: 'Submit PRs to {{MENTOR}}; they review before merge to main',
             def: { label: 'What is a Pull Request (PR)?', text: "A Pull Request is a formal request to merge code from one branch into another — typically from a feature branch into main. It is the standard collaboration mechanism in professional development. A PR includes: a description of what changed and why, a diff showing every line added or removed, and a review process where another developer reads your code and either approves it, requests changes, or asks questions. PRs create a permanent record of every decision made in a codebase." },
             how: 'On the nextvillage.community GitHub repo, enable branch protection on main: Settings → Branches → Add rule → require pull request review before merging. From now on, you never push directly to main.',
-            platform: 'The next feature you build — even a small one — goes through a full PR. Write the description as if Kevin has never seen the code before.',
-            submitPrompt: "Paste the URL of a real PR you submitted on the vAI repo, plus the first paragraph of your PR description. The description should answer: what does this change, why was it needed, and how did you test it?",
+            platform: 'The next feature you build — even a small one — goes through a full PR. Write the description as if {{MENTOR}} has never seen the code before.',
+            submitPrompt: "Paste the URL of a real PR you submitted on your repo, plus the first paragraph of your PR description. The description should answer: what does this change, why was it needed, and how did you test it?",
           },
           {
             name: 'Add branch protection + CI lint/build check',
@@ -125,7 +139,7 @@ const PHASES: Phase[] = [
         label: 'System Design (Your Own Work)',
         tasks: [
           {
-            name: 'Draw the vAI architecture you built',
+            name: 'Draw the architecture you built',
             short: '1-page diagram: React → Vercel → Supabase → AI services',
             def: { label: 'What is a system architecture diagram?', text: 'An architecture diagram is a visual map of the components in a system and how they communicate. For a web platform it typically shows: the frontend (React), the hosting layer (Vercel), the database and auth (Supabase), external AI services, and any edge functions or background jobs.' },
             how: 'Include: the React frontend served from Vercel, Supabase (database, auth, storage, edge functions), AI service calls (which pages call which models), SSE streaming flows, and the two learner cohorts (Oloibiri and Ibiade) as distinct data contexts.',
@@ -160,7 +174,7 @@ const PHASES: Phase[] = [
     color: '#0e8f62',
     colorBg: 'rgba(14,143,98,0.07)',
     colorBorder: 'rgba(14,143,98,0.22)',
-    milestone: 'A working test suite with 10+ tests for nextvillage.community. At least one test catches a regression Kevin deliberately introduces into the codebase.',
+    milestone: 'A working test suite with 10+ tests for nextvillage.community. At least one test catches a regression {{MENTOR}} deliberately introduces into the codebase.',
     tracks: [
       {
         label: 'Testing Practice',
@@ -296,21 +310,21 @@ const PHASES: Phase[] = [
     id: 'p4',
     label: 'Phase 4 · Months 6–9',
     title: 'Platform Ownership & Portfolio',
-    subtitle: 'Employable identity + full vAI stewardship',
+    subtitle: 'Employable identity + full stewardship of what you built',
     color: '#c24a20',
     colorBg: 'rgba(194,74,32,0.07)',
     colorBorder: 'rgba(194,74,32,0.22)',
     milestone: 'A live portfolio. A live platform you can say you own — and prove it. An interview you can walk into with stories, not just code.',
     tracks: [
       {
-        label: 'vAI Platform Stewardship',
+        label: 'Platform Stewardship',
         tasks: [
           {
             name: 'Own one full feature solo: requirements → deploy',
-            short: 'No review from Kevin until you request it',
+            short: 'No review from {{MENTOR}} until you request it',
             def: { label: 'What does full ownership of a feature mean?', text: 'Full ownership means you are responsible for every phase: writing the requirements, designing the solution, building and testing it, writing the PR, deploying it, and monitoring it for the first week after launch.' },
             how: 'Suggested feature: a learner progress dashboard visible to Bennywhite Davidson and Solomon Mathias Solomon — showing weekly active learners, assessment completion rates, and proficiency trends for both cohorts.',
-            platform: 'Share the requirements document with Kevin not for approval but for information — then proceed independently.',
+            platform: 'Share the requirements document with {{MENTOR}} not for approval but for information — then proceed independently.',
             submitPrompt: "Paste: (1) your one-page requirements document, (2) the GitHub PR URL, and (3) the Vercel deployment URL. The requirements document must be written before the code — if the PR predates the doc, that is a flag.",
           },
           {
@@ -322,7 +336,7 @@ const PHASES: Phase[] = [
             submitPrompt: "Paste your incident-log.md covering at least 4 weeks. It must include at least 3 entries with: date, observed anomaly, likely cause, and action taken (or \"no action — monitored\"). Then paste your 1-page summary of patterns observed.",
           },
           {
-            name: 'Write the vAI onboarding doc for a future developer',
+            name: 'Write the onboarding doc for a future developer',
             short: 'If you left, could someone else take over? Write that guide.',
             def: { label: 'What is a developer onboarding document?', text: "A developer onboarding document allows a new developer to understand, run, and contribute to a codebase without asking questions. Writing one forces you to surface assumptions you have been carrying silently — things you 'just know' that no one else would." },
             how: 'Cover: prerequisites, architecture overview, key flows (how a new learner is created, how assessments work, how certifications are generated), deployment process, and known gotchas.',
@@ -335,9 +349,9 @@ const PHASES: Phase[] = [
         label: 'Portfolio & Employability',
         tasks: [
           {
-            name: 'Build one independent project (not vAI)',
+            name: 'Build one independent project (not your main platform)',
             short: 'Your idea, your stack — demonstrates agency to hiring managers',
-            def: { label: 'Why an independent project?', text: "nextvillage.community is genuinely impressive — but it was initiated and mentored by Kevin. An independent project built from your own idea answers definitively: 'Is this his work or his mentor's?'" },
+            def: { label: 'Why an independent project?', text: "nextvillage.community is genuinely impressive — but it was initiated and mentored by {{MENTOR}}. An independent project built from your own idea answers definitively: 'Is this your work or your mentor's?'" },
             how: 'Criteria: your own idea, deployed and publicly accessible, with a README explaining what it does, why you built it, and what you would do differently.',
             platform: 'What problem did you notice while building nextvillage.community that the platform itself does not solve? That gap is your independent project.',
             submitPrompt: "Paste: (1) the live URL, (2) the GitHub repo URL, and (3) the README excerpt that covers what it does, why you built it, and what you would do differently. The project must be deployed — a GitHub repo alone does not count.",
@@ -347,16 +361,16 @@ const PHASES: Phase[] = [
             short: 'Not just screenshots — explain the decisions and tradeoffs',
             def: { label: 'What makes a developer portfolio effective?', text: "Most developer portfolios show screenshots and list technologies. An effective portfolio shows thinking: why was this architecture chosen, what tradeoffs were made, what problems were harder than they looked. A hiring manager remembers the one who explained their decisions." },
             how: 'For each project include: a 2-sentence description, the architecture diagram, one key technical decision and why, one thing that was harder than expected, and a live link plus GitHub link.',
-            platform: 'The vAI platform entry should lead with the human impact — 79+ learners in off-grid Nigeria — before the technical details.',
-            submitPrompt: "Paste the live URL of your portfolio site. Then paste the full text of the vAI project entry — it must include human impact framing first, then architecture, then technical decisions. The portfolio must be live, not a local build.",
+            platform: 'The nextvillage.community entry should lead with the human impact — 79+ learners in off-grid Nigeria — before the technical details.',
+            submitPrompt: "Paste the live URL of your portfolio site. Then paste the full text of your main platform's project entry — it must include human impact framing first, then architecture, then technical decisions. The portfolio must be live, not a local build.",
           },
           {
-            name: 'Complete a mock technical interview with Kevin',
+            name: 'Complete a mock technical interview with your mentor',
             short: 'Architecture, live debugging, tradeoff discussion — treat it as real',
             def: { label: 'What does a technical interview look like?', text: "A technical interview has three parts: (1) a conversation about your background and projects; (2) a live coding or debugging exercise solved in real time while thinking out loud; (3) a system design discussion where the interviewer wants to hear your reasoning process." },
-            how: "The mock interview should cover: (1) Describe nextvillage.community in 90 seconds. (2) Kevin introduces a bug — you diagnose it while narrating your thinking out loud. (3) Tradeoff question: 'Why Supabase instead of building your own auth?'",
+            how: "The mock interview should cover: (1) Describe nextvillage.community in 90 seconds. (2) {{MENTOR}} introduces a bug — you diagnose it while narrating your thinking out loud. (3) Tradeoff question: 'Why Supabase instead of building your own auth?'",
             platform: "The 90-second platform description is the most important exercise. Practice it until it leads with impact before technology.",
-            submitPrompt: "Write your 90-second platform description as you would deliver it in a real interview. Then write Kevin's feedback from the mock interview — what he said you did well and what he said you should improve. Both parts are required.",
+            submitPrompt: "Write your 90-second platform description as you would deliver it in a real interview. Then write your mentor's feedback from the mock interview — what they said you did well and what they said you should improve. Both parts are required.",
           },
         ],
       },
@@ -364,85 +378,99 @@ const PHASES: Phase[] = [
   },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const DIAGNOSTIC_STORAGE_KEY = 'employability_diagnostic_answers';
-const PHASE_PROGRESS_STORAGE_KEY = 'employability_phase_progress';
+// ─── Token substitution ───────────────────────────────────────────────────────
 
-function buildInitialDiagnosticAnswers(): DiagnosticAnswers {
-  return DIAGNOSTICS.reduce<DiagnosticAnswers>((acc, item) => {
-    acc[item.q] = { text: '', submitted: false };
-    return acc;
-  }, {});
+function substitute(text: string, mentorName: string, repoLabel: string): string {
+  return text.replace(/\{\{MENTOR\}\}/g, mentorName).replace(/\{\{REPO\}\}/g, repoLabel);
 }
 
-function buildInitialPhaseProgress(): PhaseTaskProgress {
-  return PHASES.reduce<PhaseTaskProgress>((phaseAcc, phase) => {
-    phaseAcc[phase.id] = phase.tracks.reduce<Record<string, boolean>>((taskAcc, track) => {
-      track.tasks.forEach((task) => {
-        taskAcc[task.name] = false;
-      });
-      return taskAcc;
-    }, {});
-    return phaseAcc;
-  }, {});
+function deriveRepoLabel(repoUrl: string | null): string {
+  if (!repoUrl) return 'your project repo';
+  try {
+    const { pathname } = new URL(repoUrl);
+    const parts = pathname.replace(/^\/|\/$/g, '').split('/').slice(0, 2);
+    return parts.length === 2 ? parts.join('/') : 'your project repo';
+  } catch {
+    return 'your project repo';
+  }
 }
 
-function sanitizeDiagnosticAnswers(raw: unknown): DiagnosticAnswers {
-  const initial = buildInitialDiagnosticAnswers();
-  if (!raw || typeof raw !== 'object') return initial;
-  const source = raw as Record<string, unknown>;
-  DIAGNOSTICS.forEach((item) => {
-    const candidate = source[item.q];
-    if (candidate && typeof candidate === 'object') {
-      const typed = candidate as Record<string, unknown>;
-      initial[item.q] = {
-        text: typeof typed.text === 'string' ? typed.text : '',
-        submitted: Boolean(typed.submitted),
-      };
-    }
-  });
-  return initial;
-}
+// ─── Submission controls (shared by diagnostics + tasks) ──────────────────────
 
-function sanitizePhaseProgress(raw: unknown): PhaseTaskProgress {
-  const initial = buildInitialPhaseProgress();
-  if (!raw || typeof raw !== 'object') return initial;
-  const source = raw as Record<string, unknown>;
+const SubmissionControls: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+  error: string | null;
+  record?: ProgressRecord;
+  accentColor: string;
+}> = ({ value, onChange, onSubmit, submitting, error, record, accentColor }) => {
+  const passed = record?.status === 'pass';
+  const needsWork = record?.status === 'needs_work';
 
-  PHASES.forEach((phase) => {
-    const phaseData = source[phase.id];
-    if (!phaseData || typeof phaseData !== 'object') return;
-    const typedPhaseData = phaseData as Record<string, unknown>;
-    phase.tracks.forEach((track) => {
-      track.tasks.forEach((task) => {
-        initial[phase.id][task.name] = Boolean(typedPhaseData[task.name]);
-      });
-    });
-  });
+  return (
+    <div className="space-y-2">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Write your answer here — be specific about your platform..."
+        rows={6}
+        className="w-full text-sm rounded-md border border-gray-200 bg-white p-3 resize-y focus:outline-none focus:ring-2"
+        style={{ ['--tw-ring-color' as any]: accentColor }}
+      />
+      <button
+        onClick={onSubmit}
+        disabled={!value.trim() || submitting}
+        className="inline-flex items-center gap-2 rounded-lg text-white text-xs font-semibold px-4 py-2 transition-colors disabled:opacity-40"
+        style={{ background: accentColor }}
+      >
+        <Send size={13} /> {submitting ? 'Evaluating…' : 'Submit for evaluation'}
+      </button>
+      {error && (
+        <p className="text-xs text-red-600 flex items-center gap-1">
+          <AlertCircle size={12} /> {error}
+        </p>
+      )}
+      {passed && (
+        <div className="rounded-md p-2.5 bg-emerald-50 border border-emerald-200">
+          <p className="text-xs text-emerald-700 font-mono flex items-center gap-1 mb-1">
+            <CheckCircle2 size={13} /> Passed
+          </p>
+          {record?.ai_feedback && <p className="text-xs text-emerald-800 leading-relaxed">{record.ai_feedback}</p>}
+        </div>
+      )}
+      {needsWork && (
+        <div className="rounded-md p-2.5 bg-amber-50 border border-amber-200">
+          <p className="text-xs text-amber-700 font-mono mb-1">
+            Needs work — attempt {record?.attempt_count ?? 1}
+          </p>
+          {record?.ai_feedback && <p className="text-xs text-amber-800 leading-relaxed">{record.ai_feedback}</p>}
+        </div>
+      )}
+    </div>
+  );
+};
 
-  return initial;
-}
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
+// ─── DiagCard ─────────────────────────────────────────────────────────────────
 
 const DiagCard: React.FC<{
   item: DiagItem;
-  answer: DiagnosticAnswerState;
-  onAnswerChange: (diagName: string, text: string) => void;
-  onSubmit: (diagName: string) => void;
-}> = ({ item, answer, onAnswerChange, onSubmit }) => {
+  record?: ProgressRecord;
+  draftText: string;
+  submitting: boolean;
+  error: string | null;
+  onDraftChange: (text: string) => void;
+  onSubmit: () => void;
+}> = ({ item, record, draftText, submitting, error, onDraftChange, onSubmit }) => {
   const [open, setOpen] = useState(false);
-  const passed = answer.submitted;
+  const passed = record?.status === 'pass';
 
   return (
     <div className={`rounded-lg border bg-white p-4 transition-shadow hover:shadow-sm ${
       passed ? 'border-emerald-300' : 'border-purple-200'
     }`}>
-      {/* Header row — clickable to expand */}
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full text-left"
-      >
+      <button onClick={() => setOpen(o => !o)} className="w-full text-left">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
@@ -462,15 +490,12 @@ const DiagCard: React.FC<{
 
       {open && (
         <div className="mt-3 pt-3 border-t border-purple-100 space-y-3">
-          {/* Definition */}
           <div className="rounded bg-purple-50 p-2.5">
             <span className="font-medium text-purple-700 text-xs">Definition: </span>
             <span className="text-xs text-gray-700">{item.def}</span>
           </div>
-          {/* Detail / instructions */}
           <p className="text-xs text-gray-600 leading-relaxed">{item.detail}</p>
 
-          {/* What to submit */}
           <div className="rounded-md p-3 bg-purple-50 border border-purple-200">
             <p className="text-xs font-mono uppercase tracking-wider text-purple-600 mb-1 flex items-center gap-1">
               <ClipboardList size={11} /> What to submit
@@ -482,26 +507,15 @@ const DiagCard: React.FC<{
             </p>
           </div>
 
-          {/* Textarea + submit */}
-          <textarea
-            value={answer.text}
-            onChange={(e) => onAnswerChange(item.q, e.target.value)}
-            placeholder="Write your answer here — be specific about your platform..."
-            rows={6}
-            className="w-full text-sm rounded-md border border-purple-200 bg-white p-3 resize-y focus:outline-none focus:ring-2 focus:ring-purple-400"
+          <SubmissionControls
+            value={draftText}
+            onChange={onDraftChange}
+            onSubmit={onSubmit}
+            submitting={submitting}
+            error={error}
+            record={record}
+            accentColor="#7c3aed"
           />
-          <button
-            onClick={() => onSubmit(item.q)}
-            disabled={!answer.text.trim()}
-            className="inline-flex items-center gap-2 rounded-lg bg-purple-600 text-white text-xs font-semibold px-4 py-2 hover:bg-purple-700 transition-colors disabled:opacity-40"
-          >
-            <Send size={13} /> Submit for evaluation
-          </button>
-          {passed && (
-            <p className="text-xs text-emerald-600 font-mono flex items-center gap-1">
-              <CheckCircle2 size={13} /> Complete
-            </p>
-          )}
         </div>
       )}
     </div>
@@ -510,27 +524,26 @@ const DiagCard: React.FC<{
 
 // ── TaskRow ───────────────────────────────────────────────────────────────────
 
-interface TaskRowProps {
+const TaskRow: React.FC<{
   task: Task;
   phaseColor: string;
   phaseBg: string;
   locked: boolean;
-  completed: boolean;
-  onToggleComplete: (taskName: string, completed: boolean) => void;
-}
-
-const TaskRow: React.FC<TaskRowProps> = ({
-  task, phaseColor, phaseBg, locked, completed, onToggleComplete
-}) => {
+  record?: ProgressRecord;
+  draftText: string;
+  submitting: boolean;
+  error: string | null;
+  onDraftChange: (text: string) => void;
+  onSubmit: () => void;
+}> = ({ task, phaseColor, phaseBg, locked, record, draftText, submitting, error, onDraftChange, onSubmit }) => {
   const [open, setOpen] = useState(false);
+  const passed = record?.status === 'pass';
 
   return (
     <div className={`border-b border-gray-100 last:border-0 ${locked ? 'opacity-50' : ''}`}>
-      {/* Row header */}
       <div className="flex items-start gap-3 py-3 px-1">
-        {/* Status icon */}
         <div className="mt-0.5 flex-shrink-0">
-          {completed
+          {passed
             ? <CheckCircle2 size={18} style={{ color: phaseColor }} />
             : locked
               ? <Lock size={18} className="text-gray-300" />
@@ -539,7 +552,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium leading-snug ${completed ? 'line-through text-gray-400' : locked ? 'text-gray-400' : 'text-gray-800'}`}>
+          <p className={`text-sm font-medium leading-snug ${passed ? 'text-gray-500' : locked ? 'text-gray-400' : 'text-gray-800'}`}>
             {task.name}
           </p>
           <p className="text-xs text-gray-400 mt-0.5 italic">{task.short}</p>
@@ -558,10 +571,8 @@ const TaskRow: React.FC<TaskRowProps> = ({
         </button>
       </div>
 
-      {/* Accordion */}
       {open && !locked && (
         <div className="ml-7 mb-3 space-y-3">
-          {/* Definition */}
           <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 text-sm text-gray-700">
             <div className="rounded-md p-3" style={{ background: phaseBg, borderLeft: `3px solid ${phaseColor}` }}>
               <p className="text-xs font-mono uppercase tracking-wider mb-1.5" style={{ color: phaseColor }}>
@@ -586,17 +597,17 @@ const TaskRow: React.FC<TaskRowProps> = ({
               </p>
               <p className="text-xs text-gray-700 leading-relaxed">{task.submitPrompt}</p>
             </div>
-          </div>
 
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700 select-none">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-gray-300"
-              checked={completed}
-              onChange={(e) => onToggleComplete(task.name, e.target.checked)}
+            <SubmissionControls
+              value={draftText}
+              onChange={onDraftChange}
+              onSubmit={onSubmit}
+              submitting={submitting}
+              error={error}
+              record={record}
+              accentColor={phaseColor}
             />
-            Mark this task complete
-          </label>
+          </div>
         </div>
       )}
     </div>
@@ -605,18 +616,18 @@ const TaskRow: React.FC<TaskRowProps> = ({
 
 // ── PhaseSection ──────────────────────────────────────────────────────────────
 
-interface PhaseSectionProps {
+const PhaseSection: React.FC<{
   phase: Phase;
   locked: boolean;
   completedCount: number;
   totalCount: number;
-  onToggleTask: (phaseId: string, taskName: string, completed: boolean) => void;
-  phaseProgress: PhaseTaskProgress;
-}
-
-const PhaseSection: React.FC<PhaseSectionProps> = ({
-  phase, locked, completedCount, totalCount, onToggleTask, phaseProgress
-}) => {
+  progress: ProgressMap;
+  drafts: Record<string, string>;
+  submitting: Record<string, boolean>;
+  errors: Record<string, string | null>;
+  onDraftChange: (key: string, text: string) => void;
+  onSubmit: (phaseId: string, taskName: string) => void;
+}> = ({ phase, locked, completedCount, totalCount, progress, drafts, submitting, errors, onDraftChange, onSubmit }) => {
   const [open, setOpen] = useState(phase.id === 'p1');
 
   const phaseIcon = {
@@ -661,7 +672,7 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({
                   {track.label}
                 </p>
                 {track.tasks.map((task, i) => {
-                  const completed = Boolean(phaseProgress[phase.id]?.[task.name]);
+                  const key = progressKey(phase.id, task.name);
                   return (
                     <TaskRow
                       key={i}
@@ -669,8 +680,12 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({
                       phaseColor={phase.color}
                       phaseBg={phase.colorBg}
                       locked={locked}
-                      completed={completed}
-                      onToggleComplete={(taskName, checked) => onToggleTask(phase.id, taskName, checked)}
+                      record={progress[key]}
+                      draftText={drafts[key] ?? ''}
+                      submitting={Boolean(submitting[key])}
+                      error={errors[key] ?? null}
+                      onDraftChange={(text) => onDraftChange(key, text)}
+                      onSubmit={() => onSubmit(phase.id, task.name)}
                     />
                   );
                 })}
@@ -678,7 +693,6 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({
             ))}
           </div>
 
-          {/* Milestone */}
           <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 flex items-start gap-3">
             <span className="text-xl flex-shrink-0">{phase.id === 'p4' ? '🏁' : '🎯'}</span>
             <div>
@@ -700,94 +714,130 @@ const PhaseSection: React.FC<PhaseSectionProps> = ({
 
 const TechSkillsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [diagnosticAnswers, setDiagnosticAnswers] = useState<DiagnosticAnswers>(() => buildInitialDiagnosticAnswers());
-  const [phaseProgress, setPhaseProgress] = useState<PhaseTaskProgress>(() => buildInitialPhaseProgress());
-  const [hydrated, setHydrated] = useState(false);
+  const { user } = useAuth();
 
+  const [certLoading, setCertLoading] = useState(true);
+  const [certified, setCertified] = useState(false);
+
+  const [mentorName, setMentorName] = useState('your mentor');
+  const [repoLabel, setRepoLabel] = useState('your project repo');
+
+  const [progress, setProgress] = useState<ProgressMap>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // ── Certification gate + org (mentor/repo) + progress hydration ──────────
   useEffect(() => {
-    try {
-      const rawDiagnostics = localStorage.getItem(DIAGNOSTIC_STORAGE_KEY);
-      if (rawDiagnostics) {
-        setDiagnosticAnswers(sanitizeDiagnosticAnswers(JSON.parse(rawDiagnostics)));
-      }
-    } catch (error) {
-      console.error('[TechSkillsPage] Failed to parse diagnostic answers from localStorage', error);
-    }
+    if (!user?.id) return;
+    let cancelled = false;
 
-    try {
-      const rawPhaseProgress = localStorage.getItem(PHASE_PROGRESS_STORAGE_KEY);
-      if (rawPhaseProgress) {
-        setPhaseProgress(sanitizePhaseProgress(JSON.parse(rawPhaseProgress)));
-      }
-    } catch (error) {
-      console.error('[TechSkillsPage] Failed to parse phase progress from localStorage', error);
-    }
+    (async () => {
+      const [{ data: certRows }, { data: profileRow }, { data: progressRows }] = await Promise.all([
+        supabase
+          .from('dashboard')
+          .select('progress')
+          .eq('user_id', user.id)
+          .eq('activity', 'AI Proficiency Certification')
+          .eq('category_activity', 'Certification'),
+        supabase
+          .from('profiles')
+          .select('organization_id, organizations ( mentor_name, mentor_repo_url )')
+          .eq('id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('tech_skills_progress')
+          .select('phase_id, task_name, status, submission_text, ai_feedback, attempt_count')
+          .eq('user_id', user.id),
+      ]);
 
-    setHydrated(true);
+      if (cancelled) return;
+
+      setCertified(Boolean(certRows?.some((r: any) => r.progress === 'completed')));
+      setCertLoading(false);
+
+      const org = (profileRow as any)?.organizations;
+      if (org) {
+        setMentorName(org.mentor_name?.trim() || 'your mentor');
+        setRepoLabel(deriveRepoLabel(org.mentor_repo_url ?? null));
+      }
+
+      const map: ProgressMap = {};
+      const initialDrafts: Record<string, string> = {};
+      (progressRows ?? []).forEach((row: any) => {
+        const key = progressKey(row.phase_id, row.task_name);
+        map[key] = {
+          status: row.status,
+          submission_text: row.submission_text ?? '',
+          ai_feedback: row.ai_feedback,
+          attempt_count: row.attempt_count ?? 0,
+        };
+        initialDrafts[key] = row.submission_text ?? '';
+      });
+      setProgress(map);
+      setDrafts(initialDrafts);
+      setDataLoading(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const onDraftChange = useCallback((key: string, text: string) => {
+    setDrafts((prev) => ({ ...prev, [key]: text }));
   }, []);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    localStorage.setItem(DIAGNOSTIC_STORAGE_KEY, JSON.stringify(diagnosticAnswers));
-  }, [diagnosticAnswers, hydrated]);
+  const handleSubmit = useCallback(async (phaseId: string, taskName: string) => {
+    if (!user?.id) return;
+    const key = progressKey(phaseId, taskName);
+    const text = (drafts[key] ?? '').trim();
+    if (!text) return;
 
-  useEffect(() => {
-    if (!hydrated) return;
-    localStorage.setItem(PHASE_PROGRESS_STORAGE_KEY, JSON.stringify(phaseProgress));
-  }, [phaseProgress, hydrated]);
+    setSubmitting((prev) => ({ ...prev, [key]: true }));
+    setErrors((prev) => ({ ...prev, [key]: null }));
 
-  const onDiagnosticAnswerChange = (diagName: string, text: string) => {
-    setDiagnosticAnswers((prev) => ({
-      ...prev,
-      [diagName]: {
-        ...prev[diagName],
-        text,
-      },
-    }));
-  };
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      const { data, error } = await supabase.functions.invoke('evaluate-tech-skills-submission', {
+        body: { phase_id: phaseId, task_name: taskName, submission_text: text },
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      });
 
-  const onDiagnosticSubmit = (diagName: string) => {
-    setDiagnosticAnswers((prev) => {
-      const current = prev[diagName];
-      if (!current?.text.trim()) return prev;
-      return {
+      if (error) throw new Error(error.message);
+      if (!data?.ok) throw new Error(data?.error ?? 'Evaluation failed.');
+
+      setProgress((prev) => ({
         ...prev,
-        [diagName]: {
-          text: current.text.trim(),
-          submitted: true,
+        [key]: {
+          status: data.status,
+          submission_text: text,
+          ai_feedback: data.ai_feedback,
+          attempt_count: data.attempt_count,
         },
-      };
-    });
-  };
-
-  const onToggleTask = (phaseId: string, taskName: string, completed: boolean) => {
-    setPhaseProgress((prev) => ({
-      ...prev,
-      [phaseId]: {
-        ...prev[phaseId],
-        [taskName]: completed,
-      },
-    }));
-  };
+      }));
+    } catch (e: any) {
+      setErrors((prev) => ({ ...prev, [key]: e.message ?? 'Evaluation failed. Please try again.' }));
+    } finally {
+      setSubmitting((prev) => ({ ...prev, [key]: false }));
+    }
+  }, [user?.id, drafts]);
 
   const phaseTaskCounts = useMemo(() => {
     return PHASES.reduce<Record<string, { total: number; completed: number }>>((acc, phase) => {
       const allTasks = phase.tracks.flatMap((track) => track.tasks);
-      const completed = allTasks.filter((task) => Boolean(phaseProgress[phase.id]?.[task.name])).length;
+      const completed = allTasks.filter((task) => progress[progressKey(phase.id, task.name)]?.status === 'pass').length;
       acc[phase.id] = { total: allTasks.length, completed };
       return acc;
     }, {});
-  }, [phaseProgress]);
+  }, [progress]);
 
   const phaseIsComplete = (phaseId: string) => {
     const counts = phaseTaskCounts[phaseId];
     return Boolean(counts && counts.total > 0 && counts.completed === counts.total);
   };
 
-  const authTestSubmitted = diagnosticAnswers['Auth test']?.submitted ?? false;
-  const debugTestSubmitted = diagnosticAnswers['Debug test']?.submitted ?? false;
-  const schemaTestSubmitted = diagnosticAnswers['Schema test']?.submitted ?? false;
-  const diagAllPassed = authTestSubmitted && debugTestSubmitted && schemaTestSubmitted;
+  const diagAllPassed = DIAGNOSTICS.every((d) => progress[progressKey('diag', d.q)]?.status === 'pass');
 
   const phaseLockedById: Record<string, boolean> = {
     p1: !diagAllPassed,
@@ -799,56 +849,97 @@ const TechSkillsPage: React.FC = () => {
   const totalTasks = Object.values(phaseTaskCounts).reduce((sum, v) => sum + v.total, 0);
   const totalPassed = Object.values(phaseTaskCounts).reduce((sum, v) => sum + v.completed, 0);
 
+  const substituteText = (text: string) => substitute(text, mentorName, repoLabel);
+
+  const header = (
+    <>
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/home')}
+          className="inline-flex items-center gap-1.5 text-xs font-mono text-gray-400 hover:text-gray-700 transition-colors border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50"
+        >
+          ← Home
+        </button>
+      </div>
+
+      <div className="mb-10">
+        <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-3">
+          Advanced · nextvillage.community
+        </p>
+        <h1 className="text-4xl font-extrabold text-gray-900 leading-tight mb-3">
+          Employable{' '}
+          <span className="bg-gradient-to-r from-purple-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
+            Developer Roadmap
+          </span>
+        </h1>
+        <p className="text-base text-gray-500 max-w-xl leading-relaxed mb-6">
+          A 9-month plan from full-stack builder to platform owner and employable developer.
+          Each task must be completed and evaluated before the next unlocks.
+        </p>
+      </div>
+    </>
+  );
+
+  if (certLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-10 pb-20">
+          {header}
+          <p className="text-sm text-gray-400">Loading…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!certified) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-10 pb-20">
+          {header}
+          <div className="rounded-xl border border-purple-200 bg-purple-50 p-8 text-center">
+            <Lock size={28} className="text-purple-400 mx-auto mb-3" />
+            <h2 className="text-lg font-bold text-gray-900 mb-2">This roadmap is for advanced learners</h2>
+            <p className="text-sm text-gray-600 max-w-md mx-auto mb-5 leading-relaxed">
+              This page opens up once you earn the <strong>AI Proficiency Certification</strong>.
+              It's the requirement for this roadmap because the diagnostics and tasks assume you already
+              have strong AI skills to draw on.
+            </p>
+            <button
+              onClick={() => navigate('/certifications/ai-proficiency')}
+              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-purple-700 transition-colors"
+            >
+              Go to AI Proficiency Certification <ExternalLink size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto px-6 py-10 pb-20">
+        {header}
 
-        {/* Home button */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/home')}
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-gray-400 hover:text-gray-700 transition-colors border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50"
-          >
-            ← Home
-          </button>
-        </div>
-
-        {/* Header */}
-        <div className="mb-10">
-          <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-3">
-            vAI · nextvillage.community
-          </p>
-          <h1 className="text-4xl font-extrabold text-gray-900 leading-tight mb-3">
-            Employable{' '}
-            <span className="bg-gradient-to-r from-purple-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
-              Developer Roadmap
-            </span>
-          </h1>
-          <p className="text-base text-gray-500 max-w-xl leading-relaxed mb-6">
-            A 9-month plan from full-stack builder to platform owner and employable developer.
-            Each task must be completed and evaluated before the next unlocks.
-          </p>
-
-          {/* AI Playground CTA */}
-          <div className="inline-flex items-start gap-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
-            <Terminal size={22} className="text-blue-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-blue-800 mb-0.5">
-                Use the AI Playground to do the work
-              </p>
-              <p className="text-xs text-blue-600 leading-relaxed mb-3">
-                For each task, open the AI Playground and use it as your thinking partner.
-                Then paste your evidence back here to submit.
-              </p>
-              <button
-                onClick={() => window.open('/playground', '_blank')}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white text-xs font-semibold px-4 py-2 hover:bg-blue-700 transition-colors"
-              >
-                <Terminal size={13} />
-                Open AI Playground
-                <ExternalLink size={12} />
-              </button>
-            </div>
+        {/* AI Playground CTA */}
+        <div className="inline-flex items-start gap-4 rounded-xl border border-blue-200 bg-blue-50 p-4 mb-8">
+          <Terminal size={22} className="text-blue-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-blue-800 mb-0.5">
+              Use the AI Playground to do the work
+            </p>
+            <p className="text-xs text-blue-600 leading-relaxed mb-3">
+              For each task, open the AI Playground and use it as your thinking partner.
+              Then paste your evidence back here to submit.
+            </p>
+            <button
+              onClick={() => window.open('/playground', '_blank')}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white text-xs font-semibold px-4 py-2 hover:bg-blue-700 transition-colors"
+            >
+              <Terminal size={13} />
+              Open AI Playground
+              <ExternalLink size={12} />
+            </button>
           </div>
         </div>
 
@@ -859,10 +950,8 @@ const TechSkillsPage: React.FC = () => {
             <p className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">
               Your progress
             </p>
-            {!hydrated ? (
-              <p className="text-sm text-gray-400 flex items-center gap-1">
-                Loading…
-              </p>
+            {dataLoading ? (
+              <p className="text-sm text-gray-400">Loading…</p>
             ) : (
               <div className="flex items-center gap-4">
                 <p className="text-sm text-gray-600">
@@ -890,48 +979,72 @@ const TechSkillsPage: React.FC = () => {
           </div>
           <p className="text-xs text-purple-500 mb-4">
             Complete all three before Phase 1 unlocks. Your answers reveal where to push hardest.
-            This step is local and immediate: once all three are submitted, Phase 1 unlocks.
+            Each is evaluated by AI against the stated criteria — once all three pass, Phase 1 unlocks.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {DIAGNOSTICS.map((d, i) => (
-              <DiagCard
-                key={i}
-                item={d}
-                answer={diagnosticAnswers[d.q] ?? { text: '', submitted: false }}
-                onAnswerChange={onDiagnosticAnswerChange}
-                onSubmit={onDiagnosticSubmit}
-              />
-            ))}
+            {DIAGNOSTICS.map((d, i) => {
+              const key = progressKey('diag', d.q);
+              return (
+                <DiagCard
+                  key={i}
+                  item={d}
+                  record={progress[key]}
+                  draftText={drafts[key] ?? ''}
+                  submitting={Boolean(submitting[key])}
+                  error={errors[key] ?? null}
+                  onDraftChange={(text) => onDraftChange(key, text)}
+                  onSubmit={() => handleSubmit('diag', d.q)}
+                />
+              );
+            })}
           </div>
         </div>
 
-        {/* Phase 1 gate notice */}
-        {hydrated && !diagAllPassed && (
+        {!dataLoading && !diagAllPassed && (
           <div className="mb-6 rounded-xl border border-purple-200 bg-purple-50 p-4 flex items-center gap-3">
             <Lock size={16} className="text-purple-400 flex-shrink-0" />
             <p className="text-xs text-purple-600">
               <span className="font-semibold">Phase 1 is locked.</span>{' '}
-              Submit all three diagnostics above to unlock the roadmap.
+              Pass all three diagnostics above to unlock the roadmap.
             </p>
           </div>
         )}
 
-        {/* Phases */}
-        {hydrated && PHASES.map(phase => (
-          <PhaseSection
-            key={phase.id}
-            phase={phase}
-            locked={phaseLockedById[phase.id]}
-            completedCount={phaseTaskCounts[phase.id]?.completed ?? 0}
-            totalCount={phaseTaskCounts[phase.id]?.total ?? 0}
-            onToggleTask={onToggleTask}
-            phaseProgress={phaseProgress}
-          />
-        ))}
+        {!dataLoading && PHASES.map(phase => {
+          const substitutedPhase: Phase = {
+            ...phase,
+            milestone: substituteText(phase.milestone),
+            tracks: phase.tracks.map((track) => ({
+              ...track,
+              tasks: track.tasks.map((task) => ({
+                ...task,
+                short: substituteText(task.short),
+                def: { ...task.def, text: substituteText(task.def.text) },
+                how: substituteText(task.how),
+                platform: substituteText(task.platform),
+                submitPrompt: substituteText(task.submitPrompt),
+              })),
+            })),
+          };
+          return (
+            <PhaseSection
+              key={phase.id}
+              phase={substitutedPhase}
+              locked={phaseLockedById[phase.id]}
+              completedCount={phaseTaskCounts[phase.id]?.completed ?? 0}
+              totalCount={phaseTaskCounts[phase.id]?.total ?? 0}
+              progress={progress}
+              drafts={drafts}
+              submitting={submitting}
+              errors={errors}
+              onDraftChange={onDraftChange}
+              onSubmit={handleSubmit}
+            />
+          );
+        })}
 
-        {/* Footer */}
         <p className="text-center text-xs font-mono text-gray-300 pt-6 border-t border-gray-100">
-          vAI · nextvillage.community · May 2026
+          nextvillage.community
         </p>
       </div>
     </div>

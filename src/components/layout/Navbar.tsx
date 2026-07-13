@@ -250,7 +250,14 @@ const Navbar: React.FC = () => {
                                       : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
                                 )}
                               >
-                                {item.name}
+                                <span className="flex items-center gap-1.5">
+                                  {item.name}
+                                  {item.path === '/tech-skills' && (
+                                    <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                      ADVANCED
+                                    </span>
+                                  )}
+                                </span>
                               </Link>
                             ))}
                           </div>
@@ -365,7 +372,14 @@ const Navbar: React.FC = () => {
                         )}
                         onClick={() => setIsOpen(false)}
                       >
-                        {item.name}
+                        <span className="flex items-center gap-1.5">
+                          {item.name}
+                          {item.path === '/tech-skills' && (
+                            <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                              ADVANCED
+                            </span>
+                          )}
+                        </span>
                       </Link>
                     ))}
                   </div>

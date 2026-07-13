@@ -232,7 +232,14 @@ const Sidebar: React.FC = () => {
         <span className={classNames('flex-shrink-0', active ? activeText : 'text-gray-400')}>
           {item.icon}
         </span>
-        {item.name}
+        <span className="flex items-center gap-1.5 min-w-0">
+          <span className="truncate">{item.name}</span>
+          {item.path === '/tech-skills' && (
+            <span className="flex-shrink-0 text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+              ADVANCED
+            </span>
+          )}
+        </span>
       </Link>
     );
   };

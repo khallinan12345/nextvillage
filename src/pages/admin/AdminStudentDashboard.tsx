@@ -18,7 +18,7 @@ import {
   ChevronUp, Trophy, User, BarChart2, Code, Brain,
   Target, Lightbulb, MessageSquare, Cpu,
   DollarSign, TrendingUp, Zap, Activity,
-  Server, Building2, Search, Globe, Sparkles, Send, Eye, Sprout,
+  Server, Building2, Search, Globe, Sparkles, Send, Eye, Sprout, GitBranch,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
@@ -51,6 +51,20 @@ interface CommunityImpactRow {
   resolution_value_label: string | null;
   created_at: string;
   resolved_at: string | null;
+}
+
+interface TechSkillsProgressRow {
+  user_id: string;
+  organization_id: string | null;
+  learner_name: string | null;
+  phase_id: string;
+  track_label: string | null;
+  task_name: string;
+  status: 'not_started' | 'submitted' | 'pass' | 'needs_work';
+  ai_score: number | null;
+  attempt_count: number | null;
+  submitted_at: string | null;
+  evaluated_at: string | null;
 }
 
 interface ActivityRow {
@@ -2246,7 +2260,7 @@ const AdminStudentDashboard: React.FC = () => {
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
   const isLeader = userRole === 'leader' && !isPlatformAdmin;
 
-  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'community-impact'>(
+  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'community-impact' | 'tech-skills-roadmap'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
   );
 
@@ -2442,6 +2456,35 @@ const AdminStudentDashboard: React.FC = () => {
       }
     })();
   }, [activeTab, authChecked, isPlatformAdmin, communityImpactOrgId]);
+
+  const [techSkillsRows, setTechSkillsRows] = useState<TechSkillsProgressRow[]>([]);
+  const [loadingTechSkills, setLoadingTechSkills] = useState(false);
+  const [techSkillsError, setTechSkillsError] = useState<string | null>(null);
+
+  const techSkillsOrgId = isPlatformAdmin ? effectiveOrgId : (selectedOrgId || userOrgId);
+
+  useEffect(() => {
+    if (activeTab !== 'tech-skills-roadmap' || !authChecked) return;
+    if (isPlatformAdmin && !techSkillsOrgId) { setTechSkillsRows([]); return; }
+
+    (async () => {
+      setLoadingTechSkills(true);
+      setTechSkillsError(null);
+      try {
+        let query = supabase.from('tech_skills_progress_admin').select('*');
+        if (techSkillsOrgId && techSkillsOrgId !== '__all__') {
+          query = query.eq('organization_id', techSkillsOrgId);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        setTechSkillsRows((data || []) as TechSkillsProgressRow[]);
+      } catch (err: any) {
+        setTechSkillsError(err.message || 'Failed to load tech skills roadmap data');
+      } finally {
+        setLoadingTechSkills(false);
+      }
+    })();
+  }, [activeTab, authChecked, isPlatformAdmin, techSkillsOrgId]);
 
   const fetchStudentSummary = useCallback(async () => {
     if (!learners.length) { setStudentSessionRows([]); return; }
@@ -2733,6 +2776,7 @@ const AdminStudentDashboard: React.FC = () => {
             { id: 'create-challenge' as const, label: 'Create Challenge', icon: <Sparkles size={14} />, show: isPlatformAdmin },
             { id: 'student' as const, label: 'Student Activity', icon: <BookOpen size={14} />, show: true },
             { id: 'community-impact' as const, label: 'Community Impact', icon: <Sprout size={14} />, show: isPlatformAdmin || isLeader },
+            { id: 'tech-skills-roadmap' as const, label: 'Tech Skills Roadmap', icon: <GitBranch size={14} />, show: isPlatformAdmin || isLeader },
             { id: 'model-overview' as const, label: 'Model Overview', icon: <Server size={14} />, show: isPlatformAdmin },
             { id: 'cost-overview' as const, label: 'Cost Overview', icon: <DollarSign size={14} />, show: isPlatformAdmin },
             { id: 'cost-learner' as const, label: 'Per-Learner Cost', icon: <Activity size={14} />, show: isPlatformAdmin },
@@ -2918,6 +2962,131 @@ const AdminStudentDashboard: React.FC = () => {
                                 <td className="px-4 py-2.5 text-right text-gray-800">{d.total}</td>
                                 <td className="px-4 py-2.5 text-right text-gray-800">{d.resolved}</td>
                                 <td className="px-4 py-2.5 text-right text-gray-800">{d.total > 0 ? Math.round((d.resolved / d.total) * 100) : 0}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {activeTab === 'tech-skills-roadmap' && (
+          <div>
+            {isPlatformAdmin && !adminSelectedOrgId && (
+              <OrgSelectorGrid
+                orgs={allOrgs}
+                onSelectOrg={(orgId) => setAdminSelectedOrgId(orgId)}
+                onSelectAll={() => setAdminSelectedOrgId('__all__')}
+                loading={loadingOrgs}
+              />
+            )}
+
+            {(!isPlatformAdmin || adminSelectedOrgId) && (() => {
+              const PHASE_ORDER = ['diag', 'p1', 'p2', 'p3', 'p4'];
+              const PHASE_TOTALS: Record<string, number> = { diag: 3, p1: 6, p2: 6, p3: 6, p4: 6 };
+              const PHASE_DISPLAY: Record<string, string> = { diag: 'Diagnostics', p1: 'Phase 1', p2: 'Phase 2', p3: 'Phase 3', p4: 'Phase 4' };
+              const TOTAL_ITEMS = Object.values(PHASE_TOTALS).reduce((a, b) => a + b, 0);
+
+              const byUser = new Map<string, TechSkillsProgressRow[]>();
+              techSkillsRows.forEach((r) => {
+                const arr = byUser.get(r.user_id) ?? [];
+                arr.push(r);
+                byUser.set(r.user_id, arr);
+              });
+
+              const leaderboard = Array.from(byUser.entries()).map(([userId, userRows]) => {
+                const passed = userRows.filter((r) => r.status === 'pass').length;
+                let furthestPhaseIndex = -1;
+                for (let i = 0; i < PHASE_ORDER.length; i++) {
+                  const phaseId = PHASE_ORDER[i];
+                  const passedInPhase = userRows.filter((r) => r.phase_id === phaseId && r.status === 'pass').length;
+                  if (passedInPhase === PHASE_TOTALS[phaseId]) furthestPhaseIndex = i;
+                  else break;
+                }
+                const lastActivity = userRows.reduce((latest, r) => {
+                  const t = r.submitted_at ? new Date(r.submitted_at).getTime() : 0;
+                  return t > latest ? t : latest;
+                }, 0);
+                return {
+                  userId,
+                  name: userRows[0]?.learner_name || 'Unknown',
+                  passed,
+                  furthestPhaseIndex,
+                  lastActivity,
+                };
+              }).sort((a, b) => b.passed - a.passed || b.furthestPhaseIndex - a.furthestPhaseIndex || b.lastActivity - a.lastActivity);
+
+              const participants = leaderboard.length;
+              const avgPassed = participants > 0
+                ? Math.round((leaderboard.reduce((s, l) => s + l.passed, 0) / participants) * 10) / 10
+                : 0;
+              const roadmapComplete = leaderboard.filter((l) => l.furthestPhaseIndex === PHASE_ORDER.length - 1).length;
+
+              return (
+                <>
+                  {isPlatformAdmin && (
+                    <OrgBanner orgName={adminSelectedOrgName} onBack={() => setAdminSelectedOrgId('')} />
+                  )}
+
+                  {loadingTechSkills ? (
+                    <div className="flex items-center justify-center py-16 text-gray-400">
+                      <Loader2 size={24} className="animate-spin" />
+                    </div>
+                  ) : techSkillsError ? (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+                      {techSkillsError} — make sure the tech_skills_progress_admin view was created.
+                    </div>
+                  ) : participants === 0 ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center text-sm text-gray-500">
+                      No tech skills roadmap submissions yet for this org.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-gray-900">{participants}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Participants</p>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-indigo-600">{avgPassed} / {TOTAL_ITEMS}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Avg items passed</p>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-emerald-600">{roadmapComplete}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Completed roadmap</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                              <th className="text-left px-4 py-2.5 font-semibold text-gray-600">#</th>
+                              <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Learner</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Items passed</th>
+                              <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Current phase</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Last activity</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {leaderboard.map((l, i) => (
+                              <tr key={l.userId} className="border-b border-gray-100 last:border-0">
+                                <td className="px-4 py-2.5 text-gray-400">{i + 1}</td>
+                                <td className="px-4 py-2.5 text-gray-800 font-medium">{l.name}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-800">{l.passed} / {TOTAL_ITEMS}</td>
+                                <td className="px-4 py-2.5 text-gray-800">
+                                  {l.furthestPhaseIndex === PHASE_ORDER.length - 1
+                                    ? '🏁 Complete'
+                                    : `Working on ${PHASE_DISPLAY[PHASE_ORDER[l.furthestPhaseIndex + 1]]}`}
+                                </td>
+                                <td className="px-4 py-2.5 text-right text-gray-500">
+                                  {l.lastActivity ? new Date(l.lastActivity).toLocaleDateString() : '—'}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
