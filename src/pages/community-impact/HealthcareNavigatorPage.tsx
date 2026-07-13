@@ -27,6 +27,8 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { PidginTooltip } from '../../components/PidginTooltip';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import { useAuth } from '../../hooks/useAuth';
@@ -925,6 +927,7 @@ const HealthcareNavigatorPage: React.FC = () => {
   const [speechOn, setSpeechOn] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
 
   // ── Prior follow-up chat state (guided clinical follow-up)
   const [priorFollowupMessages, setPriorFollowupMessages] = useState<ChatMessage[]>([]);
@@ -965,15 +968,27 @@ const HealthcareNavigatorPage: React.FC = () => {
     return () => window.speechSynthesis.removeEventListener('voiceschanged', load);
   }, []);
 
-  const speak = useCallback((text: string) => {
-    if (!speechOn || !window.speechSynthesis) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text.slice(0, 400));
-    const voice = voices.find(v => v.lang === 'en-NG') || voices.find(v => v.lang.startsWith('en'));
+    const voice = voiceMode === 'pidgin'
+      ? (voices.find(v => v.lang === 'en-NG') || voices.find(v => v.lang === 'en-ZA') || voices.find(v => v.lang.startsWith('en')))
+      : (voices.find(v => v.name === 'Google UK English Female') || voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en')));
     if (voice) { utt.voice = voice; utt.lang = voice.lang; }
-    utt.rate = 0.87;
+    utt.rate = 0.87; utt.pitch = 1.0;
     window.speechSynthesis.speak(utt);
-  }, [speechOn, voices]);
+  }, [voices, voiceMode]);
+
+  const speak = useCallback((text: string) => {
+    if (!speechOn) return;
+    void playPidginVoice(text.slice(0, 400), 'english', {
+      onError: (err) => {
+        console.warn('[HealthcareNavigatorPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
+  }, [speechOn, voiceMode, speakBrowser]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isSending]);
   useEffect(() => { priorFollowupEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [priorFollowupMessages, priorFollowupSending]);
@@ -1508,6 +1523,12 @@ const HealthcareNavigatorPage: React.FC = () => {
                 <div className="min-w-0">
                   <h1 className="text-lg sm:text-xl font-bold text-white leading-tight">Health Navigator</h1>
                   <p className="text-xs text-blue-200 truncate">Your patient casebook · Oloibiri & Ibiade</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="Your patient casebook · Oloibiri & Ibiade"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -2436,10 +2457,20 @@ const HealthcareNavigatorPage: React.FC = () => {
                   <p className="text-xs text-gray-500">{patient.patient_name} · {triageBadge(assess.triage_level)}</p>
                 </div>
               </div>
-              <button onClick={() => { setSpeechOn(s => !s); if (speechOn) window.speechSynthesis.cancel(); }}
-                className={classNames('p-2 rounded-lg', speechOn ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400')}>
-                {speechOn ? <Volume2 size={15}/> : <VolumeX size={15}/>}
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                  {(['pidgin', 'english'] as const).map(m => (
+                    <button key={m} onClick={() => setVoiceMode(m)}
+                      className={`px-2.5 py-1.5 text-xs font-bold border-r border-gray-300 last:border-0 transition-all ${voiceMode===m?(m==='english'?'bg-blue-600 text-white':'bg-green-600 text-white'):'bg-white text-gray-500'}`}>
+                      {m==='english'?'🇬🇧':'🇳🇬'}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => { setSpeechOn(s => !s); if (speechOn) { window.speechSynthesis.cancel(); stopPidginSpeech(); } }}
+                  className={classNames('p-2 rounded-lg', speechOn ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400')}>
+                  {speechOn ? <Volume2 size={15}/> : <VolumeX size={15}/>}
+                </button>
+              </div>
             </div>
           </div>
 

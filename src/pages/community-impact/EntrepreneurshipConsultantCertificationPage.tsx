@@ -25,6 +25,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { PidginTooltip } from '../../components/PidginTooltip';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { useBranding } from '../../lib/useBranding';
 import {
   Briefcase, Award, Trophy, Loader2, Download, AlertCircle,
@@ -341,6 +343,7 @@ const EntrepreneurshipConsultantCertificationPage: React.FC = () => {
   const [dashboardRowId, setDashboardRowId]     = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking]             = useState(false);
   const [speechOn, setSpeechOn]                 = useState(true);
+  const [voiceMode, setVoiceMode]               = useState<'english' | 'pidgin'>('pidgin');
   const speechSynth = typeof window !== 'undefined' ? window.speechSynthesis : null;
 
   const [activePersona, setActivePersona]     = useState<EntrepreneurPersona | null>(null);
@@ -359,20 +362,34 @@ const EntrepreneurshipConsultantCertificationPage: React.FC = () => {
     ? assessmentScores.reduce((s, a) => s + (a.score ?? 0), 0) / assessmentScores.length
     : null;
 
-  const speak = useCallback((text: string) => {
-    if (!speechOn || !speechSynth) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!speechSynth) return;
     speechSynth.cancel();
     const utt = new SpeechSynthesisUtterance(text.slice(0, 300));
     const voices = speechSynth.getVoices();
-    const voice = voices.find(v => v.lang === 'en-NG') || voices.find(v => v.lang.startsWith('en'));
+    const voice = voiceMode === 'pidgin'
+      ? (voices.find(v => v.lang === 'en-NG') || voices.find(v => v.lang === 'en-ZA') || voices.find(v => v.lang.startsWith('en')))
+      : (voices.find(v => v.name === 'Google UK English Female') || voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en')));
     if (voice) { utt.voice = voice; utt.lang = voice.lang; }
-    utt.rate = 0.87;
+    utt.rate = 0.87; utt.pitch = 1.0;
     utt.onstart = () => setIsSpeaking(true);
     utt.onend   = () => setIsSpeaking(false);
     speechSynth.speak(utt);
-  }, [speechOn, speechSynth]);
+  }, [speechSynth, voiceMode]);
 
-  const stopSpeaking = useCallback(() => { speechSynth?.cancel(); setIsSpeaking(false); }, [speechSynth]);
+  const speak = useCallback((text: string) => {
+    if (!speechOn) return;
+    void playPidginVoice(text.slice(0, 300), 'english', {
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: (err) => {
+        console.warn('[EntrepreneurshipConsultantCertificationPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
+  }, [speechOn, voiceMode, speakBrowser]);
+
+  const stopSpeaking = useCallback(() => { speechSynth?.cancel(); stopPidginSpeech(); setIsSpeaking(false); }, [speechSynth]);
 
   useEffect(() => {
     const last = sessionMessages[sessionMessages.length - 1];
@@ -609,6 +626,14 @@ Return valid JSON only (no markdown, no code fences):
               <p className="text-xs text-gray-500 mt-0.5">{userTurnCount} turn{userTurnCount !== 1 ? 's' : ''} · {userTurnCount >= 3 ? '✅ Ready to save' : `${3 - userTurnCount} more turns to save`}</p>
             </div>
             <div className="flex gap-2">
+              <div className="flex rounded-xl overflow-hidden border border-gray-600">
+                {(['pidgin', 'english'] as const).map(m => (
+                  <button key={m} onClick={() => setVoiceMode(m)}
+                    className={`px-2 py-2 text-xs font-bold border-r border-gray-600 last:border-0 transition-all ${voiceMode===m?(m==='english'?'bg-blue-600 text-white':'bg-green-600 text-white'):'bg-gray-700 text-gray-400'}`}>
+                    {m==='english'?'🇬🇧':'🇳🇬'}
+                  </button>
+                ))}
+              </div>
               <button onClick={saveSession} disabled={userTurnCount < 3}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${userTurnCount >= 3 ? `bg-gradient-to-r ${activePersona.colour} text-white` : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
                 <CheckCircle size={13} /> Save Session
@@ -683,6 +708,12 @@ Return valid JSON only (no markdown, no code fences):
               </div>
               <h1 className="text-2xl font-bold text-white">Entrepreneurship Consultant Certification</h1>
               <p className="text-sm text-amber-300">Community Impact Track · {branding.institutionName}</p>
+              <div className="flex justify-center">
+                <PidginTooltip
+                  originalText={`Community Impact Track · ${branding.institutionName}`}
+                  hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                />
+              </div>
               <p className="text-sm text-gray-300 leading-relaxed max-w-md mx-auto">
                 Prove you can advise young Nigerians starting businesses — with accurate knowledge of CAC registration, pricing, WhatsApp marketing, Ajo savings, and lean business planning.
               </p>
