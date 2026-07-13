@@ -767,23 +767,20 @@ Keep responses to 2–4 short paragraphs. Write accessibly for 18–26 year olds
     setLoading(true);
     setMessages([]);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-calls": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          page: "ResearchIGiTREE",
           max_tokens: 1000,
           system: systemPrompt(),
           messages: [{ role: "user", content: "I'm starting this task. Please introduce yourself, tell me what you can help with, and ask me one focused question to get started." }],
         }),
       });
       const data = await res.json();
-      const text = data.content?.find(b => b.type === "text")?.text || "";
+      const text = data.choices?.[0]?.message?.content
+        ?? data.content?.find(b => b.type === "text")?.text
+        ?? "";
       setMessages([{ role: "ai", text, ts: Date.now() }]);
     } catch {
       setMessages([{ role: "ai", text: `Hi — I'm your iGiTREE research assistant. I'm here to help with: ${AI_ROLE_LABELS[taskContext?.aiRole]?.desc || "this task"}. Where would you like to start?`, ts: Date.now() }]);
@@ -795,23 +792,20 @@ Keep responses to 2–4 short paragraphs. Write accessibly for 18–26 year olds
     setLoading(true);
     const msgs = [...history.map(m => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text })), { role: "user", content: userMsg }];
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-calls": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          page: "ResearchIGiTREE",
           max_tokens: 1000,
           system: systemPrompt(),
           messages: msgs,
         }),
       });
       const data = await res.json();
-      const text = data.content?.find(b => b.type === "text")?.text || "Connection issue — please try again.";
+      const text = data.choices?.[0]?.message?.content
+        ?? data.content?.find(b => b.type === "text")?.text
+        ?? "Connection issue — please try again.";
       setMessages(prev => [...prev, { role: "ai", text, ts: Date.now() }]);
     } catch {
       setMessages(prev => [...prev, { role: "ai", text: "Connection issue — please try again.", ts: Date.now() }]);
