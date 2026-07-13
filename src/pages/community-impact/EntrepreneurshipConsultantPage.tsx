@@ -27,6 +27,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { PidginTooltip } from '../../components/PidginTooltip';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import {
@@ -35,7 +37,7 @@ import {
   TrendingUp, Lightbulb, ShieldCheck, Award, RefreshCw,
   DollarSign, Smartphone, Target, BarChart2, Handshake, Zap,
   Plus, FileText, CheckCircle, Clock, AlertTriangle, Calendar,
-  ClipboardList,
+  ClipboardList, Store, Trash2,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -53,7 +55,8 @@ type AppMode =
   | 'learn-topics' | 'learn-chat'
   | 'casebook-dashboard' | 'add-client' | 'client-detail'
   | 'new-consultation' | 'case-detail' | 'followup-chat'
-  | 'consult-personas' | 'consult-prepare' | 'consult-chat';
+  | 'consult-personas' | 'consult-prepare' | 'consult-chat'
+  | 'enterprise-dashboard' | 'enterprise-add';
 
 type ConsultationType =
   | 'starting-up'
@@ -124,6 +127,19 @@ interface Consultation {
   resolution_value_amount: number | null;
   resolution_value_unit: string | null;
   resolution_value_label: string | null;
+  created_at: string;
+}
+
+interface EnterpriseEntry {
+  id: string;
+  user_id: string;
+  enterprise_name: string | null;
+  item_or_service: string;
+  buyer_description: string | null;
+  amount: number | null;
+  unit: 'NGN' | 'other';
+  entry_date: string;
+  notes: string | null;
   created_at: string;
 }
 
@@ -648,6 +664,20 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingConsults, setLoadingConsults] = useState(false);
 
+  // ── My Enterprise (own venture ledger)
+  const [enterpriseEntries, setEnterpriseEntries] = useState<EnterpriseEntry[]>([]);
+  const [loadingEnterprise, setLoadingEnterprise] = useState(true);
+  const [enterpriseName, setEnterpriseName] = useState('');
+  const [editingEnterpriseName, setEditingEnterpriseName] = useState(false);
+  const [savingEnterpriseName, setSavingEnterpriseName] = useState(false);
+  const [neItemOrService, setNeItemOrService] = useState('');
+  const [neBuyer, setNeBuyer] = useState('');
+  const [neAmount, setNeAmount] = useState('');
+  const [neUnit, setNeUnit] = useState<'NGN' | 'other'>('NGN');
+  const [neDate, setNeDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [neNotes, setNeNotes] = useState('');
+  const [savingEntry, setSavingEntry] = useState(false);
+
   // ── Add-client form
   const [newName, setNewName] = useState('');
   const [newVillage, setNewVillage] = useState('');
@@ -691,6 +721,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   const [dashboardId, setDashboardId] = useState<string | null>(null);
   const [speechOn, setSpeechOn] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
 
   // ── Community AI Challenge state ─────────────────────────────────────────
   const [availableChallenge, setAvailableChallenge] = useState<ActiveChallenge | null>(null);
@@ -716,15 +747,27 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isSending]);
   useEffect(() => { probeChatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [probeMessages, probeLoading]);
 
-  const speak = useCallback((text: string) => {
-    if (!speechOn || !window.speechSynthesis) return;
+  const speakBrowser = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text.slice(0, 380));
-    const voice = voices.find(v => v.lang === 'en-NG') || voices.find(v => v.lang.startsWith('en'));
+    const voice = voiceMode === 'pidgin'
+      ? (voices.find(v => v.lang === 'en-NG') || voices.find(v => v.lang === 'en-ZA') || voices.find(v => v.lang.startsWith('en')))
+      : (voices.find(v => v.name === 'Google UK English Female') || voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en')));
     if (voice) { utt.voice = voice; utt.lang = voice.lang; }
-    utt.rate = 0.87;
+    utt.rate = 0.87; utt.pitch = 1.0;
     window.speechSynthesis.speak(utt);
-  }, [speechOn, voices]);
+  }, [voices, voiceMode]);
+
+  const speak = useCallback((text: string) => {
+    if (!speechOn) return;
+    void playPidginVoice(text.slice(0, 380), 'english', {
+      onError: (err) => {
+        console.warn('[EntrepreneurshipConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
+        speakBrowser(text);
+      },
+    });
+  }, [speechOn, voiceMode, speakBrowser]);
 
   useEffect(() => { const last = messages[messages.length - 1]; if (last?.role === 'assistant') speak(last.content); }, [messages, speak]);
 
@@ -879,6 +922,70 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   }, [user]);
 
   useEffect(() => { loadClients(); }, [loadClients]);
+
+  const loadEnterpriseEntries = useCallback(async () => {
+    if (!user) return;
+    setLoadingEnterprise(true);
+    try {
+      const { data, error } = await supabase
+        .from('enterprise_ledger_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        setEnterpriseEntries(data as EnterpriseEntry[]);
+        const mostRecentName = (data as EnterpriseEntry[]).find(e => e.enterprise_name?.trim())?.enterprise_name;
+        if (mostRecentName) setEnterpriseName(mostRecentName);
+      }
+    } finally { setLoadingEnterprise(false); }
+  }, [user]);
+
+  useEffect(() => { loadEnterpriseEntries(); }, [loadEnterpriseEntries]);
+
+  const resetEnterpriseForm = () => {
+    setNeItemOrService(''); setNeBuyer(''); setNeAmount(''); setNeUnit('NGN');
+    setNeDate(new Date().toISOString().slice(0, 10)); setNeNotes('');
+  };
+
+  const saveEnterpriseEntry = async () => {
+    if (!user || !neItemOrService.trim() || savingEntry) return;
+    setSavingEntry(true);
+    try {
+      const amount = neAmount.trim() ? parseFloat(neAmount) : null;
+      const { error } = await supabase.from('enterprise_ledger_entries').insert({
+        user_id: user.id,
+        enterprise_name: enterpriseName.trim() || null,
+        item_or_service: neItemOrService.trim(),
+        buyer_description: neBuyer.trim() || null,
+        amount: amount !== null && !isNaN(amount) ? amount : null,
+        unit: neUnit,
+        entry_date: neDate,
+        notes: neNotes.trim() || null,
+      });
+      if (!error) { await loadEnterpriseEntries(); resetEnterpriseForm(); setMode('enterprise-dashboard'); }
+      else console.error('[EntrepreneurshipConsultantPage] saveEnterpriseEntry error:', error);
+    } finally { setSavingEntry(false); }
+  };
+
+  const deleteEnterpriseEntry = async (id: string) => {
+    await supabase.from('enterprise_ledger_entries').delete().eq('id', id);
+    setEnterpriseEntries(prev => prev.filter(e => e.id !== id));
+  };
+
+  const saveEnterpriseName = async () => {
+    if (!user || savingEnterpriseName) return;
+    setSavingEnterpriseName(true);
+    try {
+      if (enterpriseEntries.length > 0) {
+        await supabase.from('enterprise_ledger_entries')
+          .update({ enterprise_name: enterpriseName.trim() || null })
+          .eq('user_id', user.id);
+        await loadEnterpriseEntries();
+      }
+      setEditingEnterpriseName(false);
+    } finally { setSavingEnterpriseName(false); }
+  };
 
   const loadConsultations = useCallback(async (clientId: string) => {
     setLoadingConsults(true);
@@ -1209,7 +1316,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               Help young Nigerian entrepreneurs start, grow, and fix their businesses — using AI to give them access to information and strategies they couldn't afford before.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <button onClick={() => setMode('learn-topics')}
               className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-amber-400">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center mb-3"><BookOpen size={24} className="text-white" /></div>
@@ -1223,6 +1330,13 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <h3 className="text-lg font-bold text-gray-900 mb-1">Casebook</h3>
               <p className="text-sm text-gray-600 leading-relaxed">Register real entrepreneurs, run structured consultations, save case records and follow-ups.</p>
               <div className="mt-2 flex items-center gap-1 text-orange-700 font-semibold text-sm">Real clients <ChevronRight size={14} /></div>
+            </button>
+            <button onClick={() => setMode('enterprise-dashboard')}
+              className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-emerald-400">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center mb-3"><Store size={24} className="text-white" /></div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">My Enterprise</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">Log your own sales week by week — a business you're building for yourself.</p>
+              <div className="mt-2 flex items-center gap-1 text-emerald-700 font-semibold text-sm">Build your own <ChevronRight size={14} /></div>
             </button>
             <button onClick={() => setMode('consult-personas')}
               className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-red-400">
@@ -1299,6 +1413,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 <div>
                   <h1 className="text-xl font-bold text-white">Entrepreneur Casebook</h1>
                   <p className="text-sm text-amber-200">Your client records · Oloibiri & Ibiade</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="Your client records · Oloibiri & Ibiade"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1680,6 +1800,171 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   }
 
   // ════════════════════════════════════════════════════════════════════════════
+  // RENDER: MY ENTERPRISE DASHBOARD
+  // ════════════════════════════════════════════════════════════════════════════
+
+  if (mode === 'enterprise-dashboard') {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekTotal = enterpriseEntries
+      .filter(e => e.unit === 'NGN' && e.amount != null && new Date(e.entry_date) >= weekAgo)
+      .reduce((s, e) => s + (e.amount || 0), 0);
+    const allTimeTotal = enterpriseEntries
+      .filter(e => e.unit === 'NGN' && e.amount != null)
+      .reduce((s, e) => s + (e.amount || 0), 0);
+
+    return (
+      <AppLayout>
+        <EntrepreneurshipBackground />
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
+          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-5 mb-5">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setMode('select')} className="text-white/70 hover:text-white p-1"><ArrowLeft size={18}/></button>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center"><Store size={22} className="text-white" /></div>
+                <div>
+                  {editingEnterpriseName ? (
+                    <div className="flex items-center gap-2">
+                      <input value={enterpriseName} onChange={e => setEnterpriseName(e.target.value)} placeholder="Name your enterprise…" autoFocus
+                        className="px-2 py-1 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400"/>
+                      <button onClick={saveEnterpriseName} disabled={savingEnterpriseName} className="text-emerald-300 hover:text-white text-xs font-bold">Save</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setEditingEnterpriseName(true)} className="text-left">
+                      <h1 className="text-xl font-bold text-white">{enterpriseName.trim() || 'My Enterprise'} <span className="text-xs font-normal text-emerald-200 opacity-70">(edit)</span></h1>
+                    </button>
+                  )}
+                  <p className="text-sm text-emerald-200">Your own venture — logged week by week</p>
+                </div>
+              </div>
+              <button onClick={() => { resetEnterpriseForm(); setMode('enterprise-add'); }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-xl font-semibold text-sm hover:opacity-90">
+                <Plus size={16}/> Log a Sale
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            {[
+              { label: 'This Week', value: `₦${weekTotal.toLocaleString()}`, icon: '📅' },
+              { label: 'All-Time', value: `₦${allTimeTotal.toLocaleString()}`, icon: '💰' },
+              { label: 'Sales Logged', value: enterpriseEntries.length, icon: '🧾' },
+            ].map(stat => (
+              <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center">
+                <div className="text-2xl mb-1">{stat.icon}</div>
+                <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-xs text-gray-500">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-md overflow-hidden">
+            {loadingEnterprise ? (
+              <div className="flex items-center justify-center gap-2 py-12 text-gray-500 text-sm">
+                <Loader2 size={16} className="animate-spin" /> Loading your sales…
+              </div>
+            ) : enterpriseEntries.length === 0 ? (
+              <div className="py-12 text-center px-6">
+                <p className="text-gray-500 text-sm mb-3">No sales logged yet. Sold something this week? Log it — even a small sale counts.</p>
+                <button onClick={() => { resetEnterpriseForm(); setMode('enterprise-add'); }}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700">
+                  Log your first sale
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {enterpriseEntries.map(entry => (
+                  <div key={entry.id} className="flex items-start gap-3 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-gray-900">{entry.item_or_service}</span>
+                        <span className="text-xs text-gray-400">{formatDate(entry.entry_date)}</span>
+                      </div>
+                      {entry.buyer_description && <p className="text-xs text-gray-500 mt-0.5">Sold to: {entry.buyer_description}</p>}
+                      {entry.notes && <p className="text-xs text-gray-400 mt-0.5">{entry.notes}</p>}
+                    </div>
+                    {entry.amount != null && (
+                      <span className="text-sm font-bold text-emerald-700 whitespace-nowrap">
+                        {entry.unit === 'NGN' ? '₦' : ''}{entry.amount.toLocaleString()}{entry.unit !== 'NGN' ? ` ${entry.unit}` : ''}
+                      </span>
+                    )}
+                    <button onClick={() => deleteEnterpriseEntry(entry.id)} className="text-gray-300 hover:text-red-500 p-1" title="Delete entry">
+                      <Trash2 size={14}/>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // RENDER: LOG A SALE (MY ENTERPRISE)
+  // ════════════════════════════════════════════════════════════════════════════
+
+  if (mode === 'enterprise-add') {
+    return (
+      <AppLayout>
+        <EntrepreneurshipBackground />
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+            <div className="flex items-center gap-3 mb-5">
+              <button onClick={() => setMode('enterprise-dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
+              <div><h2 className="text-xl font-bold text-gray-900">Log a Sale</h2><p className="text-sm text-gray-500">What did you sell this week?</p></div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">What did you sell? *</label>
+                <input value={neItemOrService} onChange={e => setNeItemOrService(e.target.value)} placeholder="e.g. 20 plates of jollof rice, phone screen repair"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Who bought it? (optional)</label>
+                <input value={neBuyer} onChange={e => setNeBuyer(e.target.value)} placeholder="e.g. Church event, neighbour, walk-in customer"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">For how much? (optional)</label>
+                  <input type="number" value={neAmount} onChange={e => setNeAmount(e.target.value)} placeholder="e.g. 15000"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Unit</label>
+                  <select value={neUnit} onChange={e => setNeUnit(e.target.value as 'NGN' | 'other')}
+                    className="px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base bg-white">
+                    <option value="NGN">₦ (Naira)</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Date</label>
+                <input type="date" value={neDate} onChange={e => setNeDate(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Notes (optional)</label>
+                <textarea value={neNotes} onChange={e => setNeNotes(e.target.value)} rows={2}
+                  placeholder="Anything worth remembering about this sale…"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm resize-none"/>
+              </div>
+              <button onClick={saveEnterpriseEntry} disabled={!neItemOrService.trim() || savingEntry}
+                className={classNames('w-full py-3.5 rounded-xl font-bold text-white text-base transition-opacity',
+                  neItemOrService.trim() && !savingEntry ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
+                {savingEntry ? <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin"/>Saving…</span> : 'Save Sale'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
   // RENDER: CLIENT DETAIL
   // ════════════════════════════════════════════════════════════════════════════
 
@@ -1955,10 +2240,20 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   <p className="text-xs text-white/70">{selectedClient.client_name} · {ct.label}</p>
                 </div>
               </div>
-              <button onClick={() => { setSpeechOn(s => !s); if (speechOn) window.speechSynthesis.cancel(); }}
-                className={classNames('p-2 rounded-lg', speechOn ? 'bg-amber-100 text-amber-700' : 'bg-white/20 text-white/60')}>
-                {speechOn ? <Volume2 size={15}/> : <VolumeX size={15}/>}
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex rounded-lg overflow-hidden border border-white/30">
+                  {(['pidgin', 'english'] as const).map(m => (
+                    <button key={m} onClick={() => setVoiceMode(m)}
+                      className={`px-2.5 py-1.5 text-xs font-bold border-r border-white/30 last:border-0 transition-all ${voiceMode===m?(m==='english'?'bg-blue-600 text-white':'bg-green-600 text-white'):'bg-white/10 text-white/60'}`}>
+                      {m==='english'?'🇬🇧':'🇳🇬'}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => { setSpeechOn(s => !s); if (speechOn) { window.speechSynthesis.cancel(); stopPidginSpeech(); } }}
+                  className={classNames('p-2 rounded-lg', speechOn ? 'bg-amber-100 text-amber-700' : 'bg-white/20 text-white/60')}>
+                  {speechOn ? <Volume2 size={15}/> : <VolumeX size={15}/>}
+                </button>
+              </div>
             </div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg mb-4 flex flex-col" style={{ height: '500px' }}>
@@ -2246,7 +2541,15 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <button onClick={() => { setSpeechOn(s => !s); if (speechOn) window.speechSynthesis.cancel(); }} className={`p-2 rounded-lg ${speechOn?'bg-amber-100 text-amber-700':'bg-white/20 text-white/60'}`}>
+                <div className="flex rounded-lg overflow-hidden border border-white/30">
+                  {(['pidgin', 'english'] as const).map(m => (
+                    <button key={m} onClick={() => setVoiceMode(m)}
+                      className={`px-2.5 py-1.5 text-xs font-bold border-r border-white/30 last:border-0 transition-all ${voiceMode===m?(m==='english'?'bg-blue-600 text-white':'bg-green-600 text-white'):'bg-white/10 text-white/60'}`}>
+                      {m==='english'?'🇬🇧':'🇳🇬'}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => { setSpeechOn(s => !s); if (speechOn) { window.speechSynthesis.cancel(); stopPidginSpeech(); } }} className={`p-2 rounded-lg ${speechOn?'bg-amber-100 text-amber-700':'bg-white/20 text-white/60'}`}>
                   {speechOn ? <Volume2 size={16}/> : <VolumeX size={16}/>}
                 </button>
                 <button onClick={handleSave} disabled={isSaving || messages.length < 2}

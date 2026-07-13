@@ -18,7 +18,7 @@ import {
   ChevronUp, Trophy, User, BarChart2, Code, Brain,
   Target, Lightbulb, MessageSquare, Cpu,
   DollarSign, TrendingUp, Zap, Activity,
-  Server, Building2, Search, Globe, Sparkles, Send, Eye, Sprout, GitBranch,
+  Server, Building2, Search, Globe, Sparkles, Send, Eye, Sprout, GitBranch, Store,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
@@ -51,6 +51,20 @@ interface CommunityImpactRow {
   resolution_value_label: string | null;
   created_at: string;
   resolved_at: string | null;
+}
+
+interface EnterpriseLedgerRow {
+  id: string;
+  user_id: string;
+  organization_id: string | null;
+  learner_name: string | null;
+  enterprise_name: string | null;
+  item_or_service: string;
+  buyer_description: string | null;
+  amount: number | null;
+  unit: 'NGN' | 'other';
+  entry_date: string;
+  created_at: string;
 }
 
 interface TechSkillsProgressRow {
@@ -2260,7 +2274,7 @@ const AdminStudentDashboard: React.FC = () => {
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
   const isLeader = userRole === 'leader' && !isPlatformAdmin;
 
-  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'community-impact' | 'tech-skills-roadmap'>(
+  const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'community-impact' | 'tech-skills-roadmap' | 'youth-enterprises'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
   );
 
@@ -2456,6 +2470,46 @@ const AdminStudentDashboard: React.FC = () => {
       }
     })();
   }, [activeTab, authChecked, isPlatformAdmin, communityImpactOrgId]);
+
+  // ── Youth Enterprises rollup (own-venture ledger, "for themselves") ────────
+  // Paired with each learner's entrepreneurship_consultations count (via the
+  // existing community_impact_resolutions rollup, domain='entrepreneurship')
+  // so a leader sees "building for self" vs. "advising others" side by side.
+  const [enterpriseLedgerRows, setEnterpriseLedgerRows] = useState<EnterpriseLedgerRow[]>([]);
+  const [entrepAdvisingCounts, setEntrepAdvisingCounts] = useState<Record<string, number>>({});
+  const [loadingEnterpriseLedger, setLoadingEnterpriseLedger] = useState(false);
+  const [enterpriseLedgerError, setEnterpriseLedgerError] = useState<string | null>(null);
+
+  const enterpriseLedgerOrgId = isPlatformAdmin ? effectiveOrgId : (selectedOrgId || userOrgId);
+
+  useEffect(() => {
+    if (activeTab !== 'youth-enterprises' || !authChecked) return;
+    if (isPlatformAdmin && !enterpriseLedgerOrgId) { setEnterpriseLedgerRows([]); setEntrepAdvisingCounts({}); return; }
+
+    (async () => {
+      setLoadingEnterpriseLedger(true);
+      setEnterpriseLedgerError(null);
+      try {
+        let ledgerQuery = supabase.from('enterprise_ledger_admin').select('*');
+        let advisingQuery = supabase.from('community_impact_resolutions').select('youth_user_id').eq('domain', 'entrepreneurship');
+        if (enterpriseLedgerOrgId && enterpriseLedgerOrgId !== '__all__') {
+          ledgerQuery = ledgerQuery.eq('organization_id', enterpriseLedgerOrgId);
+          advisingQuery = advisingQuery.eq('organization_id', enterpriseLedgerOrgId);
+        }
+        const [{ data: ledgerData, error: ledgerError }, { data: advisingData, error: advisingError }] = await Promise.all([ledgerQuery, advisingQuery]);
+        if (ledgerError) throw ledgerError;
+        if (advisingError) throw advisingError;
+        setEnterpriseLedgerRows((ledgerData || []) as EnterpriseLedgerRow[]);
+        const counts: Record<string, number> = {};
+        (advisingData || []).forEach((r: any) => { counts[r.youth_user_id] = (counts[r.youth_user_id] || 0) + 1; });
+        setEntrepAdvisingCounts(counts);
+      } catch (err: any) {
+        setEnterpriseLedgerError(err.message || 'Failed to load youth enterprise data');
+      } finally {
+        setLoadingEnterpriseLedger(false);
+      }
+    })();
+  }, [activeTab, authChecked, isPlatformAdmin, enterpriseLedgerOrgId]);
 
   const [techSkillsRows, setTechSkillsRows] = useState<TechSkillsProgressRow[]>([]);
   const [loadingTechSkills, setLoadingTechSkills] = useState(false);
@@ -2776,6 +2830,7 @@ const AdminStudentDashboard: React.FC = () => {
             { id: 'create-challenge' as const, label: 'Create Challenge', icon: <Sparkles size={14} />, show: isPlatformAdmin },
             { id: 'student' as const, label: 'Student Activity', icon: <BookOpen size={14} />, show: true },
             { id: 'community-impact' as const, label: 'Community Impact', icon: <Sprout size={14} />, show: isPlatformAdmin || isLeader },
+            { id: 'youth-enterprises' as const, label: 'Youth Enterprises', icon: <Store size={14} />, show: isPlatformAdmin || isLeader },
             { id: 'tech-skills-roadmap' as const, label: 'Tech Skills Roadmap', icon: <GitBranch size={14} />, show: isPlatformAdmin || isLeader },
             { id: 'model-overview' as const, label: 'Model Overview', icon: <Server size={14} />, show: isPlatformAdmin },
             { id: 'cost-overview' as const, label: 'Cost Overview', icon: <DollarSign size={14} />, show: isPlatformAdmin },
@@ -2962,6 +3017,116 @@ const AdminStudentDashboard: React.FC = () => {
                                 <td className="px-4 py-2.5 text-right text-gray-800">{d.total}</td>
                                 <td className="px-4 py-2.5 text-right text-gray-800">{d.resolved}</td>
                                 <td className="px-4 py-2.5 text-right text-gray-800">{d.total > 0 ? Math.round((d.resolved / d.total) * 100) : 0}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {activeTab === 'youth-enterprises' && (
+          <div>
+            {isPlatformAdmin && !adminSelectedOrgId && (
+              <OrgSelectorGrid
+                orgs={allOrgs}
+                onSelectOrg={(orgId) => setAdminSelectedOrgId(orgId)}
+                onSelectAll={() => setAdminSelectedOrgId('__all__')}
+                loading={loadingOrgs}
+              />
+            )}
+
+            {(!isPlatformAdmin || adminSelectedOrgId) && (() => {
+              const rows = enterpriseLedgerRows;
+              const total = rows.length;
+
+              type LearnerEnterprise = {
+                user_id: string; name: string; enterpriseName: string | null;
+                count: number; totalNGN: number; lastDate: string; advisingCount: number;
+              };
+              const learnerMap = new Map<string, LearnerEnterprise>();
+              rows.forEach(r => {
+                const existing = learnerMap.get(r.user_id) || {
+                  user_id: r.user_id, name: r.learner_name || '(no name)', enterpriseName: null,
+                  count: 0, totalNGN: 0, lastDate: r.entry_date, advisingCount: entrepAdvisingCounts[r.user_id] || 0,
+                };
+                existing.count += 1;
+                if (r.unit === 'NGN' && r.amount != null) existing.totalNGN += r.amount;
+                if (r.enterprise_name?.trim()) existing.enterpriseName = r.enterprise_name;
+                if (r.entry_date > existing.lastDate) existing.lastDate = r.entry_date;
+                learnerMap.set(r.user_id, existing);
+              });
+              const learners = [...learnerMap.values()].sort((a, b) => b.totalNGN - a.totalNGN);
+
+              const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+              const weekTotal = rows.filter(r => r.unit === 'NGN' && r.amount != null && new Date(r.entry_date) >= weekAgo).reduce((s, r) => s + (r.amount || 0), 0);
+              const allTimeTotal = rows.filter(r => r.unit === 'NGN' && r.amount != null).reduce((s, r) => s + (r.amount || 0), 0);
+
+              return (
+                <>
+                  {isPlatformAdmin && (
+                    <OrgBanner orgName={adminSelectedOrgName} onBack={() => setAdminSelectedOrgId('')} />
+                  )}
+
+                  {loadingEnterpriseLedger ? (
+                    <div className="flex items-center justify-center py-16 text-gray-400">
+                      <Loader2 size={24} className="animate-spin" />
+                    </div>
+                  ) : enterpriseLedgerError ? (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+                      {enterpriseLedgerError} — make sure the enterprise_ledger_admin view was created.
+                    </div>
+                  ) : total === 0 ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center text-sm text-gray-500">
+                      No sales logged yet for this org. Learners can log their own sales from the "My Enterprise" mode on the Entrepreneurship page.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-gray-900">{learners.length}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Active enterprises</p>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-indigo-600">{total}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">Sales logged</p>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-emerald-600">₦{weekTotal.toLocaleString()}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">This week</p>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                          <p className="text-2xl font-black text-amber-600">₦{allTimeTotal.toLocaleString()}</p>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">All-time</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                              <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Learner</th>
+                              <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Enterprise</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Sales Logged</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Total ₦</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Last Sale</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Consultations (Others)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {learners.map(l => (
+                              <tr key={l.user_id} className="border-b border-gray-100 last:border-0">
+                                <td className="px-4 py-2.5 text-gray-800 font-semibold">{l.name}</td>
+                                <td className="px-4 py-2.5 text-gray-600">{l.enterpriseName || '—'}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-800">{l.count}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-800 font-semibold">₦{l.totalNGN.toLocaleString()}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-600">{new Date(l.lastDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-600">{l.advisingCount}</td>
                               </tr>
                             ))}
                           </tbody>

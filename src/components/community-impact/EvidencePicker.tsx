@@ -21,6 +21,7 @@ const DOMAIN_LABELS: Record<string, string> = {
   healthcare: 'Healthcare',
   entrepreneurship: 'Entrepreneurship',
   animal_husbandry: 'Animal Husbandry',
+  enterprise: 'My Enterprise',
 };
 
 const OUTCOME_LABELS: Record<string, string> = {
@@ -50,7 +51,7 @@ export const EvidencePicker: React.FC<EvidencePickerProps> = ({ sourceType, sour
     if (!user?.id || !sourceId) return;
     setLoading(true);
     try {
-      const [{ data: resolved }, { data: links }] = await Promise.all([
+      const [{ data: resolved }, { data: enterprise }, { data: links }] = await Promise.all([
         supabase
           .from('community_impact_resolutions')
           .select('*')
@@ -59,12 +60,29 @@ export const EvidencePicker: React.FC<EvidencePickerProps> = ({ sourceType, sour
           .order('created_at', { ascending: false })
           .limit(30),
         supabase
+          .from('enterprise_ledger_entries')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(30),
+        supabase
           .from('consultation_evidence_links')
           .select('consultation_domain, consultation_id')
           .eq('source_type', sourceType)
           .eq('source_id', sourceId),
       ]);
-      setRows((resolved || []) as ResolutionRow[]);
+      const enterpriseRows: ResolutionRow[] = (enterprise || []).map((e: any) => ({
+        domain: 'enterprise',
+        id: e.id,
+        summary_text: e.buyer_description ? `${e.item_or_service} — ${e.buyer_description}` : e.item_or_service,
+        resolution_outcome: null,
+        resolution_value_amount: e.amount,
+        resolution_value_unit: e.unit,
+        created_at: e.created_at,
+      }));
+      const merged = [...(resolved || []) as ResolutionRow[], ...enterpriseRows]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setRows(merged);
       setSelectedIds(new Set((links || []).map(l => `${l.consultation_domain}:${l.consultation_id}`)));
     } finally {
       setLoading(false);
