@@ -9,6 +9,7 @@ import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Database, BookOpen, Play, CheckCircle, ArrowRight, Eye,
   ChevronDown, ChevronRight, Loader2, FolderOpen,
@@ -320,6 +321,12 @@ const DP900Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
         <a href="https://aka.ms/registerngcertification" target="_blank" rel="noopener noreferrer"
           className="text-blue-400 underline">aka.ms/registerngcertification</a>.
       </p>
+      <div className="mb-4">
+        <PidginTooltip
+          originalText="You are preparing for the Microsoft DP-900: Azure Data Fundamentals certification. This globally recognised credential validates your understanding of core data concepts and Azure data services — no coding required."
+          hintText="Tap here to translate this introduction into Nigerian Pidgin."
+        />
+      </div>
 
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">What the DP-900 Covers</p>
       <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-1 mb-3">

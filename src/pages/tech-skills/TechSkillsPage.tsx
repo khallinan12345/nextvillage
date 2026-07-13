@@ -8,10 +8,14 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
+import { useVoice } from '../../hooks/useVoice';
+import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   CheckCircle2, Circle, ChevronDown, ChevronUp,
   Terminal, GitBranch, FlaskConical, Layers, Trophy, Zap,
-  ExternalLink, BookOpen, Lock, Send, ClipboardList, AlertCircle
+  ExternalLink, BookOpen, Lock, Send, ClipboardList, AlertCircle,
+  Volume2, VolumeX,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -408,6 +412,7 @@ const SubmissionControls: React.FC<{
 }> = ({ value, onChange, onSubmit, submitting, error, record, accentColor }) => {
   const passed = record?.status === 'pass';
   const needsWork = record?.status === 'needs_work';
+  const { speak, cancel, speaking, fallbackText, clearFallback } = useVoice(true);
 
   return (
     <div className="space-y-2">
@@ -437,7 +442,16 @@ const SubmissionControls: React.FC<{
           <p className="text-xs text-emerald-700 font-mono flex items-center gap-1 mb-1">
             <CheckCircle2 size={13} /> Passed
           </p>
-          {record?.ai_feedback && <p className="text-xs text-emerald-800 leading-relaxed">{record.ai_feedback}</p>}
+          {record?.ai_feedback && (
+            <div className="flex items-start gap-1.5">
+              <p className="text-xs text-emerald-800 leading-relaxed flex-1">{record.ai_feedback}</p>
+              <button onClick={() => speaking ? cancel() : speak(record.ai_feedback!)}
+                className="p-1 rounded text-emerald-700 hover:bg-emerald-100 flex-shrink-0" title="Read feedback aloud">
+                {speaking ? <VolumeX size={13}/> : <Volume2 size={13}/>}
+              </button>
+            </div>
+          )}
+          {fallbackText && <VoiceFallback text={fallbackText} onDismiss={clearFallback} />}
         </div>
       )}
       {needsWork && (
@@ -445,7 +459,16 @@ const SubmissionControls: React.FC<{
           <p className="text-xs text-amber-700 font-mono mb-1">
             Needs work — attempt {record?.attempt_count ?? 1}
           </p>
-          {record?.ai_feedback && <p className="text-xs text-amber-800 leading-relaxed">{record.ai_feedback}</p>}
+          {record?.ai_feedback && (
+            <div className="flex items-start gap-1.5">
+              <p className="text-xs text-amber-800 leading-relaxed flex-1">{record.ai_feedback}</p>
+              <button onClick={() => speaking ? cancel() : speak(record.ai_feedback!)}
+                className="p-1 rounded text-amber-700 hover:bg-amber-100 flex-shrink-0" title="Read feedback aloud">
+                {speaking ? <VolumeX size={13}/> : <Volume2 size={13}/>}
+              </button>
+            </div>
+          )}
+          {fallbackText && <VoiceFallback text={fallbackText} onDismiss={clearFallback} />}
         </div>
       )}
     </div>
@@ -876,6 +899,10 @@ const TechSkillsPage: React.FC = () => {
           A 9-month plan from full-stack builder to platform owner and employable developer.
           Each task must be completed and evaluated before the next unlocks.
         </p>
+        <PidginTooltip
+          originalText="A 9-month plan from full-stack builder to platform owner and employable developer. Each task must be completed and evaluated before the next unlocks."
+          hintText="Tap here to translate this description into Nigerian Pidgin."
+        />
       </div>
     </>
   );

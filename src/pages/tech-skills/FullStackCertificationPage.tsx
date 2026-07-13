@@ -22,6 +22,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Editor from '@monaco-editor/react';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import {
   Database, Layers, Award, Trophy, CheckCircle, XCircle,
@@ -959,6 +960,12 @@ Respond ONLY in this JSON format:
                 <div>
                   <h1 className="text-xl font-bold text-white">Full-Stack Development Certification</h1>
                   <p className="text-teal-300 text-sm">React + Supabase · PostgreSQL · Authentication · RLS</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="React + Supabase · PostgreSQL · Authentication · RLS"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">

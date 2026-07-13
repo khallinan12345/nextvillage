@@ -26,6 +26,7 @@ import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { VibeCodingWorkflow } from '../../components/learning/VibeCodingWorkflow';
 import {
   Code, Award, Trophy, Loader2, Download, Globe,
@@ -638,6 +639,12 @@ Respond ONLY in this JSON format:
                 <div>
                   <h1 className="text-xl font-bold text-white">Vibe Coding Certification</h1>
                   <p className="text-pink-300 text-sm">Prompt Engineering · AI-Assisted Code Generation · Iterative Development</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="Prompt Engineering · AI-Assisted Code Generation · Iterative Development"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">

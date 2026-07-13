@@ -9,6 +9,7 @@ import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Brain, BookOpen, Play, CheckCircle, ArrowRight, Eye,
   ChevronDown, ChevronRight, Loader2, FolderOpen,
@@ -386,6 +387,12 @@ const GH300Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
         This certification is offered by <strong className="text-white">GitHub Education</strong> and is an excellent
         first step for developers, project managers, and anyone working with code on GitHub.
       </p>
+      <div className="mb-4">
+        <PidginTooltip
+          originalText="You are preparing for the GitHub Foundations (GH-300) certification — a globally recognised credential that validates your understanding of Git, GitHub, and modern collaborative software development. No advanced coding required."
+          hintText="Tap here to translate this introduction into Nigerian Pidgin."
+        />
+      </div>
 
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">What GH-300 Covers</p>
       <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-1 mb-3">

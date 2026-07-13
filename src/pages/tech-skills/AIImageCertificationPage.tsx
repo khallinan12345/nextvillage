@@ -19,6 +19,7 @@ import { chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import {
   ImagePlus, Award, Trophy, XCircle, Loader2,
@@ -724,6 +725,12 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                 <div>
                   <h1 className="text-xl font-bold text-white">AI Image Creation Certification</h1>
                   <p className="text-fuchsia-300 text-sm">FLUX Schnell · Text-to-Image · Prompt Engineering</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="FLUX Schnell · Text-to-Image · Prompt Engineering"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">

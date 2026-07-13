@@ -18,6 +18,7 @@ import { chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import {
   Mic, Award, Trophy, XCircle, Loader2,
@@ -720,6 +721,12 @@ Respond ONLY in this JSON format:
                 <div>
                   <h1 className="text-xl font-bold text-white">AI Voice Creation Certification</h1>
                   <p className="text-emerald-300 text-sm">MiniMax Speech-02-Turbo · Script Writing · Vocal Direction</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="MiniMax Speech-02-Turbo · Script Writing · Vocal Direction"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">

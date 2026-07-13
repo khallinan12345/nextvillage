@@ -19,6 +19,7 @@ import { chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import {
   PenLine, Award, Trophy, Loader2, Download,
@@ -724,6 +725,14 @@ Respond ONLY in this JSON format:
                         ? 'Show that you can create real content that people want to read. You will choose a type of content, write it step by step, improve it with AI, and plan how to share it.'
                         : 'Demonstrate mastery of the full content creation workflow: audience research, purposeful writing, AI-assisted drafting, editorial refinement, and platform-aware distribution.'}
                     </p>
+                    <div className="mt-2">
+                      <PidginTooltip
+                        originalText={lvl <= 1
+                          ? 'Show that you can create real content that people want to read. You will choose a type of content, write it step by step, improve it with AI, and plan how to share it.'
+                          : 'Demonstrate mastery of the full content creation workflow: audience research, purposeful writing, AI-assisted drafting, editorial refinement, and platform-aware distribution.'}
+                        hintText="Tap here to translate this description into Nigerian Pidgin."
+                      />
+                    </div>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {['Audience-Centred Writing', 'AI-Assisted Drafting', 'Editorial Refinement', 'Platform Adaptation'].map(s => (
                         <span key={s} className="text-[10px] px-2 py-0.5 bg-violet-500/15 border border-violet-500/25 text-violet-300 rounded-full font-medium">{s}</span>

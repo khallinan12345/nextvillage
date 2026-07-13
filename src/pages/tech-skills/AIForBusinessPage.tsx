@@ -13,6 +13,7 @@ import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Briefcase, Sparkles, Loader2, Save, FolderOpen, Download,
   CheckCircle, ArrowRight, ArrowUpCircle, SkipForward,
@@ -176,6 +177,12 @@ const BusinessOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
         These are not just skills — they are <strong className="text-white">products</strong>. Businesses, schools, NGOs, and individuals in your
         community need them and do not know how to do them. You do.
       </p>
+      <div className="mt-3">
+        <PidginTooltip
+          originalText="Every tool you've learned in this programme is a service someone will pay for. You can already create AI images, videos, and voices. You can build websites and apps. You can write professional content with AI. These are not just skills — they are products."
+          hintText="Tap here to translate this introduction into Nigerian Pidgin."
+        />
+      </div>
     </div>
 
     <div className="p-3 bg-gray-800/40 rounded-lg border border-gray-700">

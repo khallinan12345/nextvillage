@@ -22,6 +22,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Editor from '@monaco-editor/react';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import {
   Cpu, Award, Trophy, XCircle, Loader2,
@@ -971,6 +972,12 @@ Respond ONLY in this JSON format:
                 <div>
                   <h1 className="text-xl font-bold text-white">AI Workflow Development Certification</h1>
                   <p className="text-violet-300 text-sm">React + Anthropic API · Prompt Engineering · Chained AI Calls</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="React + Anthropic API · Prompt Engineering · Chained AI Calls"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">

@@ -9,6 +9,7 @@ import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Brain, BookOpen, CheckCircle, ArrowRight, Loader2, FolderOpen,
   ArrowUpCircle, SkipForward, Lightbulb, BarChart3, Award, X,
@@ -255,6 +256,12 @@ const AB730Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
         This is the natural next step after AI-900. Where AI-900 tested <em>what AI is</em>,
         AB-730 tests <em>how to use AI effectively</em> in real business work.
       </p>
+      <div className="mb-4">
+        <PidginTooltip
+          originalText="You are preparing for the Microsoft Certified: AI Business Professional (AB-730). This certification proves you can use generative AI and Microsoft 365 Copilot to improve daily work and drive real business outcomes — no coding required, ever."
+          hintText="Tap here to translate this introduction into Nigerian Pidgin."
+        />
+      </div>
 
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">Three Skills Measured</p>
       <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-1 mb-3">

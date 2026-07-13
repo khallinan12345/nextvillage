@@ -8,6 +8,7 @@ import React, {
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import classNames from 'classnames';
 import {
   Film, Music, Mic, Type, Play, Pause, SkipBack,
@@ -1094,6 +1095,12 @@ const VideoStudioPage: React.FC = () => {
             <div>
               <h1 className="text-white font-bold text-lg leading-tight">AI Video Studio</h1>
               <p className="text-slate-400 text-xs">Arrange · Split · Record · Export</p>
+              <div className="mt-1">
+                <PidginTooltip
+                  originalText="Arrange · Split · Record · Export"
+                  hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                />
+              </div>
             </div>
           </div>
 

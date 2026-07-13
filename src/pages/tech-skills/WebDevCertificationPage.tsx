@@ -22,6 +22,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Editor from '@monaco-editor/react';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import {
   Code, Award, GraduationCap, CheckCircle, XCircle,
@@ -765,6 +766,12 @@ Respond ONLY in this JSON format:
                 <div>
                   <h1 className="text-xl font-bold text-white">Web Development Certification</h1>
                   <p className="text-indigo-300 text-sm">React / Vite · Vibe Coding · No AI Assistance</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="React / Vite · Vibe Coding · No AI Assistance"
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">

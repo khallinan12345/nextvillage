@@ -15,6 +15,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Bot, User, Send, Mic, Wand2, Save, CheckCircle,
   Volume2, VolumeX, Code, FolderOpen, Plus, X, ChevronDown, Edit3, Check,
@@ -583,6 +584,12 @@ Respond with ONLY valid JSON:
               <div>
                 <h1 className="text-2xl font-bold text-white">Vibe Coding</h1>
                 <p className="text-sm text-purple-100">Design your prompt, critique it, and generate code with AI</p>
+                <div className="mt-2">
+                  <PidginTooltip
+                    originalText="Design your prompt, critique it, and generate code with AI"
+                    hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                  />
+                </div>
               </div>
               {/* Tutorial link */}
               <a

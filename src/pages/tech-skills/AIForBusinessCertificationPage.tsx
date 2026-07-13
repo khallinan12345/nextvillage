@@ -19,6 +19,7 @@ import { chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 import {
   Briefcase, Award, Trophy, XCircle, Loader2,
@@ -662,6 +663,12 @@ Respond ONLY in this JSON format:
                 <div>
                   <h1 className="text-xl font-bold text-white">AI for Business Certification</h1>
                   <p className="text-amber-300 text-sm font-semibold">Turn your AI skills into income.</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText="Turn your AI skills into income."
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">

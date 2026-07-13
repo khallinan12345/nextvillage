@@ -22,6 +22,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText } from '../../lib/chatClient';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Mic, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
@@ -700,6 +701,12 @@ const VoiceCreationPage: React.FC = () => {
                 <div>
                   <h1 className="text-2xl font-bold text-white tracking-tight">{uiText.pageTitle}</h1>
                   <p className="text-slate-400 text-sm">{uiText.pageSubtitle}</p>
+                  <div className="mt-2">
+                    <PidginTooltip
+                      originalText={uiText.pageSubtitle}
+                      hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                    />
+                  </div>
                 </div>
               </div>
 

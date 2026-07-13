@@ -11,6 +11,7 @@ import { useVoice } from '../../hooks/useVoice';
 import { useHelpMeAnswer } from '../../hooks/useHelpMeAnswer';
 import HelpMeAnswerPopup from '../../components/HelpMeAnswerPopup';
 import { VoiceFallback } from '../../components/VoiceFallback';
+import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Code, Sparkles, Loader2, Save, FolderOpen, Download, CheckCircle, ArrowUpCircle, SkipForward, CloudUpload, ImageIcon, ImagePlus, Trash2, MessageSquarePlus, FileText, Github,
   ArrowRight, FileCode, Plus, X, ChevronDown, ChevronUp, Lightbulb,
@@ -351,6 +352,12 @@ const ReactViteOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete 
         <strong className="text-white">Vite</strong> — the same tools used by professional developers worldwide.
         No database needed: this is a pure front-end site. A future workshop will add a Supabase backend.
       </p>
+      <div className="mb-4">
+        <PidginTooltip
+          originalText="You're going to build a real, multi-page website using React and Vite — the same tools used by professional developers worldwide. No database needed: this is a pure front-end site."
+          hintText="Tap here to translate this introduction into Nigerian Pidgin."
+        />
+      </div>
 
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">Your Project Structure</p>
       <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-0.5">
