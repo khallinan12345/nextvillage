@@ -375,9 +375,9 @@ const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
           zIndex: 0,
         }}
       >
-        {/* Purple gradient overlays - stronger tint for visibility */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 via-pink-800/50 to-blue-900/60" />
-        <div className="absolute inset-0 bg-black/30" />
+        {/* Soft, hopeful overlay — matches AIProficiencyPage's aesthetic */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
+        <div className="absolute inset-0 bg-white/10" />
       </div>
 
       {/* Distorted layer - only visible during mouse movement */}
@@ -4008,7 +4008,7 @@ Provide assessment now:`;
               Back to Overview
             </Button>
             
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-4xl font-bold text-gray-900 mb-3">
@@ -4056,7 +4056,7 @@ Provide assessment now:`;
           </div>
 
           {/* Chat Interface */}
-            <div className="w-full bg-white rounded-lg shadow-md mb-6 flex flex-col" style={{ height: '740px' }}>
+            <div className="w-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg mb-6 flex flex-col" style={{ height: '740px' }}>
               {/* Score legend bar */}
               <div className="flex items-center flex-wrap gap-2 px-5 py-3 border-b bg-indigo-50 text-xl text-indigo-700 flex-shrink-0">
                 <span className="font-semibold">Scores out of 3:</span>

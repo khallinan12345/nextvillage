@@ -348,9 +348,9 @@ const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
           zIndex: 0,
         }}
       >
-        {/* Same gradient overlays as HomePage */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-pink-800/70 to-blue-900/80" />
-        <div className="absolute inset-0 bg-black/20" />
+        {/* Soft, hopeful overlay — matches AIProficiencyPage's aesthetic */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
+        <div className="absolute inset-0 bg-white/10" />
       </div>
 
       {/* Distorted layer - only visible during mouse movement */}
@@ -370,8 +370,8 @@ const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
             WebkitMaskSize: '100% 100%',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-pink-800/70 to-blue-900/80" />
-          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
+          <div className="absolute inset-0 bg-white/10" />
         </div>
       )}
     </>
@@ -3321,7 +3321,7 @@ Respond ONLY with valid JSON:
             </div>
 
             {/* Activity Info Panel */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-3">Activity Overview</h2>
               <div className="space-y-2 text-base">
                 <div><strong>Category:</strong> {selectedActivity.sub_category}</div>
@@ -3552,7 +3552,7 @@ Respond ONLY with valid JSON:
             )}
 
             {/* Chat History Panel */}
-            <div className="bg-white rounded-lg shadow-md mb-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg mb-4">
               <div className="p-4 border-b flex items-center justify-between flex-wrap gap-2">
                 <h3 className="text-xl font-semibold text-gray-900">Learning Conversation</h3>
                 <div className="flex items-center gap-1.5 text-sm bg-indigo-50 border border-indigo-200 rounded-full px-3 py-1 text-indigo-700">
@@ -3724,7 +3724,7 @@ Respond ONLY with valid JSON:
             </div>
 
             {/* User Input Panel with Voice Chat */}
-            <div className="bg-white rounded-lg shadow-md p-4 w-full">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 w-full">
               <p className="text-base text-indigo-600 mb-2 flex items-center gap-1">
                 <span>💡</span>
                 <span>Have a question? Just ask it — the AI will answer you directly before continuing.</span>
