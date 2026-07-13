@@ -221,23 +221,33 @@ const VOICE_BY_MODE = {
 };
 
 async function generateSpeechGenAudio(text, mode) {
-    const voice = VOICE_BY_MODE[mode] || VOICE_BY_MODE.pidgin;
-    const response = await fetch(SPEECHGEN_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        token: process.env.SPEECHGEN_TOKEN || '2817806e-6b14-4ae0-943c-7006439cddee',
-        email: process.env.SPEECHGEN_EMAIL || 'khallinan1@udayton.edu',
-        voice,
-        text,
-        format: 'mp3',
-        speed: 1,
-        sample_rate: 24000,
-        bitrate: 192,
-      }),
-    });
+  const token = process.env.SPEECHGEN_TOKEN;
+  const email = process.env.SPEECHGEN_EMAIL;
+  const voice = process.env.SPEECHGEN_VOICE || VOICE_BY_MODE[mode] || 'ClergyPidgin clone';
+
+  if (!token || !email) {
+    return {
+      error: 'SpeechGen credentials are not configured on the server (SPEECHGEN_TOKEN, SPEECHGEN_EMAIL).',
+      statusCode: 500,
+    };
+  }
+
+  const response = await fetch(SPEECHGEN_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      token,
+      email,
+      voice,
+      text,
+      format: 'mp3',
+      speed: 1,
+      sample_rate: 24000,
+      bitrate: 192,
+    }),
+  });
 
   const data = await response.json().catch(() => null);
 
