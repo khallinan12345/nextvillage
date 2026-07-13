@@ -459,7 +459,7 @@ const HomePage: React.FC = () => {
             {/* ── News banner ─────────────────────────────────────────────── */}
             {!newsDismissed && newsItems.length > 0 && (
               <div className="w-full max-w-4xl mb-8 animate-fade-in">
-                <div className="relative bg-gradient-to-r from-yellow-500/35 to-orange-500/35 backdrop-blur-md border border-yellow-400/50 rounded-2xl px-5 py-4 shadow-xl">
+                <div className="relative bg-gradient-to-r from-yellow-500/85 to-orange-500/85 backdrop-blur-md border border-yellow-400/50 rounded-2xl px-5 py-4 shadow-xl">
                   {/* Header row */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -519,7 +519,7 @@ const HomePage: React.FC = () => {
             {/* ── Weekly Champion Banner ── */}
             {weeklyChampion && (
               <div className="w-full max-w-4xl mb-4 animate-fade-in">
-                <div className="relative bg-gradient-to-r from-amber-500/35 to-yellow-500/35 backdrop-blur-md border border-amber-400/50 rounded-2xl px-5 py-4 shadow-xl text-left">
+                <div className="relative bg-gradient-to-r from-amber-500/85 to-yellow-500/85 backdrop-blur-md border border-amber-400/50 rounded-2xl px-5 py-4 shadow-xl text-left">
                   <div className="flex items-start gap-3">
                     <span className="text-2xl leading-none flex-shrink-0">🏆</span>
                     <div className="flex-1 min-w-0">
@@ -544,7 +544,7 @@ const HomePage: React.FC = () => {
             {/* ── Active Challenge Teaser ── */}
             {activeChallenge && (
               <div className="w-full max-w-4xl mb-8 animate-fade-in">
-                <div className="relative bg-gradient-to-r from-green-500/30 to-teal-500/30 backdrop-blur-md border border-green-400/45 rounded-2xl px-5 py-4 shadow-xl text-left">
+                <div className="relative bg-gradient-to-r from-green-500/85 to-teal-500/85 backdrop-blur-md border border-green-400/45 rounded-2xl px-5 py-4 shadow-xl text-left">
                   <div className="flex items-start gap-3">
                     <span className="text-2xl leading-none flex-shrink-0">🌍</span>
                     <div className="flex-1 min-w-0">
@@ -585,8 +585,8 @@ const HomePage: React.FC = () => {
                     {content.englishStepHeading}
                   </h3>
                 </div>
-                <div className="bg-white/20 rounded-lg p-6 mb-4">
-                  <p className="text-xl text-white text-center mb-4">
+                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                  <p className="text-xl text-gray-800 text-center mb-4">
                     {content.englishStepDesc}
                   </p>
                   <div className="flex justify-center">
@@ -599,8 +599,8 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
                   {content.englishStages.map(stage => (
-                    <div key={stage} className="bg-white/20 rounded-lg px-3 py-2 text-center">
-                      <p className="text-sm font-semibold text-cyan-200">{stage}</p>
+                    <div key={stage} className="bg-white/80 rounded-lg px-3 py-2 text-center">
+                      <p className="text-sm font-semibold text-cyan-700">{stage}</p>
                     </div>
                   ))}
                 </div>
@@ -615,8 +615,8 @@ const HomePage: React.FC = () => {
                   {content.learningStepHeading}
                 </h3>
               </div>
-              <div className="bg-white/20 rounded-lg p-6 mb-4">
-                <p className="text-xl text-white text-center mb-4">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                <p className="text-xl text-gray-800 text-center mb-4">
                   {content.learningStepDesc}
                 </p>
                 <div className="flex justify-center gap-4">
@@ -642,8 +642,8 @@ const HomePage: React.FC = () => {
                   {content.certifyStepHeading}
                 </h3>
               </div>
-              <div className="bg-white/20 rounded-lg p-6 mb-4">
-                <p className="text-xl text-white text-center mb-4">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                <p className="text-xl text-gray-800 text-center mb-4">
                   {content.certifyStepDesc}
                 </p>
                 <div className="flex justify-center gap-4">
@@ -670,8 +670,8 @@ const HomePage: React.FC = () => {
                     {content.impactStepHeading}
                   </h3>
                 </div>
-                <div className="bg-white/20 rounded-lg p-6 mb-4">
-                  <p className="text-xl text-white text-center mb-4">
+                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                  <p className="text-xl text-gray-800 text-center mb-4">
                     {content.impactStepDesc}
                   </p>
                   <div className="flex justify-center">
@@ -684,8 +684,8 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {content.impactAreas.map((area: string) => (
-                    <div key={area} className="bg-white/20 rounded-lg px-3 py-2 text-center">
-                      <p className="text-sm font-semibold text-orange-200">{area}</p>
+                    <div key={area} className="bg-white/80 rounded-lg px-3 py-2 text-center">
+                      <p className="text-sm font-semibold text-orange-700">{area}</p>
                     </div>
                   ))}
                 </div>
@@ -701,8 +701,8 @@ const HomePage: React.FC = () => {
                     {content.researchStepHeading}
                   </h3>
                 </div>
-                <div className="bg-white/20 rounded-lg p-6 mb-4">
-                  <p className="text-xl text-white text-center mb-4">
+                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                  <p className="text-xl text-gray-800 text-center mb-4">
                     {content.researchStepDesc}
                   </p>
                   <div className="flex justify-center">
@@ -715,8 +715,8 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {content.researchAreas.map((area: string) => (
-                    <div key={area} className="bg-white/20 rounded-lg px-3 py-2 text-center">
-                      <p className="text-sm font-semibold text-pink-200">{area}</p>
+                    <div key={area} className="bg-white/80 rounded-lg px-3 py-2 text-center">
+                      <p className="text-sm font-semibold text-pink-700">{area}</p>
                     </div>
                   ))}
                 </div>
@@ -724,7 +724,7 @@ const HomePage: React.FC = () => {
             )}
 
             {/* Framework Section */}
-            <div className="max-w-4xl w-full bg-gradient-to-r from-blue-500/35 to-purple-500/35 backdrop-blur-sm rounded-xl p-6 border border-white/30">
+            <div className="max-w-4xl w-full bg-gradient-to-r from-blue-500/85 to-purple-500/85 backdrop-blur-sm rounded-xl p-6 border border-white/30">
               <p className="text-lg md:text-xl text-white">
                 {content.frameworkText.split(/(ISTE|UNESCO|CSTA)/).map((part, i) =>
                   ['ISTE', 'UNESCO', 'CSTA'].includes(part)
