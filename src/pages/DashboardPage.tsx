@@ -1017,7 +1017,7 @@ const DashboardPage: React.FC = () => {
         if (data) {
           const filtered = data.filter((item: any) => {
             const ids: string[] = item.organization_ids ?? [];
-            return ids.length === 0 || (newsOrgSlug && ids.includes(newsOrgSlug));
+            return ids.length === 0 || (orgId && ids.includes(orgId));
           });
           setNewsItems(filtered as NewsItem[]);
         }

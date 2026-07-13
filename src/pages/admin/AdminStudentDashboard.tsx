@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useImpersonation } from '../../contexts/ImpersonationContext';
+import NewsManager from '../../components/news/NewsManager';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    TYPES
@@ -2812,16 +2813,30 @@ const AdminStudentDashboard: React.FC = () => {
     </div>
   );
 
+  const newsOrgId = selectedOrgId || userOrgId;
+  const newsOrgOptions = isPlatformAdmin ? allOrgs : leaderOrgs;
+  const newsOrgName = leaderOrgs.find(o => o.id === newsOrgId)?.name ?? null;
+
   return (
     <AppLayout>
       <div className="max-w-5xl mx-auto px-4 py-8">
 
-        <div className="mb-5">
-          <div className="flex items-center gap-3 mb-1">
-            <Users size={22} className="text-purple-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <div className="mb-5 flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <Users size={22} className="text-purple-600" />
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            </div>
+            <p className="text-sm text-gray-500 ml-9">Student activity, certification scores, and API cost analytics.</p>
           </div>
-          <p className="text-sm text-gray-500 ml-9">Student activity, certification scores, and API cost analytics.</p>
+          {(isPlatformAdmin || isLeader) && (
+            <NewsManager
+              isPlatformAdmin={isPlatformAdmin}
+              userOrgId={newsOrgId}
+              userOrgName={newsOrgName}
+              allOrgs={newsOrgOptions}
+            />
+          )}
         </div>
 
         <div className="flex gap-1 mb-5 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
