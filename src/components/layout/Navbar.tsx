@@ -162,7 +162,7 @@ const Navbar: React.FC = () => {
           <div className="flex-shrink-0">
             <Link to="/home" className="flex items-center gap-1.5 group">
               {branding.logoPathLight ? (
-                <img src={branding.logoPathLight} alt={branding.shortName} className="h-7 object-contain" />
+                <img src={branding.logoPathLight} alt={branding.shortName} className="h-10 object-contain" />
               ) : (
                 <>
                   <Sparkles size={20} className={`${branding.textColor} group-hover:opacity-80 transition-opacity`} />

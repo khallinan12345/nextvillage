@@ -436,7 +436,7 @@ const HomePage: React.FC = () => {
                   <img
                     src={branding.logoPath}
                     alt={branding.shortName}
-                    className="h-40 object-contain drop-shadow-lg"
+                    className="h-40 object-contain rounded-2xl shadow-xl"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 </div>
