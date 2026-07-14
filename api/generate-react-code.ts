@@ -24,7 +24,7 @@
 // Response (critique):
 //   { critique: string, feedback: string }
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { logApiCost } from '../lib/api-cost-logger';
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
@@ -189,7 +189,7 @@ Only return the JSON object, no markdown backticks or extra text.`;
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const {

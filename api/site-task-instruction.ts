@@ -3,7 +3,7 @@
 // Each instruction has 3 sequential sub-tasks, each paired with a
 // "why this matters" teaching commentary shown before the question.
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Migrated from OpenAI → Anthropic direct fetch
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
@@ -204,7 +204,7 @@ const TASK_SEEDS: Record<string, TaskSeed> = {
   },
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { taskId, taskLabel, phase, projectFiles, sessionContext, completedTasks, communicationStrategy, learningStrategy } = req.body;

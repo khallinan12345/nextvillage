@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "api/**/*.{ts,js}",
+    "scripts/*.ts"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "api/**/*.{ts,js}",
+    "scripts/**/*.ts"
+  ],
+  "ignoreDependencies": [
+    "e2b",
+    "jszip",
+    "marked"
+  ],
+  "ignoreBinaries": [
+    "real-e2b-server.cjs"
+  ]
+}
