@@ -97,7 +97,7 @@ import IGiTREEResearchPage from './pages/research/ResearchIGiTREE';
 // Claude / Agent Builder
 import CoworkPage from './pages/CoworkPage';
 
-const AppContent: React.FC = () => {
+export const AppContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const {
