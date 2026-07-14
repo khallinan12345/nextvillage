@@ -9,7 +9,7 @@
 // Response: raw Anthropic /v1/messages response
 //   { content: [{ type, text }], ... }
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -52,7 +52,7 @@ function logCost(page: string, model: string, usage: { input_tokens?: number; ou
   }).catch(() => {});
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only accept POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

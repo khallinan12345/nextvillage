@@ -18,7 +18,7 @@
 // If the response needs improvement → hasSuggestions: true,
 //   feedback: specific, encouraging suggestions tied to the teaching concept
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Migrated from OpenAI → Anthropic direct fetch
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
@@ -60,7 +60,7 @@ function logCost(inputTokens: number, outputTokens: number, cacheHitTokens = 0, 
   }).catch(() => {}); // never block the response for logging
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const {

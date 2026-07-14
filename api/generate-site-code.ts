@@ -37,7 +37,7 @@
 // The splitter uses labelled-section detection (lines starting with a known label
 // followed by ":" or "—") so it handles the natural free-text format learners use.
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { logApiCost } from '../lib/api-cost-logger.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -629,7 +629,7 @@ function buildUserMessage(
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const {
