@@ -29,3 +29,4 @@ dist-ssr
 .env.production
 .env*
 public/OurYouthsFuture.mp4
+supabase/.temp/
