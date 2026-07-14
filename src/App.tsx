@@ -56,6 +56,7 @@ import AIContentCreationPage from './pages/AIContentCreationPage';
 import AIWorkflowDevPage from './pages/tech-skills/AIWorkflowDevPage';
 import AIForBusinessPage from './pages/tech-skills/AIForBusinessPage';
 import MicrosoftAI900Page from './pages/tech-skills/MicrosoftAI900Page';
+import MicrosoftDP900Page from './pages/tech-skills/MicrosoftDP900Page';
 import MicrosoftAB730Page from './pages/tech-skills/MicrosoftAB730Page';
 import MicrosoftGH300Page from './pages/tech-skills/MicrosoftGH300Page';
 import VibeCodingCertificationPage from './pages/tech-skills/VibeCodingCertificationPage';
@@ -232,6 +233,7 @@ const AppContent: React.FC = () => {
         <Route path="/tech-skills/ai-workflow-development" element={<AIWorkflowDevPage />} />
         <Route path="/tech-skills/ai-for-business" element={<AIForBusinessPage />} />
         <Route path="/tech-skills/microsoft-ai900" element={<MicrosoftAI900Page />} />
+        <Route path="/tech-skills/microsoft-dp900" element={<MicrosoftDP900Page />} />
         <Route path="/tech-skills/microsoft-ab730" element={<MicrosoftAB730Page />} />
         <Route path="/tech-skills/github-gh300" element={<MicrosoftGH300Page />} />
         <Route path="/tech-skills" element={<TechSkillsPage />} />

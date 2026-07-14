@@ -83,6 +83,7 @@ const Navbar: React.FC = () => {
         { name: 'AI Workflow Development', path: '/tech-skills/ai-workflow-development' },
         { name: 'AI for Business', path: '/tech-skills/ai-for-business' },
         { name: 'Microsoft AI-900 Prep', path: '/tech-skills/microsoft-ai900' },
+        { name: 'Microsoft DP-900 Prep', path: '/tech-skills/microsoft-dp900' },
         { name: 'Microsoft AB-730 Prep', path: '/tech-skills/microsoft-ab730' },
         { name: 'GitHub Foundations GH-300 Prep', path: '/tech-skills/github-gh300' },
         { name: 'Employable Tech Skills Prep', path: '/tech-skills'},
