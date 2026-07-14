@@ -1,9 +1,9 @@
 // src/App.tsx
 
-import React, { useEffect, useMemo } from 'react';
-import EnglishSkillsPage from './pages/EnglishSkillsPage';
-import MathSkillsPage from './pages/MathSkillsPage';
-import ScienceSkillsPage from './pages/ScienceSkillsPage';
+import React, { useEffect, useMemo, lazy, Suspense } from 'react';
+const EnglishSkillsPage = lazy(() => import('./pages/EnglishSkillsPage'));
+const MathSkillsPage = lazy(() => import('./pages/MathSkillsPage'));
+const ScienceSkillsPage = lazy(() => import('./pages/ScienceSkillsPage'));
 import {
   BrowserRouter,
   Routes,
@@ -21,81 +21,94 @@ import ProfileCompletionPopup from './components/profile/ProfileCompletionPopup'
 import { AuthProvider } from './hooks/useAuth';
 
 // Auth Pages
-import LoginPage from './pages/auth/LoginPage';
-import SignupPage from './pages/auth/SignupPage';
-import ResetPasswordPage from './pages/auth/ResetPasswordPage';
-import ConfirmationPage from './pages/auth/ConfirmationPage';
-import AuthCallback from './pages/auth/AuthCallback';
-import EmailConfirmationSuccess from './pages/auth/EmailConfirmationSuccess';
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const SignupPage = lazy(() => import('./pages/auth/SignupPage'));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+const ConfirmationPage = lazy(() => import('./pages/auth/ConfirmationPage'));
+const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
+const EmailConfirmationSuccess = lazy(() => import('./pages/auth/EmailConfirmationSuccess'));
 
 // Main Pages
-import PublicLandingPage from './pages/PublicLandingPage';
-import HomePage from './pages/HomePage';
-import DashboardPage from './pages/DashboardPage';
-import AboutPage from './pages/AboutPage';
-import ProfilePage from './pages/ProfilePage';
+const PublicLandingPage = lazy(() => import('./pages/PublicLandingPage'));
+const HomePage = lazy(() => import('./pages/HomePage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Learning Pages
-import AILearningPage from './pages/AILearningPage';
-import SkillsDevelopmentPage from './pages/SkillsDevelopmentPage';
+const AILearningPage = lazy(() => import('./pages/AILearningPage'));
+const SkillsDevelopmentPage = lazy(() => import('./pages/SkillsDevelopmentPage'));
 
 // Certification Pages
-import AIProficiencyPage from './pages/AIProficiencyPage';
-import AIReadySkillsPage from './pages/AIReadySkillsPage';
-import AIPlaygroundPage from './pages/AIPlaygroundPage';
+const AIProficiencyPage = lazy(() => import('./pages/AIProficiencyPage'));
+const AIReadySkillsPage = lazy(() => import('./pages/AIReadySkillsPage'));
+const AIPlaygroundPage = lazy(() => import('./pages/AIPlaygroundPage'));
 
 // Tech Skills Pages
-import WebDevelopmentPage from './pages/tech-skills/WebDevelopmentPage';
-import VibeCodingPage from './pages/tech-skills/VibeCodingPage';
-import FullStackDevelopmentPage from './pages/tech-skills/FullStackDevelopmentPage';
-import ImageGenerationPage from './pages/tech-skills/ImageGenerationPage';
-import VideoGenerationPage from './pages/tech-skills/VideoGenerationPage';
-import VideoStudioPage from './pages/tech-skills/VideoStudioPage';
-import VoiceCreationPage from './pages/tech-skills/VoiceCreationPage';
-import AIContentCreationPage from './pages/AIContentCreationPage';
-import AIWorkflowDevPage from './pages/tech-skills/AIWorkflowDevPage';
-import AIForBusinessPage from './pages/tech-skills/AIForBusinessPage';
-import MicrosoftAI900Page from './pages/tech-skills/MicrosoftAI900Page';
-import MicrosoftDP900Page from './pages/tech-skills/MicrosoftDP900Page';
-import MicrosoftAB730Page from './pages/tech-skills/MicrosoftAB730Page';
-import MicrosoftGH300Page from './pages/tech-skills/MicrosoftGH300Page';
-import VibeCodingCertificationPage from './pages/tech-skills/VibeCodingCertificationPage';
-import WebDevCertificationPage from './pages/tech-skills/WebDevCertificationPage';
-import AIVideoProductionCertificationPage from './pages/tech-skills/AIVideoProductionCertificationPage';
-import AIImageCertificationPage from './pages/tech-skills/AIImageCertificationPage';
-import AIVoiceCertificationPage from './pages/tech-skills/AIVoiceCertificationPage';
-import FullStackCertificationPage from './pages/tech-skills/FullStackCertificationPage';
-import AIWorkflowDevCertificationPage from './pages/tech-skills/AIWorkflowDevCertificationPage';
-import AIForBusinessCertificationPage from './pages/tech-skills/AIForBusinessCertificationPage';
-import AIContentCreationCertificationPage from './pages/tech-skills/AIContentCreationCertificationPage';
-import TechSkillsPage from './pages/tech-skills/TechSkillsPage';
+const WebDevelopmentPage = lazy(() => import('./pages/tech-skills/WebDevelopmentPage'));
+const VibeCodingPage = lazy(() => import('./pages/tech-skills/VibeCodingPage'));
+const FullStackDevelopmentPage = lazy(() => import('./pages/tech-skills/FullStackDevelopmentPage'));
+const ImageGenerationPage = lazy(() => import('./pages/tech-skills/ImageGenerationPage'));
+const VideoGenerationPage = lazy(() => import('./pages/tech-skills/VideoGenerationPage'));
+const VideoStudioPage = lazy(() => import('./pages/tech-skills/VideoStudioPage'));
+const VoiceCreationPage = lazy(() => import('./pages/tech-skills/VoiceCreationPage'));
+const AIContentCreationPage = lazy(() => import('./pages/AIContentCreationPage'));
+const AIWorkflowDevPage = lazy(() => import('./pages/tech-skills/AIWorkflowDevPage'));
+const AIForBusinessPage = lazy(() => import('./pages/tech-skills/AIForBusinessPage'));
+const MicrosoftAI900Page = lazy(() => import('./pages/tech-skills/MicrosoftAI900Page'));
+const MicrosoftDP900Page = lazy(() => import('./pages/tech-skills/MicrosoftDP900Page'));
+const MicrosoftAB730Page = lazy(() => import('./pages/tech-skills/MicrosoftAB730Page'));
+const MicrosoftGH300Page = lazy(() => import('./pages/tech-skills/MicrosoftGH300Page'));
+const VibeCodingCertificationPage = lazy(() => import('./pages/tech-skills/VibeCodingCertificationPage'));
+const WebDevCertificationPage = lazy(() => import('./pages/tech-skills/WebDevCertificationPage'));
+const AIVideoProductionCertificationPage = lazy(() => import('./pages/tech-skills/AIVideoProductionCertificationPage'));
+const AIImageCertificationPage = lazy(() => import('./pages/tech-skills/AIImageCertificationPage'));
+const AIVoiceCertificationPage = lazy(() => import('./pages/tech-skills/AIVoiceCertificationPage'));
+const FullStackCertificationPage = lazy(() => import('./pages/tech-skills/FullStackCertificationPage'));
+const AIWorkflowDevCertificationPage = lazy(() => import('./pages/tech-skills/AIWorkflowDevCertificationPage'));
+const AIForBusinessCertificationPage = lazy(() => import('./pages/tech-skills/AIForBusinessCertificationPage'));
+const AIContentCreationCertificationPage = lazy(() => import('./pages/tech-skills/AIContentCreationCertificationPage'));
+const TechSkillsPage = lazy(() => import('./pages/tech-skills/TechSkillsPage'));
 
 
 // Legacy pages - kept for backwards compatibility
-import CodeAssistantPage from './pages/CodeAssistantPage';
-import AdminStudentDashboard from './pages/admin/AdminStudentDashboard';
+const CodeAssistantPage = lazy(() => import('./pages/CodeAssistantPage'));
+const AdminStudentDashboard = lazy(() => import('./pages/admin/AdminStudentDashboard'));
 
 // Community Impact Pages
-import AIAmbassadorsPage from './pages/community-impact/AIAmbassadorsPage';
-import AIAmbassadorsCertificationPage from './pages/community-impact/AIAmbassadorsCertificationPage';
-import AgricultureConsultantPage from './pages/community-impact/AgricultureConsultantPage';
-import AgricultureConsultantCertificationPage from './pages/community-impact/AgricultureConsultantCertificationPage';
-import FishingConsultantPage from './pages/community-impact/FishingConsultantPage';
-import FishingConsultantCertificationPage from './pages/community-impact/FishingConsultantCertificationPage';
-import HealthcareNavigatorPage from './pages/community-impact/HealthcareNavigatorPage';
-import HealthcareNavigatorCertificationPage from './pages/community-impact/HealthcareNavigatorCertificationPage';
-import EntrepreneurshipConsultantPage from './pages/community-impact/EntrepreneurshipConsultantPage';
-import EntrepreneurshipConsultantCertificationPage from './pages/community-impact/EntrepreneurshipConsultantCertificationPage';
-import AnimalHusbandryPage from './pages/community-impact/AnimalHusbandryPage';
-import OfflineClinicalAssessment from './pages/community-impact/OfflineClinicalAssessment';
+const AIAmbassadorsPage = lazy(() => import('./pages/community-impact/AIAmbassadorsPage'));
+const AIAmbassadorsCertificationPage = lazy(() => import('./pages/community-impact/AIAmbassadorsCertificationPage'));
+const AgricultureConsultantPage = lazy(() => import('./pages/community-impact/AgricultureConsultantPage'));
+const AgricultureConsultantCertificationPage = lazy(() => import('./pages/community-impact/AgricultureConsultantCertificationPage'));
+const FishingConsultantPage = lazy(() => import('./pages/community-impact/FishingConsultantPage'));
+const FishingConsultantCertificationPage = lazy(() => import('./pages/community-impact/FishingConsultantCertificationPage'));
+const HealthcareNavigatorPage = lazy(() => import('./pages/community-impact/HealthcareNavigatorPage'));
+const HealthcareNavigatorCertificationPage = lazy(() => import('./pages/community-impact/HealthcareNavigatorCertificationPage'));
+const EntrepreneurshipConsultantPage = lazy(() => import('./pages/community-impact/EntrepreneurshipConsultantPage'));
+const EntrepreneurshipConsultantCertificationPage = lazy(() => import('./pages/community-impact/EntrepreneurshipConsultantCertificationPage'));
+const AnimalHusbandryPage = lazy(() => import('./pages/community-impact/AnimalHusbandryPage'));
+const OfflineClinicalAssessment = lazy(() => import('./pages/community-impact/OfflineClinicalAssessment'));
 
 // Research Pages
-import ResearchAILearningLab from './pages/research/ResearchAILearningLab';
-import ResearchNewProjectPage from './pages/research/ResearchNewProjectPage';
-import IGiTREEResearchPage from './pages/research/ResearchIGiTREE';
+const ResearchAILearningLab = lazy(() => import('./pages/research/ResearchAILearningLab'));
+const ResearchNewProjectPage = lazy(() => import('./pages/research/ResearchNewProjectPage'));
+const IGiTREEResearchPage = lazy(() => import('./pages/research/ResearchIGiTREE'));
 
 // Claude / Agent Builder
-import CoworkPage from './pages/CoworkPage';
+const CoworkPage = lazy(() => import('./pages/CoworkPage'));
+
+// Shown briefly while a lazy-loaded route's chunk downloads. Matches the
+// full-page auth-loading spinner's style above for visual consistency.
+const RouteLoadingFallback: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12
+                      border-t-2 border-b-2 border-blue-500
+                      mx-auto mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 
 export const AppContent: React.FC = () => {
   const location = useLocation();
@@ -185,6 +198,7 @@ export const AppContent: React.FC = () => {
 
   return (
     <>
+      <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
         {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
@@ -286,6 +300,7 @@ export const AppContent: React.FC = () => {
         <Route path="/" element={<PublicLandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
 
       {showPopup && (
         <ProfileCompletionPopup
