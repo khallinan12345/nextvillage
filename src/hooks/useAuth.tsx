@@ -107,28 +107,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // fetchUserProfile wrapped in useCallback to avoid recreating function
-  const fetchUserProfile = useCallback(async (userId: string) => {
+  // fetchUserProfile wrapped in useCallback to avoid recreating function.
+  // `force` skips the cached-user fast path — use this any time you need to
+  // read the actual current row (e.g. right after writing to `profiles`).
+  const fetchUserProfile = useCallback(async (userId: string, force: boolean = false) => {
     if (fetchingRef.current) {
       console.log('[Auth] Profile fetch already in progress, skipping');
       return null;
     }
 
-    // If profile already confirmed for same user, return cached user from ref
-    if (profileConfirmedRef.current && userRef.current?.id === userId) {
+    // If profile already confirmed for same user, return cached user from ref —
+    // unless the caller explicitly wants a fresh read.
+    if (!force && profileConfirmedRef.current && userRef.current?.id === userId) {
       console.log('[Auth] Profile already confirmed, returning cached user');
       return userRef.current;
     }
 
     try {
       fetchingRef.current = true;
-      console.log('[Auth] fetchUserProfile for', userId);
+      console.log('[Auth] fetchUserProfile for', userId, force ? '(forced)' : '');
       console.log('Sending query to Supabase profiles table...');
 
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Bypass')), 2000)
+        setTimeout(() => reject(new Error('Timeout')), 2000)
       );
 
+      let timedOut = false;
       const result: any = await Promise.race([
         supabase
           .from('profiles')
@@ -137,12 +141,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single(),
         timeoutPromise,
       ]).catch((err: any) => {
-        console.warn('[Auth] fetchUserProfile fallback triggered:', err?.message);
-        return {
-          data: { id: userId, role: 'teacher', full_name: 'Teacher User' },
-          error: null,
-        };
+        console.warn('[Auth] fetchUserProfile query timed out:', err?.message);
+        timedOut = true;
+        return { data: null, error: null };
       });
+
+      if (timedOut) {
+        // Do NOT fabricate a profile here and do NOT set profileConfirmedRef —
+        // that previously poisoned the cache with fake data that looked
+        // "confirmed" forever. Tell the caller this attempt was inconclusive
+        // so it can retry instead of treating it as a real profile.
+        return 'TIMEOUT' as any;
+      }
 
       console.log('Supabase response:', { data: result.data, error: result.error });
 
@@ -185,11 +195,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const profile = await fetchUserProfile(session.user.id);
+      let profile = await fetchUserProfile(session.user.id, true);
 
       if (profile === 'AUTH_ERROR') {
         console.warn('[Auth] refreshUserProfile aborted due to auth error');
         return;
+      }
+
+      if (profile === 'TIMEOUT') {
+        // One retry — a genuine write (e.g. profile completion) just
+        // happened and we need the real row, not a stale/fake one.
+        console.warn('[Auth] refreshUserProfile query timed out, retrying once');
+        profile = await fetchUserProfile(session.user.id, true);
+        if (profile === 'TIMEOUT' || profile === 'AUTH_ERROR') {
+          console.warn('[Auth] refreshUserProfile retry also failed, giving up for now');
+          return;
+        }
       }
 
       if (profile) {
@@ -270,10 +291,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           // Try fetch first
           let profile = await fetchUserProfile(currentSession.user.id);
+          if (profile === 'TIMEOUT') {
+            console.warn('[Auth] Initial profile fetch timed out, retrying once');
+            profile = await fetchUserProfile(currentSession.user.id, true);
+          }
 
-          if (profile === 'AUTH_ERROR') {
-            // session not ready; treat as no profile but do not force insert
-            console.warn('[Auth] Auth error while fetching profile during init - deferring');
+          if (profile === 'AUTH_ERROR' || profile === 'TIMEOUT') {
+            // session not ready, or the query timed out; treat as no profile
+            // but do not force insert, and — critically — do not mark
+            // profileConfirmedRef true. That flag being set from a fake
+            // "profile" is what previously trapped users behind a
+            // completion popup that never cleared.
+            console.warn('[Auth] Profile fetch inconclusive during init (', profile, ') - deferring');
             const minimalUser: UserProfile = {
               id: currentSession.user.id,
               name: '',
@@ -370,6 +399,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if ((profile as any) === 'AUTH_ERROR') {
           console.warn('[Auth] Auth error in SIGNED_IN handler — skipping popup');
           return;
+        }
+
+        if ((profile as any) === 'TIMEOUT') {
+          // Retry once with force before giving up — this is exactly the
+          // path a fresh login takes, and a slow first query shouldn't
+          // masquerade as "no profile" or "profile confirmed".
+          console.warn('[Auth] Profile fetch timed out in SIGNED_IN handler, retrying once');
+          profile = await fetchUserProfile(newSession.user.id, true);
+          if ((profile as any) === 'TIMEOUT' || (profile as any) === 'AUTH_ERROR') {
+            console.warn('[Auth] Retry also failed — leaving user state as-is for now');
+            return;
+          }
         }
 
         if (profile) {
