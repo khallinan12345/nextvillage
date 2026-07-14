@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import { findSimilarProfile, type SimilarProfileMatch } from '../../lib/duplicateDetection';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { Github, Eye, EyeOff } from 'lucide-react';
@@ -18,7 +19,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<'form' | 'magic-link-sent'>('form');
-  const [similarMatch, setSimilarMatch] = useState<{ maskedEmail: string; rawEmail: string } | null>(null);
+  const [similarMatch, setSimilarMatch] = useState<SimilarProfileMatch | null>(null);
 
   // ─── Duplicate email check ────────────────────────────────────────────────
   const emailAlreadyExists = async (email: string): Promise<boolean> => {
@@ -35,64 +36,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     return !!data;
   };
 
-  // ─── Fuzzy duplicate check ────────────────────────────────────────────────
-  // Returns the best-matching canonical email if a near-duplicate is found,
-  // or null if the user appears genuinely new.
-  const findSimilarAccount = async (
-    inputEmail: string,
-    inputName: string
-  ): Promise<{ maskedEmail: string; rawEmail: string } | null> => {
-    const emailLocal = inputEmail.split('@')[0].toLowerCase();
-    const nameLower  = inputName.trim().toLowerCase();
-
-    // Fetch all active profiles — small table, acceptable for now
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('email, name')
-      .eq('is_active', true);
-
-    if (error || !data) return null;
-
-    // Levenshtein distance (simple iterative implementation)
-    const lev = (a: string, b: string): number => {
-      const m = a.length, n = b.length;
-      const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
-        Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
-      );
-      for (let i = 1; i <= m; i++)
-        for (let j = 1; j <= n; j++)
-          dp[i][j] = a[i-1] === b[j-1]
-            ? dp[i-1][j-1]
-            : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
-      return dp[m][n];
-    };
-
-    const maskEmail = (e: string) => {
-      const [local, domain] = e.split('@');
-      if (!domain) return e;
-      const visible = local.slice(0, 2);
-      return `${visible}${'*'.repeat(Math.max(local.length - 2, 2))}@${domain}`;
-    };
-
-    for (const profile of data) {
-      if (!profile.email) continue;
-      const profileLocal = profile.email.split('@')[0].toLowerCase();
-      const profileName  = (profile.name ?? '').toLowerCase();
-
-      // Same email local part (different domain suffix e.g. gmail.co vs gmail.com)
-      const sameLocal = profileLocal === emailLocal;
-      // Email local part within 2 edits (typo tolerance)
-      const emailClose = lev(emailLocal, profileLocal) <= 2;
-      // Name match: exact or within 2 edits (handles "Princss" vs "Princess")
-      const nameMatch = nameLower.length >= 3 &&
-        (profileName === nameLower || lev(profileName, nameLower) <= 2);
-
-      if (sameLocal || emailClose || nameMatch) {
-        return { maskedEmail: maskEmail(profile.email), rawEmail: profile.email };
-      }
-    }
-    return null;
-  };
   const handleForgotPassword = async () => {
     if (!email) {
       setError('Please enter your email address above first.');
@@ -157,9 +100,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
           return;
         }
 
-        // 2. Fuzzy match — warn and let user decide
+        // 2. Fuzzy match — warn and let user decide. No organization is known
+        // yet at this point in signup, so this only checks email similarity
+        // (name matching needs an org scope — see ProfileCompletionPopup).
         if (!similarMatch) {
-          const match = await findSimilarAccount(email, username);
+          const match = await findSimilarProfile({ email });
           if (match) {
             setSimilarMatch(match);
             setLoading(false);

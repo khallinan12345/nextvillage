@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { findSimilarProfile, type SimilarProfileMatch } from '../../lib/duplicateDetection';
 import { User, GraduationCap, Globe, MapPin, Key, Building2, Search, PlusCircle, Upload, Copy, CheckCircle } from 'lucide-react';
 
 // Site leader can either join an existing org (they have a co-leader join code)
@@ -130,6 +131,48 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Duplicate-account detection ───────────────────────────────────────────
+  const [duplicateMatch, setDuplicateMatch] = useState<SimilarProfileMatch | null>(null);
+  const [mergedAndRedirected, setMergedAndRedirected] = useState(false);
+
+  // Confirmed same person as an existing profile: soft-merge this brand-new
+  // (throwaway) account into the original instead of creating a duplicate,
+  // then send a password reset to the original account's email.
+  const handleThatsMe = async () => {
+    if (!duplicateMatch) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error('No active session');
+
+      const { error: mergeError } = await supabase
+        .from('profiles')
+        .update({
+          name: name.trim(),
+          is_active: false,
+          merged_into: duplicateMatch.id,
+          profile_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', session.user.id);
+      if (mergeError) throw mergeError;
+
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: duplicateMatch.rawEmail,
+        options: { emailRedirectTo: `${window.location.origin}/auth/reset-password` },
+      });
+      if (otpError) throw otpError;
+
+      await supabase.auth.signOut();
+      setMergedAndRedirected(true);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong sending your reset link.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // ── Learner join code lookup (array-aware via RPC) ────────────────────────
   const handleJoinCodeChange = async (code: string) => {
     const upper = code.toUpperCase();
@@ -212,6 +255,30 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
       if (sessionError || !session?.user) throw new Error('No active session');
       const actualUserId = session.user.id;
       const actualEmail  = session.user.email;
+
+      // ── Duplicate-account check ──────────────────────────────────────────
+      // Scoped to the organization the person is joining — checking names
+      // platform-wide would false-positive on unrelated people who share a
+      // common name. Skipped when no org is known yet (leader creating a
+      // brand-new org has no cohort to collide with).
+      const scopeOrgId =
+        role === 'student' ? (orgCtx?.id ?? null) :
+        (role === 'site_leader' && leaderOrgMode === 'join') ? (coOrgCtx?.id ?? null) :
+        null;
+
+      if (scopeOrgId && !duplicateMatch) {
+        const match = await findSimilarProfile({
+          name: name.trim(),
+          organizationId: scopeOrgId,
+          excludeUserId: actualUserId,
+        });
+        if (match) {
+          setDuplicateMatch(match);
+          setIsSubmitting(false);
+          return; // pause — UI renders the confirmation prompt below
+        }
+      }
+      // If duplicateMatch is already set, the user clicked "No, continue" — proceed
 
       let organization_id: string | null = null;
       let join_code_used: string | null  = null;
@@ -384,6 +451,92 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   // ── Whether the learner must choose their own gender ──────────────────────
   // Only show gender picker to learners if org has mixed genders OR no org linked
   const learnerNeedsGender = role === 'student' && (!orgCtx || orgCtx.learner_gender === 'both');
+
+  // ── Reset link sent after a confirmed duplicate merge ─────────────────────
+  if (mergedAndRedirected) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 text-center space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Check your email</h2>
+          <p className="text-gray-600 text-sm">
+            We sent a password reset link to your original account. Click the
+            link in that email to set a new password and sign in — no need
+            for a second account.
+          </p>
+          <button
+            onClick={() => { window.location.href = '/login'; }}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Possible duplicate warning ─────────────────────────────────────────────
+  if (duplicateMatch) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-sm">
+                  You may already have an account
+                </h3>
+                <p className="text-gray-600 text-sm mt-1">
+                  Someone with a name like <strong>{name.trim()}</strong> already
+                  has an account in this organization, registered to{' '}
+                  <strong className="font-mono">{duplicateMatch.maskedEmail}</strong>.
+                </p>
+                <p className="text-gray-600 text-sm mt-2">
+                  Is that you? If so, you don't need a new account — just reset
+                  your password and sign in with it instead.
+                </p>
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleThatsMe}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                {isSubmitting ? 'Sending…' : "Yes, that's me — send me a password reset link"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDuplicateMatch(null);
+                  // Re-submit now that the user has confirmed they're a different person
+                  handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+                }}
+                className="w-full py-2.5 border border-gray-300 hover:bg-gray-50 text-sm font-medium text-gray-700 rounded-lg transition-colors"
+              >
+                No, that's a different person — continue signing up
+              </button>
+              <button
+                type="button"
+                className="text-sm text-gray-400 hover:text-gray-600 text-center mt-1"
+                onClick={() => setDuplicateMatch(null)}
+              >
+                ← Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Join code modal ────────────────────────────────────────────────────────
   if (newOrgJoinCode && newOrgName) {
