@@ -101,6 +101,10 @@ export default async function handler(req, res) {
   if (!trimmedMessage || trimmedMessage.length > MAX_MESSAGE_LENGTH) {
     return res.status(400).json({ error: `Message is required and must be under ${MAX_MESSAGE_LENGTH} characters` });
   }
+  if (!process.env.RESEND_API_KEY || !process.env.RESEND_ALERTS_FROM_EMAIL) {
+    console.error('[send-encouragement] Missing RESEND_API_KEY or RESEND_ALERTS_FROM_EMAIL');
+    return res.status(500).json({ error: 'Email sending is not configured' });
+  }
 
   try {
     const { data: sender, error: senderErr } = await supabase
@@ -133,7 +137,7 @@ export default async function handler(req, res) {
       message: trimmedMessage,
     });
 
-    await resend.emails.send({
+    const { data: sendResult, error: sendError } = await resend.emails.send({
       from: process.env.RESEND_ALERTS_FROM_EMAIL,
       to: [recipient.email],
       replyTo: sender.email,
@@ -141,6 +145,12 @@ export default async function handler(req, res) {
       html,
     });
 
+    if (sendError) {
+      console.error('[send-encouragement] Resend error:', sendError);
+      return res.status(502).json({ error: sendError.message || 'Resend rejected the email' });
+    }
+
+    console.log(`[send-encouragement] Sent ${sendResult?.id} to ${recipient.email}`);
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error('[send-encouragement] Error:', err);
