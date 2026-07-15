@@ -37,6 +37,7 @@ import {
   Newspaper,
   X as XIcon,
   Flame,
+  Mail,
 } from 'lucide-react';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/ui/Button';
@@ -448,6 +449,8 @@ const LEADERBOARD_OPTIONS: { value: LeaderboardMetric; label: string }[] = [
 
 const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
+const ENCOURAGE_ROLES = ['site_leader', 'teacher', 'platform_administrator', 'leader', 'research_lead'];
+
 // ── Helper: Score bar component ────────────────────────────────────────────
 const ScoreBar: React.FC<{
   label: string;
@@ -527,7 +530,8 @@ interface NewsItem {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+  const canEncourage = user?.role ? ENCOURAGE_ROLES.includes(user.role) : false;
   const [data, setData] = useState<DashboardData>({
     projects: [],
     dashboardActivities: [],
@@ -567,6 +571,12 @@ const DashboardPage: React.FC = () => {
   const [leaderboardScope, setLeaderboardScope] = useState<'current' | 'alltime'>('current');
   const [communityLbLoading, setCommunityLbLoading]   = useState(false);
   const [learnerActionsModal, setLearnerActionsModal] = useState<{ entry: CommunityLeaderEntry; actions: LearnerAction[] | null } | null>(null);
+  const [encourageModal, setEncourageModal]           = useState<{ entry: CurrentChallengeLeaderEntry } | null>(null);
+  const [encourageSubject, setEncourageSubject]       = useState('');
+  const [encourageMessage, setEncourageMessage]       = useState('');
+  const [encourageSending, setEncourageSending]       = useState(false);
+  const [encourageSent, setEncourageSent]             = useState(false);
+  const [encourageError, setEncourageError]           = useState('');
   const [learnerActionsLoading, setLearnerActionsLoading] = useState(false);
 
   // ── Grand Challenge state ─────────────────────────────────────────────────
@@ -1283,6 +1293,34 @@ ${prior.impact_arc}
       setLearnerActionsLoading(false);
     }
   }, []);
+
+  // ── Send an encouragement/advice email to a leaderboard participant ─────
+  const handleSendEncouragement = useCallback(async () => {
+    if (!encourageModal || !session?.access_token) return;
+    setEncourageSending(true);
+    setEncourageError('');
+    try {
+      const res = await fetch('/api/send-encouragement', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          recipient_id: encourageModal.entry.learner_id,
+          subject: encourageSubject,
+          message: encourageMessage,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send');
+      setEncourageSent(true);
+    } catch (err: any) {
+      setEncourageError(err.message || 'Failed to send');
+    } finally {
+      setEncourageSending(false);
+    }
+  }, [encourageModal, encourageSubject, encourageMessage, session?.access_token]);
 
   // ── Fetch leaderboard for a past challenge ───────────────────────────────
   const fetchPastChallengeLeaderboard = useCallback(async (challengeId: string) => {
@@ -2679,6 +2717,20 @@ ${prior.impact_arc}
                               {entry.action_taken && (
                                 <p className="text-xs text-gray-500 mt-1 line-clamp-2">{entry.action_taken}</p>
                               )}
+                              {canEncourage && !isMe && (
+                                <button
+                                  onClick={() => {
+                                    setEncourageModal({ entry });
+                                    setEncourageSubject(`Great work this week, ${entry.name}!`);
+                                    setEncourageMessage('');
+                                    setEncourageSent(false);
+                                    setEncourageError('');
+                                  }}
+                                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 hover:text-emerald-800 hover:underline"
+                                >
+                                  <Mail className="w-3 h-3" /> Encourage
+                                </button>
+                              )}
                             </div>
                           </div>
                         );
@@ -3825,6 +3877,97 @@ ${prior.impact_arc}
                 >
                   Close
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {encourageModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" onClick={() => setEncourageModal(null)}>
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/50 transition-opacity" />
+            <div
+              className="relative bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="border-b px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {encourageSent ? 'Message sent' : `Message ${encourageModal.entry.name}`}
+                  </h2>
+                  {!encourageSent && (
+                    <p className="text-xs text-gray-400 mt-1">Send a note of encouragement or advice on how to improve.</p>
+                  )}
+                </div>
+                <button onClick={() => setEncourageModal(null)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              {encourageSent ? (
+                <div className="px-6 py-8 text-center">
+                  <div className="text-3xl mb-2">✓</div>
+                  <p className="text-sm text-gray-700">Sent to {encourageModal.entry.name}.</p>
+                </div>
+              ) : (
+                <div className="px-6 py-4 space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Subject</label>
+                    <input
+                      type="text"
+                      value={encourageSubject}
+                      onChange={e => setEncourageSubject(e.target.value)}
+                      maxLength={200}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Message</label>
+                    <textarea
+                      value={encourageMessage}
+                      onChange={e => setEncourageMessage(e.target.value)}
+                      maxLength={5000}
+                      rows={6}
+                      placeholder="Share encouragement or a suggestion for how they could grow their impact further…"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none"
+                    />
+                  </div>
+                  {encourageError && (
+                    <p className="text-xs text-red-600">{encourageError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="border-t bg-gray-50 px-6 py-3 flex justify-end gap-2">
+                {encourageSent ? (
+                  <button
+                    onClick={() => setEncourageModal(null)}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Close
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setEncourageModal(null)}
+                      className="px-5 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <Button
+                      onClick={handleSendEncouragement}
+                      isLoading={encourageSending}
+                      disabled={encourageSending || !encourageMessage.trim() || !encourageSubject.trim()}
+                      icon={<Mail className="w-4 h-4" />}
+                    >
+                      Send
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
