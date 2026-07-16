@@ -1406,8 +1406,8 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
             {/* Voice selector */}
             <div className="mt-5 inline-flex flex-col items-center gap-2">
-              <div className="flex items-center gap-2 text-base text-gray-800 font-medium">
-                <Volume2 className="h-5 w-5 text-emerald-600" />
+              <div className="flex items-center gap-2 text-base text-white font-medium bg-emerald-600 rounded-xl px-4 py-2 shadow-lg">
+                <Volume2 className="h-5 w-5 text-white" />
                 <span>Choose your coach&apos;s voice:</span>
               </div>
               <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
@@ -1472,9 +1472,11 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-l from-sky-500/60 to-transparent" />
                 </div>
-                <p className="text-center text-gray-500 text-sm mb-5">
-                  Complete all 5 stages to unlock the Science Pathways below.
-                </p>
+                <div className="text-center mb-5">
+                  <p className="inline-block text-white text-sm bg-emerald-600 rounded-xl px-4 py-2 shadow-lg">
+                    Complete all 5 stages to unlock the Science Pathways below.
+                  </p>
+                </div>
                 <div className="space-y-4">
                   {(REASONING_STAGES || []).map((stage, idx) =>
                     renderStageCard(stage, idx, progress?.reasoning, false)
