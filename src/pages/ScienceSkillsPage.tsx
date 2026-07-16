@@ -117,7 +117,7 @@ const ScienceDistortedBackground: React.FC = () => {
     };
   }, []);
 
-  const imageUrl = '/SciencePageBackground.jpeg';
+  const imageUrl = '/background_science-skills_page.png';
 
   return (
     <>
@@ -134,8 +134,8 @@ const ScienceDistortedBackground: React.FC = () => {
         className="fixed top-14 left-0 right-0 bottom-0"
         style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/65 via-teal-900/55 to-cyan-900/60" />
-        <div className="absolute inset-0 bg-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 via-teal-300/25 to-cyan-300/30" />
+        <div className="absolute inset-0 bg-white/10" />
       </div>
       {isMouseMoving && (
         <div
@@ -147,7 +147,7 @@ const ScienceDistortedBackground: React.FC = () => {
             maskImage: `radial-gradient(circle 150px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`,
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/65 via-teal-900/55 to-cyan-900/60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 via-teal-300/25 to-cyan-300/30" />
         </div>
       )}
     </>
@@ -564,7 +564,7 @@ const STAGE_RUBRICS: Record<Pathway, Record<number, string[]>> = {
 };
 
 const LEVEL_CONFIG: Record<ProficiencyLevel, { color: string; bg: string; border: string; emoji: string }> = {
-  Emerging:   { color: 'text-slate-300',  bg: 'bg-slate-700/50',  border: 'border-slate-500', emoji: '🌱' },
+  Emerging:   { color: 'text-red-600',    bg: 'bg-red-100',       border: 'border-red-300',  emoji: '🌱' },
   Developing: { color: 'text-blue-300',   bg: 'bg-blue-900/40',   border: 'border-blue-500',  emoji: '📈' },
   Proficient: { color: 'text-green-300',  bg: 'bg-green-900/40',  border: 'border-green-500', emoji: '✅' },
   Advanced:   { color: 'text-yellow-300', bg: 'bg-yellow-900/40', border: 'border-yellow-500', emoji: '🏆' },
@@ -677,9 +677,9 @@ const renderInline = (text: string, key: string | number): React.ReactNode => {
     <React.Fragment key={key}>
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**'))
-          return <strong key={i} className="font-bold text-white">{part.slice(2, -2)}</strong>;
+          return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
         if (part.startsWith('`') && part.endsWith('`'))
-          return <code key={i} className="bg-slate-700 text-emerald-300 rounded px-1 text-sm font-mono">{part.slice(1, -1)}</code>;
+          return <code key={i} className="bg-gray-200 text-emerald-700 rounded px-1 text-sm font-mono">{part.slice(1, -1)}</code>;
         return part;
       })}
     </React.Fragment>
@@ -700,7 +700,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
           return (
             <ol key={bi} className="list-decimal list-inside space-y-1 pl-1">
               {lines.map((l, li) => (
-                <li key={li} className="text-slate-100">{renderInline(l.replace(/^\d+\.\s/, ''), li)}</li>
+                <li key={li} className="text-gray-800">{renderInline(l.replace(/^\d+\.\s/, ''), li)}</li>
               ))}
             </ol>
           );
@@ -711,7 +711,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
           return (
             <ul key={bi} className="list-disc list-inside space-y-1 pl-1">
               {lines.map((l, li) => (
-                <li key={li} className="text-slate-100">{renderInline(l.replace(/^[-•*]\s/, ''), li)}</li>
+                <li key={li} className="text-gray-800">{renderInline(l.replace(/^[-•*]\s/, ''), li)}</li>
               ))}
             </ul>
           );
@@ -835,42 +835,42 @@ const EvaluationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
         <div className={`sticky top-0 ${stage.glowBg} border-b ${stage.border} rounded-t-2xl px-6 py-4 flex items-start justify-between`}>
           <div>
-            <h2 className="text-white font-bold text-lg">{stage.name} — Session Evaluation</h2>
+            <h2 className="text-gray-900 font-bold text-lg">{stage.name} — Session Evaluation</h2>
             <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-semibold ${overall.bg} ${overall.color} border ${overall.border}`}>
               {overall.emoji} Overall: {evaluation.overall_level}
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-1"><X size={22} /></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 p-1"><X size={22} /></button>
         </div>
 
         <div className="px-6 py-5 space-y-3">
-          <h3 className="text-slate-400 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
+          <h3 className="text-gray-500 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
           {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
             return (
               <div key={i} className={`rounded-xl border ${lc.border} ${lc.bg} p-4`}>
                 <div className="flex items-center justify-between mb-2 gap-3">
-                  <span className="text-white font-semibold text-sm">{sub.name}</span>
+                  <span className="text-gray-900 font-semibold text-sm">{sub.name}</span>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${lc.bg} ${lc.color} ${lc.border}`}>{lc.emoji} {sub.level}</span>
-                    <span className="text-slate-400 text-xs font-mono">{sub.score}/100</span>
+                    <span className="text-gray-500 text-xs font-mono">{sub.score}/100</span>
                   </div>
                 </div>
                 <div className="h-1.5 bg-slate-700/60 rounded-full mb-3 overflow-hidden">
                   <div className={`h-full rounded-full bg-gradient-to-r ${stage.gradient} transition-all duration-700`} style={{ width: `${sub.score}%` }} />
                 </div>
-                <p className="text-slate-300 text-xs"><span className="text-slate-500 mr-1">Evidence:</span>{sub.evidence}</p>
+                <p className="text-gray-600 text-xs"><span className="text-gray-500 mr-1">Evidence:</span>{sub.evidence}</p>
               </div>
             );
           })}
         </div>
 
         <div className="px-6 pb-4">
-          <div className="bg-slate-800/70 border border-slate-700 rounded-xl p-4">
-            <p className="text-slate-200 text-sm">🌟 {evaluation.encouragement}</p>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <p className="text-gray-700 text-sm">🌟 {evaluation.encouragement}</p>
           </div>
         </div>
 
@@ -895,9 +895,9 @@ const EvaluationModal: React.FC<{
                 <p className="text-amber-200 text-xs font-semibold uppercase tracking-wider mb-2">🎯 Focus here next</p>
                 <ul className="space-y-1">
                   {growth.map((s, i) => (
-                    <li key={i} className="text-slate-300 text-sm flex items-start gap-2">
+                    <li key={i} className="text-gray-600 text-sm flex items-start gap-2">
                       <span className="text-amber-400 mt-0.5">•</span>
-                      <span><strong className="text-white">{s.name}</strong> — {s.evidence}</span>
+                      <span><strong className="text-gray-900">{s.name}</strong> — {s.evidence}</span>
                     </li>
                   ))}
                 </ul>
@@ -918,9 +918,9 @@ const EvaluationModal: React.FC<{
               <p className="text-blue-200 text-sm">✅ <strong>Proficient</strong> in all skills — next stage unlocked! Keep practising to reach Advanced.</p>
             </div>
           ) : (
-            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4 flex items-start gap-3">
-              <TrendingUp className="h-5 w-5 text-slate-300 flex-shrink-0 mt-0.5" />
-              <p className="text-slate-300 text-sm">Reach <strong className="text-blue-300">Proficient</strong> in all skills to unlock the next stage.</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
+              <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
+              <p className="text-gray-600 text-sm">Reach <strong className="text-blue-600">Proficient</strong> in all skills to unlock the next stage.</p>
             </div>
           )}
         </div>
@@ -1336,15 +1336,15 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
             ? 'bg-emerald-950/80 border-emerald-500/40 cursor-not-allowed opacity-50 backdrop-blur-sm pointer-events-none'
             : isActive
               ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-              : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed opacity-70'}`}
+              : 'bg-gray-100/80 border-gray-300 cursor-not-allowed opacity-70'}`}
       >
         <div className="flex items-start gap-5">
           <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
-            {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-slate-300" />}
+            {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-gray-400" />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
+              <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>Stage {idx + 1}</span>
               {isCompleted && <span className="font-bold text-green-400">Completed</span>}
               {!isCompleted && scoreBadge && (
                 <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
@@ -1352,20 +1352,20 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 </span>
               )}
               {!isActive && isLocked && lockReason && (
-                <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
+                <span className="text-sm bg-gray-300/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-400/60">
                   🔒 {lockReason}
                 </span>
               )}
               {!isActive && isLocked && !lockReason && (
-                <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
+                <span className="text-sm bg-gray-300/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-400/60">
                   🔒 Complete Stage {idx} to unlock
                 </span>
               )}
             </div>
-            <h3 className={`text-xl font-bold ${isUnlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
-            <p className={`text-sm font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
-            <p className={`text-sm mt-1 ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
-            <p className={`text-xs mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>
+            <h3 className={`text-xl font-bold ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>{stage.name}</h3>
+            <p className={`text-sm font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-gray-400'}`}>{stage.subtitle}</p>
+            <p className={`text-sm mt-1 ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
+            <p className={`text-xs mt-2 ${isUnlocked ? 'text-slate-400' : 'text-gray-400'}`}>
               {(STAGE_RUBRICS[stage.pathway]?.[idx] ?? []).join(' · ')}
             </p>
           </div>
@@ -1392,7 +1392,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 Science Skills
               </h1>
             </div>
-            <p className="text-xl md:text-2xl text-slate-200 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto">
               Build scientific reasoning first — then unlock Life Sciences and Physical Sciences pathways.
             </p>
             <div className="mt-4">
@@ -1404,15 +1404,15 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
             {/* Voice selector */}
             <div className="mt-5 inline-flex flex-col items-center gap-2">
-              <div className="flex items-center gap-2 text-base text-white font-medium">
+              <div className="flex items-center gap-2 text-base text-gray-800 font-medium">
                 <Volume2 className="h-5 w-5 text-emerald-300" />
                 <span>Choose your coach&apos;s voice:</span>
               </div>
-              <div className="flex rounded-xl overflow-hidden border border-slate-500 shadow-lg">
+              <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
                 <button
                   onClick={e => { e.stopPropagation(); setVoiceMode('english'); }}
                   className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
-                    ${voiceMode === 'english' ? 'bg-blue-600 text-white shadow-inner' : 'bg-slate-700/80 text-white hover:bg-slate-600'}`}
+                    ${voiceMode === 'english' ? 'bg-blue-600 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                   🇬🇧 British English
                 </button>
@@ -1420,7 +1420,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <button
                   onClick={e => { e.stopPropagation(); setVoiceMode('pidgin'); }}
                   className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
-                    ${voiceMode === 'pidgin' ? 'bg-green-600 text-white shadow-inner' : 'bg-slate-700/80 text-white hover:bg-slate-600'}`}
+                    ${voiceMode === 'pidgin' ? 'bg-green-600 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                   🇳🇬 Nigerian Pidgin
                 </button>
@@ -1461,16 +1461,16 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 h-px bg-gradient-to-r from-sky-500/60 to-transparent" />
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/20 border border-sky-400/50">
-                    <Eye className="h-4 w-4 text-sky-300" />
-                    <span className="text-sky-300 font-bold text-sm uppercase tracking-wider">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-100 border border-sky-300">
+                    <Eye className="h-4 w-4 text-sky-700" />
+                    <span className="text-sky-700 font-bold text-sm uppercase tracking-wider">
                       Tier 1 · Scientific Reasoning
                     </span>
                     {progress?.tier1Complete && <CheckCircle className="h-4 w-4 text-green-400" />}
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-l from-sky-500/60 to-transparent" />
                 </div>
-                <p className="text-center text-slate-400 text-sm mb-5">
+                <p className="text-center text-gray-500 text-sm mb-5">
                   Complete all 5 stages to unlock the Science Pathways below.
                 </p>
                 <div className="space-y-4">
@@ -1484,23 +1484,23 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 h-px bg-gradient-to-r from-emerald-500/60 to-transparent" />
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/50">
-                    <BookOpen className="h-4 w-4 text-emerald-300" />
-                    <span className="text-emerald-300 font-bold text-sm uppercase tracking-wider">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300">
+                    <BookOpen className="h-4 w-4 text-emerald-700" />
+                    <span className="text-emerald-700 font-bold text-sm uppercase tracking-wider">
                       Tier 2 · Science Pathways
                     </span>
-                    {!progress?.tier1Complete && <Lock className="h-4 w-4 text-slate-400" />}
+                    {!progress?.tier1Complete && <Lock className="h-4 w-4 text-gray-400" />}
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-l from-emerald-500/60 to-transparent" />
                 </div>
 
                 {!progress?.tier1Complete && (
-                  <div className="bg-slate-800/70 border border-slate-600 rounded-xl p-4 text-center mb-5">
-                    <Lock className="h-6 w-6 text-slate-400 mx-auto mb-2" />
-                    <p className="text-slate-300 text-sm font-medium">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center mb-5">
+                    <Lock className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm font-medium">
                       Complete all 5 Scientific Reasoning stages to unlock the pathways below.
                     </p>
-                    <p className="text-slate-500 text-xs mt-1">
+                    <p className="text-gray-400 text-xs mt-1">
                       {5 - (REASONING_STAGES || []).filter((_, i) => progress?.reasoning?.completedStages?.[i] === true).length} stage{
                         5 - (REASONING_STAGES || []).filter((_, i) => progress?.reasoning?.completedStages?.[i] === true).length !== 1 ? 's' : ''
                       } remaining
@@ -1511,14 +1511,14 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <div className="space-y-4">
 
                   {/* Life Sciences accordion */}
-                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress?.tier1Complete ? 'border-green-500/50' : 'border-slate-600/50 opacity-60'}`}>
+                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress?.tier1Complete ? 'border-green-500/50' : 'border-gray-300 opacity-60'}`}>
                     <button
                       disabled={!progress?.tier1Complete}
                       onClick={() => setLifeOpen(o => !o)}
                       className={`w-full flex items-center justify-between px-6 py-5 transition-all
                         ${progress?.tier1Complete
-                          ? 'bg-green-900/30 hover:bg-green-900/40 cursor-pointer'
-                          : 'bg-slate-800/50 cursor-not-allowed'}`}
+                          ? 'bg-green-100 hover:bg-green-200 cursor-pointer'
+                          : 'bg-gray-100/70 cursor-not-allowed'}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-500`}>
@@ -1526,22 +1526,22 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                         </div>
                         <div className="text-left">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold text-white">Life Sciences</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Life Sciences</h3>
                             {progress?.tier1Complete && (
-                              <span className="text-xs bg-green-500/30 text-green-300 px-2 py-0.5 rounded-full border border-green-500/40">
+                              <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full border border-green-400">
                                 {(progress?.life?.completedStages ?? []).filter(Boolean).length}/5 complete
                               </span>
                             )}
                           </div>
-                          <p className="text-green-300 text-sm mt-0.5">Cells · Organisms · Ecosystems · Genetics · Evolution</p>
+                          <p className="text-green-700 text-sm mt-0.5">Cells · Organisms · Ecosystems · Genetics · Evolution</p>
                         </div>
                       </div>
                       {progress?.tier1Complete
-                        ? (lifeOpen ? <ChevronUp className="h-5 w-5 text-green-300" /> : <ChevronDown className="h-5 w-5 text-green-300" />)
-                        : <Lock className="h-5 w-5 text-slate-400" />}
+                        ? (lifeOpen ? <ChevronUp className="h-5 w-5 text-green-700" /> : <ChevronDown className="h-5 w-5 text-green-700" />)
+                        : <Lock className="h-5 w-5 text-gray-400" />}
                     </button>
                     {lifeOpen && progress?.tier1Complete && (
-                      <div className="px-4 pb-4 pt-2 space-y-3 bg-green-900/10">
+                      <div className="px-4 pb-4 pt-2 space-y-3 bg-green-50">
                         {(LIFE_STAGES || []).map((stage, idx) =>
                           renderStageCard(stage, idx, progress?.life, false)
                         )}
@@ -1550,14 +1550,14 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   </div>
 
                   {/* Physical Sciences accordion */}
-                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress?.tier1Complete ? 'border-orange-500/50' : 'border-slate-600/50 opacity-60'}`}>
+                  <div className={`rounded-2xl border-2 overflow-hidden transition-all ${progress?.tier1Complete ? 'border-orange-500/50' : 'border-gray-300 opacity-60'}`}>
                     <button
                       disabled={!progress?.tier1Complete}
                       onClick={() => setPhysicalOpen(o => !o)}
                       className={`w-full flex items-center justify-between px-6 py-5 transition-all
                         ${progress?.tier1Complete
-                          ? 'bg-orange-900/30 hover:bg-orange-900/40 cursor-pointer'
-                          : 'bg-slate-800/50 cursor-not-allowed'}`}
+                          ? 'bg-orange-100 hover:bg-orange-200 cursor-pointer'
+                          : 'bg-gray-100/70 cursor-not-allowed'}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-500">
@@ -1565,22 +1565,22 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                         </div>
                         <div className="text-left">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold text-white">Physical Sciences</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Physical Sciences</h3>
                             {progress?.tier1Complete && (
-                              <span className="text-xs bg-orange-500/30 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/40">
+                              <span className="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full border border-orange-400">
                                 {(progress?.physical?.completedStages ?? []).filter(Boolean).length}/5 complete
                               </span>
                             )}
                           </div>
-                          <p className="text-orange-300 text-sm mt-0.5">Matter · Forces · Energy & Waves · Electricity · Earth & Space</p>
+                          <p className="text-orange-700 text-sm mt-0.5">Matter · Forces · Energy & Waves · Electricity · Earth & Space</p>
                         </div>
                       </div>
                       {progress?.tier1Complete
-                        ? (physicalOpen ? <ChevronUp className="h-5 w-5 text-orange-300" /> : <ChevronDown className="h-5 w-5 text-orange-300" />)
-                        : <Lock className="h-5 w-5 text-slate-400" />}
+                        ? (physicalOpen ? <ChevronUp className="h-5 w-5 text-orange-700" /> : <ChevronDown className="h-5 w-5 text-orange-700" />)
+                        : <Lock className="h-5 w-5 text-gray-400" />}
                     </button>
                     {physicalOpen && progress?.tier1Complete && (
-                      <div className="px-4 pb-4 pt-2 space-y-3 bg-orange-900/10">
+                      <div className="px-4 pb-4 pt-2 space-y-3 bg-orange-50">
                         {(PHYSICAL_STAGES || []).map((stage, idx) =>
                           renderStageCard(stage, idx, progress?.physical, false)
                         )}
@@ -1612,21 +1612,21 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
         <ScienceDistortedBackground />
         <main className="relative z-10 flex-1 min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
-            <button onClick={() => { cancel(); setView('stages'); }} className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors">
+            <button onClick={() => { cancel(); setView('stages'); }} className="flex items-center gap-2 text-gray-400 hover:text-gray-900 mb-8 transition-colors">
               <ArrowLeft size={20} /> Back to Stages
             </button>
 
-            <div className="bg-slate-900 border-2 border-slate-600 rounded-2xl p-8 mb-6">
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 mb-6">
               <div className="text-center mb-7">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{pathwayLabel}</div>
+                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{pathwayLabel}</div>
                 <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                   <Icon className="h-10 w-10 text-white" />
                 </div>
-                <div className="text-base font-semibold text-slate-300 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
-                <h2 className="text-4xl font-bold text-white">{selectedStage.name}</h2>
+                <div className="text-base font-semibold text-gray-500 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
+                <h2 className="text-4xl font-bold text-gray-900">{selectedStage.name}</h2>
                 <p className={`text-lg font-medium mt-1 ${selectedStage.textColor}`}>{selectedStage.subtitle}</p>
-                <p className="text-slate-200 text-lg mt-3">{selectedStage.description?.trim() || 'Description could not be loaded.'}</p>
-                <p className="text-slate-400 text-sm mt-2">{(STAGE_RUBRICS[selectedStage.pathway]?.[selectedStage.id] ?? []).join(' · ')}</p>
+                <p className="text-gray-700 text-lg mt-3">{selectedStage.description?.trim() || 'Description could not be loaded.'}</p>
+                <p className="text-gray-500 text-sm mt-2">{(STAGE_RUBRICS[selectedStage.pathway]?.[selectedStage.id] ?? []).join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}
                   className={`mt-4 inline-flex items-center gap-2 text-base ${selectedStage.textColor} border ${selectedStage.border} bg-white/5 px-4 py-2 rounded-full hover:bg-white/10 transition-all`}
@@ -1636,18 +1636,18 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
               </div>
 
               {/* Voice */}
-              <div className="mb-6 bg-slate-800 border border-slate-600 rounded-xl p-4">
-                <p className="text-white text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
+              <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-gray-900 text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
                   <Volume2 size={18} className="text-emerald-400" /> Choose your coach&apos;s voice
                 </p>
-                <div className="flex rounded-xl overflow-hidden border border-slate-500">
+                <div className="flex rounded-xl overflow-hidden border border-gray-300">
                   <button onClick={() => setVoiceMode('english')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'}`}>
+                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
                     🇬🇧 British English
                   </button>
                   <div className="w-px bg-slate-500" />
                   <button onClick={() => setVoiceMode('pidgin')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'}`}>
+                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
                     🇳🇬 Nigerian Pidgin
                   </button>
                 </div>
@@ -1655,10 +1655,10 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
               {/* Topic input */}
               <div className="mb-4">
-                <label className="block text-white text-lg font-semibold mb-2">
+                <label className="block text-gray-900 text-lg font-semibold mb-2">
                   What context should your science coach use today?
                 </label>
-                <p className="text-slate-400 text-sm mb-3">
+                <p className="text-gray-500 text-sm mb-3">
                   Choose something from your world — the Niger Delta, your farm, fishing, cooking, the sky, animals nearby. Science is everywhere.
                 </p>
                 <input
@@ -1667,7 +1667,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   onChange={e => setTopicInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && topicInput.trim()) startSession(); }}
                   placeholder="e.g., mangrove forests, cassava farming, the harmattan, fishing, solar panels..."
-                  className={`w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-4 text-lg focus:outline-none focus:${selectedStage.border} placeholder-slate-400 transition-colors`}
+                  className={`w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-4 text-lg focus:outline-none focus:${selectedStage.border} placeholder-gray-400 transition-colors`}
                 />
               </div>
               <button
@@ -1684,17 +1684,17 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
             {activeSessions.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <MessageSquare size={18} /> Continue a Session
                 </h3>
                 <div className="space-y-3">
                   {(activeSessions ?? []).map(session => (
                     <div key={session.id} onClick={() => resumeSession(session)}
-                      className={`bg-slate-900 border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-slate-800 transition-all`}>
+                      className={`bg-white border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-all`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-base truncate">{session.sub_category}</p>
-                          <p className="text-slate-400 text-sm mt-0.5">{new Date(session.updated_at).toLocaleDateString()} · {session.progress}</p>
+                          <p className="text-gray-900 font-semibold text-base truncate">{session.sub_category}</p>
+                          <p className="text-gray-500 text-sm mt-0.5">{new Date(session.updated_at).toLocaleDateString()} · {session.progress}</p>
                           {session.science_skills_evaluation && (
                             <span className={`mt-1 inline-flex text-xs px-2 py-0.5 rounded-full border font-semibold
                               ${LEVEL_CONFIG[session.science_skills_evaluation.overall_level].bg}
@@ -1714,7 +1714,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
             {finishedSessions.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <CheckCircle size={18} className="text-green-400" /> Completed Sessions
                 </h3>
                 <div className="space-y-2">
@@ -1724,7 +1724,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-green-300 font-semibold text-base truncate">🏆 {session.sub_category}</p>
-                          <p className="text-slate-400 text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
+                          <p className="text-gray-500 text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
                         </div>
                         <ChevronRight size={20} className="text-green-400" />
                       </div>
@@ -1756,17 +1756,17 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
         <main className="relative z-10 flex flex-col h-[calc(100vh-64px)]">
           {/* Chat header */}
-          <div className={`flex-shrink-0 border-b ${selectedStage.border} bg-slate-900/95 backdrop-blur px-4 py-3`}>
+          <div className={`flex-shrink-0 border-b ${selectedStage.border} bg-white/95 backdrop-blur px-4 py-3`}>
             <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <button onClick={() => { cancel(); setView('topic'); }} className="text-slate-400 hover:text-white transition-colors flex-shrink-0">
+                <button onClick={() => { cancel(); setView('topic'); }} className="text-gray-400 hover:text-gray-900 transition-colors flex-shrink-0">
                   <ArrowLeft size={22} />
                 </button>
                 <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center flex-shrink-0`}>
                   <Icon className="h-5 w-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white font-bold text-base leading-tight truncate">{selectedStage.name}</p>
+                  <p className="text-gray-900 font-bold text-base leading-tight truncate">{selectedStage.name}</p>
                   <p className={`text-xs ${selectedStage.textColor} truncate`}>{pathwayLabel} · {topic}</p>
                 </div>
               </div>
@@ -1778,15 +1778,15 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     {LEVEL_CONFIG[evaluation.overall_level].emoji} {evaluation.overall_level}
                   </button>
                 )}
-                <div className="flex rounded-lg overflow-hidden border border-slate-600">
+                <div className="flex rounded-lg overflow-hidden border border-gray-300">
                   <button onClick={() => setVoiceMode('english')} title="British English voice"
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-slate-600
-                      ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-gray-300
+                      ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}>
                     🇬🇧 <span className="hidden sm:inline">English</span>
                   </button>
                   <button onClick={() => setVoiceMode('pidgin')} title="Nigerian Pidgin voice"
                     className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all
-                      ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+                      ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}>
                     🇳🇬 <span className="hidden sm:inline">Pidgin</span>
                   </button>
                 </div>
@@ -1811,7 +1811,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     </div>
                   )}
                   <div className={`max-w-[80%] rounded-2xl px-5 py-4 text-lg leading-relaxed
-                    ${msg.role === 'user' ? 'bg-slate-700 text-white rounded-tr-sm' : 'bg-slate-900 border border-slate-600 text-slate-100 rounded-tl-sm'}`}>
+                    ${msg.role === 'user' ? 'bg-slate-700 text-white rounded-tr-sm' : 'bg-gray-50 border border-gray-200 text-gray-800 rounded-tl-sm'}`}>
                     <MessageContent content={msg.content} />
                     {msg.role === 'assistant' && (
                       <AIPidginCoachWrapper englishText={msg.content} />
@@ -1824,7 +1824,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                     <Icon className="h-4 w-4 text-white" />
                   </div>
-                  <div className="bg-slate-900 border border-slate-600 rounded-2xl rounded-tl-sm px-5 py-3">
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-5 py-3">
                     <div className="flex gap-1 items-center h-4">
                       {[0, 150, 300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
                     </div>
@@ -1841,7 +1841,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
           </div>
 
           {/* Input */}
-          <div className={`flex-shrink-0 border-t ${selectedStage.border} bg-slate-900/90 backdrop-blur px-4 pt-3 pb-4`}>
+          <div className={`flex-shrink-0 border-t ${selectedStage.border} bg-white/90 backdrop-blur px-4 pt-3 pb-4`}>
             <div className="max-w-3xl mx-auto">
               <textarea
                 ref={inputRef}
@@ -1851,12 +1851,12 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 placeholder="Type your observation, hypothesis, or answer here... or tap the mic to speak."
                 rows={3}
                 disabled={isSending || isImproving}
-                className="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-400 placeholder-slate-400 resize-none text-lg leading-relaxed disabled:opacity-50 transition-colors mb-2"
+                className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-400 placeholder-gray-400 resize-none text-lg leading-relaxed disabled:opacity-50 transition-colors mb-2"
               />
               <div className="flex items-center justify-between mb-2 gap-2">
                 <button onClick={toggleListening}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-medium transition-all
-                    ${isListening ? 'bg-red-500 animate-pulse text-white shadow-lg shadow-red-500/40' : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'}`}>
+                    ${isListening ? 'bg-red-500 animate-pulse text-white shadow-lg shadow-red-500/40' : 'bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700'}`}>
                   {isListening ? <MicOff size={17} /> : <Mic size={17} />}
                   {isListening ? 'Stop' : 'Speak'}
                 </button>
@@ -1874,7 +1874,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${inputText.trim() && !isImproving && !isSending
                       ? 'bg-violet-500/20 border-violet-400/50 text-violet-300 hover:bg-violet-500/30'
-                      : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'}`}>
+                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
                   <Wand2 size={15} />
                   {isImproving ? 'Polishing...' : 'Improve my explanation'}
                 </button>
@@ -1882,7 +1882,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${!isSaving && messages.length >= 2
                       ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/30'
-                      : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'}`}>
+                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
                   <Save size={15} />
                   {isSaving ? 'Saving...' : 'Save Session'}
                 </button>
@@ -1890,13 +1890,13 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   title={userMessageCount < 2 ? 'Send at least 2 messages first' : 'Get your science evaluation'}
                   className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${!isEvaluating && userMessageCount >= 2
-                      ? 'bg-slate-700 border-slate-500 text-white hover:bg-slate-600'
-                      : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'}`}>
+                      ? 'bg-blue-600 border-blue-500 text-white hover:bg-blue-700'
+                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
                   <BarChart3 size={15} />
                   {isEvaluating ? 'Evaluating...' : 'Evaluate'}
                 </button>
               </div>
-              <p className="text-center text-slate-400 text-base mt-2">
+              <p className="text-center text-gray-500 text-base mt-2">
                 Enter to send · Shift+Enter for new line
                 {userMessageCount < 2 && ` · Send ${2 - userMessageCount} more message${userMessageCount === 1 ? '' : 's'} to enable evaluation`}
               </p>

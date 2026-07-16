@@ -168,8 +168,8 @@ const EnglishDistortedBackground: React.FC = () => {
         }}
       >
         {/* Purple-tinted overlay — matches AILearningPage feel */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 via-teal-900/50 to-blue-900/60" />
-        <div className="absolute inset-0 bg-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-400/30 via-teal-300/25 to-blue-300/30" />
+        <div className="absolute inset-0 bg-white/10" />
       </div>
 
       {/* Whirl layer — only renders while mouse is moving */}
@@ -189,8 +189,8 @@ const EnglishDistortedBackground: React.FC = () => {
             WebkitMaskSize: '100% 100%',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 via-teal-900/50 to-blue-900/60" />
-          <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/30 via-teal-300/25 to-blue-300/30" />
+          <div className="absolute inset-0 bg-white/10" />
         </div>
       )}
     </>
@@ -595,35 +595,35 @@ const EvaluationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
 
         {/* Header */}
         <div className={`sticky top-0 ${stage.glowBg} border-b ${stage.border} rounded-t-2xl px-6 py-4 flex items-start justify-between`}>
           <div>
-            <h2 className="text-white font-bold text-lg">{stage.name} — Session Evaluation</h2>
+            <h2 className="text-gray-900 font-bold text-lg">{stage.name} — Session Evaluation</h2>
             <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-semibold ${overall.bg} ${overall.color} border ${overall.border}`}>
               {overall.emoji} Overall: {evaluation.overall_level}
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-1 mt-0.5 flex-shrink-0">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 p-1 mt-0.5 flex-shrink-0">
             <X size={22} />
           </button>
         </div>
 
         {/* Sub-categories */}
         <div className="px-6 py-5 space-y-3">
-          <h3 className="text-slate-400 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
+          <h3 className="text-gray-500 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
           {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
             return (
               <div key={i} className={`rounded-xl border ${lc.border} ${lc.bg} p-4`}>
                 <div className="flex items-center justify-between mb-2 gap-3">
-                  <span className="text-white font-semibold text-sm">{sub.name}</span>
+                  <span className="text-gray-900 font-semibold text-sm">{sub.name}</span>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${lc.bg} ${lc.color} ${lc.border}`}>
                       {lc.emoji} {sub.level}
                     </span>
-                    <span className="text-slate-400 text-xs font-mono">{sub.score}/100</span>
+                    <span className="text-gray-500 text-xs font-mono">{sub.score}/100</span>
                   </div>
                 </div>
                 <div className="h-1.5 bg-slate-700/60 rounded-full mb-3 overflow-hidden">
@@ -632,7 +632,7 @@ const EvaluationModal: React.FC<{
                     style={{ width: `${sub.score}%` }}
                   />
                 </div>
-                <p className="text-slate-300 text-xs leading-relaxed">
+                <p className="text-gray-600 text-xs leading-relaxed">
                   <span className="text-slate-500 mr-1">Evidence:</span>{sub.evidence}
                 </p>
               </div>
@@ -642,8 +642,8 @@ const EvaluationModal: React.FC<{
 
         {/* Encouragement */}
         <div className="px-6 pb-4">
-          <div className="bg-slate-800/70 border border-slate-700 rounded-xl p-4">
-            <p className="text-slate-200 text-sm leading-relaxed">🌟 {evaluation.encouragement}</p>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <p className="text-gray-700 text-sm leading-relaxed">🌟 {evaluation.encouragement}</p>
           </div>
         </div>
 
@@ -661,9 +661,9 @@ const EvaluationModal: React.FC<{
                 </p>
                 <ul className="space-y-1">
                   {growthSkills.map((s, i) => (
-                    <li key={i} className="text-slate-300 text-sm flex items-start gap-2">
+                    <li key={i} className="text-gray-600 text-sm flex items-start gap-2">
                       <span className="text-amber-400 mt-0.5">•</span>
-                      <span><strong className="text-white">{s.name}</strong> — {s.evidence}</span>
+                      <span><strong className="text-gray-900">{s.name}</strong> — {s.evidence}</span>
                     </li>
                   ))}
                 </ul>
@@ -689,9 +689,9 @@ const EvaluationModal: React.FC<{
               </p>
             </div>
           ) : (
-            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4 flex items-start gap-3">
-              <TrendingUp className="h-5 w-5 text-slate-300 flex-shrink-0 mt-0.5" />
-              <p className="text-slate-300 text-sm">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
+              <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
+              <p className="text-gray-600 text-sm">
                 Keep going! Reach <strong className="text-blue-300">Proficient</strong> in all skill areas to unlock the next stage.
               </p>
             </div>
@@ -1233,7 +1233,7 @@ Respond ONLY with valid JSON:
                   English Skills
                 </h1>
               </div>
-              <p className="text-xl md:text-2xl text-slate-200 max-w-2xl mx-auto">
+              <p className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto">
                 Grow your English communication through real conversations with an AI coach.
                 Complete each stage to unlock the next — at your own pace.
               </p>
@@ -1245,32 +1245,32 @@ Respond ONLY with valid JSON:
               </div>
               {/* ── Coach Voice Selector ──────────────────────────────── */}
               <div className="mt-5 inline-flex flex-col items-center gap-2">
-                <div className="flex items-center gap-2 text-base text-white font-medium">
+                <div className="flex items-center gap-2 text-base text-gray-800 font-medium">
                   <Volume2 className="h-5 w-5 text-teal-300" />
                   <span>Choose your coach&apos;s voice:</span>
                 </div>
-                <div className="flex rounded-xl overflow-hidden border border-slate-500 shadow-lg">
+                <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
                   <button
                     onClick={e => { e.stopPropagation(); setVoiceMode('english'); }}
                     className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
                       ${voiceMode === 'english'
                         ? 'bg-blue-600 text-white shadow-inner'
-                        : 'bg-slate-700/80 text-white hover:bg-slate-600'}`}
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                   >
                     🇬🇧 British English
                   </button>
-                  <div className="w-px bg-slate-500" />
+                  <div className="w-px bg-gray-300" />
                   <button
                     onClick={e => { e.stopPropagation(); setVoiceMode('pidgin'); }}
                     className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
                       ${voiceMode === 'pidgin'
                         ? 'bg-green-600 text-white shadow-inner'
-                        : 'bg-slate-700/80 text-white hover:bg-slate-600'}`}
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                   >
                     🇳🇬 Nigerian Pidgin
                   </button>
                 </div>
-                <p className="text-sm text-slate-300 font-medium">
+                <p className="text-sm text-gray-600 font-medium">
                   {voiceMode === 'english'
                     ? 'British English voice — clear standard accent'
                     : 'Nigerian English voice (en-NG) — familiar local accent, works offline on Chromebook'}
@@ -1353,18 +1353,18 @@ Respond ONLY with valid JSON:
                       }}
                       className={`relative rounded-2xl border-2 p-5 transition-all duration-200
                         ${isCompleted
-                          ? 'bg-emerald-950/80 border-emerald-500/40 cursor-not-allowed opacity-50 backdrop-blur-sm pointer-events-none'
+                          ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
                           : isActive
                             ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-                            : 'bg-slate-800/60 border-slate-500/70 cursor-not-allowed opacity-70'}`}
+                            : 'bg-gray-100/80 border-gray-300 cursor-not-allowed opacity-70'}`}
                     >
                       <div className="flex items-start gap-5">
-                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
-                          {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-slate-300" />}
+                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-gray-300/80'}`}>
+                          {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-gray-400" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 flex-wrap mb-1">
-                            <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>Stage {idx + 1}</span>
+                            <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>Stage {idx + 1}</span>
                             {isCompleted && <span className="font-bold text-green-400">Completed</span>}
                             {!isCompleted && scoreBadge && (
                               <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
@@ -1372,17 +1372,17 @@ Respond ONLY with valid JSON:
                               </span>
                             )}
                             {!isActive && isLocked && !isCompleted && (
-                              <span className="text-sm bg-slate-600/80 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500/60">
+                              <span className="text-sm bg-gray-300/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-400/60">
                                 {idx === 0
                                   ? '🔒 Not yet unlocked'
                                   : `🔒 Complete Stage ${idx} to unlock`}
                               </span>
                             )}
                           </div>
-                          <h3 className={`text-2xl font-bold ${isUnlocked ? 'text-white' : 'text-slate-300'}`}>{stage.name}</h3>
-                          <p className={`text-base font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-slate-400'}`}>{stage.subtitle}</p>
-                          <p className={`text-base mt-1 ${isUnlocked ? 'text-slate-300' : 'text-slate-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
-                          <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-slate-500'}`}>{(STAGE_RUBRICS[idx] ?? []).join(' · ')}</p>
+                          <h3 className={`text-2xl font-bold ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>{stage.name}</h3>
+                          <p className={`text-base font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-gray-400'}`}>{stage.subtitle}</p>
+                          <p className={`text-base mt-1 ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
+                          <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-gray-400'}`}>{(STAGE_RUBRICS[idx] ?? []).join(' · ')}</p>
                         </div>
                         {isActive && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
                       </div>
@@ -1409,20 +1409,20 @@ Respond ONLY with valid JSON:
           <EnglishDistortedBackground />
           <main className="relative z-10 flex-1 min-h-screen px-6 py-10">
             <div className="max-w-2xl mx-auto">
-              <button onClick={() => { cancel(); setView('stages'); }} className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors text-base">
+              <button onClick={() => { cancel(); setView('stages'); }} className="flex items-center gap-2 text-gray-400 hover:text-gray-900 mb-8 transition-colors text-base">
                 <ArrowLeft size={20} /> Back to Stages
               </button>
 
-              <div className="bg-slate-900 border-2 border-slate-600 rounded-2xl p-8 mb-6">
+              <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 mb-6">
                 <div className="text-center mb-7">
                   <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                     <Icon className="h-10 w-10 text-white" />
                   </div>
-                  <div className="text-base font-semibold text-slate-300 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
-                  <h2 className="text-4xl font-bold text-white">{selectedStage.name}</h2>
-                  <p className="text-lg font-medium mt-1 text-slate-200">{selectedStage.subtitle}</p>
-                  <p className="text-slate-200 text-lg mt-3">{selectedStage.description || 'Description could not be loaded.'}</p>
-                  <p className="text-slate-400 text-base mt-2">{(STAGE_RUBRICS[selectedStage.id] ?? []).join(' · ')}</p>
+                  <div className="text-base font-semibold text-gray-500 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
+                  <h2 className="text-4xl font-bold text-gray-900">{selectedStage.name}</h2>
+                  <p className="text-lg font-medium mt-1 text-gray-600">{selectedStage.subtitle}</p>
+                  <p className="text-gray-700 text-lg mt-3">{selectedStage.description || 'Description could not be loaded.'}</p>
+                  <p className="text-gray-500 text-base mt-2">{(STAGE_RUBRICS[selectedStage.id] ?? []).join(' · ')}</p>
                   <button
                     onClick={() => speak(selectedStage.voiceIntro)}
                     className="mt-4 inline-flex items-center gap-2 text-base text-teal-300 hover:text-teal-200 border border-teal-500/40 hover:border-teal-400/60 bg-teal-500/10 px-4 py-2 rounded-full transition-all"
@@ -1432,46 +1432,46 @@ Respond ONLY with valid JSON:
                 </div>
 
                 {/* ── Voice Mode — prominent selector ───────────────── */}
-                <div className="mb-6 bg-slate-800 border border-slate-600 rounded-xl p-4">
-                  <p className="text-white text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
+                <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <p className="text-gray-900 text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
                     <Volume2 size={18} className="text-teal-400" /> Choose your coach&apos;s voice
                   </p>
-                  <div className="flex rounded-xl overflow-hidden border border-slate-500">
+                  <div className="flex rounded-xl overflow-hidden border border-gray-300">
                     <button
                       onClick={() => setVoiceMode('english')}
                       className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all
                         ${voiceMode === 'english'
                           ? 'bg-blue-600 text-white'
-                          : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                     >
                       🇬🇧 British English
                     </button>
-                    <div className="w-px bg-slate-500" />
+                    <div className="w-px bg-gray-300" />
                     <button
                       onClick={() => setVoiceMode('pidgin')}
                       className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all
                         ${voiceMode === 'pidgin'
                           ? 'bg-green-600 text-white'
-                          : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                     >
                       🇳🇬 Nigerian Pidgin
                     </button>
                   </div>
-                  <p className="text-base text-slate-300 text-center mt-2">
+                  <p className="text-base text-gray-600 text-center mt-2">
                     {voiceMode === 'english' ? '🎙️ Google UK English Female — clear British accent' : '🎙️ Nigerian English voice — familiar local accent'}
                   </p>
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-white text-lg font-semibold mb-2">What would you like to talk about today?</label>
-                  <p className="text-slate-300 text-base mb-3">Choose any topic — your community, a goal, something you enjoy, a problem you want to solve.</p>
+                  <label className="block text-gray-900 text-lg font-semibold mb-2">What would you like to talk about today?</label>
+                  <p className="text-gray-600 text-base mb-3">Choose any topic — your community, a goal, something you enjoy, a problem you want to solve.</p>
                   <input
                     type="text"
                     value={topicInput}
                     onChange={e => setTopicInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') startSession(); }}
                     placeholder="e.g. My village, A business idea, Football, My family..."
-                    className="w-full bg-slate-800 border border-slate-600 text-white text-base rounded-xl px-4 py-3 focus:outline-none focus:border-teal-400 placeholder-slate-500 transition-colors"
+                    className="w-full bg-white border border-gray-300 text-gray-900 text-base rounded-xl px-4 py-3 focus:outline-none focus:border-teal-400 placeholder-gray-400 transition-colors"
                   />
                 </div>
 
@@ -1483,14 +1483,14 @@ Respond ONLY with valid JSON:
                 >
                   <Mic size={20} /> Start New Session
                 </button>
-                <div className="mt-4 flex items-center justify-center gap-2 text-slate-400 text-base">
+                <div className="mt-4 flex items-center justify-center gap-2 text-gray-500 text-base">
                   <Volume2 size={15} /><span>Your coach will speak to you — turn up your volume!</span>
                 </div>
               </div>
 
               {activeSessions.length > 0 && (
                 <div className="mb-5">
-                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-lg">
+                  <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2 text-lg">
                     <Clock size={18} className="text-teal-300" /> Active Sessions
                   </h3>
                   <div className="space-y-2">
@@ -1498,10 +1498,10 @@ Respond ONLY with valid JSON:
                       const ev = s.english_skills_evaluation;
                       const lc = ev ? LEVEL_CONFIG[ev.overall_level] : null;
                       return (
-                        <div key={s.id} className="bg-slate-800 border border-slate-600 rounded-xl p-4 flex items-center justify-between gap-3">
+                        <div key={s.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-white font-medium text-lg truncate">{s.sub_category}</p>
-                            <p className="text-slate-300 text-base mt-0.5">
+                            <p className="text-gray-900 font-medium text-lg truncate">{s.sub_category}</p>
+                            <p className="text-gray-600 text-base mt-0.5">
                               {s.updated_at ? new Date(s.updated_at).toLocaleDateString() : ''}
                               {lc && ev ? <span className={`ml-2 ${lc.color}`}>{lc.emoji} {ev.overall_level}</span> : <span className="ml-2 text-slate-500">No evaluation yet</span>}
                             </p>
@@ -1518,16 +1518,16 @@ Respond ONLY with valid JSON:
 
               {finishedSessions.length > 0 && (
                 <div>
-                  <h3 className="text-slate-200 font-semibold mb-3 flex items-center gap-2 text-lg">
+                  <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2 text-lg">
                     <CheckCircle size={18} className="text-green-400" /> Finished Sessions
-                    <span className="text-slate-400 text-base font-normal">(all sub-categories Advanced)</span>
+                    <span className="text-gray-500 text-base font-normal">(all sub-categories Advanced)</span>
                   </h3>
                   <div className="space-y-2">
                     {(finishedSessions ?? []).map(s => (
                       <div key={s.id} className="bg-green-900/60 border border-green-500/40 rounded-xl p-4 flex items-center justify-between">
                         <div>
-                          <p className="text-white font-medium text-lg">{s.sub_category}</p>
-                          <p className="text-slate-300 text-base mt-0.5">{s.updated_at ? new Date(s.updated_at).toLocaleDateString() : ''} · <span className="text-green-300">🏆 Advanced — Complete</span></p>
+                          <p className="text-gray-900 font-medium text-lg">{s.sub_category}</p>
+                          <p className="text-gray-600 text-base mt-0.5">{s.updated_at ? new Date(s.updated_at).toLocaleDateString() : ''} · <span className="text-green-600 font-semibold">🏆 Advanced — Complete</span></p>
                         </div>
                         <CheckCircle size={22} className="text-green-400 flex-shrink-0" />
                       </div>
@@ -1563,18 +1563,18 @@ Respond ONLY with valid JSON:
             )}
 
             {/* Header */}
-            <div className="bg-slate-900 border-b border-slate-600 px-4 py-3 flex-shrink-0">
+            <div className="bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
               <div className="max-w-3xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <button onClick={() => { cancel(); setView('topic'); loadStageSessions(selectedStage.name); }} className="text-slate-400 hover:text-white transition-colors p-1 flex-shrink-0">
+                  <button onClick={() => { cancel(); setView('topic'); loadStageSessions(selectedStage.name); }} className="text-gray-400 hover:text-gray-900 transition-colors p-1 flex-shrink-0">
                     <ArrowLeft size={22} />
                   </button>
                   <div className={`w-11 h-11 rounded-lg bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center flex-shrink-0`}>
                     <Icon className="h-6 w-6 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-white font-bold text-lg leading-tight">{selectedStage.name}</h3>
-                    <p className="text-slate-300 text-base truncate max-w-[240px]">Topic: {topic}</p>
+                    <h3 className="text-gray-900 font-bold text-lg leading-tight">{selectedStage.name}</h3>
+                    <p className="text-gray-500 text-base truncate max-w-[240px]">Topic: {topic}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -1588,12 +1588,12 @@ Respond ONLY with valid JSON:
                   )}
 
                   {/* Voice Mode Toggle — labeled pills */}
-                  <div className="flex rounded-lg overflow-hidden border border-slate-600">
+                  <div className="flex rounded-lg overflow-hidden border border-gray-300">
                     <button
                       onClick={() => setVoiceMode('english')}
                       title="British English voice"
-                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-slate-600
-                        ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}`}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-gray-300
+                        ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}
                     >
                       🇬🇧 <span className="hidden sm:inline">English</span>
                     </button>
@@ -1601,7 +1601,7 @@ Respond ONLY with valid JSON:
                       onClick={() => setVoiceMode('pidgin')}
                       title="Nigerian Pidgin voice"
                       className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all
-                        ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}`}
+                        ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}
                     >
                       🇳🇬 <span className="hidden sm:inline">Pidgin</span>
                     </button>
@@ -1630,7 +1630,7 @@ Respond ONLY with valid JSON:
                     <div className={`max-w-[80%] rounded-2xl px-5 py-4 text-lg leading-relaxed
                       ${msg.role === 'user'
                         ? 'bg-slate-700 text-white rounded-tr-sm'
-                        : 'bg-slate-900 border border-slate-600 text-slate-100 rounded-tl-sm'}`}
+                        : 'bg-gray-50 border border-gray-200 text-gray-800 rounded-tl-sm'}`}
                     >
                       <MessageContent content={msg.content} />
                       {msg.role === 'assistant' && (
@@ -1644,7 +1644,7 @@ Respond ONLY with valid JSON:
                     <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                       <Icon className="h-4 w-4 text-white" />
                     </div>
-                    <div className="bg-slate-900 border border-slate-600 rounded-2xl rounded-tl-sm px-5 py-3">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-5 py-3">
                       <div className="flex gap-1 items-center h-4">
                         {[0, 150, 300].map(d => (
                           <div key={d} className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
@@ -1665,7 +1665,7 @@ Respond ONLY with valid JSON:
             </div>
 
             {/* Input */}
-            <div className={`flex-shrink-0 border-t ${selectedStage.border} bg-slate-900/90 backdrop-blur px-4 pt-3 pb-4`}>
+            <div className={`flex-shrink-0 border-t ${selectedStage.border} bg-white/90 backdrop-blur px-4 pt-3 pb-4`}>
               <div className="max-w-3xl mx-auto">
                 <textarea
                   ref={inputRef}
@@ -1675,7 +1675,7 @@ Respond ONLY with valid JSON:
                   placeholder="Type your response here, or tap the mic to speak..."
                   rows={3}
                   disabled={isSending || isImproving}
-                  className="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3
+                  className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3
                     focus:outline-none focus:border-teal-400 placeholder-slate-400 resize-none text-lg
                     leading-relaxed disabled:opacity-50 transition-colors mb-2"
                 />
@@ -1685,7 +1685,7 @@ Respond ONLY with valid JSON:
                   <button
                     onClick={toggleListening}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-medium transition-all
-                      ${isListening ? 'bg-red-500 animate-pulse text-white shadow-lg shadow-red-500/40' : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'}`}
+                      ${isListening ? 'bg-red-500 animate-pulse text-white shadow-lg shadow-red-500/40' : 'bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700'}`}
                   >
                     {isListening ? <MicOff size={17} /> : <Mic size={17} />}
                     {isListening ? 'Stop' : 'Speak'}
@@ -1694,7 +1694,7 @@ Respond ONLY with valid JSON:
                     onClick={sendMessage}
                     disabled={!inputText.trim() || isSending}
                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-base font-bold transition-all
-                      ${inputText.trim() && !isSending ? `bg-gradient-to-r ${selectedStage.gradient} text-white hover:opacity-90 shadow-lg` : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                      ${inputText.trim() && !isSending ? `bg-gradient-to-r ${selectedStage.gradient} text-white hover:opacity-90 shadow-lg` : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                   >
                     <Send size={16} /> Send
                   </button>
@@ -1708,8 +1708,8 @@ Respond ONLY with valid JSON:
                     title="AI rewrites your typed text with better English, preserving your meaning"
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all border
                       ${inputText.trim() && !isImproving && !isSending
-                        ? 'bg-violet-500/20 border-violet-400/50 text-violet-300 hover:bg-violet-500/30'
-                        : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'}`}
+                        ? 'bg-violet-100 border-violet-300 text-violet-700 hover:bg-violet-200'
+                        : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
                   >
                     <Wand2 size={15} />
                     {isImproving ? 'Improving...' : 'Improve my English'}
@@ -1722,8 +1722,8 @@ Respond ONLY with valid JSON:
                     title="Save session and get your full voiced evaluation"
                     className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
                       ${!isSaving && messages.length >= 2
-                        ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/30'
-                        : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'}`}
+                        ? 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200'
+                        : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
                   >
                     <Save size={15} />
                     {isSaving ? 'Saving...' : 'Save Session'}
@@ -1735,15 +1735,15 @@ Respond ONLY with valid JSON:
                     title={userMessageCount < 2 ? 'Send at least 2 messages first' : 'Get your full proficiency evaluation'}
                     className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
                       ${!isEvaluating && userMessageCount >= 2
-                        ? `bg-slate-700 border-slate-500 text-white hover:bg-slate-600`
-                        : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'}`}
+                        ? `bg-blue-600 border-blue-500 text-white hover:bg-blue-700`
+                        : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
                   >
                     <BarChart3 size={15} />
                     {isEvaluating ? 'Evaluating...' : 'Evaluate'}
                   </button>
                 </div>
 
-                <p className="text-center text-slate-400 text-base mt-2">
+                <p className="text-center text-gray-500 text-base mt-2">
                   Enter to send · Shift+Enter for new line
                   {userMessageCount < 2 && ` · Send ${2 - userMessageCount} more message${userMessageCount === 1 ? '' : 's'} to enable evaluation`}
                 </p>
