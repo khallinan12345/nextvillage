@@ -1247,8 +1247,8 @@ Respond ONLY with valid JSON:
               </div>
               {/* ── Coach Voice Selector ──────────────────────────────── */}
               <div className="mt-5 inline-flex flex-col items-center gap-2">
-                <div className="flex items-center gap-2 text-base text-gray-800 font-medium">
-                  <Volume2 className="h-5 w-5 text-teal-600" />
+                <div className="flex items-center gap-2 text-base text-white font-medium bg-teal-600 rounded-xl px-4 py-2 shadow-lg">
+                  <Volume2 className="h-5 w-5 text-white" />
                   <span>Choose your coach&apos;s voice:</span>
                 </div>
                 <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
@@ -1272,7 +1272,7 @@ Respond ONLY with valid JSON:
                     🇳🇬 Nigerian Pidgin
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 font-medium">
+                <p className="text-sm text-white font-medium bg-teal-600 rounded-xl px-4 py-2 shadow-lg">
                   {voiceMode === 'english'
                     ? 'British English voice — clear standard accent'
                     : 'Nigerian English voice (en-NG) — familiar local accent, works offline on Chromebook'}
