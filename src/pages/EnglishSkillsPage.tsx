@@ -1227,14 +1227,14 @@ Respond ONLY with valid JSON:
           <EnglishDistortedBackground />
           <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10">
             <div className="text-center mb-10">
-              <div className="inline-flex flex-col items-center gap-1 rounded-lg bg-teal-100/80 backdrop-blur-sm p-4 mb-4">
-                <div className="flex items-center justify-center gap-3">
-                  <Globe2 className="h-12 w-12 text-teal-600 animate-pulse" />
-                  <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900">
+              <div className="bg-gradient-to-r from-teal-600 to-blue-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <Globe2 className="h-12 w-12 animate-pulse" />
+                  <h1 className="text-4xl font-bold">
                     English Skills
                   </h1>
                 </div>
-                <p className="text-xl md:text-2xl text-gray-800 max-w-2xl mx-auto">
+                <p className="text-xl text-teal-100 max-w-2xl mx-auto">
                   Grow your English communication through real conversations with an AI coach.
                   Complete each stage to unlock the next — at your own pace.
                 </p>
