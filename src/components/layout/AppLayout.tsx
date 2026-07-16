@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import Navbar from './Navbar';
-import Sidebar from './Sidebar';
 import { useAuth } from '../../hooks/useAuth';
 
 interface AppLayoutProps {
@@ -32,14 +31,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       <Navbar />
 
       <div className="flex">
-        {/* Sidebar hidden on mobile, visible md+ */}
-        {user && (
-          <div className="hidden md:block">
-            <Sidebar />
-          </div>
-        )}
-        {/* No left margin on mobile; sidebar margin only on md+ */}
-        <main className={`flex-1 min-w-0 p-6 ${user ? 'md:ml-64' : ''}`}>
+        <main className="flex-1 min-w-0 p-6">
           {children}
         </main>
       </div>
