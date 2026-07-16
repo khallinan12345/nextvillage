@@ -2057,7 +2057,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
         
         <div className="min-h-screen">
           <div 
-            className="fixed top-14 left-0 md:left-64 right-0 bottom-0 opacity-80"
+            className="fixed top-14 left-0 right-0 bottom-0 opacity-80"
             style={{
               backgroundImage: 'url("/girls_coding.png")',
               backgroundSize: 'cover',
@@ -2683,7 +2683,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
       <div className="min-h-screen">
         <div className="pl-0 pr-6 py-12 -ml-48">
           <div 
-            className="fixed top-14 left-0 md:left-64 right-0 bottom-0 opacity-80"
+            className="fixed top-14 left-0 right-0 bottom-0 opacity-80"
             style={{
               backgroundImage: 'url("/girls_coding.png")',
               backgroundSize: 'cover',
