@@ -1154,14 +1154,14 @@ LANGUAGE RULES:
         <MathDistortedBackground />
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10">
           <div className="text-center mb-10">
-            <div className="inline-flex flex-col items-center gap-1 rounded-lg bg-indigo-100/80 backdrop-blur-sm p-4 mb-4">
-              <div className="flex items-center justify-center gap-3">
-                <Sigma className="h-12 w-12 text-indigo-600 animate-pulse" />
-                <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900">
+            <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <Sigma className="h-12 w-12 animate-pulse" />
+                <h1 className="text-4xl font-bold">
                   Math Skills
                 </h1>
               </div>
-              <p className="text-xl md:text-2xl text-gray-800 max-w-2xl mx-auto">
+              <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
                 Build mathematical mastery from counting to algebra — one stage at a time, with an AI coach who meets you where you are.
               </p>
             </div>

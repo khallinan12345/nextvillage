@@ -1386,14 +1386,14 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="inline-flex flex-col items-center gap-1 rounded-lg bg-emerald-100/80 backdrop-blur-sm p-4 mb-4">
-              <div className="flex items-center justify-center gap-3">
-                <FlaskConical className="h-12 w-12 text-emerald-600 animate-pulse" />
-                <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900">
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <FlaskConical className="h-12 w-12 animate-pulse" />
+                <h1 className="text-4xl font-bold">
                   Science Skills
                 </h1>
               </div>
-              <p className="text-xl md:text-2xl text-gray-800 max-w-2xl mx-auto">
+              <p className="text-xl text-emerald-100 max-w-2xl mx-auto">
                 Build scientific reasoning first — then unlock Life Sciences and Physical Sciences pathways.
               </p>
             </div>
