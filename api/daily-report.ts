@@ -33,6 +33,7 @@ const EXCLUDED_USER_IDS = new Set([
 // ─── Organization IDs (matches assess-monthly.ts) ─────────────────────────────
 const VAI_ORG_ID       = 'c0b48eae-67af-449d-8c04-cc6950bf0982'; // 100 Black Girls / vAI
 const SOLARDERO_ORG_ID = 'a1b2c3d4-0002-0002-0002-000000000002'; // Solardero / Ibiade
+const OLOIBIRI_ORG_ID  = 'a1b2c3d4-0001-0001-0001-000000000001'; // Davidson AI Futures Lab / Oloibiri
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -98,7 +99,7 @@ async function inChunks<T>(
 // Uses the SAME.or() filter as assess-monthly.ts to ensure identical coverage.
 
 async function fetchAllCohortProfiles(): Promise<UserProfile[]> {
-  const { data: profiles } = await supabase.from("profiles").select("id, name, city, organization_id, continent").or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID},organization_id.eq.${SOLARDERO_ORG_ID}`);
+  const { data: profiles } = await supabase.from("profiles").select("id, name, city, organization_id, continent").or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID},organization_id.eq.${SOLARDERO_ORG_ID},organization_id.eq.${OLOIBIRI_ORG_ID}`);
 
   return (profiles || []).filter((p) => !EXCLUDED_USER_IDS.has(p.id));
 }

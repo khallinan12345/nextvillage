@@ -1166,12 +1166,13 @@ Return this exact JSON:
 // ─── User Discovery ───────────────────────────────────────────────────────────
 
 async function getAfricanUsersNeedingAssessment(startDate: Date, endDate: Date): Promise<string[]> {
-  // Broadened: Africa continent OR vAI org OR Solardero org
+  // Broadened: Africa continent OR vAI org OR Solardero org OR Oloibiri org
   const VAI_ORG_ID       = 'c0b48eae-67af-449d-8c04-cc6950bf0982';
   const SOLARDERO_ORG_ID = 'a1b2c3d4-0002-0002-0002-000000000002';
+  const OLOIBIRI_ORG_ID  = 'a1b2c3d4-0001-0001-0001-000000000001';
   const { data: profiles } = await supabase
     .from("profiles").select("id")
-    .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID},organization_id.eq.${SOLARDERO_ORG_ID}`);
+    .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID},organization_id.eq.${SOLARDERO_ORG_ID},organization_id.eq.${OLOIBIRI_ORG_ID}`);
   if (!profiles?.length) return [];
   const ids = profiles.map((p) => p.id).filter((id) => !EXCLUDED_USER_IDS.has(id));
 
@@ -1849,12 +1850,13 @@ async function sendEmailReport(
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) { console.warn("⚠️  RESEND_API_KEY not set"); return; }
 
-  // Broadened: Africa continent OR vAI org OR Solardero org
+  // Broadened: Africa continent OR vAI org OR Solardero org OR Oloibiri org
   const VAI_ORG_ID_SEND       = 'c0b48eae-67af-449d-8c04-cc6950bf0982';
   const SOLARDERO_ORG_ID_SEND = 'a1b2c3d4-0002-0002-0002-000000000002';
+  const OLOIBIRI_ORG_ID_SEND  = 'a1b2c3d4-0001-0001-0001-000000000001';
   const { data: africanProfiles } = await supabase
     .from("profiles").select("id, name")
-    .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID_SEND},organization_id.eq.${SOLARDERO_ORG_ID_SEND}`);
+    .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID_SEND},organization_id.eq.${SOLARDERO_ORG_ID_SEND},organization_id.eq.${OLOIBIRI_ORG_ID_SEND}`);
 
   const nameMap: Record<string, string> = {};
   for (const p of africanProfiles || []) nameMap[p.id] = p.name || "Unknown";
@@ -2212,12 +2214,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`[report] Building email for ${monthLabel}`);
     const startTime = Date.now();
     try {
-      // Broadened: Africa continent OR vAI org OR Solardero org
+      // Broadened: Africa continent OR vAI org OR Solardero org OR Oloibiri org
       const VAI_ORG_ID_RPT       = 'c0b48eae-67af-449d-8c04-cc6950bf0982';
       const SOLARDERO_ORG_ID_RPT = 'a1b2c3d4-0002-0002-0002-000000000002';
+      const OLOIBIRI_ORG_ID_RPT  = 'a1b2c3d4-0001-0001-0001-000000000001';
       const { data: africanProfiles } = await supabase
         .from("profiles").select("id, name")
-        .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID_RPT},organization_id.eq.${SOLARDERO_ORG_ID_RPT}`);
+        .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID_RPT},organization_id.eq.${SOLARDERO_ORG_ID_RPT},organization_id.eq.${OLOIBIRI_ORG_ID_RPT}`);
       const nameMap: Record<string, string> = {};
       for (const p of africanProfiles || []) nameMap[p.id] = p.name || "Unknown";
       const allIds = (africanProfiles || []).map((p) => p.id)
@@ -2838,9 +2841,10 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
         // Fetch names for the report
         const VAI_ORG_ID_ORC       = "c0b48eae-67af-449d-8c04-cc6950bf0982";
         const SOLARDERO_ORG_ID_ORC = "a1b2c3d4-0002-0002-0002-000000000002";
+        const OLOIBIRI_ORG_ID_ORC  = "a1b2c3d4-0001-0001-0001-000000000001";
         const { data: profilesForReport } = await supabase
           .from("profiles").select("id, name")
-          .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID_ORC},organization_id.eq.${SOLARDERO_ORG_ID_ORC}`);
+          .or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID_ORC},organization_id.eq.${SOLARDERO_ORG_ID_ORC},organization_id.eq.${OLOIBIRI_ORG_ID_ORC}`);
         const nameMap: Record<string, string> = {};
         for (const p of profilesForReport || []) nameMap[p.id] = p.name || "Unknown";
 
