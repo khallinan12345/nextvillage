@@ -181,7 +181,7 @@ const STAGES = [
       'Build a strong number foundation. Count, compare, order, and understand what numbers really mean — from 1 to 1,000 and beyond.',
     icon: Hash,
     gradient: 'from-yellow-500 to-amber-500',
-    glowBg: 'bg-yellow-500/20',
+    glowBg: 'bg-yellow-500/90',
     border: 'border-yellow-400/60',
     textColor: 'text-yellow-300',
     voiceIntro: `Welcome to Stage 1: Counting and Number Sense. Numbers are the language of the universe, and this is where your journey begins! In this stage, you will practise counting, comparing numbers, and understanding what numbers mean. Your AI math coach will use games, stories, and everyday examples to help numbers feel real and fun. Choose a topic you enjoy — like market stalls, animals, or family members — and your coach will bring numbers to life through it. When you are ready, type your topic and press Start New Session.`,
@@ -208,7 +208,7 @@ Coaching principles:
       'Master adding and subtracting — from single digits to 3-digit numbers with regrouping. Understand the relationship between these operations.',
     icon: Calculator,
     gradient: 'from-green-500 to-emerald-500',
-    glowBg: 'bg-green-500/20',
+    glowBg: 'bg-green-500/90',
     border: 'border-green-400/60',
     textColor: 'text-green-300',
     voiceIntro: `Welcome to Stage 2: Addition and Subtraction. This is where numbers start working for you! You will practise adding and subtracting — starting with small numbers and building all the way to hundreds. Your AI coach will create real-world problems using your chosen topic so that every calculation feels meaningful and connected to your life. When you are ready, type your topic and press Start New Session.`,
@@ -234,7 +234,7 @@ Coaching principles:
       'Unlock the power of multiplication and division — times tables, multi-digit multiplication, long division, and real-world applications.',
     icon: Sigma,
     gradient: 'from-orange-500 to-red-500',
-    glowBg: 'bg-orange-500/20',
+    glowBg: 'bg-orange-500/90',
     border: 'border-orange-400/60',
     textColor: 'text-orange-300',
     voiceIntro: `Welcome to Stage 3: Multiplication and Division. These operations are incredibly powerful — they let you work with groups and patterns far faster than counting one by one. In this stage, you will learn your times tables, how to multiply and divide larger numbers, and how these two operations are connected. Your coach will use your chosen topic to create patterns and problems that feel real. Type your topic and press Start New Session when you are ready.`,
@@ -260,7 +260,7 @@ Coaching principles:
       'Explore the world of parts and wholes. Fractions, decimals, and percentages — understand, compare, and compute with confidence.',
     icon: BookOpen,
     gradient: 'from-teal-500 to-cyan-500',
-    glowBg: 'bg-teal-500/20',
+    glowBg: 'bg-teal-500/90',
     border: 'border-teal-400/60',
     textColor: 'text-teal-300',
     voiceIntro: `Welcome to Stage 4: Fractions and Decimals. This is where many students find math gets tricky — but it does not have to be! Fractions are just ways of describing parts of things we already know. Your coach will connect fractions and decimals to your chosen topic so they feel natural and intuitive. You will practise comparing fractions, adding and subtracting them, and connecting them to decimals and percentages. Type your topic and press Start New Session.`,
@@ -286,7 +286,7 @@ Coaching principles:
       'Measure the world around you. Explore 2D and 3D shapes, area, perimeter, volume, angles, and coordinate geometry.',
     icon: Shapes,
     gradient: 'from-purple-500 to-violet-500',
-    glowBg: 'bg-purple-500/20',
+    glowBg: 'bg-purple-500/90',
     border: 'border-purple-400/60',
     textColor: 'text-purple-300',
     voiceIntro: `Welcome to Stage 5: Measurement and Geometry. Mathematics lives in the physical world — in the shapes of buildings, the sizes of fields, and the angles of roads. In this stage you will explore shapes, their properties, how to measure them, and how to work with angles and coordinates. Your coach will use your chosen context to make geometry feel alive. Type your topic and press Start New Session.`,
@@ -312,7 +312,7 @@ Coaching principles:
       'Understand proportional thinking — ratios, rates, percentages, proportions, and scaling — the bridge to algebra.',
     icon: TrendingUp,
     gradient: 'from-rose-500 to-pink-500',
-    glowBg: 'bg-rose-500/20',
+    glowBg: 'bg-rose-500/90',
     border: 'border-rose-400/60',
     textColor: 'text-rose-300',
     voiceIntro: `Welcome to Stage 6: Ratios, Rates, and Proportions. This is where mathematics starts describing relationships between things — and that is incredibly powerful. Ratios show us how quantities compare. Rates describe how one quantity changes relative to another. Proportions let us scale things up or down. These ideas are everywhere in real life: cooking, business, maps, and more. Your coach will connect everything to your chosen topic. Type it in and press Start New Session.`,
@@ -338,7 +338,7 @@ Coaching principles:
       'Think algebraically — variables, expressions, equations, inequalities, linear functions, and geometric proof. Welcome to real mathematics.',
     icon: FunctionSquare,
     gradient: 'from-indigo-500 to-blue-500',
-    glowBg: 'bg-indigo-500/20',
+    glowBg: 'bg-indigo-500/90',
     border: 'border-indigo-400/60',
     textColor: 'text-indigo-300',
     voiceIntro: `Welcome to Stage 7: Algebra and Geometry. You have arrived at the frontier of school mathematics. Algebra is the language mathematicians use to describe patterns, relationships, and unknowns. Geometry at this level proves WHY shapes work the way they do — not just what their measurements are. Your coach will meet you exactly where you are and guide you step by step through variables, equations, functions, and geometric reasoning. Type your topic or a specific area you want to work on, and press Start New Session.`,
@@ -373,9 +373,9 @@ const STAGE_RUBRICS: Record<number, string[]> = {
 
 const LEVEL_CONFIG: Record<ProficiencyLevel, { color: string; bg: string; border: string; emoji: string }> = {
   Emerging:   { color: 'text-red-600',    bg: 'bg-red-100',       border: 'border-red-300',   emoji: '🌱' },
-  Developing: { color: 'text-blue-300',   bg: 'bg-blue-900/40',    border: 'border-blue-500',  emoji: '📈' },
-  Proficient: { color: 'text-green-300',  bg: 'bg-green-900/40',   border: 'border-green-500', emoji: '✅' },
-  Advanced:   { color: 'text-yellow-300', bg: 'bg-yellow-900/40',  border: 'border-yellow-500',emoji: '🏆' },
+  Developing: { color: 'text-blue-700',   bg: 'bg-blue-100',    border: 'border-blue-300',  emoji: '📈' },
+  Proficient: { color: 'text-green-700',  bg: 'bg-green-100',   border: 'border-green-300', emoji: '✅' },
+  Advanced:   { color: 'text-yellow-700', bg: 'bg-yellow-100',  border: 'border-yellow-300',emoji: '🏆' },
 };
 
 // ─── Evaluation function ──────────────────────────────────────────────────────
@@ -528,7 +528,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
       {lines.map((line, i) => {
         if (line.startsWith('✅')) {
           return (
-            <p key={i} className="text-green-300 font-semibold">
+            <p key={i} className="text-green-700 font-semibold">
               {line}
             </p>
           );
@@ -678,14 +678,14 @@ const EvaluationModal: React.FC<{
           if (growthSkills.length === 0) return null;
           return (
             <div className="px-6 pb-4">
-              <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4">
-                <p className="text-amber-200 text-xs font-semibold uppercase tracking-wider mb-2">
+              <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
+                <p className="text-amber-800 text-xs font-semibold uppercase tracking-wider mb-2">
                   🎯 Focus here next to grow the most
                 </p>
                 <ul className="space-y-1">
                   {growthSkills.map((s, i) => (
                     <li key={i} className="text-gray-600 text-sm flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">•</span>
+                      <span className="text-amber-600 mt-0.5">•</span>
                       <span><strong className="text-gray-900">{s.name}</strong> — {s.evidence}</span>
                     </li>
                   ))}
@@ -698,16 +698,16 @@ const EvaluationModal: React.FC<{
         {/* Advancement status */}
         <div className="px-6 pb-4">
           {evaluation.is_complete ? (
-            <div className="bg-green-500/20 border border-green-400/40 rounded-xl p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-300 flex-shrink-0 mt-0.5" />
-              <p className="text-green-200 text-sm font-medium">
+            <div className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
+              <p className="text-green-800 text-sm font-medium">
                 🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete and the next stage is now unlocked!
               </p>
             </div>
           ) : evaluation.can_advance ? (
-            <div className="bg-blue-500/20 border border-blue-400/40 rounded-xl p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-blue-300 flex-shrink-0 mt-0.5" />
-              <p className="text-blue-200 text-sm font-medium">
+            <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-blue-700 flex-shrink-0 mt-0.5" />
+              <p className="text-blue-800 text-sm font-medium">
                 ✅ You are <strong>Proficient</strong> in all skill areas — the next stage is unlocked! Keep practising here to reach Advanced and fully master this stage.
               </p>
             </div>
@@ -715,7 +715,7 @@ const EvaluationModal: React.FC<{
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
               <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
               <p className="text-gray-600 text-sm">
-                Keep going! Reach <strong className="text-blue-300">Proficient</strong> in all skill areas to unlock the next stage.
+                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to unlock the next stage.
               </p>
             </div>
           )}
@@ -723,8 +723,8 @@ const EvaluationModal: React.FC<{
 
         {/* Coach note */}
         <div className="px-6 pb-4">
-          <div className="bg-indigo-500/10 border border-indigo-400/30 rounded-xl p-4 text-center">
-            <p className="text-indigo-200 text-sm">
+          <div className="bg-indigo-50 border border-indigo-300 rounded-xl p-4 text-center">
+            <p className="text-indigo-800 text-sm">
               🧮 Every mathematician started exactly where you are. You are building something real. Keep going!
             </p>
           </div>
@@ -734,7 +734,7 @@ const EvaluationModal: React.FC<{
         <div className="px-6 pb-6 flex gap-3">
           <button
             onClick={() => onSpeak(buildSpokenEvaluation(evaluation))}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-indigo-400/40 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-indigo-300 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-all"
           >
             <Volume2 size={15} /> Hear Again
           </button>
@@ -1154,15 +1154,17 @@ LANGUAGE RULES:
         <MathDistortedBackground />
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10">
           <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Sigma className="h-12 w-12 text-indigo-400 animate-pulse" />
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-300 via-cyan-300 to-teal-300 bg-clip-text text-transparent">
-                Math Skills
-              </h1>
+            <div className="inline-flex flex-col items-center gap-1 rounded-lg bg-indigo-100/80 backdrop-blur-sm p-4 mb-4">
+              <div className="flex items-center justify-center gap-3">
+                <Sigma className="h-12 w-12 text-indigo-600 animate-pulse" />
+                <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900">
+                  Math Skills
+                </h1>
+              </div>
+              <p className="text-xl md:text-2xl text-gray-800 max-w-2xl mx-auto">
+                Build mathematical mastery from counting to algebra — one stage at a time, with an AI coach who meets you where you are.
+              </p>
             </div>
-            <p className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto">
-              Build mathematical mastery from counting to algebra — one stage at a time, with an AI coach who meets you where you are.
-            </p>
             <div className="mt-4">
               <PidginTooltip
                 originalText="Build mathematical mastery from counting to algebra — one stage at a time, with an AI coach who meets you where you are."
@@ -1173,7 +1175,7 @@ LANGUAGE RULES:
             {/* Voice selector */}
             <div className="mt-5 inline-flex flex-col items-center gap-2">
               <div className="flex items-center gap-2 text-base text-gray-800 font-medium">
-                <Volume2 className="h-5 w-5 text-indigo-300" />
+                <Volume2 className="h-5 w-5 text-indigo-600" />
                 <span>Choose your coach&apos;s voice:</span>
               </div>
               <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
@@ -1217,7 +1219,7 @@ LANGUAGE RULES:
                   🔊 Tap here to enable voice
                 </button>
               ) : (
-                <div className="flex items-center gap-2 text-indigo-300 text-sm font-semibold">
+                <div className="flex items-center gap-2 text-indigo-700 text-sm font-semibold">
                   <Volume2 className="h-4 w-4" /> Voice is on
                 </div>
               )}
@@ -1262,10 +1264,10 @@ LANGUAGE RULES:
                     }}
                     className={`relative rounded-2xl border-2 p-5 transition-all duration-200
                       ${isCompleted
-                        ? 'bg-emerald-950/80 border-emerald-500/40 cursor-not-allowed opacity-50 backdrop-blur-sm pointer-events-none'
+                        ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
                         : isActive
-                          ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-                          : 'bg-gray-100/80 border-gray-300 cursor-not-allowed opacity-70'}`}
+                          ? `${stage.glowBg} ${stage.border} backdrop-blur-sm cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+                          : 'bg-gray-100/80 border-gray-300 backdrop-blur-sm cursor-not-allowed opacity-70'}`}
                   >
                     <div className="flex items-start gap-5">
                       <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
@@ -1279,7 +1281,7 @@ LANGUAGE RULES:
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap mb-1">
                           <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>Stage {idx + 1}</span>
-                          {isCompleted && <span className="font-bold text-green-400">Completed</span>}
+                          {isCompleted && <span className="font-bold text-green-700">Completed</span>}
                           {!isCompleted && scoreBadge && (
                             <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
                               {scoreBadge}
@@ -1342,7 +1344,7 @@ LANGUAGE RULES:
                 <p className="text-gray-500 text-base mt-2">{(STAGE_RUBRICS[selectedStage.id] ?? []).join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}
-                  className="mt-4 inline-flex items-center gap-2 text-base text-indigo-300 hover:text-indigo-200 border border-indigo-500/40 hover:border-indigo-400/60 bg-indigo-500/10 px-4 py-2 rounded-full transition-all"
+                  className="mt-4 inline-flex items-center gap-2 text-base text-indigo-700 hover:text-indigo-800 border border-indigo-300 hover:border-indigo-400 bg-indigo-100 px-4 py-2 rounded-full transition-all"
                 >
                   <Volume2 size={16} /> Hear instructions again
                 </button>
@@ -1351,7 +1353,7 @@ LANGUAGE RULES:
               {/* Voice mode */}
               <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
                 <p className="text-gray-900 text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
-                  <Volume2 size={18} className="text-indigo-400" /> Choose your coach&apos;s voice
+                  <Volume2 size={18} className="text-indigo-600" /> Choose your coach&apos;s voice
                 </p>
                 <div className="flex rounded-xl overflow-hidden border border-gray-300">
                   <button
@@ -1443,21 +1445,21 @@ LANGUAGE RULES:
             {finishedSessions.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <CheckCircle size={18} className="text-green-400" /> Completed Sessions
+                  <CheckCircle size={18} className="text-green-600" /> Completed Sessions
                 </h3>
                 <div className="space-y-2">
                   {(finishedSessions ?? []).map(session => (
                     <div
                       key={session.id}
                       onClick={() => resumeSession(session)}
-                      className="bg-green-900/20 border border-green-500/40 rounded-xl p-4 cursor-pointer hover:bg-green-900/30 transition-all"
+                      className="bg-green-100 border border-green-300 rounded-xl p-4 cursor-pointer hover:bg-green-200 transition-all"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-green-300 font-semibold text-base truncate">🏆 {session.sub_category}</p>
+                          <p className="text-green-700 font-semibold text-base truncate">🏆 {session.sub_category}</p>
                           <p className="text-gray-500 text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
                         </div>
-                        <ChevronRight size={20} className="text-green-400" />
+                        <ChevronRight size={20} className="text-green-600" />
                       </div>
                     </div>
                   ))}
@@ -1640,7 +1642,7 @@ LANGUAGE RULES:
                   title="AI polishes your mathematical explanation while keeping your ideas"
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${inputText.trim() && !isImproving && !isSending
-                      ? 'bg-violet-500/20 border-violet-400/50 text-violet-300 hover:bg-violet-500/30'
+                      ? 'bg-violet-100 border-violet-300 text-violet-700 hover:bg-violet-200'
                       : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
                 >
                   <Wand2 size={15} />
@@ -1653,7 +1655,7 @@ LANGUAGE RULES:
                   title="Save session and get your full evaluation"
                   className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${!isSaving && messages.length >= 2
-                      ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/30'
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200'
                       : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
                 >
                   <Save size={15} />
