@@ -519,12 +519,12 @@ const CommunityBackground: React.FC = () => {
           </filter>
         </defs>
       </svg>
-      <div className="fixed top-14 left-0 md:left-64 right-0 bottom-0" style={{ backgroundImage: "url('/background_AI_ambassador.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}>
+      <div className="fixed top-14 left-0 right-0 bottom-0" style={{ backgroundImage: "url('/background_AI_ambassador.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}>
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/65 via-teal-900/55 to-green-900/65" />
         <div className="absolute inset-0 bg-black/15" />
       </div>
       {moving && (
-        <div className="fixed top-14 left-0 md:left-64 right-0 bottom-0 pointer-events-none" style={{ backgroundImage: "url('/background_AI_ambassador.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 1, filter: 'url(#community-distortion)', WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)`, maskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)` }}>
+        <div className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none" style={{ backgroundImage: "url('/background_AI_ambassador.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 1, filter: 'url(#community-distortion)', WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)`, maskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)` }}>
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/65 via-teal-900/55 to-green-900/65" />
         </div>
       )}

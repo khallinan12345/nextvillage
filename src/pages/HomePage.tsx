@@ -411,7 +411,7 @@ const HomePage: React.FC = () => {
         <main className="flex-1 relative overflow-x-hidden">
           {/* Static background — matches PublicLandingPage */}
           <div
-            className="fixed top-14 left-0 md:left-64 right-0 bottom-0"
+            className="fixed top-14 left-0 right-0 bottom-0"
             style={{
               backgroundImage: "url('/home_page_africa.png')",
               backgroundSize: 'cover',

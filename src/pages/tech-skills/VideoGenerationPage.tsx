@@ -1045,7 +1045,7 @@ Return ONLY the improved text. No explanation, no preamble.`
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
       {/* Cinematic background */}
-      <div className="fixed top-14 left-0 md:left-64 right-0 bottom-0 overflow-hidden" style={{ zIndex: 0 }}>
+      <div className="fixed top-14 left-0 right-0 bottom-0 overflow-hidden" style={{ zIndex: 0 }}>
         <div className="absolute inset-0 bg-slate-950" />
         <div className="absolute inset-0 opacity-20" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,

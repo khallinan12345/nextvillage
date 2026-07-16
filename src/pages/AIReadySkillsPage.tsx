@@ -155,13 +155,13 @@ const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
         </defs>
       </svg>
 
-      <div className="fixed top-14 left-0 md:left-64 right-0 bottom-0" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 0 }}>
+      <div className="fixed top-14 left-0 right-0 bottom-0" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 0 }}>
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
         <div className="absolute inset-0 bg-white/10" />
       </div>
 
       {isMouseMoving && (
-        <div className="fixed top-14 left-0 md:left-64 right-0 bottom-0 pointer-events-none transition-opacity duration-100" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 1, filter: 'url(#ai-ready-skills-distortion)', WebkitMaskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }}>
+        <div className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none transition-opacity duration-100" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 1, filter: 'url(#ai-ready-skills-distortion)', WebkitMaskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }}>
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
           <div className="absolute inset-0 bg-white/10" />
         </div>
