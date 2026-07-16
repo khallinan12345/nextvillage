@@ -448,7 +448,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
             <React.Fragment key={i}>
               {i > 0 && <br />}
               <br />
-              <strong className="text-green-400 font-bold">{line}</strong>
+              <strong className="text-green-700 font-bold">{line}</strong>
               <br />
             </React.Fragment>
           );
@@ -655,14 +655,14 @@ const EvaluationModal: React.FC<{
           if (growthSkills.length === 0) return null;
           return (
             <div className="px-6 pb-4">
-              <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4">
-                <p className="text-amber-200 text-xs font-semibold uppercase tracking-wider mb-2">
+              <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
+                <p className="text-amber-800 text-xs font-semibold uppercase tracking-wider mb-2">
                   🎯 Focus here next to improve the most
                 </p>
                 <ul className="space-y-1">
                   {growthSkills.map((s, i) => (
                     <li key={i} className="text-gray-600 text-sm flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">•</span>
+                      <span className="text-amber-600 mt-0.5">•</span>
                       <span><strong className="text-gray-900">{s.name}</strong> — {s.evidence}</span>
                     </li>
                   ))}
@@ -675,16 +675,16 @@ const EvaluationModal: React.FC<{
         {/* Advancement status */}
         <div className="px-6 pb-4">
           {evaluation.is_complete ? (
-            <div className="bg-green-500/20 border border-green-400/40 rounded-xl p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-300 flex-shrink-0 mt-0.5" />
-              <p className="text-green-200 text-sm font-medium">
+            <div className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
+              <p className="text-green-800 text-sm font-medium">
                 🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete and the next stage is now unlocked!
               </p>
             </div>
           ) : evaluation.can_advance ? (
-            <div className="bg-blue-500/20 border border-blue-400/40 rounded-xl p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-blue-300 flex-shrink-0 mt-0.5" />
-              <p className="text-blue-200 text-sm font-medium">
+            <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-blue-700 flex-shrink-0 mt-0.5" />
+              <p className="text-blue-800 text-sm font-medium">
                 ✅ You are <strong>Proficient</strong> in all skill areas — the next stage is unlocked! Keep practising here to reach Advanced and fully complete this stage.
               </p>
             </div>
@@ -692,7 +692,7 @@ const EvaluationModal: React.FC<{
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
               <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
               <p className="text-gray-600 text-sm">
-                Keep going! Reach <strong className="text-blue-300">Proficient</strong> in all skill areas to unlock the next stage.
+                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to unlock the next stage.
               </p>
             </div>
           )}
@@ -700,8 +700,8 @@ const EvaluationModal: React.FC<{
 
         {/* Reminder the coach is with them */}
         <div className="px-6 pb-4">
-          <div className="bg-teal-500/10 border border-teal-400/30 rounded-xl p-4 text-center">
-            <p className="text-teal-200 text-sm">
+          <div className="bg-teal-50 border border-teal-300 rounded-xl p-4 text-center">
+            <p className="text-teal-800 text-sm">
               💚 I am here with you every step of the way. Keep going — you are doing something amazing!
             </p>
           </div>
@@ -711,7 +711,7 @@ const EvaluationModal: React.FC<{
         <div className="px-6 pb-6 flex gap-3">
           <button
             onClick={() => onSpeak(buildSpokenEvaluation(evaluation))}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-teal-400/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-teal-300 bg-teal-100 text-teal-700 hover:bg-teal-200 transition-all"
           >
             <Volume2 size={15} /> Hear Again
           </button>
@@ -1227,16 +1227,18 @@ Respond ONLY with valid JSON:
           <EnglishDistortedBackground />
           <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10">
             <div className="text-center mb-10">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Globe2 className="h-12 w-12 text-teal-400 animate-pulse" />
-                <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-teal-300 via-emerald-300 to-blue-300 bg-clip-text text-transparent">
-                  English Skills
-                </h1>
+              <div className="inline-flex flex-col items-center gap-1 rounded-lg bg-teal-100/80 backdrop-blur-sm p-4 mb-4">
+                <div className="flex items-center justify-center gap-3">
+                  <Globe2 className="h-12 w-12 text-teal-600 animate-pulse" />
+                  <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900">
+                    English Skills
+                  </h1>
+                </div>
+                <p className="text-xl md:text-2xl text-gray-800 max-w-2xl mx-auto">
+                  Grow your English communication through real conversations with an AI coach.
+                  Complete each stage to unlock the next — at your own pace.
+                </p>
               </div>
-              <p className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto">
-                Grow your English communication through real conversations with an AI coach.
-                Complete each stage to unlock the next — at your own pace.
-              </p>
               <div className="mt-4">
                 <PidginTooltip
                   originalText="Grow your English communication through real conversations with an AI coach. Complete each stage to unlock the next — at your own pace."
@@ -1246,7 +1248,7 @@ Respond ONLY with valid JSON:
               {/* ── Coach Voice Selector ──────────────────────────────── */}
               <div className="mt-5 inline-flex flex-col items-center gap-2">
                 <div className="flex items-center gap-2 text-base text-gray-800 font-medium">
-                  <Volume2 className="h-5 w-5 text-teal-300" />
+                  <Volume2 className="h-5 w-5 text-teal-600" />
                   <span>Choose your coach&apos;s voice:</span>
                 </div>
                 <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
@@ -1294,7 +1296,7 @@ Respond ONLY with valid JSON:
                     🔊 Tap here to enable voice
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2 text-teal-300 text-sm font-semibold">
+                  <div className="flex items-center gap-2 text-teal-700 text-sm font-semibold">
                     <Volume2 className="h-4 w-4" /> Voice is on
                   </div>
                 )}
@@ -1355,8 +1357,8 @@ Respond ONLY with valid JSON:
                         ${isCompleted
                           ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
                           : isActive
-                            ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-                            : 'bg-gray-100/80 border-gray-300 cursor-not-allowed opacity-70'}`}
+                            ? `${stage.glowBg} ${stage.border} backdrop-blur-sm cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+                            : 'bg-gray-100/80 border-gray-300 backdrop-blur-sm cursor-not-allowed opacity-70'}`}
                     >
                       <div className="flex items-start gap-5">
                         <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-gray-300/80'}`}>
@@ -1365,7 +1367,7 @@ Respond ONLY with valid JSON:
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 flex-wrap mb-1">
                             <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>Stage {idx + 1}</span>
-                            {isCompleted && <span className="font-bold text-green-400">Completed</span>}
+                            {isCompleted && <span className="font-bold text-green-700">Completed</span>}
                             {!isCompleted && scoreBadge && (
                               <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
                                 {scoreBadge}
@@ -1425,7 +1427,7 @@ Respond ONLY with valid JSON:
                   <p className="text-gray-500 text-base mt-2">{(STAGE_RUBRICS[selectedStage.id] ?? []).join(' · ')}</p>
                   <button
                     onClick={() => speak(selectedStage.voiceIntro)}
-                    className="mt-4 inline-flex items-center gap-2 text-base text-teal-300 hover:text-teal-200 border border-teal-500/40 hover:border-teal-400/60 bg-teal-500/10 px-4 py-2 rounded-full transition-all"
+                    className="mt-4 inline-flex items-center gap-2 text-base text-teal-700 hover:text-teal-800 border border-teal-300 hover:border-teal-400 bg-teal-100 px-4 py-2 rounded-full transition-all"
                   >
                     <Volume2 size={16} /> Hear instructions again
                   </button>
@@ -1434,7 +1436,7 @@ Respond ONLY with valid JSON:
                 {/* ── Voice Mode — prominent selector ───────────────── */}
                 <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
                   <p className="text-gray-900 text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
-                    <Volume2 size={18} className="text-teal-400" /> Choose your coach&apos;s voice
+                    <Volume2 size={18} className="text-teal-600" /> Choose your coach&apos;s voice
                   </p>
                   <div className="flex rounded-xl overflow-hidden border border-gray-300">
                     <button
@@ -1491,7 +1493,7 @@ Respond ONLY with valid JSON:
               {activeSessions.length > 0 && (
                 <div className="mb-5">
                   <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2 text-lg">
-                    <Clock size={18} className="text-teal-300" /> Active Sessions
+                    <Clock size={18} className="text-teal-700" /> Active Sessions
                   </h3>
                   <div className="space-y-2">
                     {(activeSessions ?? []).map(s => {
@@ -1519,17 +1521,17 @@ Respond ONLY with valid JSON:
               {finishedSessions.length > 0 && (
                 <div>
                   <h3 className="text-gray-900 font-semibold mb-3 flex items-center gap-2 text-lg">
-                    <CheckCircle size={18} className="text-green-400" /> Finished Sessions
+                    <CheckCircle size={18} className="text-green-600" /> Finished Sessions
                     <span className="text-gray-500 text-base font-normal">(all sub-categories Advanced)</span>
                   </h3>
                   <div className="space-y-2">
                     {(finishedSessions ?? []).map(s => (
-                      <div key={s.id} className="bg-green-900/60 border border-green-500/40 rounded-xl p-4 flex items-center justify-between">
+                      <div key={s.id} className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-center justify-between">
                         <div>
                           <p className="text-gray-900 font-medium text-lg">{s.sub_category}</p>
                           <p className="text-gray-600 text-base mt-0.5">{s.updated_at ? new Date(s.updated_at).toLocaleDateString() : ''} · <span className="text-green-600 font-semibold">🏆 Advanced — Complete</span></p>
                         </div>
-                        <CheckCircle size={22} className="text-green-400 flex-shrink-0" />
+                        <CheckCircle size={22} className="text-green-600 flex-shrink-0" />
                       </div>
                     ))}
                   </div>

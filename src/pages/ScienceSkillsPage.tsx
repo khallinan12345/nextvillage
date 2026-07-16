@@ -165,7 +165,7 @@ const REASONING_STAGES = [
     description: 'Develop the habit of careful observation. Learn to ask precise, testable questions about the world around you — the foundation of all science.',
     icon: Eye,
     gradient: 'from-sky-500 to-blue-500',
-    glowBg: 'bg-sky-500/20',
+    glowBg: 'bg-sky-500/90',
     border: 'border-sky-400/60',
     textColor: 'text-sky-300',
     voiceIntro: `Welcome to Stage 1: Observation and Questioning. Every great scientific discovery began with someone paying close attention to the world around them. In this stage, you will practise making careful observations and turning what you notice into precise, testable questions. Your AI science coach will use your chosen context to help you see science everywhere in your daily life. Choose a topic you are curious about and press Start New Session.`,
@@ -190,7 +190,7 @@ Coaching principles:
     description: 'Transform questions into testable predictions. Learn the structure of a scientific hypothesis and understand the difference between a guess and a reasoned prediction.',
     icon: Lightbulb,
     gradient: 'from-yellow-500 to-amber-500',
-    glowBg: 'bg-yellow-500/20',
+    glowBg: 'bg-yellow-500/90',
     border: 'border-yellow-400/60',
     textColor: 'text-yellow-300',
     voiceIntro: `Welcome to Stage 2: Hypothesis and Prediction. A hypothesis is not just a guess — it is a reasoned prediction based on what you already know. In this stage, you will learn to turn your observations and questions into well-formed hypotheses, and to make specific, testable predictions from them. Your coach will connect every concept to your chosen context. Type your topic and press Start New Session.`,
@@ -214,7 +214,7 @@ Coaching principles:
     description: 'Design investigations to test your hypotheses. Understand variables, controls, and what makes evidence reliable and trustworthy.',
     icon: FlaskConical,
     gradient: 'from-violet-500 to-purple-500',
-    glowBg: 'bg-violet-500/20',
+    glowBg: 'bg-violet-500/90',
     border: 'border-violet-400/60',
     textColor: 'text-violet-300',
     voiceIntro: `Welcome to Stage 3: Investigation and Evidence. A hypothesis is only as good as the test you design to examine it. In this stage, you will learn how to design fair, reliable investigations — what to change, what to keep the same, and how to collect evidence you can trust. Your coach will guide you through experimental design using your chosen context. Type your topic and press Start New Session.`,
@@ -238,7 +238,7 @@ Coaching principles:
     description: 'Collect, organise, and analyse data to find patterns. Learn to distinguish signal from noise, and evidence from opinion.',
     icon: BarChart3,
     gradient: 'from-rose-500 to-pink-500',
-    glowBg: 'bg-rose-500/20',
+    glowBg: 'bg-rose-500/90',
     border: 'border-rose-400/60',
     textColor: 'text-rose-300',
     voiceIntro: `Welcome to Stage 4: Data, Patterns, and Analysis. Collecting data is only the beginning — the real scientific skill is making sense of it. In this stage, you will practise organising data, identifying patterns, and drawing conclusions that are actually supported by your evidence. Your coach will use your chosen context to make data analysis feel meaningful and real. Type your topic and press Start New Session.`,
@@ -262,7 +262,7 @@ Coaching principles:
     description: 'Communicate your findings clearly and honestly. Learn to write up investigations, evaluate claims, and engage with the scientific community of practice.',
     icon: MessageSquare,
     gradient: 'from-teal-500 to-green-500',
-    glowBg: 'bg-teal-500/20',
+    glowBg: 'bg-teal-500/90',
     border: 'border-teal-400/60',
     textColor: 'text-teal-300',
     voiceIntro: `Welcome to Stage 5: Scientific Communication. Science only advances when findings are shared clearly and honestly. In this stage, you will practise writing up your investigations, evaluating scientific claims you encounter in the world, and understanding peer review. Your coach will help you communicate science powerfully using your chosen context. This is the final Reasoning stage — completing it unlocks both pathway tracks. Type your topic and press Start New Session.`,
@@ -291,7 +291,7 @@ const LIFE_STAGES = [
     description: 'Explore the cell as the fundamental unit of life. Understand what all living things share and what makes each type of organism unique.',
     icon: Microscope,
     gradient: 'from-green-500 to-emerald-500',
-    glowBg: 'bg-green-500/20',
+    glowBg: 'bg-green-500/90',
     border: 'border-green-400/60',
     textColor: 'text-green-300',
     voiceIntro: `Welcome to Life Sciences Stage 1: Cells and Life Processes. Every living thing — from the smallest bacterium to the tallest iroko tree — is made of cells. In this stage, you will explore what cells are, how they work, and what characteristics define all living things. Your coach will connect everything to your chosen context. Type your topic and press Start New Session.`,
@@ -315,7 +315,7 @@ Coaching principles:
     description: 'From cells to tissues to organs to systems — understand how complex organisms are organised, and how body systems work together to sustain life.',
     icon: Dna,
     gradient: 'from-lime-500 to-green-500',
-    glowBg: 'bg-lime-500/20',
+    glowBg: 'bg-lime-500/90',
     border: 'border-lime-400/60',
     textColor: 'text-lime-300',
     voiceIntro: `Welcome to Life Sciences Stage 2: Organisms and Systems. A single cell can only do so much. Complex living things organise their cells into tissues, organs, and systems — each with a specialised role. In this stage, you will explore how major body systems work and how they cooperate to keep an organism alive. Type your topic and press Start New Session.`,
@@ -338,7 +338,7 @@ Coaching principles:
     description: 'Explore how organisms interact with each other and their environment. Food webs, energy flow, nutrient cycles, and the fragile balance of ecosystems.',
     icon: TreePine,
     gradient: 'from-emerald-500 to-teal-500',
-    glowBg: 'bg-emerald-500/20',
+    glowBg: 'bg-emerald-500/90',
     border: 'border-emerald-400/60',
     textColor: 'text-emerald-300',
     voiceIntro: `Welcome to Life Sciences Stage 3: Ecosystems and Interdependence. No organism lives in isolation. Every living thing is connected to others and to its physical environment in a web of relationships. In this stage, you will explore ecosystems, food webs, energy flow, and the interdependence of life — using the rich ecosystems of the Niger Delta and West Africa as your primary context. Type your topic and press Start New Session.`,
@@ -362,7 +362,7 @@ Coaching principles:
     description: 'Understand how traits are inherited, the role of DNA and genes, and the basics of Mendelian genetics and modern genomics.',
     icon: Dna,
     gradient: 'from-purple-500 to-violet-500',
-    glowBg: 'bg-purple-500/20',
+    glowBg: 'bg-purple-500/90',
     border: 'border-purple-400/60',
     textColor: 'text-purple-300',
     voiceIntro: `Welcome to Life Sciences Stage 4: Genetics and Heredity. Why do children look like their parents? Why do some traits skip a generation? The answers lie in DNA — the molecule that carries the instructions for life. In this stage, you will explore how traits are inherited and how genetics shapes living things. Type your topic and press Start New Session.`,
@@ -386,7 +386,7 @@ Coaching principles:
     description: 'Understand natural selection, adaptation, and how life on Earth diversified over billions of years into the extraordinary biodiversity we see today.',
     icon: Globe,
     gradient: 'from-cyan-500 to-blue-500',
-    glowBg: 'bg-cyan-500/20',
+    glowBg: 'bg-cyan-500/90',
     border: 'border-cyan-400/60',
     textColor: 'text-cyan-300',
     voiceIntro: `Welcome to Life Sciences Stage 5: Evolution and Biodiversity. How did life on Earth produce millions of different species — from bacteria to blue whales? The answer is evolution by natural selection. In this final Life Sciences stage, you will explore the evidence for evolution, how natural selection works, and how it produced the incredible biodiversity of our planet. Type your topic and press Start New Session.`,
@@ -415,7 +415,7 @@ const PHYSICAL_STAGES = [
     description: 'Explore the nature of matter — atoms, elements, compounds, mixtures, and the properties that let us identify and use different materials.',
     icon: Atom,
     gradient: 'from-orange-500 to-red-500',
-    glowBg: 'bg-orange-500/20',
+    glowBg: 'bg-orange-500/90',
     border: 'border-orange-400/60',
     textColor: 'text-orange-300',
     voiceIntro: `Welcome to Physical Sciences Stage 1: Matter and Its Properties. Everything around you — the air you breathe, the water you drink, the ground beneath your feet — is made of matter. In this stage, you will explore what matter is made of, how we classify it, and what properties we use to identify and work with different materials. Type your topic and press Start New Session.`,
@@ -439,7 +439,7 @@ Coaching principles:
     description: 'Explore Newton\'s laws, gravity, friction, pressure, and the physics of motion — from falling mangoes to rockets leaving Earth.',
     icon: Zap,
     gradient: 'from-yellow-500 to-orange-500',
-    glowBg: 'bg-yellow-500/20',
+    glowBg: 'bg-yellow-500/90',
     border: 'border-yellow-400/60',
     textColor: 'text-yellow-300',
     voiceIntro: `Welcome to Physical Sciences Stage 2: Forces and Motion. Why does a mango fall straight down? Why does a canoe move when you paddle? Why does it take longer to stop a loaded truck than an empty one? The answers are in the physics of forces and motion. Type your topic and press Start New Session.`,
@@ -463,7 +463,7 @@ Coaching principles:
     description: 'Understand energy transfer, waves, the electromagnetic spectrum, and the physics of light and sound that underpin modern communication and technology.',
     icon: Lightbulb,
     gradient: 'from-amber-500 to-yellow-500',
-    glowBg: 'bg-amber-500/20',
+    glowBg: 'bg-amber-500/90',
     border: 'border-amber-400/60',
     textColor: 'text-amber-300',
     voiceIntro: `Welcome to Physical Sciences Stage 3: Energy, Waves, and Light. Energy is the capacity to do work — and it is everywhere, taking countless forms and constantly transferring between them. Waves carry energy across space, and light is a wave that makes vision, communication, and even solar power possible. Type your topic and press Start New Session.`,
@@ -487,7 +487,7 @@ Coaching principles:
     description: 'Understand circuits, current, voltage, resistance, and magnetism — the physics that powers every electronic device on Earth.',
     icon: Zap,
     gradient: 'from-blue-500 to-indigo-500',
-    glowBg: 'bg-blue-500/20',
+    glowBg: 'bg-blue-500/90',
     border: 'border-blue-400/60',
     textColor: 'text-blue-300',
     voiceIntro: `Welcome to Physical Sciences Stage 4: Electricity and Magnetism. Every device you use — phone, solar panel, generator — runs on the physics you will learn in this stage. Understanding electricity is understanding power, both literally and in terms of who has access to energy in our world. Type your topic and press Start New Session.`,
@@ -511,7 +511,7 @@ Coaching principles:
     description: 'Explore Earth systems, the solar system, climate science, and humanity\'s relationship with the planet — the science behind the most urgent issues of our time.',
     icon: Globe,
     gradient: 'from-teal-500 to-emerald-500',
-    glowBg: 'bg-teal-500/20',
+    glowBg: 'bg-teal-500/90',
     border: 'border-teal-400/60',
     textColor: 'text-teal-300',
     voiceIntro: `Welcome to Physical Sciences Stage 5: Earth, Space, and Climate. We live on a dynamic planet in an extraordinary solar system. In this final Physical Sciences stage, you will explore how Earth works as a system, how the solar system is structured, and how human activities are changing Earth's climate — and what the science says about solutions. Type your topic and press Start New Session.`,
@@ -565,9 +565,9 @@ const STAGE_RUBRICS: Record<Pathway, Record<number, string[]>> = {
 
 const LEVEL_CONFIG: Record<ProficiencyLevel, { color: string; bg: string; border: string; emoji: string }> = {
   Emerging:   { color: 'text-red-600',    bg: 'bg-red-100',       border: 'border-red-300',  emoji: '🌱' },
-  Developing: { color: 'text-blue-300',   bg: 'bg-blue-900/40',   border: 'border-blue-500',  emoji: '📈' },
-  Proficient: { color: 'text-green-300',  bg: 'bg-green-900/40',  border: 'border-green-500', emoji: '✅' },
-  Advanced:   { color: 'text-yellow-300', bg: 'bg-yellow-900/40', border: 'border-yellow-500', emoji: '🏆' },
+  Developing: { color: 'text-blue-700',   bg: 'bg-blue-100',   border: 'border-blue-300',  emoji: '📈' },
+  Proficient: { color: 'text-green-700',  bg: 'bg-green-100',  border: 'border-green-300', emoji: '✅' },
+  Advanced:   { color: 'text-yellow-700', bg: 'bg-yellow-100', border: 'border-yellow-300', emoji: '🏆' },
 };
 
 const evaluateSession = async (
@@ -719,7 +719,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
 
         // Single or multi-line paragraph
         return (
-          <p key={bi} className={`leading-relaxed ${lines[0].startsWith('✅') ? 'text-green-300 font-semibold' : ''}`}>
+          <p key={bi} className={`leading-relaxed ${lines[0].startsWith('✅') ? 'text-green-700 font-semibold' : ''}`}>
             {lines.map((line, li) => (
               <React.Fragment key={li}>
                 {li > 0 && <br />}
@@ -877,8 +877,8 @@ const EvaluationModal: React.FC<{
         {/* Special banner: pathways unlocked */}
         {isTier1Unlocking && (
           <div className="px-6 pb-4">
-            <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-4">
-              <p className="text-emerald-200 text-sm font-semibold text-center">
+            <div className="bg-emerald-100 border border-emerald-300 rounded-xl p-4">
+              <p className="text-emerald-800 text-sm font-semibold text-center">
                 🔓 Scientific Reasoning Complete! Both Life Sciences and Physical Sciences pathways are now unlocked.
               </p>
             </div>
@@ -891,12 +891,12 @@ const EvaluationModal: React.FC<{
           if (!growth.length) return null;
           return (
             <div className="px-6 pb-4">
-              <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4">
-                <p className="text-amber-200 text-xs font-semibold uppercase tracking-wider mb-2">🎯 Focus here next</p>
+              <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
+                <p className="text-amber-800 text-xs font-semibold uppercase tracking-wider mb-2">🎯 Focus here next</p>
                 <ul className="space-y-1">
                   {growth.map((s, i) => (
                     <li key={i} className="text-gray-600 text-sm flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">•</span>
+                      <span className="text-amber-600 mt-0.5">•</span>
                       <span><strong className="text-gray-900">{s.name}</strong> — {s.evidence}</span>
                     </li>
                   ))}
@@ -908,19 +908,19 @@ const EvaluationModal: React.FC<{
 
         <div className="px-6 pb-4">
           {evaluation.is_complete ? (
-            <div className="bg-green-500/20 border border-green-400/40 rounded-xl p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-300 flex-shrink-0 mt-0.5" />
-              <p className="text-green-200 text-sm">🎉 <strong>Advanced</strong> in every skill — stage fully complete and next stage unlocked!</p>
+            <div className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
+              <p className="text-green-800 text-sm">🎉 <strong>Advanced</strong> in every skill — stage fully complete and next stage unlocked!</p>
             </div>
           ) : evaluation.can_advance ? (
-            <div className="bg-blue-500/20 border border-blue-400/40 rounded-xl p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-blue-300 flex-shrink-0 mt-0.5" />
-              <p className="text-blue-200 text-sm">✅ <strong>Proficient</strong> in all skills — next stage unlocked! Keep practising to reach Advanced.</p>
+            <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-blue-700 flex-shrink-0 mt-0.5" />
+              <p className="text-blue-800 text-sm">✅ <strong>Proficient</strong> in all skills — next stage unlocked! Keep practising to reach Advanced.</p>
             </div>
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
               <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
-              <p className="text-gray-600 text-sm">Reach <strong className="text-blue-600">Proficient</strong> in all skills to unlock the next stage.</p>
+              <p className="text-gray-600 text-sm">Reach <strong className="text-blue-700">Proficient</strong> in all skills to unlock the next stage.</p>
             </div>
           )}
         </div>
@@ -928,7 +928,7 @@ const EvaluationModal: React.FC<{
         <div className="px-6 pb-6 flex gap-3">
           <button
             onClick={() => onSpeak(buildSpokenEvaluation(evaluation))}
-            className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-emerald-400/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 transition-all"
+            className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-emerald-300 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all"
           >
             <Volume2 size={15} /> Hear Again
           </button>
@@ -1333,10 +1333,10 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
         }}
         className={`relative rounded-2xl border-2 p-5 transition-all duration-200
           ${isCompleted
-            ? 'bg-emerald-950/80 border-emerald-500/40 cursor-not-allowed opacity-50 backdrop-blur-sm pointer-events-none'
+            ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
             : isActive
-              ? `${stage.glowBg} ${stage.border} cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-              : 'bg-gray-100/80 border-gray-300 cursor-not-allowed opacity-70'}`}
+              ? `${stage.glowBg} ${stage.border} backdrop-blur-sm cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+              : 'bg-gray-100/80 border-gray-300 backdrop-blur-sm cursor-not-allowed opacity-70'}`}
       >
         <div className="flex items-start gap-5">
           <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
@@ -1345,7 +1345,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
               <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>Stage {idx + 1}</span>
-              {isCompleted && <span className="font-bold text-green-400">Completed</span>}
+              {isCompleted && <span className="font-bold text-green-700">Completed</span>}
               {!isCompleted && scoreBadge && (
                 <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
                   {scoreBadge}
@@ -1386,15 +1386,17 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <FlaskConical className="h-12 w-12 text-emerald-400 animate-pulse" />
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
-                Science Skills
-              </h1>
+            <div className="inline-flex flex-col items-center gap-1 rounded-lg bg-emerald-100/80 backdrop-blur-sm p-4 mb-4">
+              <div className="flex items-center justify-center gap-3">
+                <FlaskConical className="h-12 w-12 text-emerald-600 animate-pulse" />
+                <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900">
+                  Science Skills
+                </h1>
+              </div>
+              <p className="text-xl md:text-2xl text-gray-800 max-w-2xl mx-auto">
+                Build scientific reasoning first — then unlock Life Sciences and Physical Sciences pathways.
+              </p>
             </div>
-            <p className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto">
-              Build scientific reasoning first — then unlock Life Sciences and Physical Sciences pathways.
-            </p>
             <div className="mt-4">
               <PidginTooltip
                 originalText="Build scientific reasoning first — then unlock Life Sciences and Physical Sciences pathways."
@@ -1405,7 +1407,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
             {/* Voice selector */}
             <div className="mt-5 inline-flex flex-col items-center gap-2">
               <div className="flex items-center gap-2 text-base text-gray-800 font-medium">
-                <Volume2 className="h-5 w-5 text-emerald-300" />
+                <Volume2 className="h-5 w-5 text-emerald-600" />
                 <span>Choose your coach&apos;s voice:</span>
               </div>
               <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
@@ -1443,7 +1445,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   <Volume2 className="h-5 w-5" /> 🔊 Tap here to enable voice
                 </button>
               ) : (
-                <div className="flex items-center gap-2 text-emerald-300 text-sm font-semibold">
+                <div className="flex items-center gap-2 text-emerald-700 text-sm font-semibold">
                   <Volume2 className="h-4 w-4" /> Voice is on
                 </div>
               )}
@@ -1466,7 +1468,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     <span className="text-sky-700 font-bold text-sm uppercase tracking-wider">
                       Tier 1 · Scientific Reasoning
                     </span>
-                    {progress?.tier1Complete && <CheckCircle className="h-4 w-4 text-green-400" />}
+                    {progress?.tier1Complete && <CheckCircle className="h-4 w-4 text-green-600" />}
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-l from-sky-500/60 to-transparent" />
                 </div>
@@ -1629,7 +1631,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <p className="text-gray-500 text-sm mt-2">{(STAGE_RUBRICS[selectedStage.pathway]?.[selectedStage.id] ?? []).join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}
-                  className={`mt-4 inline-flex items-center gap-2 text-base ${selectedStage.textColor} border ${selectedStage.border} bg-white/5 px-4 py-2 rounded-full hover:bg-white/10 transition-all`}
+                  className="mt-4 inline-flex items-center gap-2 text-base text-gray-700 border border-gray-300 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition-all"
                 >
                   <Volume2 size={16} /> Hear instructions again
                 </button>
@@ -1638,7 +1640,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
               {/* Voice */}
               <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
                 <p className="text-gray-900 text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
-                  <Volume2 size={18} className="text-emerald-400" /> Choose your coach&apos;s voice
+                  <Volume2 size={18} className="text-emerald-600" /> Choose your coach&apos;s voice
                 </p>
                 <div className="flex rounded-xl overflow-hidden border border-gray-300">
                   <button onClick={() => setVoiceMode('english')}
@@ -1715,18 +1717,18 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
             {finishedSessions.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <CheckCircle size={18} className="text-green-400" /> Completed Sessions
+                  <CheckCircle size={18} className="text-green-600" /> Completed Sessions
                 </h3>
                 <div className="space-y-2">
                   {(finishedSessions ?? []).map(session => (
                     <div key={session.id} onClick={() => resumeSession(session)}
-                      className="bg-green-900/20 border border-green-500/40 rounded-xl p-4 cursor-pointer hover:bg-green-900/30 transition-all">
+                      className="bg-green-100 border border-green-300 rounded-xl p-4 cursor-pointer hover:bg-green-200 transition-all">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-green-300 font-semibold text-base truncate">🏆 {session.sub_category}</p>
+                          <p className="text-green-700 font-semibold text-base truncate">🏆 {session.sub_category}</p>
                           <p className="text-gray-500 text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
                         </div>
-                        <ChevronRight size={20} className="text-green-400" />
+                        <ChevronRight size={20} className="text-green-600" />
                       </div>
                     </div>
                   ))}
@@ -1873,7 +1875,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   title="AI polishes your scientific explanation"
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${inputText.trim() && !isImproving && !isSending
-                      ? 'bg-violet-500/20 border-violet-400/50 text-violet-300 hover:bg-violet-500/30'
+                      ? 'bg-violet-100 border-violet-300 text-violet-700 hover:bg-violet-200'
                       : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
                   <Wand2 size={15} />
                   {isImproving ? 'Polishing...' : 'Improve my explanation'}
@@ -1881,7 +1883,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <button onClick={handleSave} disabled={isSaving || isSending || messages.length < 2}
                   className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${!isSaving && messages.length >= 2
-                      ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/30'
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200'
                       : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
                   <Save size={15} />
                   {isSaving ? 'Saving...' : 'Save Session'}
