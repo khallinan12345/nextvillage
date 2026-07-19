@@ -43,6 +43,8 @@ const ACTIONABLE_EVENTS = new Set([
   'missing_api_key',
   'http_520',        // ← add this
   'http_error',      // ← catch-all for anything else chat-stream logs
+  'model_deprecated',   // ← from api/model-check cron: configured model gone from provider
+  'model_check_failed', // ← model-check couldn't fetch a provider's list
 ]);
 
 const ACTIONABLE_SEVERITIES = new Set(['warning', 'error', 'critical']);
