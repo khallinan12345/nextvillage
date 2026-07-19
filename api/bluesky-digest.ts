@@ -11,9 +11,13 @@
 //
 // Environment variables needed:
 //   RESEND_API_KEY      — already configured (used by chat.js, triage-webhook.ts, etc.)
-//   DIGEST_RECIPIENTS   — comma-separated, e.g. "kevin@...,divinegift@..." (NEW — not yet set)
+//   DIGEST_RECIPIENTS   — comma-separated, e.g. "kevin@...,divinegift@..." (already set)
 //   ANTHROPIC_API_KEY   — for reply drafting (already set for chat.js)
 //   CRON_SECRET         — already configured (shared with the other cron endpoints)
+//   BLUESKY_IDENTIFIER  — the account handle posts are searched as, e.g. "nextvillage.community"
+//   BLUESKY_APP_PASSWORD — a Bluesky App Password (Settings → Privacy and Security →
+//       App Passwords) for that account. Bluesky's searchPosts endpoint now requires
+//       auth — the old unauthenticated public.api.bsky.app path returns 403 for everyone.
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — optional; lets the drafter
 //       read the current Sonnet model ID from model_config
 //
@@ -113,12 +117,31 @@ interface RankedPost {
 }
 
 // ============================================================
-// BLUESKY PUBLIC API
+// BLUESKY API (authenticated — searchPosts no longer works unauthenticated)
 // ============================================================
 
-const BSKY_PUBLIC = "https://public.api.bsky.app/xrpc";
+const BSKY_ENTRYWAY = "https://bsky.social/xrpc";
 
-async function searchBluesky(query: string): Promise<BskyPost[]> {
+async function getBlueskySession(): Promise<string> {
+  const identifier = process.env.BLUESKY_IDENTIFIER;
+  const password = process.env.BLUESKY_APP_PASSWORD;
+  if (!identifier || !password) {
+    throw new Error("BLUESKY_IDENTIFIER / BLUESKY_APP_PASSWORD not configured");
+  }
+  const resp = await fetch(`${BSKY_ENTRYWAY}/com.atproto.server.createSession`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier, password }),
+  });
+  if (!resp.ok) {
+    throw new Error(`Bluesky auth failed: HTTP ${resp.status}`);
+  }
+  const data = await resp.json();
+  if (!data.accessJwt) throw new Error("Bluesky auth response missing accessJwt");
+  return data.accessJwt as string;
+}
+
+async function searchBluesky(query: string, accessJwt: string): Promise<BskyPost[]> {
   const since = new Date(Date.now() - LOOKBACK_HOURS * 3600 * 1000).toISOString();
   const params = new URLSearchParams({
     q: query,
@@ -126,7 +149,9 @@ async function searchBluesky(query: string): Promise<BskyPost[]> {
     sort: "latest",
     since,
   });
-  const resp = await fetch(`${BSKY_PUBLIC}/app.bsky.feed.searchPosts?${params}`);
+  const resp = await fetch(`${BSKY_ENTRYWAY}/app.bsky.feed.searchPosts?${params}`, {
+    headers: { Authorization: `Bearer ${accessJwt}` },
+  });
   if (!resp.ok) {
     console.warn(`[digest] Bluesky search failed for "${query}": HTTP ${resp.status}`);
     return [];
@@ -142,8 +167,9 @@ function postUrl(uri: string, handle: string): string {
 }
 
 async function collectPosts(): Promise<RankedPost[]> {
+  const accessJwt = await getBlueskySession();
   const resultsPerQuery = await Promise.all(
-    SEARCH_QUERIES.map(async (q) => ({ q, posts: await searchBluesky(q) })),
+    SEARCH_QUERIES.map(async (q) => ({ q, posts: await searchBluesky(q, accessJwt) })),
   );
 
   // Deduplicate across queries; multi-query matches earn a relevance bonus
