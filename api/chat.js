@@ -85,18 +85,69 @@ const CERT_PAGES = new Set([
   'EntrepreneurshipConsultantCertificationPage',
 ]);
 
-const ANTHROPIC_HAIKU  = 'claude-haiku-4-5-20251001';
-const ANTHROPIC_SONNET = 'claude-sonnet-4-6';
-const GROQ_MODEL       = 'llama-3.3-70b-versatile';
-const CEREBRAS_MODEL   = 'gpt-oss-120b';             // Cerebras — llama3.1-8b was deprecated/removed (confirmed via /v1/models, Jul 2026); chose 120B for quality over gemma-4-31b's speed/quota headroom
-const DEEPSEEK_MODEL   = 'deepseek-chat';          // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
+// ── Model configuration ───────────────────────────────────────────────────────
+// Model IDs live in the Supabase `model_config` table so a deprecated model can
+// be swapped with a single row update — no redeploy. The hard-coded defaults
+// below are the safety net: used on first cold start, and whenever the config
+// fetch fails, so a Supabase outage can never take chat down.
+//
+// Table (run once in Supabase SQL editor — see model_config.sql):
+//   create table model_config (
+//     provider   text primary key,
+//     model      text not null,
+//     updated_at timestamptz default now()
+//   );
 
-// ── Fallback provider models ───────────────────────────────────────────────────
+const DEFAULT_MODELS = {
+  anthropic_haiku:  'claude-haiku-4-5-20251001',
+  anthropic_sonnet: 'claude-sonnet-4-6',
+  groq:             'llama-3.3-70b-versatile',
+  cerebras:         'gpt-oss-120b',             // llama3.1-8b was deprecated/removed (confirmed via /v1/models, Jul 2026); chose 120B for quality over gemma-4-31b's speed/quota headroom
+  deepseek:         'deepseek-chat',            // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
+  gemini:           'gemini-2.0-flash',
+  cloudflare:       '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  openrouter:       'meta-llama/llama-3.3-70b-instruct:free',
+  mistral:          'mistral-small-latest',
+};
 
-const GEMINI_MODEL      = 'gemini-2.0-flash';
-const CLOUDFLARE_MODEL  = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-const OPENROUTER_MODEL  = 'meta-llama/llama-3.3-70b-instruct:free';
-const MISTRAL_MODEL     = 'mistral-small-latest';
+// Mutable copy — refreshModels() overwrites entries from Supabase.
+const MODELS = { ...DEFAULT_MODELS };
+
+const MODEL_CONFIG_TTL_MS = 5 * 60 * 1000; // re-fetch at most every 5 minutes
+let modelConfigFetchedAt = 0;
+
+async function refreshModels() {
+  if (Date.now() - modelConfigFetchedAt < MODEL_CONFIG_TTL_MS) return;
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseKey) return;
+
+  try {
+    const resp = await fetch(
+      `${supabaseUrl}/rest/v1/model_config?select=provider,model`,
+      {
+        headers: {
+          'apikey':        supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+      },
+    );
+    if (!resp.ok) throw new Error(`model_config fetch: HTTP ${resp.status}`);
+
+    const rows = await resp.json();
+    for (const row of rows) {
+      if (row?.provider in DEFAULT_MODELS && typeof row.model === 'string' && row.model.trim()) {
+        MODELS[row.provider] = row.model.trim();
+      }
+    }
+    modelConfigFetchedAt = Date.now();
+  } catch (err) {
+    // Non-fatal: keep whatever MODELS currently holds (defaults or last good fetch).
+    console.warn('[chat.js] model_config refresh failed — using current models:', err?.message);
+    modelConfigFetchedAt = Date.now(); // don't retry on every request during an outage
+  }
+}
 
 // ── Pricing table (per million tokens, USD) ───────────────────────────────────
 
@@ -296,7 +347,7 @@ async function logEvent({ function_name, event_type, severity, payload }) {
 function resolveRoute(page, playgroundModel, taskType) {
   // Free-tier pages (including SkillsDevelopmentPage) → fallback chain
   if (FREE_TIER_PAGES.has(page)) {
-    return { provider: 'groq', model: GROQ_MODEL };
+    return { provider: 'groq', model: MODELS.groq };
   }
 
   // Hybrid coding pages:
@@ -309,25 +360,25 @@ function resolveRoute(page, playgroundModel, taskType) {
     const isCoding = taskType === 'coding'
       || (taskType == null && page !== 'WebDevelopmentPage');
     if (isCoding) {
-      return { provider: 'anthropic', model: ANTHROPIC_HAIKU };
+      return { provider: 'anthropic', model: MODELS.anthropic_haiku };
     }
     // non-coding (or WebDevelopmentPage with no taskType) → free-tier chain
-    return { provider: 'groq', model: GROQ_MODEL };
+    return { provider: 'groq', model: MODELS.groq };
   }
 
   // AIPlaygroundPage → Sonnet if profile set, otherwise free-tier chain
   if (page === 'AIPlaygroundPage') {
-    if (playgroundModel === ANTHROPIC_SONNET) return { provider: 'anthropic', model: ANTHROPIC_SONNET };
-    return { provider: 'groq', model: GROQ_MODEL };
+    if (playgroundModel === MODELS.anthropic_sonnet || playgroundModel === 'claude-sonnet-4-6') return { provider: 'anthropic', model: MODELS.anthropic_sonnet };
+    return { provider: 'groq', model: MODELS.groq };
   }
 
   // Certification pages → Haiku directly; reliable JSON eval, no free-tier risk
   if (CERT_PAGES.has(page)) {
-    return { provider: 'anthropic', model: ANTHROPIC_HAIKU };
+    return { provider: 'anthropic', model: MODELS.anthropic_haiku };
   }
 
   // Default → Haiku
-  return { provider: 'anthropic', model: ANTHROPIC_HAIKU };
+  return { provider: 'anthropic', model: MODELS.anthropic_haiku };
 }
 
 
@@ -708,47 +759,47 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
   const chain = [
     {
       name:     'groq',
-      model:    GROQ_MODEL,
+      model:    MODELS.groq,
       keyEnv:   'GROQ_API_KEY',
       skipIf:   () => estimateRequestTokens(messages, system, max_tokens) > (GROQ_TPM_LIMIT - TOKEN_SAFETY_MARGIN),
       skipReason: 'estimated request size exceeds Groq TPM limit (12000)',
-      fn:       () => callGroq(GROQ_MODEL, messages, system, max_tokens, temperature),
+      fn:       () => callGroq(MODELS.groq, messages, system, max_tokens, temperature),
     },
     {
       name:     'cerebras',
-      model:    CEREBRAS_MODEL,
+      model:    MODELS.cerebras,
       keyEnv:   'CEREBRAS_API_KEY',
-      fn:       () => callCerebras(CEREBRAS_MODEL, messages, system, max_tokens, temperature),
+      fn:       () => callCerebras(MODELS.cerebras, messages, system, max_tokens, temperature),
     },
     {
       name:     'cloudflare',
-      model:    CLOUDFLARE_MODEL,
+      model:    MODELS.cloudflare,
       keyEnv:   'CLOUDFLARE_API_TOKEN',
-      fn:       () => callCloudflare(CLOUDFLARE_MODEL, messages, system, max_tokens, temperature),
+      fn:       () => callCloudflare(MODELS.cloudflare, messages, system, max_tokens, temperature),
     },
     {
       name:     'openrouter',
-      model:    OPENROUTER_MODEL,
+      model:    MODELS.openrouter,
       keyEnv:   'OPENROUTER_API_KEY',
-      fn:       () => callOpenRouter(OPENROUTER_MODEL, messages, system, max_tokens, temperature),
+      fn:       () => callOpenRouter(MODELS.openrouter, messages, system, max_tokens, temperature),
     },
     {
       name:     'mistral',
-      model:    MISTRAL_MODEL,
+      model:    MODELS.mistral,
       keyEnv:   'MISTRAL_API_KEY',
-      fn:       () => callMistral(MISTRAL_MODEL, messages, system, max_tokens, temperature),
+      fn:       () => callMistral(MODELS.mistral, messages, system, max_tokens, temperature),
     },
     {
       name:     'deepseek',
-      model:    DEEPSEEK_MODEL,
+      model:    MODELS.deepseek,
       keyEnv:   'DEEPSEEK_API_KEY',
-      fn:       () => callDeepSeek(DEEPSEEK_MODEL, messages, system, max_tokens, temperature),
+      fn:       () => callDeepSeek(MODELS.deepseek, messages, system, max_tokens, temperature),
     },
     {
       name:     'anthropic',
-      model:    ANTHROPIC_HAIKU,
+      model:    MODELS.anthropic_haiku,
       keyEnv:   'ANTHROPIC_API_KEY',
-      fn:       () => callAnthropic(ANTHROPIC_HAIKU, messages, system, max_tokens, temperature),
+      fn:       () => callAnthropic(MODELS.anthropic_haiku, messages, system, max_tokens, temperature),
     },
   ];
 
@@ -965,6 +1016,9 @@ export default async function handler(req, res) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Each message must have a string `role` and a `content` string or array' });
     }
+
+    // Pick up any model_config changes (cached 5 min; falls back to defaults on failure)
+    await refreshModels();
 
     const { provider, model } = resolveRoute(page, playgroundModel, taskType);
 
