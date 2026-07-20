@@ -624,12 +624,12 @@ const ImageGenerationPage: React.FC = () => {
             <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
               <label className="block text-sm font-semibold text-slate-300 mb-2">{uiText.promptLabel}</label>
               <textarea value={prompt} onChange={e => setPrompt(e.target.value)}
-                rows={4} maxLength={500} disabled={isGenerating}
+                rows={4} maxLength={750} disabled={isGenerating}
                 placeholder={uiText.promptPlaceholder}
                 className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 outline-none transition disabled:opacity-50" />
               <div className="flex items-center justify-between mt-1 mb-3">
                 <p className="text-xs text-slate-500">{uiText.promptHint}</p>
-                <span className={classNames('text-xs', charCount > 450 ? 'text-amber-400' : 'text-slate-500')}>{charCount}/500</span>
+                <span className={classNames('text-xs', charCount > 675 ? 'text-amber-400' : 'text-slate-500')}>{charCount}/750</span>
               </div>
 
               {/* Action buttons */}
