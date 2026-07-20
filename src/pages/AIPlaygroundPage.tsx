@@ -600,18 +600,26 @@ async function* chatPlaygroundFree(
 
 const MODEL_OPTIONS = [
   { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku' },
+  { value: 'claude-sonnet-5',           label: 'Claude Sonnet 5' },
   { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6' },
 ];
 const getModelDisplayName = (modelId: string): string => {
   const trimmed = (modelId || '').trim();
   const match = MODEL_OPTIONS.find(m => m.value === trimmed);
   if (match) return match.label;
-  if (trimmed.includes('sonnet'))          return 'Claude Sonnet 4.6';
+  if (trimmed.includes('sonnet'))          return 'Claude Sonnet 5';
   if (trimmed.includes('haiku'))           return 'Claude Haiku 4.5';
   if (trimmed.includes('llama-3.3-70b'))   return 'Llama 3.3 70B';
   if (trimmed.includes('llama3.1-8b'))     return 'Llama 3.1 8B';
   return trimmed || 'Claude';
 };
+
+// Back to Basics Youth Education — org id (profiles.organization_id) and
+// join code (profiles.join_code_used) get Sonnet 5 as their default model,
+// since organization_id isn't always populated for join-code signups.
+const BACK_TO_BASICS_ORG_ID   = 'bf573bfa-c57a-4476-be26-508991bb4d76';
+const BACK_TO_BASICS_JOIN_CODE = 'Y3K9DC';
+const PLATFORM_DEFAULT_MODEL  = 'claude-haiku-4-5-20251001';
 
 // ── System prompt ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are a personal AI assistant for anyone using this platform. This is an open playground — help with anything ethical: coding, writing, research, math, science, business, creative projects, poetry, personal questions, technical problems, or just exploring ideas. There are no topic restrictions beyond safety.
@@ -678,6 +686,7 @@ const AIPlaygroundPage: React.FC = () => {
   const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
   const [quotaUsed, setQuotaUsed]         = useState(0);
   const [quotaWindowStart, setQuotaWindowStart] = useState<Date | null>(null);
+  const [quotaExempt, setQuotaExempt]     = useState(false); // Back to Basics Youth Education — no usage cap
   const [playgroundModel, setPlaygroundModel]     = useState<string>('claude-haiku-4-5-20251001'); // default Haiku — overridden by profile
   // Tracks the model actually used for the last response (may differ from playgroundModel
   // because chat-stream routes non-coding turns to Groq/Haiku automatically).
@@ -724,19 +733,27 @@ const AIPlaygroundPage: React.FC = () => {
     if (!user?.id) return;
     supabase
       .from('profiles')
-      .select('name, ai_playground_model')
+      .select('name, ai_playground_model, organization_id, join_code_used')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
         if (data?.name) setProfileName(data.name);
-        // Use profile model if explicitly set to Sonnet, otherwise default to Haiku
         const profileModel = data?.ai_playground_model;
-        const model = profileModel === 'claude-sonnet-4-6'
-          ? 'claude-sonnet-4-6'
-          : 'claude-haiku-4-5-20251001';
+        const isBackToBasics =
+          data?.organization_id === BACK_TO_BASICS_ORG_ID ||
+          data?.join_code_used?.trim() === BACK_TO_BASICS_JOIN_CODE;
+        setQuotaExempt(isBackToBasics);
+
+        let model = PLATFORM_DEFAULT_MODEL;
+        if (profileModel === 'claude-sonnet-5' || profileModel === 'claude-sonnet-4-6') {
+          // Explicit prior preference — respect it regardless of org.
+          model = 'claude-sonnet-5';
+        } else if (isBackToBasics && (!profileModel || profileModel === PLATFORM_DEFAULT_MODEL)) {
+          model = 'claude-sonnet-5';
+        }
         setPlaygroundModel(model);
         setModelLoaded(true);
-        console.log(`[Playground] model loaded: ${model} (profile: ${profileModel ?? 'not set'})`);
+        console.log(`[Playground] model loaded: ${model} (profile: ${profileModel ?? 'not set'}, backToBasics: ${isBackToBasics})`);
       })
       .catch(() => {
         setPlaygroundModel('claude-haiku-4-5-20251001');
@@ -1066,14 +1083,20 @@ const AIPlaygroundPage: React.FC = () => {
     } catch { return false; }
   };
 
-  // ── Topic drift check: has the user shifted to a new subject mid-chat? ─────────
-  // Returns true if the latest user message is clearly about a different topic
-  // than the first message in the conversation.
+  // ── Topic drift check: has the user shifted to a completely unrelated subject? ──
+  // Returns true only when the new message has no reasonable connection to the
+  // recent conversation — follow-ups, clarifications, and related tangents are
+  // "same". Uses the last few turns as context (not just the first message),
+  // since comparing only message #1 against the newest message ignores how a
+  // conversation naturally evolves and caused frequent false positives.
   // Only called when there are already ≥ 2 messages (i.e. mid-conversation).
   const checkTopicDrift = async (currentMessages: ChatMessage[], newUserText: string): Promise<boolean> => {
     if (currentMessages.length < 2) return false;
-    const firstUserMsg = currentMessages.find(m => m.role === 'user')?.content ?? '';
-    if (!firstUserMsg || firstUserMsg === newUserText) return false;
+    const recentContext = currentMessages
+      .slice(-6)
+      .map(m => `${m.role}: ${m.content.slice(0, 300)}`)
+      .join('\n\n');
+    if (!recentContext) return false;
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -1082,7 +1105,7 @@ const AIPlaygroundPage: React.FC = () => {
           page: 'AIPlaygroundPage',
           messages: [{
             role: 'user',
-            content: `Original topic: "${firstUserMsg.slice(0, 200)}"\n\nNew message: "${newUserText.slice(0, 200)}"\n\nAre these about the same topic? Reply ONLY "same" or "new".`,
+            content: `Recent conversation:\n\n${recentContext}\n\nUser's new message: "${newUserText.slice(0, 300)}"\n\nIs the new message a follow-up, clarification, related tangent, or continuation of this conversation? Only answer "new" if it is a completely unrelated subject with no reasonable connection to what was discussed. When in doubt, answer "same". Reply ONLY "same" or "new".`,
           }],
           max_tokens: 5,
           temperature: 0,
@@ -1767,11 +1790,11 @@ const AIPlaygroundPage: React.FC = () => {
               </button>
               <input ref={contextFileInputRef} type="file" onChange={handleContextFileAttach} className="hidden" accept=".txt,.md,.csv,.json,.py,.js,.ts,.tsx,.jsx,.html,.css,.sh,.yaml,.yml,.toml,.env" multiple />
               <textarea ref={textareaRef} value={userInput} onChange={e => setUserInput(e.target.value)} onKeyDown={handleKeyDown}
-                placeholder={quotaUsed >= QUOTA_TOKENS ? 'Quota reached — please wait for reset' : 'Message Claude...'} rows={1} disabled={sending || !modelLoaded || quotaUsed >= QUOTA_TOKENS}
+                placeholder={quotaUsed >= QUOTA_TOKENS && !quotaExempt ? 'Quota reached — please wait for reset' : 'Message Claude...'} rows={1} disabled={sending || !modelLoaded || (quotaUsed >= QUOTA_TOKENS && !quotaExempt)}
                 className="flex-1 resize-none outline-none text-base text-gray-800 placeholder-gray-400 bg-transparent min-h-[24px] max-h-[200px] leading-6" />
               <span
                 className={`flex-shrink-0 text-xs mb-0.5 pr-1 font-medium transition-colors ${
-                  (activeModel || playgroundModel) === 'claude-sonnet-4-6'
+                  (activeModel || playgroundModel) === 'claude-sonnet-4-6' || (activeModel || playgroundModel) === 'claude-sonnet-5'
                     ? 'text-violet-600'
                     : (activeModel || playgroundModel).includes('llama') || (activeModel || playgroundModel).includes('groq')
                       ? 'text-emerald-600'
@@ -1792,14 +1815,18 @@ const AIPlaygroundPage: React.FC = () => {
                 className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all mb-0.5 ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}>
                 {isListening ? <MicOff size={13} /> : <Mic size={13} />}
               </button>
-              <button onClick={handleSend} disabled={(!userInput.trim() && !attachments.length) || sending || !modelLoaded || quotaUsed >= QUOTA_TOKENS}
+              <button onClick={handleSend} disabled={(!userInput.trim() && !attachments.length) || sending || !modelLoaded || (quotaUsed >= QUOTA_TOKENS && !quotaExempt)}
                 className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity mb-0.5">
                 {sending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               </button>
             </div>
 
             {/* ── Quota bar ──────────────────────────────────────────────────────── */}
-            {(() => {
+            {quotaExempt ? (
+              <p className="text-center text-xs mt-1 text-gray-400">
+                Enter to send · Shift+Enter for new line{voiceOutputEnabled ? ' · 🔊 Ezinne' : ''}
+              </p>
+            ) : (() => {
               const pct = Math.min(100, Math.round((quotaUsed / QUOTA_TOKENS) * 100));
               const isOver = quotaUsed >= QUOTA_TOKENS;
               const resetTime = quotaWindowStart
