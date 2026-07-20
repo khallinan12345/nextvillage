@@ -7,6 +7,7 @@ import { Sparkles, Brain, Award, CheckCircle, Globe2, Newspaper, ChevronRight, X
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useBranding } from '../lib/useBranding';
+import { resolveChallengeOrgSlug } from '../lib/communityChallengeScope';
 
 
 
@@ -93,14 +94,9 @@ const HomePage: React.FC = () => {
           orgId = profileData?.organization_id ?? null;
         }
 
-        // Resolve org slug for platform_news filtering (news uses slugs, not UUIDs)
-        let newsOrgSlug: string | null = null;
-        if (orgId) {
-          const { data: orgData } = await supabase
-            .from('organizations').select('name').eq('id', orgId).single();
-          const name = orgData?.name?.toLowerCase() ?? '';
-          newsOrgSlug = name.includes('ibiade') ? 'ibiade' : 'oloibiri';
-        }
+        // The weekly-champion/community-challenge banner only applies to
+        // Davidson AI Futures Lab — every other org has no rows for it.
+        const newsOrgSlug = resolveChallengeOrgSlug(orgId);
 
         const { data } = await supabase
           .from('platform_news')

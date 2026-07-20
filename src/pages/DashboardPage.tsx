@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { resolveChallengeOrgSlug } from '../lib/communityChallengeScope';
 import { Project, Team, UserProfile } from '../types/supabase';
 import {
   Plus,
@@ -919,15 +920,15 @@ const DashboardPage: React.FC = () => {
           .eq('id', user.id)
           .single();
 
-        // Map org UUID to slug for challenge filtering
-        let orgSlug = 'oloibiri';
-        if (profile?.organization_id) {
-          const { data: org } = await supabase
-            .from('organizations')
-            .select('name')
-            .eq('id', profile.organization_id)
-            .single();
-          orgSlug = org?.name?.toLowerCase().includes('ibiade') ? 'ibiade' : 'oloibiri';
+        // The community challenge program only exists for Davidson AI
+        // Futures Lab — every other org has no rows in these tables.
+        const orgSlug = resolveChallengeOrgSlug(profile?.organization_id);
+        if (!orgSlug) {
+          setWeeklyChallenge(null);
+          setPastChallenges([]);
+          setWeeklyChampion(null);
+          setCommunityLeaderboard([]);
+          return;
         }
 
         // Get active challenge for this learner's org
@@ -967,10 +968,11 @@ const DashboardPage: React.FC = () => {
           setCurrentChallengeLbLoading(false);
         }
 
-        // Fetch community impact leaderboard
+        // Fetch community impact leaderboard, scoped to this org
         const { data: lb } = await supabase
           .from('community_leaderboard')
           .select('*')
+          .eq('org_id', orgSlug)
           .order('rank', { ascending: true });
 
         if (lb) setCommunityLeaderboard(lb as CommunityLeaderEntry[]);
@@ -1006,17 +1008,10 @@ const DashboardPage: React.FC = () => {
     (async () => {
       try {
         let orgId: string | null = null;
-        let newsOrgSlug: string | null = null;
         if (user?.id) {
           const { data: profileData } = await supabase
             .from('profiles').select('organization_id').eq('id', user.id).single();
           orgId = profileData?.organization_id ?? null;
-          if (orgId) {
-            const { data: orgData } = await supabase
-              .from('organizations').select('name').eq('id', orgId).single();
-            const name = orgData?.name?.toLowerCase() ?? '';
-            newsOrgSlug = name.includes('ibiade') ? 'ibiade' : 'oloibiri';
-          }
         }
         const { data } = await supabase
           .from('platform_news')
@@ -1100,15 +1095,10 @@ const DashboardPage: React.FC = () => {
         .eq('id', user.id)
         .single();
 
-      let orgSlug = 'oloibiri';
-      if (profile?.organization_id) {
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('name')
-          .eq('id', profile.organization_id)
-          .single();
-        orgSlug = org?.name?.toLowerCase().includes('ibiade') ? 'ibiade' : 'oloibiri';
-      }
+      // Grand Challenge is open to every org (grand_challenge_quarters.org_id
+      // === 'all') — track the submitter's real organization, not the
+      // Oloibiri/Ibiade community-challenge slug.
+      const grandOrgId = profile?.organization_id ?? 'unassigned';
 
       if (grandSubmission?.id) {
         // Update existing draft
@@ -1132,7 +1122,7 @@ const DashboardPage: React.FC = () => {
           .from('grand_challenge_submissions')
           .insert({
             learner_id:            user.id,
-            org_id:                orgSlug,
+            org_id:                grandOrgId,
             quarter:               grandChallenge.quarter,
             title:                 grandDraftTitle.trim(),
             impact_arc:            grandDraftArc.trim() || ' ',
@@ -1216,7 +1206,7 @@ ${prior.impact_arc}
         .upsert({
           learner_id:   user.id,
           challenge_id: weeklyChallenge.id,
-          org_id:       profile?.organization_id ?? 'oloibiri',
+          org_id:       resolveChallengeOrgSlug(profile?.organization_id) ?? 'oloibiri',
           status:       'active',
         }, { onConflict: 'learner_id,challenge_id', ignoreDuplicates: true })
         .select('id, status')

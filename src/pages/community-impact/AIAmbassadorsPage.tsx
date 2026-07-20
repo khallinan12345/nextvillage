@@ -23,6 +23,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import { resolveChallengeOrgSlug } from '../../lib/communityChallengeScope';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
@@ -744,15 +745,8 @@ const AIAmbassadorsPage: React.FC = () => {
           .eq('id', user.id)
           .single();
 
-        let orgSlug = 'oloibiri';
-        if (profile?.organization_id) {
-          const { data: org } = await supabase
-            .from('organizations')
-            .select('name')
-            .eq('id', profile.organization_id)
-            .single();
-          orgSlug = org?.name?.toLowerCase().includes('ibiade') ? 'ibiade' : 'oloibiri';
-        }
+        const orgSlug = resolveChallengeOrgSlug(profile?.organization_id);
+        if (!orgSlug) return;
 
         const { data: challenges } = await supabase
           .from('community_challenges')
@@ -813,7 +807,7 @@ const AIAmbassadorsPage: React.FC = () => {
         .insert({
           learner_id:   user.id,
           challenge_id: ch.challengeId,
-          org_id:       profile?.organization_id ?? 'oloibiri',
+          org_id:       resolveChallengeOrgSlug(profile?.organization_id) ?? 'oloibiri',
           status:       'active',
         })
         .select('id')
