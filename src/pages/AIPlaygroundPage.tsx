@@ -1786,7 +1786,7 @@ const AIPlaygroundPage: React.FC = () => {
                 className="flex-1 resize-none outline-none text-base text-gray-800 placeholder-gray-400 bg-transparent min-h-[24px] max-h-[200px] leading-6" />
               <span
                 className={`flex-shrink-0 text-xs mb-0.5 pr-1 font-medium transition-colors ${
-                  (activeModel || playgroundModel) === 'claude-sonnet-4-6'
+                  (activeModel || playgroundModel) === 'claude-sonnet-4-6' || (activeModel || playgroundModel) === 'claude-sonnet-5'
                     ? 'text-violet-600'
                     : (activeModel || playgroundModel).includes('llama') || (activeModel || playgroundModel).includes('groq')
                       ? 'text-emerald-600'

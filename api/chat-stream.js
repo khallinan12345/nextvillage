@@ -538,6 +538,10 @@ export default async function handler(req) {
   // Cache the last assistant message so repeated context is served from cache
   const cachedMessagesForApi = applyCacheToLastAssistant(messagesForApi);
 
+  // Claude Sonnet 5 (and the Opus 4.7+/Fable 5 family) reject a non-default
+  // `temperature` with a 400 — only send it for models that still accept it.
+  const modelAllowsCustomTemperature = !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -549,7 +553,7 @@ export default async function handler(req) {
     body: JSON.stringify({
       model,
       max_tokens,
-      temperature,
+      ...(modelAllowsCustomTemperature ? { temperature } : {}),
       stream: true,
       messages: cachedMessagesForApi,
       ...(systemPayload ? { system: systemPayload } : {}),

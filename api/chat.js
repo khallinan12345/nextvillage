@@ -368,7 +368,7 @@ function resolveRoute(page, playgroundModel, taskType) {
 
   // AIPlaygroundPage → Sonnet if profile set, otherwise free-tier chain
   if (page === 'AIPlaygroundPage') {
-    if (playgroundModel === MODELS.anthropic_sonnet || playgroundModel === 'claude-sonnet-4-6') return { provider: 'anthropic', model: MODELS.anthropic_sonnet };
+    if (playgroundModel === MODELS.anthropic_sonnet || playgroundModel === 'claude-sonnet-4-6' || playgroundModel === 'claude-sonnet-5') return { provider: 'anthropic', model: MODELS.anthropic_sonnet };
     return { provider: 'groq', model: MODELS.groq };
   }
 
