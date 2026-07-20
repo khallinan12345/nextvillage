@@ -33,6 +33,7 @@ const KEEP_RECENT           = 10;
 
 // ─── Token prices per million (USD) ──────────────────────────────────────────
 const PRICES = {
+  'claude-sonnet-5':            { input: 2.0,  output: 10.0 }, // intro pricing through 2026-08-31
   'claude-sonnet-4-6':         { input: 3.0,  output: 15.0 },
   'claude-haiku-4-5-20251001': { input: 1.0,  output:  5.0 },
   default:                     { input: 3.0,  output: 15.0 },

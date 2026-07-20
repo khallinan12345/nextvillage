@@ -600,18 +600,26 @@ async function* chatPlaygroundFree(
 
 const MODEL_OPTIONS = [
   { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku' },
+  { value: 'claude-sonnet-5',           label: 'Claude Sonnet 5' },
   { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6' },
 ];
 const getModelDisplayName = (modelId: string): string => {
   const trimmed = (modelId || '').trim();
   const match = MODEL_OPTIONS.find(m => m.value === trimmed);
   if (match) return match.label;
-  if (trimmed.includes('sonnet'))          return 'Claude Sonnet 4.6';
+  if (trimmed.includes('sonnet'))          return 'Claude Sonnet 5';
   if (trimmed.includes('haiku'))           return 'Claude Haiku 4.5';
   if (trimmed.includes('llama-3.3-70b'))   return 'Llama 3.3 70B';
   if (trimmed.includes('llama3.1-8b'))     return 'Llama 3.1 8B';
   return trimmed || 'Claude';
 };
+
+// Back to Basics Youth Education — org id (profiles.organization_id) and
+// join code (profiles.join_code_used) get Sonnet 5 as their default model,
+// since organization_id isn't always populated for join-code signups.
+const BACK_TO_BASICS_ORG_ID   = 'bf573bfa-c57a-4476-be26-508991bb4d76';
+const BACK_TO_BASICS_JOIN_CODE = 'Y3K9DC';
+const PLATFORM_DEFAULT_MODEL  = 'claude-haiku-4-5-20251001';
 
 // ── System prompt ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are a personal AI assistant for anyone using this platform. This is an open playground — help with anything ethical: coding, writing, research, math, science, business, creative projects, poetry, personal questions, technical problems, or just exploring ideas. There are no topic restrictions beyond safety.
@@ -724,19 +732,26 @@ const AIPlaygroundPage: React.FC = () => {
     if (!user?.id) return;
     supabase
       .from('profiles')
-      .select('name, ai_playground_model')
+      .select('name, ai_playground_model, organization_id, join_code_used')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
         if (data?.name) setProfileName(data.name);
-        // Use profile model if explicitly set to Sonnet, otherwise default to Haiku
         const profileModel = data?.ai_playground_model;
-        const model = profileModel === 'claude-sonnet-4-6'
-          ? 'claude-sonnet-4-6'
-          : 'claude-haiku-4-5-20251001';
+        const isBackToBasics =
+          data?.organization_id === BACK_TO_BASICS_ORG_ID ||
+          data?.join_code_used?.trim() === BACK_TO_BASICS_JOIN_CODE;
+
+        let model = PLATFORM_DEFAULT_MODEL;
+        if (profileModel === 'claude-sonnet-5' || profileModel === 'claude-sonnet-4-6') {
+          // Explicit prior preference — respect it regardless of org.
+          model = 'claude-sonnet-5';
+        } else if (isBackToBasics && (!profileModel || profileModel === PLATFORM_DEFAULT_MODEL)) {
+          model = 'claude-sonnet-5';
+        }
         setPlaygroundModel(model);
         setModelLoaded(true);
-        console.log(`[Playground] model loaded: ${model} (profile: ${profileModel ?? 'not set'})`);
+        console.log(`[Playground] model loaded: ${model} (profile: ${profileModel ?? 'not set'}, backToBasics: ${isBackToBasics})`);
       })
       .catch(() => {
         setPlaygroundModel('claude-haiku-4-5-20251001');
