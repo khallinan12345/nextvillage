@@ -1,12 +1,20 @@
 // supabase/functions/generate-voice/index.ts
 //
 // Voice generation via Kokoro TTS on Replicate.
-// Model: hexgrad/kokoro-82m — fast, high quality, no ElevenLabs key needed.
+// Model: jaaari/kokoro-82m — same Kokoro v1.0 (82M params, StyleTTS2) model
+// previously deployed as hexgrad/kokoro-82m, which was removed from
+// Replicate entirely (predictions returned 404 "Model not found"). This
+// community deployment has no official/default version configured, so it
+// must be called via the generic /v1/predictions endpoint with an explicit
+// version hash — the /v1/models/{owner}/{name}/predictions shorthand 404s
+// for it. If this version is ever retired, look up the current
+// latest_version at https://replicate.com/jaaari/kokoro-82m/versions.
 // Uses the same Replicate API token already configured for video generation.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const REPLICATE_TTS = 'https://api.replicate.com/v1/models/hexgrad/kokoro-82m/predictions';
+const REPLICATE_TTS = 'https://api.replicate.com/v1/predictions';
+const REPLICATE_TTS_VERSION = 'f559560eb822dc509045f3921a1921234918b91739db4bf3daab2169b71c7a13';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin':  '*',
@@ -110,6 +118,7 @@ Deno.serve(async (req: Request) => {
         'Prefer':        'wait=60',  // wait up to 60s for result
       },
       body: JSON.stringify({
+        version: REPLICATE_TTS_VERSION,
         input: {
           text:   script.trim().slice(0, 500),
           voice:  kokoroVoice,
