@@ -1,7 +1,8 @@
 /**
  * backToBasicsScope — org boundary for features exclusive to Back to Basics
- * Youth Education (e.g. the Sonnet 5 default in "Use Claude", the usage-quota
- * exemption, and the "Use Claude Together" collaborative rooms).
+ * Youth Education (the Sonnet 5 default in "Use Claude", the image-generation
+ * quota exemption, and the usage-quota exemption on "Use Claude Together",
+ * which is otherwise available to every organization).
  *
  * organization_id isn't always populated for join-code signups, so callers
  * must check both organization_id and join_code_used — never organization_id
