@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useIsBackToBasicsMember } from '../../hooks/useIsBackToBasicsMember';
 import { supabase } from '../../lib/supabaseClient';
 import {
   Award, Brain, BarChart, BookOpen, GraduationCap,
@@ -35,6 +36,7 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const isLeaderOrAdmin = user?.role === 'site_leader' || user?.role === 'research_lead' || user?.role === 'platform_administrator';
+  const isBackToBasics = useIsBackToBasicsMember();
 
   const mainNavigation: NavItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: <Database size={20} /> },
@@ -173,6 +175,7 @@ const Sidebar: React.FC = () => {
       items: [
         { name: 'Agent Builder', path: '/claude/agents', icon: <Bot size={20} /> },
         { name: 'Use Claude',    path: '/playground',    icon: <Sparkles size={20} /> },
+        ...(isBackToBasics ? [{ name: 'Use Claude Together', path: '/playground/together', icon: <Users size={20} /> }] : []),
       ],
     },
   ];

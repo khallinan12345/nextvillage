@@ -7,6 +7,7 @@ import { useVoice } from '../hooks/useVoice';
 import { VoiceFallback } from '../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import { useBranding } from '../lib/useBranding';
+import { isBackToBasicsMember } from '../lib/backToBasicsScope';
 import {
   Plus, Search, Trash2, Download, Send, Paperclip,
   ChevronLeft, ChevronRight, Edit3, Check, X,
@@ -614,11 +615,7 @@ const getModelDisplayName = (modelId: string): string => {
   return trimmed || 'Claude';
 };
 
-// Back to Basics Youth Education — org id (profiles.organization_id) and
-// join code (profiles.join_code_used) get Sonnet 5 as their default model,
-// since organization_id isn't always populated for join-code signups.
-const BACK_TO_BASICS_ORG_ID   = 'bf573bfa-c57a-4476-be26-508991bb4d76';
-const BACK_TO_BASICS_JOIN_CODE = 'Y3K9DC';
+// Back to Basics Youth Education gets Sonnet 5 as their default model.
 const PLATFORM_DEFAULT_MODEL  = 'claude-haiku-4-5-20251001';
 
 // ── System prompt ──────────────────────────────────────────────────────────────
@@ -741,9 +738,7 @@ const AIPlaygroundPage: React.FC = () => {
       .then(({ data }) => {
         if (data?.name) setProfileName(data.name);
         const profileModel = data?.ai_playground_model;
-        const isBackToBasics =
-          data?.organization_id === BACK_TO_BASICS_ORG_ID ||
-          data?.join_code_used?.trim() === BACK_TO_BASICS_JOIN_CODE;
+        const isBackToBasics = isBackToBasicsMember(data?.organization_id, data?.join_code_used);
         setQuotaExempt(isBackToBasics);
 
         let model = PLATFORM_DEFAULT_MODEL;
