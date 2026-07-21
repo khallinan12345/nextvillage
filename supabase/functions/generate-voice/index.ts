@@ -168,28 +168,64 @@ Deno.serve(async (req: Request) => {
 
     if (!audioUrl) throw new Error('Voice generation timed out — please try again');
 
-    // ── Save record to DB (audio lives on Replicate CDN temporarily) ─────────
-    const jobId = prediction.id ?? crypto.randomUUID();
+    // voice_generations.id is a uuid column — must generate a fresh one here,
+    // never reuse Replicate's own prediction id (not a UUID), or the insert
+    // below fails silently and every later voice-status poll 404s.
+    const jobId = crypto.randomUUID();
+
+    // ── Upload to ai-voices bucket for permanent storage ─────────────────────
+    // Mirrors voice-status's own upload step, done here since this function
+    // already has the final result — so the row is inserted already-complete
+    // (status 'succeeded' + saved_audio_url set) and voice-status's existing
+    // "already succeeded" fast path returns it correctly on the first poll,
+    // with no changes needed to voice-status or the frontend poll loop.
+    let savedAudioUrl = audioUrl; // fallback to the ephemeral Replicate URL
+    try {
+      const audioRes = await fetch(audioUrl);
+      if (audioRes.ok) {
+        const audioBuffer = await audioRes.arrayBuffer();
+        const storagePath = `${user.id}/${jobId}.mp3`;
+        const { error: uploadError } = await supabase.storage
+          .from('ai-voices')
+          .upload(storagePath, audioBuffer, { contentType: 'audio/mpeg', upsert: true });
+
+        if (!uploadError) {
+          const { data: signed } = await supabase.storage
+            .from('ai-voices')
+            .createSignedUrl(storagePath, 60 * 60 * 24 * 365 * 10);
+          if (signed?.signedUrl) savedAudioUrl = signed.signedUrl;
+        } else {
+          console.warn('[generate-voice] Storage upload failed:', uploadError.message);
+        }
+      }
+    } catch (uploadErr) {
+      console.warn('[generate-voice] Storage upload exception:', uploadErr);
+    }
+
+    // ── Save record to DB ─────────────────────────────────────────────────
     const { error: dbError } = await supabase
       .from('voice_generations')
       .insert({
-        id:         jobId,
-        user_id:    user.id,
-        script:     script.trim(),
+        id:              jobId,
+        user_id:         user.id,
+        script:          script.trim(),
         voice_id,
         emotion,
         speed,
-        status:     'succeeded',
-        audio_url:  audioUrl,
-        created_at: new Date().toISOString(),
+        status:          'succeeded',
+        audio_url:       audioUrl,
+        saved_audio_url: savedAudioUrl,
+        saved_at:        new Date().toISOString(),
+        created_at:      new Date().toISOString(),
+        replicate_id:    prediction.id ?? null,
       });
 
     if (dbError) console.warn('[generate-voice] DB insert warning:', dbError.message);
 
-    console.log('[generate-voice] Done. jobId:', jobId, 'audioUrl:', audioUrl.slice(0, 60));
+    console.log('[generate-voice] Done. jobId:', jobId, 'audioUrl:', savedAudioUrl.slice(0, 60));
 
     return new Response(
-      JSON.stringify({ audioUrl, jobId }),
+      JSON.stringify({ audioUrl: savedAudioUrl, jobId }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
