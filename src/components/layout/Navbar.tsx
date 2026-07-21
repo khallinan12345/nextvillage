@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
-import { useIsBackToBasicsMember } from '../../hooks/useIsBackToBasicsMember';
 import { Menu, X, Sparkles, LogOut, ShieldCheck } from 'lucide-react';
 import classNames from 'classnames';
 import { useBranding } from '../../lib/useBranding';
@@ -17,7 +16,6 @@ const Navbar: React.FC = () => {
     user?.role === 'site_leader' ||
     user?.role === 'research_lead' ||
     user?.role === 'platform_administrator';
-  const isBackToBasics = useIsBackToBasicsMember();
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -135,7 +133,7 @@ const Navbar: React.FC = () => {
       dropdown: [
         { name: 'Agent Builder', path: '/claude/agents' },
         { name: 'Use Claude',    path: '/playground'    },
-        ...(isBackToBasics ? [{ name: 'Use Claude Together', path: '/playground/together' }] : []),
+        { name: 'Use Claude Together', path: '/playground/together' },
       ],
     },
     { name: 'Dashboard', path: '/dashboard', shorthand: 'Dashboard' },

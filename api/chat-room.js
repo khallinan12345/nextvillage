@@ -7,16 +7,22 @@
 // assistant's reply — using the service-role key, since there's no
 // authenticated principal for Claude to write as.
 //
-// Restricted to Back to Basics Youth Education. Because this endpoint uses
-// the service-role key (bypassing RLS) to read/write, it re-derives
-// authorization itself on every call rather than trusting the caller — keep
-// the org check below in sync with src/lib/backToBasicsScope.ts.
+// Available to every organization, each scoped to its own rooms. Because
+// this endpoint uses the service-role key (bypassing RLS) to read/write, it
+// re-derives authorization itself on every call rather than trusting the
+// caller — it resolves the calling user's effective organization (mirroring
+// get_my_effective_profile() in the DB) and checks it matches the room's
+// organization_id.
 
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 
-const BACK_TO_BASICS_ORG_ID    = 'bf573bfa-c57a-4476-be26-508991bb4d76';
-const BACK_TO_BASICS_JOIN_CODE = 'Y3K9DC';
+// Back to Basics Youth Education stays exempt from the token quota below —
+// keep in sync with src/lib/backToBasicsScope.ts.
+const BACK_TO_BASICS_ORG_ID = 'bf573bfa-c57a-4476-be26-508991bb4d76';
+
+const QUOTA_TOKENS    = 25000;
+const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -74,33 +80,76 @@ export default async function handler(req, res) {
   }
 
   try {
+    // ── Room must exist and be active ──────────────────────────────────────
+    const { data: room, error: roomErr } = await supabase
+      .from('together_rooms')
+      .select('id, name, status, model, organization_id, organizations(name)')
+      .eq('id', room_id)
+      .single();
+
+    if (roomErr || !room || room.status !== 'active') {
+      return res.status(403).json({ success: false, error: 'room_not_available' });
+    }
+
     // ── Re-derive authorization — never trust the caller, since this
-    // endpoint bypasses RLS via the service-role key. ──────────────────────
+    // endpoint bypasses RLS via the service-role key. Resolve the caller's
+    // effective organization (organization_id, falling back to a
+    // join_code/join_codes lookup) and require it match the room's org —
+    // mirrors get_my_effective_profile() in the DB. ─────────────────────────
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
       .select('organization_id, join_code_used')
       .eq('id', user_id)
       .single();
 
-    const isMember =
-      !profileErr &&
-      profile &&
-      (profile.organization_id === BACK_TO_BASICS_ORG_ID ||
-        profile.join_code_used?.trim() === BACK_TO_BASICS_JOIN_CODE);
-
-    if (!isMember) {
+    if (profileErr || !profile) {
       return res.status(403).json({ success: false, error: 'not_authorized' });
     }
 
-    // ── Room must exist and be active ──────────────────────────────────────
-    const { data: room, error: roomErr } = await supabase
-      .from('together_rooms')
-      .select('id, name, status, model')
-      .eq('id', room_id)
-      .single();
+    let effectiveOrgId = profile.organization_id;
+    if (!effectiveOrgId && profile.join_code_used?.trim()) {
+      const joinCode = profile.join_code_used.trim();
+      const { data: byCode } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('join_code', joinCode)
+        .maybeSingle();
+      let org = byCode;
+      if (!org) {
+        const { data: byCodes } = await supabase
+          .from('organizations')
+          .select('id')
+          .contains('join_codes', [joinCode])
+          .maybeSingle();
+        org = byCodes;
+      }
+      effectiveOrgId = org?.id ?? null;
+    }
 
-    if (roomErr || !room || room.status !== 'active') {
-      return res.status(403).json({ success: false, error: 'room_not_available' });
+    if (!effectiveOrgId || effectiveOrgId !== room.organization_id) {
+      return res.status(403).json({ success: false, error: 'not_authorized' });
+    }
+
+    const isBackToBasics = effectiveOrgId === BACK_TO_BASICS_ORG_ID;
+
+    // ── Quota: 25k tokens / 3h, everyone except Back to Basics ──────────────
+    if (!isBackToBasics) {
+      const windowStart = new Date(Date.now() - QUOTA_WINDOW_MS).toISOString();
+      const { data: usage, error: usageErr } = await supabase
+        .from('api_cost_log')
+        .select('input_tokens, output_tokens')
+        .eq('user_id', user_id)
+        .eq('page', 'PlaygroundTogetherPage')
+        .gte('logged_at', windowStart);
+
+      if (!usageErr) {
+        const totalTokens = (usage || []).reduce(
+          (sum, r) => sum + (r.input_tokens ?? 0) + (r.output_tokens ?? 0), 0
+        );
+        if (totalTokens >= QUOTA_TOKENS) {
+          return res.status(429).json({ success: false, error: 'quota_exceeded' });
+        }
+      }
     }
 
     // ── Build context from recent non-deleted messages ─────────────────────
@@ -129,7 +178,8 @@ export default async function handler(req, res) {
     }
 
     const model = room.model || 'claude-sonnet-5';
-    const systemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at Back to Basics Youth Education. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Contribute naturally to whatever the group is building (for example, a community story) — build on what's already been said, don't repeat yourself, and prioritize direction from a leader. Keep replies focused and not overly long — this is a live group conversation, not a report.
+    const orgName = room.organizations?.name || 'this organization';
+    const systemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at ${orgName}. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Contribute naturally to whatever the group is building (for example, a community story) — build on what's already been said, don't repeat yourself, and prioritize direction from a leader. Keep replies focused and not overly long — this is a live group conversation, not a report.
 
 Respond to whoever sent the most recent message — don't address, praise, or ask a follow-up question of some other named participant instead (e.g. the person who started the room) just because they spoke earlier or more often. If you want the group's input, ask an open question to everyone rather than singling out one person by name.`;
 
