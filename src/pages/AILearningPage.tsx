@@ -107,6 +107,50 @@ const TUTOR_BEHAVIOR_RULES = `
 The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
 The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.`;
 
+// Extracts the "Biggest improvement lever" and "Next question" lines out of a
+// raw Rubric Critique Block — used both for the compact chat-history render
+// and to keep auto-speech in sync with what's actually shown in chat (no
+// reading out the detailed per-criterion scores turn after turn).
+const extractRubricKeyLines = (bodyLines: string[]): { suggestion: string | null; nextQuestion: string | null } => {
+  let suggestion: string | null = null;
+  let nextQuestion: string | null = null;
+  for (const line of bodyLines) {
+    const km = line.match(/^(Biggest improvement lever|Next question[^:]*):\s*(.+)$/i);
+    if (km) {
+      if (/biggest improvement lever/i.test(km[1])) suggestion = km[2];
+      else if (/next question/i.test(km[1])) nextQuestion = km[2];
+    }
+  }
+  return { suggestion, nextQuestion };
+};
+
+// Builds the text that should be spoken automatically after each AI turn —
+// same content the chat bubble shows (suggestion + next question for a
+// rubric turn, or the plain text otherwise), not the full detailed rubric.
+const extractChatVisibleText = (aiResponse: string): string =>
+  aiResponse.split('\n\n').map(paragraph => {
+    const lines = paragraph.split('\n').filter(l => l.trim());
+    if (!lines.length) return '';
+    if (/^rubric\b/i.test(lines[0].trim())) {
+      const { suggestion, nextQuestion } = extractRubricKeyLines(lines.slice(1));
+      const parts: string[] = [];
+      if (suggestion) parts.push(`Suggestion: ${suggestion}`);
+      if (nextQuestion) parts.push(`Next question: ${nextQuestion}`);
+      return parts.join('. ');
+    }
+    return paragraph;
+  }).filter(Boolean).join('\n\n');
+
+// Lightly cleans a raw Rubric Critique Block for speech — turns the em-dash
+// field separators into sentence breaks so it reads naturally aloud.
+const buildSpokenEvaluationText = (rubricBlockText: string): string =>
+  'Here is your evaluation. ' + rubricBlockText
+    .replace(/^rubric critique.*$/im, '')
+    .replace(/[—–]+/g, '. ')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
 function certificationScoreToOverallLevel(score: number | null | undefined): 'Emerging' | 'Proficient' | 'Advanced' | null {
   if (score == null) return null;
   let normalized = score;
@@ -122,7 +166,11 @@ function certificationScoreToOverallLevel(score: number | null | undefined): 'Em
   return null;
 }
 
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
+const MarkdownText: React.FC<{
+  text: string;
+  rubricMode?: 'compact' | 'full';
+  onViewEvaluation?: (evaluationText: string) => void;
+}> = ({ text, rubricMode = 'compact', onViewEvaluation }) => {
   const renderParagraph = (paragraph: string, pIndex: number) => {
     const lines = paragraph.split('\n').filter(l => l.trim());
     if (!lines.length) return null;
@@ -133,6 +181,41 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
         .replace(/^rubric\s*(critique|block)?\s*/i, '')
         .replace(/^[(\[]/, '').replace(/[)\]]$/, '').trim() || 'Rubric Critique';
 
+      // ── Compact mode (default, used in chat history) ───────────────────
+      // Shows only the next question + a suggestion drawn from the
+      // evaluation — the detailed per-criterion scoring lives behind the
+      // "View Evaluation" button so learners don't lose the thread of the
+      // conversation under a wall of scoring text every turn.
+      if (rubricMode === 'compact') {
+        const { suggestion, nextQuestion } = extractRubricKeyLines(lines.slice(1));
+        return (
+          <div key={pIndex} className="mt-3 space-y-2">
+            {suggestion && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
+                <span className="font-bold text-amber-700">💡 Suggestion:</span>{' '}
+                <span className="text-amber-900">{suggestion}</span>
+              </div>
+            )}
+            {nextQuestion && (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm">
+                <span className="font-bold text-indigo-700">❓ Next question:</span>{' '}
+                <span className="text-indigo-900 font-medium">{nextQuestion}</span>
+              </div>
+            )}
+            {onViewEvaluation && (
+              <button
+                type="button"
+                onClick={() => onViewEvaluation(paragraph)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-800 hover:underline"
+              >
+                📊 View Evaluation
+              </button>
+            )}
+          </div>
+        );
+      }
+
+      // ── Full mode (used inside the evaluation popup) ───────────────────
       return (
         <div key={pIndex} className="mt-3 rounded-xl overflow-hidden border border-indigo-200 bg-indigo-50 text-xs">
           {/* Header row */}
@@ -847,6 +930,11 @@ const AILearningPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
+  // Per-turn rubric evaluation popup — the full "Rubric critique" block for a
+  // single AI response, shown on demand instead of inline in the chat history
+  // (chat only shows the suggestion + next question) so learners don't lose
+  // track of the conversation under a wall of per-criterion scoring text.
+  const [turnEvaluationText, setTurnEvaluationText] = useState<string | null>(null);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   const [evaluationResult, setEvaluationResult] = useState<{
     score: number, 
@@ -890,12 +978,23 @@ const AILearningPage: React.FC = () => {
   // voiceMode === 'english' → en-GB priority
   const {
     speak: hookSpeak,
+    cancel: cancelSpeech,
     speaking: isSpeaking,
     fallbackText,
     clearFallback,
     recognitionLang,
     selectedVoice,
   } = useVoice(voiceMode === 'pidgin');
+
+  // ── Per-turn evaluation popup ──────────────────────────────────────────────
+  const openTurnEvaluation = (evaluationText: string) => {
+    setTurnEvaluationText(evaluationText);
+    if (voiceOutputEnabled) hookSpeak(buildSpokenEvaluationText(evaluationText));
+  };
+  const closeTurnEvaluation = () => {
+    setTurnEvaluationText(null);
+    cancelSpeech();
+  };
 
   // Initialize speech recognition
   // Note: voice selection and TTS are handled by useVoice hook above
@@ -2850,9 +2949,12 @@ Respond ONLY with valid JSON:
         }
       }
 
-      // Text-to-Speech playback of AI response
+      // Text-to-Speech playback of AI response — only the chat-visible
+      // content (suggestion + next question for a rubric turn), matching
+      // what's actually shown; the detailed evaluation is spoken separately
+      // if the learner opens the evaluation popup.
       if (voiceOutputEnabled) {
-        hookSpeak(aiResponse);
+        hookSpeak(extractChatVisibleText(aiResponse));
         // Voice input restart after TTS is handled by the isSpeaking useEffect above
       } else {
         if (wasListeningBeforeSubmit && voiceInputEnabled && speechRecognition) {
@@ -3356,6 +3458,31 @@ Respond ONLY with valid JSON:
               </div>
             </div>
 
+            {/* Per-turn Rubric Evaluation Popup */}
+            {turnEvaluationText && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      📊 Evaluation
+                    </h3>
+                    <button onClick={closeTurnEvaluation} className="text-gray-400 hover:text-gray-600">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <MarkdownText text={turnEvaluationText} rubricMode="full" />
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={closeTurnEvaluation}
+                      className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Evaluation Results Modal */}
             {showEvaluationModal && evaluationResult && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -3613,7 +3740,7 @@ Respond ONLY with valid JSON:
                           <div className="text-base leading-relaxed">
                             {message.role === 'assistant' ? (
                               <>
-                                <MarkdownText text={message.content} />
+                                <MarkdownText text={message.content} onViewEvaluation={openTurnEvaluation} />
                                 <AIPidginCoachWrapper englishText={message.content} />
                               </>
                             ) : (
