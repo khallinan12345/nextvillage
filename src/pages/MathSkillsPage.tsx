@@ -780,7 +780,7 @@ const MathSkillsPage: React.FC = () => {
   const [continent, setContinent] = useState<string | null>(null);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [ttsUnlocked, setTtsUnlocked] = useState(false);
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
   const hasSpokenIntro = useRef(false);

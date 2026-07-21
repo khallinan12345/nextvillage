@@ -375,7 +375,14 @@ const AIAmbassadorsCertificationPage: React.FC = () => {
   const [dashboardRowId, setDashboardRowId]     = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking]             = useState(false);
   const [speechOn, setSpeechOn]                 = useState(true);
-  const [voiceMode, setVoiceMode]               = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode]               = useState<'english' | 'pidgin'>('english');
+
+  // Pidgin only for learners whose profile country is Nigeria.
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('country').eq('id', user.id).single()
+      .then(({ data }) => setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'));
+  }, [user?.id]);
   const speechSynth                             = typeof window !== 'undefined' ? window.speechSynthesis : null;
 
   // Active teaching session state

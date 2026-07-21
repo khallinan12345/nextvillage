@@ -947,7 +947,7 @@ const AILearningPage: React.FC = () => {
   const [communicationStrategy, setCommunicationStrategy] = useState<any>(null);
   const [learningStrategy, setLearningStrategy] = useState<any>(null);
   const [communicationLevel, setCommunicationLevel] = useState<number>(1);
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [historyCache, setHistoryCache] = useState<Record<string, ChatMessage[]>>({});
   const [userInput, setUserInput] = useState('');

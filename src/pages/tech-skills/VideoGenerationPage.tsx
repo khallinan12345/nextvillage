@@ -208,7 +208,7 @@ const VideoGenerationPage: React.FC = () => {
   // ── Voice state ───────────────────────────────────────────────────────────
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice,   setSelectedVoice]   = useState<SpeechSynthesisVoice | null>(null);
-  const [voiceMode,       setVoiceMode]       = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode,       setVoiceMode]       = useState<'english' | 'pidgin'>('english');
   const [voiceEnabled,    setVoiceEnabled]    = useState(true);
   const [isSpeaking,      setIsSpeaking]      = useState(false);
 
@@ -278,10 +278,11 @@ const VideoGenerationPage: React.FC = () => {
         if (data?.communication_level != null) setCommunicationLevel(data.communication_level);
       });
 
-    supabase.from('profiles').select('continent, videos_per_week').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('continent, country, videos_per_week').eq('id', user.id).single().then(({ data }) => {
         setContinent(data?.continent ?? null);
         setLoadingContinent(false);
         if (data?.videos_per_week != null) setWeeklyLimit(data.videos_per_week);
+        setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english');
       });
 
     // Weekly usage count (Mon 00:00 local time → now, non-failed jobs)

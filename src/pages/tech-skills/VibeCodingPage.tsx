@@ -117,7 +117,7 @@ const VibeCodingPage: React.FC = () => {
   });
 
   // ── Voice ─────────────────────────────────────────────────────────────────
-  const [voiceMode, setVoiceMode]           = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode]           = useState<'english' | 'pidgin'>('english');
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
   const [voiceInputEnabled, setVoiceInputEnabled]   = useState(false);
   const [isListening, setIsListening]       = useState(false);

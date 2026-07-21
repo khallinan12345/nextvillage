@@ -239,7 +239,7 @@ const VoiceCreationPage: React.FC = () => {
   // ── UI narration voice (browser TTS) ─────────────────────────────────────
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice,   setSelectedVoice]   = useState<SpeechSynthesisVoice | null>(null);
-  const [voiceMode,       setVoiceMode]       = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode,       setVoiceMode]       = useState<'english' | 'pidgin'>('english');
   const [voiceEnabled,    setVoiceEnabled]    = useState(true);
   const [isSpeaking,      setIsSpeaking]      = useState(false);
 
@@ -274,9 +274,13 @@ const VoiceCreationPage: React.FC = () => {
       .eq('user_id', user.id).single()
       .then(({ data }) => { if (data?.communication_level != null) setCommunicationLevel(data.communication_level); });
 
-    supabase.from('profiles').select('continent')
+    supabase.from('profiles').select('continent, country')
       .eq('id', user.id).single()
-      .then(({ data }) => { setContinent(data?.continent ?? null); setLoadingContinent(false); });
+      .then(({ data }) => {
+        setContinent(data?.continent ?? null);
+        setLoadingContinent(false);
+        setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english');
+      });
 
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     supabase.from('voice_generations').select('id', { count: 'exact', head: true })

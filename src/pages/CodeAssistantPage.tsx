@@ -762,7 +762,7 @@ const CodeAssistantPage: React.FC = () => {
   const [speechRecognition, setSpeechRecognition] = useState<any>(null);
   const [wasListeningBeforeSubmit, setWasListeningBeforeSubmit] = useState(false);
   const [userContinent, setUserContinent] = useState<string | null>(null);
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin'); // Africa default
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english'); // corrected once profile loads
 
   // ── useVoice hook — Nigeria-aware TTS with offline fallback ───────────────
   const isAfrica = userContinent === 'Africa';

@@ -676,7 +676,7 @@ const AIAmbassadorsPage: React.FC = () => {
 
   // Voice
   const [voices, setVoices]                 = useState<SpeechSynthesisVoice[]>([]);
-  const [voiceMode, setVoiceMode]           = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode]           = useState<'english' | 'pidgin'>('english');
   const [speechOn, setSpeechOn]             = useState(true);
   const [isSpeaking, setIsSpeaking]         = useState(false);
   const [isListening, setIsListening]       = useState(false);
@@ -685,6 +685,13 @@ const AIAmbassadorsPage: React.FC = () => {
   const debriefEndRef                       = useRef<HTMLDivElement>(null);
   const inputRef                            = useRef<HTMLTextAreaElement>(null);
   const hasGreeted                          = useRef(false);
+
+  // Pidgin only for learners whose profile country is Nigeria.
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('country').eq('id', user.id).single()
+      .then(({ data }) => setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'));
+  }, [user?.id]);
 
   useEffect(() => {
     const load = () => setVoices(window.speechSynthesis.getVoices());
