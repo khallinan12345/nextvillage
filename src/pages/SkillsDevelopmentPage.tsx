@@ -155,16 +155,117 @@ const rubricScoreColor = (s: number) =>
 const rubricScoreLabel = (s: number) =>
   ['No Evidence', 'Emerging', 'Proficient ✓', 'Advanced ✓'][s] ?? '?';
 
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
+// Detects a Rubric Critique Block even when the model wraps the header in
+// **bold** markdown instead of plain text, or runs the whole block into one
+// paragraph instead of one field per line — checked against the whole
+// paragraph text, not just the first line.
+const isRubricParagraph = (paragraph: string): boolean =>
+  /^rubric\b/i.test(paragraph.replace(/^\*+/, '').trim());
+
+// Extracts "Weakest area" (used here as the chat-visible suggestion — this
+// page's rubric format has no separate "Biggest improvement lever" field)
+// and "Next question" out of a raw Rubric Critique Block. Works against the
+// raw paragraph TEXT (not a per-line array) with a dotAll regex, since the
+// model doesn't reliably put one field per line.
+const extractRubricKeyLines = (paragraph: string): { suggestion: string | null; nextQuestion: string | null } => {
+  const clean = paragraph.replace(/\*/g, '');
+  const weakestMatch = clean.match(/Weakest area:?\s*(.+?)(?=\s*(?:\n\s*\n|Next question|$))/is);
+  const nextQuestionMatch = clean.match(/Next question(?:\s*\(one only\))?:?\s*(.+?)(?=\s*(?:\n\s*\n|$))/is);
+  return {
+    suggestion: weakestMatch ? `Focus on: ${weakestMatch[1].replace(/\s+/g, ' ').trim()}` : null,
+    nextQuestion: nextQuestionMatch ? nextQuestionMatch[1].replace(/\s+/g, ' ').trim() : null,
+  };
+};
+
+// Builds the text that should be spoken automatically after each AI turn —
+// same content the chat bubble shows (suggestion + next question for a
+// rubric turn, or the plain text otherwise), not the full detailed rubric.
+const extractChatVisibleText = (aiResponse: string): string =>
+  aiResponse.split('\n\n').map(paragraph => {
+    if (!paragraph.trim()) return '';
+    if (isRubricParagraph(paragraph)) {
+      const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
+      const parts: string[] = [];
+      if (suggestion) parts.push(suggestion);
+      if (nextQuestion) parts.push(`Next question: ${nextQuestion}`);
+      return parts.join('. ');
+    }
+    return paragraph;
+  }).filter(Boolean).join('\n\n');
+
+// Lightly cleans a raw Rubric Critique Block for speech — turns the em-dash
+// field separators into sentence breaks so it reads naturally aloud.
+const buildSpokenEvaluationText = (rubricBlockText: string): string =>
+  'Here is your evaluation. ' + rubricBlockText
+    .replace(/^rubric\b.*$/im, '')
+    .replace(/[—–]+/g, '. ')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+const MarkdownText: React.FC<{
+  text: string;
+  rubricMode?: 'compact' | 'full';
+  onViewEvaluation?: (evaluationText: string) => void;
+}> = ({ text, rubricMode = 'compact', onViewEvaluation }) => {
   const renderParagraph = (paragraph: string, pIndex: number) => {
     const lines = paragraph.split('\n').filter(l => l.trim());
     if (!lines.length) return null;
 
-    // ── Rubric block (starts with "Rubric ...") ───────────────────────────
-    if (/^rubric\b/i.test(lines[0].trim())) {
-      const headerTitle = lines[0]
+    // ── Rubric block ("Rubric (...)" — possibly **bold**-wrapped) ─────────
+    if (isRubricParagraph(paragraph)) {
+      const cleanParagraph = paragraph.replace(/\*/g, '');
+      const headerTitle = cleanParagraph
+        .split('\n')[0]
         .replace(/^rubric\s*(critique|block)?\s*/i, '')
         .replace(/^[(\[]/, '').replace(/[)\]]$/, '').trim() || 'Rubric Critique';
+
+      // ── Compact mode (default, used in chat history) ───────────────────
+      // Shows only the next question + a suggestion drawn from the weakest
+      // dimension — the detailed per-dimension scoring lives behind the
+      // "View Evaluation" button so learners don't lose the thread of the
+      // conversation under a wall of scoring text every turn.
+      if (rubricMode === 'compact') {
+        const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
+        return (
+          <div key={pIndex} className="mt-3 space-y-2">
+            {suggestion && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
+                <span className="font-bold text-amber-700">💡 Suggestion:</span>{' '}
+                <span className="text-amber-900">{suggestion}</span>
+              </div>
+            )}
+            {nextQuestion && (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm">
+                <span className="font-bold text-indigo-700">❓ Next question:</span>{' '}
+                <span className="text-indigo-900 font-medium">{nextQuestion}</span>
+              </div>
+            )}
+            {onViewEvaluation && (
+              <button
+                type="button"
+                onClick={() => onViewEvaluation(paragraph)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-800 hover:underline"
+              >
+                📊 View Evaluation
+              </button>
+            )}
+          </div>
+        );
+      }
+
+      // ── Full mode (used inside the evaluation popup) ───────────────────
+      // Scans the whole (bold-stripped) paragraph text for dimension entries
+      // rather than requiring one field per line — the model doesn't always
+      // put a line break between fields. Dimension labels here are free-text
+      // (e.g. "Goal & Constraints"), not a fixed "Criterion N" prefix, so
+      // the lookahead detects the start of the *next* label: word(s)
+      // followed by ": <0-3> —".
+      const dimensionRe =
+        /([A-Za-z][\w /&'-]{1,60}?)\s*:\s*([0-3])\s*[—–-]+\s*Evidence:\s*(.+?)\s*[—–-]+\s*(?:What to improve|To improve|Improve):\s*(.+?)(?=(?:\s*[A-Za-z][\w /&'-]{1,60}?\s*:\s*[0-3]\s*[—–-]|\s*Weakest area|\s*Next question|$))/gis;
+      const dimensions = [...cleanParagraph.matchAll(dimensionRe)];
+      const { nextQuestion } = extractRubricKeyLines(paragraph);
+      const weakestMatch = cleanParagraph.match(/Weakest area:?\s*(.+?)(?=(?:\s*(?:\n\s*\n|Next question|$)))/is);
 
       return (
         <div key={pIndex} className="mt-3 rounded-xl overflow-hidden border border-indigo-200 bg-indigo-50 text-xs">
@@ -175,36 +276,40 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
             </span>
           </div>
           <div className="px-3 py-2 space-y-2.5">
-            {lines.slice(1).map((line, li) => {
-              const sm = line.match(
-                /^(.+?):\s*([0-3])\s*[—–-]+\s*Evidence:\s*(.+?)\s*[—–-]+\s*(?:What to improve|To improve|Improve):\s*(.+)$/i
-              );
-              if (sm) {
-                const score = parseInt(sm[2]);
-                return (
-                  <div key={li} className="border-l-2 border-indigo-300 pl-2 space-y-0.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold text-gray-800 capitalize">{sm[1].replace(/_/g, ' ').trim()}</span>
-                      <span className={`px-1.5 py-0.5 rounded-full border font-bold ${rubricScoreColor(score)}`}>
-                        {score}/3 · {rubricScoreLabel(score)}
-                      </span>
+            {dimensions.length > 0 ? (
+              <>
+                {dimensions.map((sm, li) => {
+                  const score = parseInt(sm[2]);
+                  return (
+                    <div key={li} className="border-l-2 border-indigo-300 pl-2 space-y-0.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-gray-800 capitalize">{sm[1].replace(/_/g, ' ').trim()}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full border font-bold ${rubricScoreColor(score)}`}>
+                          {score}/3 · {rubricScoreLabel(score)}
+                        </span>
+                      </div>
+                      <p className="text-gray-600"><span className="font-medium text-gray-700">Evidence:</span> {sm[3].replace(/\s+/g, ' ').trim()}</p>
+                      <p className="text-amber-700"><span className="font-medium">Improve:</span> {sm[4].replace(/\s+/g, ' ').trim()}</p>
                     </div>
-                    <p className="text-gray-600"><span className="font-medium text-gray-700">Evidence:</span> {sm[3]}</p>
-                    <p className="text-amber-700"><span className="font-medium">Improve:</span> {sm[4]}</p>
+                  );
+                })}
+                {weakestMatch && (
+                  <div className="pt-2 mt-1 border-t border-indigo-100 text-gray-700">
+                    <span className="font-bold">Weakest area:</span> {weakestMatch[1].replace(/\s+/g, ' ').trim()}
                   </div>
-                );
-              }
-              const km = line.match(/^(Biggest improvement lever|Weakest area|Next question[^:]*):\s*(.+)$/i);
-              if (km) {
-                const isQ = /next question/i.test(km[1]);
-                return (
-                  <div key={li} className={`pt-2 mt-1 border-t border-indigo-100 ${isQ ? 'text-indigo-800 font-semibold' : 'text-gray-700'}`}>
-                    <span className="font-bold">{km[1]}:</span> {km[2]}
+                )}
+                {nextQuestion && (
+                  <div className="pt-2 mt-1 border-t border-indigo-100 text-indigo-800 font-semibold">
+                    <span className="font-bold">Next question:</span> {nextQuestion}
                   </div>
-                );
-              }
-              return <p key={li} className="text-gray-600">{parseInline(line, `${pIndex}-${li}`)}</p>;
-            })}
+                )}
+              </>
+            ) : (
+              // Fallback — the model's formatting didn't match the expected
+              // pattern at all; still show the full raw text rather than
+              // nothing, so no evaluation content is ever lost.
+              <p className="text-gray-600 whitespace-pre-wrap">{cleanParagraph}</p>
+            )}
           </div>
         </div>
       );
@@ -1332,6 +1437,17 @@ const SkillsPage: React.FC = () => {
     recognitionLang,
     selectedVoice,
   } = useVoice(voiceMode === 'pidgin');
+
+  // ── Per-turn evaluation popup ──────────────────────────────────────────────
+  const openTurnEvaluation = (evaluationText: string) => {
+    setTurnEvaluationText(evaluationText);
+    if (voiceOutputEnabled) hookSpeak(buildSpokenEvaluationText(evaluationText));
+  };
+  const closeTurnEvaluation = () => {
+    setTurnEvaluationText(null);
+    cancelSpeech();
+  };
+
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [historyCache, setHistoryCache] = useState<Record<string, ChatMessage[]>>({});
   const [userInput, setUserInput] = useState('');
@@ -1343,6 +1459,11 @@ const SkillsPage: React.FC = () => {
   const [savingSession, setSavingSession] = useState(false);
   const [finishingModule, setFinishingModule] = useState(false);
 
+  // Per-turn rubric evaluation popup — the full "Rubric" block for a single
+  // AI response, shown on demand instead of inline in the chat history (chat
+  // only shows the suggestion + next question) so learners don't lose track
+  // of the conversation under a wall of per-dimension scoring text.
+  const [turnEvaluationText, setTurnEvaluationText] = useState<string | null>(null);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   const [evaluationResult, setEvaluationResult] = useState<{score: number, evidence: string} | SkillsRubricEvaluation | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -3346,7 +3467,10 @@ Provide assessment now:`;
         }
       }
       if (voiceOutputEnabled) {
-        hookSpeak(aiResponse);
+        // Only the chat-visible content (suggestion + next question for a
+        // rubric turn) — matches what's shown; the detailed evaluation is
+        // spoken separately if the learner opens the evaluation popup.
+        hookSpeak(extractChatVisibleText(aiResponse));
         // Voice input restart after TTS is handled by the isSpeaking useEffect above
       } else {
         if (wasListeningBeforeSubmit && voiceInputEnabled && speechRecognition) {
@@ -4097,7 +4221,7 @@ Provide assessment now:`;
                           : 'bg-purple-600 text-white'
                       )}
                     >
-                      <MarkdownText text={message.content} />
+                      <MarkdownText text={message.content} onViewEvaluation={openTurnEvaluation} />
                       {message.role === 'assistant' && <AIPidginCoachWrapper englishText={message.content} />}
                     </div>
                     {message.role === 'user' && (
@@ -4349,6 +4473,31 @@ Provide assessment now:`;
                   )}
                 >
                   <Star size={15} /> Save &amp; Complete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Per-turn Rubric Evaluation Popup */}
+        {turnEvaluationText && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  📊 Evaluation
+                </h3>
+                <button onClick={closeTurnEvaluation} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <MarkdownText text={turnEvaluationText} rubricMode="full" />
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={closeTurnEvaluation}
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                >
+                  Close
                 </button>
               </div>
             </div>
