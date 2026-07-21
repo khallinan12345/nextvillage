@@ -19,6 +19,7 @@ import { chatText } from '../../lib/chatClient';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { PidginTooltip } from '../../components/PidginTooltip';
+import { useIsBackToBasicsMember } from '../../hooks/useIsBackToBasicsMember';
 import {
   ImagePlus, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
@@ -149,6 +150,7 @@ const downloadImage = async (url: string, filename = 'generated-image.png') => {
 
 const ImageGenerationPage: React.FC = () => {
   const { user } = useAuth();
+  const isBackToBasics = useIsBackToBasicsMember(); // no weekly image limit
 
   // ── View / generation state ───────────────────────────────────────────────
   const [view,         setView]         = useState<ViewMode>('generate');
@@ -277,7 +279,7 @@ const ImageGenerationPage: React.FC = () => {
   const handleGenerate = async () => {
     if (!prompt.trim() || isGenerating || !user) return;
 
-    if (weeklyCount >= WEEKLY_LIMIT) {
+    if (weeklyCount >= WEEKLY_LIMIT && !isBackToBasics) {
       setError(lvl <= 1
         ? `You have made ${WEEKLY_LIMIT} images this week. Please come back next week!`
         : `Weekly limit reached (${WEEKLY_LIMIT} images/week). Resets in ${daysUntilReset()} day(s).`);
@@ -606,7 +608,7 @@ const ImageGenerationPage: React.FC = () => {
           <div className="space-y-4">
 
             {/* Weekly usage */}
-            {weeklyCount > 0 && (
+            {weeklyCount > 0 && !isBackToBasics && (
               <div className={classNames('flex items-center gap-3 rounded-xl px-4 py-3 text-sm border',
                 weeklyCount >= WEEKLY_LIMIT ? 'bg-red-900/20 border-red-500/30 text-red-300'
                 : weeklyCount >= WEEKLY_LIMIT - 3 ? 'bg-amber-900/20 border-amber-500/30 text-amber-300'
@@ -831,9 +833,9 @@ const ImageGenerationPage: React.FC = () => {
 
             {/* Generate button */}
             {!activeJob && (
-              <button onClick={handleGenerate} disabled={!prompt.trim() || isGenerating || weeklyCount >= WEEKLY_LIMIT}
+              <button onClick={handleGenerate} disabled={!prompt.trim() || isGenerating || (weeklyCount >= WEEKLY_LIMIT && !isBackToBasics)}
                 className={classNames('w-full flex items-center justify-center gap-3 rounded-xl py-3.5 font-semibold text-base transition-all',
-                  prompt.trim() && !isGenerating && weeklyCount < WEEKLY_LIMIT
+                  prompt.trim() && !isGenerating && (weeklyCount < WEEKLY_LIMIT || isBackToBasics)
                     ? 'bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-500 hover:to-orange-400 text-white shadow-lg hover:scale-[1.01]'
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed')}>
                 {isGenerating
