@@ -699,7 +699,7 @@ const MicrosoftGH300Page: React.FC = () => {
 
   // ── Voice ─────────────────────────────────────────────────────────────
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
-  const [voiceMode, setVoiceMode]                   = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode]                   = useState<'english' | 'pidgin'>('english');
 
   useEffect(() => {
     if (!userId) return;

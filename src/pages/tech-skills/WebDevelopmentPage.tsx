@@ -542,7 +542,7 @@ const WebDevelopmentPage: React.FC = () => {
 
   // ── Voice narration ─────────────────────────────────────────────────
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
-  const [voiceMode, setVoiceMode]                   = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode]                   = useState<'english' | 'pidgin'>('english');
   const [userContinent, setUserContinent]           = useState<string | null>(null);
   const [userGradeLevel, setUserGradeLevel]         = useState<number | null>(null);
 

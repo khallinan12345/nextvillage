@@ -576,12 +576,12 @@ const MicrosoftDP900Page: React.FC = () => {
 
   // ── Voice ────────────────────────────────────────────────────────────
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
-  const [voiceMode, setVoiceMode]                   = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode]                   = useState<'english' | 'pidgin'>('english');
 
   useEffect(() => {
     if (!userId) return;
-    supabase.from('profiles').select('continent').eq('id', userId).single()
-      .then(({ data }) => { setVoiceMode(data?.continent === 'Africa' ? 'pidgin' : 'english'); });
+    supabase.from('profiles').select('continent, country').eq('id', userId).single()
+      .then(({ data }) => { setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'); });
   }, [userId]);
 
   const {

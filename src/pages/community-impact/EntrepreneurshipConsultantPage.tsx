@@ -722,7 +722,14 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   const [dashboardId, setDashboardId] = useState<string | null>(null);
   const [speechOn, setSpeechOn] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
+
+  // Pidgin only for learners whose profile country is Nigeria.
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('country').eq('id', user.id).single()
+      .then(({ data }) => setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'));
+  }, [user?.id]);
 
   // ── Community AI Challenge state ─────────────────────────────────────────
   const [availableChallenge, setAvailableChallenge] = useState<ActiveChallenge | null>(null);

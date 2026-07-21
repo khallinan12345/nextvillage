@@ -1425,7 +1425,7 @@ const SkillsPage: React.FC = () => {
   });
   const [communicationLevel, setCommunicationLevel] = useState<number>(1);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]); // stub — hook manages selection
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
 
   // ── useVoice hook — Nigeria-aware TTS with offline fallback ───────────────
   const {

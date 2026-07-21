@@ -260,7 +260,14 @@ const AIVoiceCertificationPage: React.FC = () => {
   const [communicationLevel, setCommunicationLevel] = useState(1);
 
   // ── Page narration voice ──────────────────────────────────────────────
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin'); // Africa default
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
+
+  // Pidgin only for learners whose profile country is Nigeria.
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('country').eq('id', user.id).single()
+      .then(({ data }) => setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'));
+  }, [user?.id]);
   const branding = useBranding();
 
   useEffect(() => {

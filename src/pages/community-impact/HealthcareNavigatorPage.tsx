@@ -928,7 +928,14 @@ const HealthcareNavigatorPage: React.FC = () => {
   const [speechOn, setSpeechOn] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin');
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
+
+  // Pidgin only for learners whose profile country is Nigeria.
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('country').eq('id', user.id).single()
+      .then(({ data }) => setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'));
+  }, [user?.id]);
 
   // ── Prior follow-up chat state (guided clinical follow-up)
   const [priorFollowupMessages, setPriorFollowupMessages] = useState<ChatMessage[]>([]);

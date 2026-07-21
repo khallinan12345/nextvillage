@@ -169,7 +169,7 @@ const ImageGenerationPage: React.FC = () => {
   const [loadingContinent,   setLoadingContinent]   = useState(true);
 
   // ── Voice state ───────────────────────────────────────────────────────────
-  const [voiceMode,    setVoiceMode]    = useState<'english' | 'pidgin'>('pidgin'); // Africa default
+  const [voiceMode,    setVoiceMode]    = useState<'english' | 'pidgin'>('english'); // corrected once profile loads
   const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   const {

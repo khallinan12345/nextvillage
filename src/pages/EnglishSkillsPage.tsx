@@ -760,7 +760,7 @@ const EnglishSkillsPage: React.FC = () => {
 
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [ttsUnlocked, setTtsUnlocked] = useState(false);
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin'); // default Nigerian
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english'); // corrected once profile loads
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
   const hasSpokenIntro = useRef(false);

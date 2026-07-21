@@ -256,15 +256,16 @@ const AIReadySkillsPage: React.FC = () => {
   const [isImproving, setIsImproving] = useState(false);
 
   // ── Voice state ────────────────────────────────────────────────────────
-  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('pidgin'); // Africa default
+  const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
 
   const branding = useBranding();
 
-  // Set voiceMode from branding once ready
+  // Pidgin only for learners whose profile country is Nigeria.
   useEffect(() => {
-    if (!branding.isReady) return;
-    setVoiceMode(branding.variant === 'vai' ? 'pidgin' : 'english');
-  }, [branding.isReady, branding.variant]);
+    if (!user?.id) return;
+    supabase.from('profiles').select('country').eq('id', user.id).single()
+      .then(({ data }) => setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'));
+  }, [user?.id]);
 
   const {
     speak: hookSpeak,
