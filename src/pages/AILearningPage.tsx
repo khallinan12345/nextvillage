@@ -107,21 +107,28 @@ const TUTOR_BEHAVIOR_RULES = `
 The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
 The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.`;
 
-// Extracts the "Biggest improvement lever" and "Next question" lines out of a
-// raw Rubric Critique Block — used both for the compact chat-history render
-// and to keep auto-speech in sync with what's actually shown in chat (no
-// reading out the detailed per-criterion scores turn after turn).
-const extractRubricKeyLines = (bodyLines: string[]): { suggestion: string | null; nextQuestion: string | null } => {
-  let suggestion: string | null = null;
-  let nextQuestion: string | null = null;
-  for (const line of bodyLines) {
-    const km = line.match(/^(Biggest improvement lever|Next question[^:]*):\s*(.+)$/i);
-    if (km) {
-      if (/biggest improvement lever/i.test(km[1])) suggestion = km[2];
-      else if (/next question/i.test(km[1])) nextQuestion = km[2];
-    }
-  }
-  return { suggestion, nextQuestion };
+// Detects a Rubric Critique Block even when the model wraps the header in
+// **bold** markdown instead of plain text — checked against the whole
+// paragraph, not just a line, since the model doesn't always put a line
+// break right after the header.
+const isRubricParagraph = (paragraph: string): boolean =>
+  /^rubric\b/i.test(paragraph.replace(/^\*+/, '').trim());
+
+// Extracts "Biggest improvement lever" and "Next question" out of a raw
+// Rubric Critique Block. Works against the raw paragraph TEXT (not a
+// per-line array) with a dotAll regex, because the model doesn't reliably
+// put one field per line — it sometimes runs the whole block together as a
+// single bold-wrapped paragraph. Used both for the compact chat-history
+// render and to keep auto-speech in sync with what's actually shown in chat
+// (no reading out the detailed per-criterion scores turn after turn).
+const extractRubricKeyLines = (paragraph: string): { suggestion: string | null; nextQuestion: string | null } => {
+  const clean = paragraph.replace(/\*/g, '');
+  const suggestionMatch = clean.match(/Biggest improvement lever:?\s*(.+?)(?=\s*(?:\n\s*\n|Next question|$))/is);
+  const nextQuestionMatch = clean.match(/Next question(?:\s*\(one only\))?:?\s*(.+?)(?=\s*(?:\n\s*\n|$))/is);
+  return {
+    suggestion: suggestionMatch ? suggestionMatch[1].replace(/\s+/g, ' ').trim() : null,
+    nextQuestion: nextQuestionMatch ? nextQuestionMatch[1].replace(/\s+/g, ' ').trim() : null,
+  };
 };
 
 // Builds the text that should be spoken automatically after each AI turn —
@@ -129,10 +136,9 @@ const extractRubricKeyLines = (bodyLines: string[]): { suggestion: string | null
 // rubric turn, or the plain text otherwise), not the full detailed rubric.
 const extractChatVisibleText = (aiResponse: string): string =>
   aiResponse.split('\n\n').map(paragraph => {
-    const lines = paragraph.split('\n').filter(l => l.trim());
-    if (!lines.length) return '';
-    if (/^rubric\b/i.test(lines[0].trim())) {
-      const { suggestion, nextQuestion } = extractRubricKeyLines(lines.slice(1));
+    if (!paragraph.trim()) return '';
+    if (isRubricParagraph(paragraph)) {
+      const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
       const parts: string[] = [];
       if (suggestion) parts.push(`Suggestion: ${suggestion}`);
       if (nextQuestion) parts.push(`Next question: ${nextQuestion}`);
@@ -175,9 +181,11 @@ const MarkdownText: React.FC<{
     const lines = paragraph.split('\n').filter(l => l.trim());
     if (!lines.length) return null;
 
-    // ── Rubric block (starts with "Rubric ...") ───────────────────────────
-    if (/^rubric\b/i.test(lines[0].trim())) {
-      const headerTitle = lines[0]
+    // ── Rubric block ("Rubric critique ..." — possibly **bold**-wrapped) ──
+    if (isRubricParagraph(paragraph)) {
+      const cleanParagraph = paragraph.replace(/\*/g, '');
+      const headerTitle = cleanParagraph
+        .split('\n')[0]
         .replace(/^rubric\s*(critique|block)?\s*/i, '')
         .replace(/^[(\[]/, '').replace(/[)\]]$/, '').trim() || 'Rubric Critique';
 
@@ -187,7 +195,7 @@ const MarkdownText: React.FC<{
       // "View Evaluation" button so learners don't lose the thread of the
       // conversation under a wall of scoring text every turn.
       if (rubricMode === 'compact') {
-        const { suggestion, nextQuestion } = extractRubricKeyLines(lines.slice(1));
+        const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
         return (
           <div key={pIndex} className="mt-3 space-y-2">
             {suggestion && (
@@ -216,6 +224,16 @@ const MarkdownText: React.FC<{
       }
 
       // ── Full mode (used inside the evaluation popup) ───────────────────
+      // Scans the whole (bold-stripped) paragraph text for criterion entries
+      // rather than requiring one field per line — the model doesn't always
+      // put a line break between fields, sometimes running the whole block
+      // together as a single paragraph.
+      const criterionRe =
+        /Criterion\s*(\d+)\s*(?:\(([^)]*)\))?\s*:?\s*([0-3])\s*[—–-]+\s*Evidence:\s*(.+?)\s*[—–-]+\s*(?:What to improve|To improve|Improve):\s*(.+?)(?=(?:\s*Criterion\s*\d|\s*Biggest improvement lever|\s*Weakest area|\s*Next question|$))/gis;
+      const criteria = [...cleanParagraph.matchAll(criterionRe)];
+      const weakestMatch = cleanParagraph.match(/Weakest area:?\s*(.+?)(?=(?:\s*(?:\n\s*\n|Biggest improvement lever|Next question|$)))/is);
+      const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
+
       return (
         <div key={pIndex} className="mt-3 rounded-xl overflow-hidden border border-indigo-200 bg-indigo-50 text-xs">
           {/* Header row */}
@@ -225,40 +243,47 @@ const MarkdownText: React.FC<{
               0 No Evidence · 1 Emerging · <strong>2 Proficient ✓</strong> · <strong>3 Advanced ✓</strong>
             </span>
           </div>
-          {/* Criterion lines */}
           <div className="px-3 py-2 space-y-2.5">
-            {lines.slice(1).map((line, li) => {
-              // Match: "Label: score — Evidence: ... — Improve/What to improve: ..."
-              const sm = line.match(
-                /^(.+?):\s*([0-3])\s*[—–-]+\s*Evidence:\s*(.+?)\s*[—–-]+\s*(?:What to improve|To improve|Improve):\s*(.+)$/i
-              );
-              if (sm) {
-                const score = parseInt(sm[2]);
-                return (
-                  <div key={li} className="border-l-2 border-indigo-300 pl-2 space-y-0.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold text-gray-800 capitalize">{sm[1].replace(/_/g, ' ').trim()}</span>
-                      <span className={`px-1.5 py-0.5 rounded-full border font-bold ${rubricScoreColor(score)}`}>
-                        {score}/3 · {rubricScoreLabel(score)}
-                      </span>
+            {criteria.length > 0 ? (
+              <>
+                {criteria.map((sm, li) => {
+                  const score = parseInt(sm[3]);
+                  const label = sm[2]?.trim() || `Criterion ${sm[1]}`;
+                  return (
+                    <div key={li} className="border-l-2 border-indigo-300 pl-2 space-y-0.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-gray-800 capitalize">{label}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full border font-bold ${rubricScoreColor(score)}`}>
+                          {score}/3 · {rubricScoreLabel(score)}
+                        </span>
+                      </div>
+                      <p className="text-gray-600"><span className="font-medium text-gray-700">Evidence:</span> {sm[4].replace(/\s+/g, ' ').trim()}</p>
+                      <p className="text-amber-700"><span className="font-medium">Improve:</span> {sm[5].replace(/\s+/g, ' ').trim()}</p>
                     </div>
-                    <p className="text-gray-600"><span className="font-medium text-gray-700">Evidence:</span> {sm[3]}</p>
-                    <p className="text-amber-700"><span className="font-medium">Improve:</span> {sm[4]}</p>
+                  );
+                })}
+                {weakestMatch && (
+                  <div className="pt-2 mt-1 border-t border-indigo-100 text-gray-700">
+                    <span className="font-bold">Weakest area:</span> {weakestMatch[1].replace(/\s+/g, ' ').trim()}
                   </div>
-                );
-              }
-              // "Biggest improvement lever:", "Weakest area:", "Next question..."
-              const km = line.match(/^(Biggest improvement lever|Weakest area|Next question[^:]*):\s*(.+)$/i);
-              if (km) {
-                const isQ = /next question/i.test(km[1]);
-                return (
-                  <div key={li} className={`pt-2 mt-1 border-t border-indigo-100 ${isQ ? 'text-indigo-800 font-semibold' : 'text-gray-700'}`}>
-                    <span className="font-bold">{km[1]}:</span> {km[2]}
+                )}
+                {suggestion && (
+                  <div className="pt-2 mt-1 border-t border-indigo-100 text-gray-700">
+                    <span className="font-bold">Biggest improvement lever:</span> {suggestion}
                   </div>
-                );
-              }
-              return <p key={li} className="text-gray-600">{parseInline(line, `${pIndex}-${li}`)}</p>;
-            })}
+                )}
+                {nextQuestion && (
+                  <div className="pt-2 mt-1 border-t border-indigo-100 text-indigo-800 font-semibold">
+                    <span className="font-bold">Next question:</span> {nextQuestion}
+                  </div>
+                )}
+              </>
+            ) : (
+              // Fallback — the model's formatting didn't match the expected
+              // pattern at all; still show the full raw text rather than
+              // nothing, so no evaluation content is ever lost.
+              <p className="text-gray-600 whitespace-pre-wrap">{cleanParagraph}</p>
+            )}
           </div>
         </div>
       );
