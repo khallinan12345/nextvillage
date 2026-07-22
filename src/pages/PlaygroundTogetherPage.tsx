@@ -61,6 +61,7 @@ const PlaygroundTogetherPage: React.FC = () => {
   const [quotaUsed, setQuotaUsed] = useState(0);
 
   const isLeader = !!user?.role && (LEADER_ROLES.has(user.role) || user.role === 'platform_administrator');
+  const canDeleteRoom = (room: TogetherRoom) => isLeader || room.created_by === user?.id;
 
   const [view, setView] = useState<'list' | 'room'>('list');
   const [rooms, setRooms] = useState<TogetherRoom[]>([]);
@@ -146,6 +147,10 @@ const PlaygroundTogetherPage: React.FC = () => {
             : prev.filter(r => r.id !== room.id)
         );
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'together_rooms' }, payload => {
+        const room = payload.old as TogetherRoom;
+        setRooms(prev => prev.filter(r => r.id !== room.id));
+      })
       .subscribe();
     roomsChannelRef.current = channel;
 
@@ -181,6 +186,9 @@ const PlaygroundTogetherPage: React.FC = () => {
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'together_rooms', filter: `id=eq.${activeRoom.id}` }, payload => {
         setActiveRoom(payload.new as TogetherRoom);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'together_rooms', filter: `id=eq.${activeRoom.id}` }, () => {
+        backToList();
       })
       .subscribe();
     messagesChannelRef.current = channel;
@@ -287,6 +295,15 @@ const PlaygroundTogetherPage: React.FC = () => {
     if (data) setActiveRoom(data);
   };
 
+  const handleDeleteRoom = async (room: TogetherRoom) => {
+    if (!canDeleteRoom(room)) return;
+    if (!window.confirm(`Delete "${room.name}"? This cannot be undone.`)) return;
+    const { error } = await supabase.from('together_rooms').delete().eq('id', room.id);
+    if (error) { setRoomError('Could not delete the room — please try again.'); return; }
+    setRooms(prev => prev.filter(r => r.id !== room.id));
+    if (activeRoom?.id === room.id) backToList();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
@@ -348,17 +365,30 @@ const PlaygroundTogetherPage: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 {rooms.map(room => (
-                  <button
+                  <div
                     key={room.id}
-                    onClick={() => openRoom(room)}
-                    className="w-full text-left bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-sm transition-all flex items-center justify-between"
+                    className="group bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-sm transition-all flex items-center justify-between"
                   >
-                    <div>
-                      <p className="font-medium text-gray-900">{room.name}</p>
-                      <p className="text-xs text-gray-400">Started by {room.created_by_name}</p>
-                    </div>
-                    <ArrowLeft size={16} className="text-gray-300 rotate-180" />
-                  </button>
+                    <button
+                      onClick={() => openRoom(room)}
+                      className="flex-1 min-w-0 text-left flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{room.name}</p>
+                        <p className="text-xs text-gray-400">Started by {room.created_by_name}</p>
+                      </div>
+                      <ArrowLeft size={16} className="text-gray-300 rotate-180 flex-shrink-0" />
+                    </button>
+                    {canDeleteRoom(room) && (
+                      <button
+                        onClick={() => handleDeleteRoom(room)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 ml-2 text-gray-300 hover:text-red-500 transition-all flex-shrink-0"
+                        title="Delete room"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -377,14 +407,24 @@ const PlaygroundTogetherPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              {isLeader && activeRoom?.status === 'active' && (
-                <button
-                  onClick={handleCloseRoom}
-                  className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
-                >
-                  <Lock size={13} /> Close Room
-                </button>
-              )}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {isLeader && activeRoom?.status === 'active' && (
+                  <button
+                    onClick={handleCloseRoom}
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    <Lock size={13} /> Close Room
+                  </button>
+                )}
+                {activeRoom && canDeleteRoom(activeRoom) && (
+                  <button
+                    onClick={() => handleDeleteRoom(activeRoom)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    <Trash2 size={13} /> Delete Room
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
