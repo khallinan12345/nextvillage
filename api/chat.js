@@ -954,6 +954,32 @@ async function callAnthropicStreaming(model, messages, system, max_tokens, tempe
   return { inputTokens, outputTokens, cacheHitTokens, cacheWriteTokens };
 }
 
+// ── Unicode sanitization ──────────────────────────────────────────────────────
+// Frontend pages sometimes truncate user/AI text with `.slice(0, N)` /
+// `.substring(0, N)`, which cuts by UTF-16 code unit rather than code point
+// and can split a surrogate pair (e.g. an emoji) in half. A lone surrogate
+// left in a string is embedded as-is into every provider's JSON.stringify'd
+// request body here, and each provider's own JSON/UTF-8 parser then rejects
+// the *whole* request — this took down the entire fallback chain at once
+// (Cerebras: "unexpected end of hex escape", Anthropic: "no low surrogate in
+// string", DeepSeek and OpenRouter erroring/cooling down on the same bad
+// request). Strip lone surrogates once, here, so no caller of /api/chat can
+// take down every provider with a single bad character.
+const LONE_SURROGATE_RE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+function stripLoneSurrogates(str) {
+  if (typeof str !== 'string' || !str) return str;
+  return str.replace(LONE_SURROGATE_RE, '');
+}
+function sanitizeContent(content) {
+  if (typeof content === 'string') return stripLoneSurrogates(content);
+  if (Array.isArray(content)) {
+    return content.map(block =>
+      block && typeof block.text === 'string' ? { ...block, text: stripLoneSurrogates(block.text) } : block
+    );
+  }
+  return content;
+}
+
 // ── Main handler ───────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
@@ -988,8 +1014,8 @@ export default async function handler(req, res) {
 
   try {
     const {
-      messages,
-      system,
+      messages: rawMessages,
+      system:   rawSystem,
       max_tokens      = 1000,
       temperature     = 0.7,
       page            = '',
@@ -1000,22 +1026,27 @@ export default async function handler(req, res) {
       stream          = false,
     } = req.body || {};
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!rawMessages || !Array.isArray(rawMessages)) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
-    if (messages.length === 0) {
+    if (rawMessages.length === 0) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Messages array must contain at least one message' });
     }
 
-    const invalidMsg = messages.find(m => !m || typeof m.role !== 'string' || (typeof m.content !== 'string' && !Array.isArray(m.content)));
+    const invalidMsg = rawMessages.find(m => !m || typeof m.role !== 'string' || (typeof m.content !== 'string' && !Array.isArray(m.content)));
     if (invalidMsg) {
       console.error('[chat.js] Invalid message payload detected:', JSON.stringify(invalidMsg));
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Each message must have a string `role` and a `content` string or array' });
     }
+
+    // Strip any lone surrogates before this content reaches provider request
+    // bodies — see sanitizeContent/stripLoneSurrogates above.
+    const messages = rawMessages.map(m => ({ ...m, content: sanitizeContent(m.content) }));
+    const system   = stripLoneSurrogates(rawSystem);
 
     // Pick up any model_config changes (cached 5 min; falls back to defaults on failure)
     await refreshModels();
