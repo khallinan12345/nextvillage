@@ -73,6 +73,7 @@ const Navbar: React.FC = () => {
       shorthand: 'Tech Skills',
       dropdown: [
         { name: 'Vibe Coding', path: '/tech-skills/vibe-coding' },
+        { name: 'Create Game', path: '/tech-skills/create-game' },
         { name: 'Vite/React Web Site Development', path: '/tech-skills/web-development' },
         { name: 'Full-Stack App Development', path: '/tech-skills/full-stack-development' },
         { name: 'AI Image Creation', path: '/tech-skills/ai-image-creation' },
