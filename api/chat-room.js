@@ -153,15 +153,18 @@ export default async function handler(req, res) {
     }
 
     // ── Build context from recent non-deleted messages ─────────────────────
-    const { data: history, error: historyErr } = await supabase
+    // Fetch newest-first so `.limit()` keeps the most recent messages (not
+    // the oldest), then reverse back to chronological order for Anthropic.
+    const { data: recentHistory, error: historyErr } = await supabase
       .from('together_messages')
       .select('sender_name, role, content')
       .eq('room_id', room_id)
       .is('deleted_at', null)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(40);
 
     if (historyErr) throw historyErr;
+    const history = (recentHistory || []).reverse();
 
     const anthropicMessages = (history || []).map(m => ({
       role: m.role,
