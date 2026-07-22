@@ -67,6 +67,7 @@ const HYBRID_CODING_PAGES = new Set([
   'WebDevelopmentPage',
   'FullStackDevelopmentPage',
   'AIWorkflowDevPage',
+  'CreateGamePage',
 ]);
 
 // Certification pages — always Haiku; structured JSON eval must be reliable

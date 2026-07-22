@@ -48,6 +48,8 @@ const PlaygroundTogetherPage = lazy(() => import('./pages/PlaygroundTogetherPage
 // Tech Skills Pages
 const WebDevelopmentPage = lazy(() => import('./pages/tech-skills/WebDevelopmentPage'));
 const VibeCodingPage = lazy(() => import('./pages/tech-skills/VibeCodingPage'));
+const CreateGamePage = lazy(() => import('./pages/tech-skills/CreateGamePage'));
+const PlayGamePage = lazy(() => import('./pages/tech-skills/PlayGamePage'));
 const FullStackDevelopmentPage = lazy(() => import('./pages/tech-skills/FullStackDevelopmentPage'));
 const ImageGenerationPage = lazy(() => import('./pages/tech-skills/ImageGenerationPage'));
 const VideoGenerationPage = lazy(() => import('./pages/tech-skills/VideoGenerationPage'));
@@ -239,6 +241,8 @@ export const AppContent: React.FC = () => {
 
         {/* Tech Skills Routes */}
         <Route path="/tech-skills/vibe-coding" element={<VibeCodingPage />} />
+        <Route path="/tech-skills/create-game" element={<CreateGamePage />} />
+        <Route path="/tech-skills/games/:gameId" element={<PlayGamePage />} />
         <Route path="/tech-skills/web-development" element={<WebDevelopmentPage />} />
         <Route path="/tech-skills/full-stack-development" element={<FullStackDevelopmentPage />} />
         <Route path="/tech-skills/ai-image-creation" element={<ImageGenerationPage />} />
