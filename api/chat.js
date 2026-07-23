@@ -484,7 +484,12 @@ async function callAnthropic(model, messages, system, max_tokens, temperature) {
     throw err;
   }
 
-  const text = data?.content?.[0]?.text ?? '';
+  // Sonnet 5 (and other adaptive-thinking models) run thinking on by default
+  // when `thinking` is omitted, which puts a `thinking` block at content[0]
+  // and the real answer in a later `text` block — content[0].text is
+  // undefined in that case, silently returning "". Find the text block
+  // explicitly instead of assuming it's first.
+  const text = (data?.content || []).find(b => b?.type === 'text')?.text ?? '';
   return {
     id:     data.id,
     object: 'chat.completion',
