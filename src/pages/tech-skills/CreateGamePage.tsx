@@ -2,13 +2,17 @@
 //
 // A student describes a game idea in chat; Claude generates a complete,
 // self-contained HTML/canvas game (code stays hidden — the student only
-// sees the running game and chat). Controls are mouse/trackpad only. After
-// each generation, an automated smoke test (src/lib/gameTestHarness.ts)
-// plays the game with synthetic mouse events inside the sandboxed preview
-// iframe and reports back via postMessage; Claude then reviews that report
-// plus the code and gives the student a plain-language verdict. Once
-// satisfied, the student publishes the game to `student_games`, which
-// hands them a shareable /tech-skills/games/:id link (PlayGamePage.tsx).
+// sees the running game and chat), and can keep asking for changes to
+// improve it. Controls are mouse/trackpad only. After each generation, an
+// automated smoke test (src/lib/gameTestHarness.ts) plays the game with
+// synthetic mouse events inside the sandboxed preview iframe and reports
+// back via postMessage; Claude then reviews that report plus the code and
+// gives the student a plain-language verdict. Saving persists the game to
+// `student_games`, which hands them a shareable /tech-skills/games/:id
+// link (PlayGamePage.tsx). A student can reopen any of their own
+// previously saved games from the "Your games" list to keep improving it
+// — saving again updates that same game in place (same id, same public
+// URL) rather than creating a duplicate.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +21,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { buildHarnessedHtml, useGameSmokeTest, GameTestReport } from '../../lib/gameTestHarness';
-import { Gamepad2, Send, Loader2, Sparkles, CheckCircle2, AlertTriangle, Rocket, X } from 'lucide-react';
+import { Gamepad2, Send, Loader2, Sparkles, CheckCircle2, AlertTriangle, Rocket, Save, FolderOpen, Plus, X } from 'lucide-react';
 
 interface ChatEntry {
   role: 'user' | 'assistant';
@@ -28,6 +32,12 @@ interface Verdict {
   verdict: 'looks good' | 'needs work';
   summary: string;
   suggestions: string[];
+}
+
+interface SavedGame {
+  id: string;
+  title: string;
+  updated_at: string;
 }
 
 const GENERATION_SYSTEM_PROMPT = `You are generating a single, self-contained HTML file for a simple browser game designed by a student, to run inside a sandboxed iframe.
@@ -50,6 +60,8 @@ const CreateGamePage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
+  const [isExistingGame, setIsExistingGame] = useState(false);
   const [effectiveOrgId, setEffectiveOrgId] = useState<string | null>(null);
 
   const [chatHistory, setChatHistory] = useState<ChatEntry[]>([]);
@@ -64,18 +76,69 @@ const CreateGamePage: React.FC = () => {
   const [showVerdictModal, setShowVerdictModal] = useState(false);
 
   const [title, setTitle] = useState('');
-  const [publishing, setPublishing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const [myGames, setMyGames] = useState<SavedGame[]>([]);
+  const [loadingGame, setLoadingGame] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const smoke = useGameSmokeTest(iframeRef);
   const reviewedRef = useRef(false);
+
+  const refreshMyGames = useCallback(() => {
+    if (!user?.id) return;
+    supabase
+      .from('student_games')
+      .select('id, title, updated_at')
+      .eq('owner_id', user.id)
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => setMyGames(data ?? []));
+  }, [user?.id]);
 
   useEffect(() => {
     supabase.rpc('get_my_effective_profile').then(({ data }) => {
       setEffectiveOrgId(data?.[0]?.organization_id ?? null);
     });
   }, []);
+
+  useEffect(() => { refreshMyGames(); }, [refreshMyGames]);
+
+  const loadGame = useCallback(async (game: SavedGame) => {
+    setLoadingGame(true);
+    setError('');
+    const { data, error: loadError } = await supabase
+      .from('student_games')
+      .select('html_content')
+      .eq('id', game.id)
+      .single();
+    setLoadingGame(false);
+    if (loadError || !data) {
+      setError('Could not load that game — please try again.');
+      return;
+    }
+    setSessionId(game.id);
+    setIsExistingGame(true);
+    setTitle(game.title);
+    setGameCode(data.html_content);
+    setIframeVersion(v => v + 1);
+    setVerdict(null);
+    smoke.reset();
+    reviewedRef.current = false;
+    setChatHistory([]);
+  }, [smoke]);
+
+  const handleStartNew = useCallback(() => {
+    setSessionId(crypto.randomUUID());
+    setIsExistingGame(false);
+    setTitle('');
+    setGameCode(null);
+    setChatHistory([]);
+    setVerdict(null);
+    smoke.reset();
+    reviewedRef.current = false;
+    setError('');
+  }, [smoke]);
 
   // ── AI review of the smoke-test report, once it lands ──────────────────────
   useEffect(() => {
@@ -151,53 +214,99 @@ const CreateGamePage: React.FC = () => {
     runGeneration(text, !gameCode);
   }, [input, generating, gameCode, runGeneration]);
 
-  const handlePublish = useCallback(async () => {
-    if (!user?.id || !gameCode || !effectiveOrgId || publishing) return;
+  const handleSave = useCallback(async () => {
+    if (!user?.id || !gameCode || !effectiveOrgId || saving) return;
     const gameTitle = title.trim() || 'My Game';
-    setPublishing(true);
+    setSaving(true);
     setError('');
-    const { data, error: insertError } = await supabase
+    // Upsert rather than plain insert so re-saving an already-loaded game
+    // updates it in place (same id → same public URL) instead of failing
+    // on the primary-key conflict a plain insert would hit.
+    const { data, error: saveError } = await supabase
       .from('student_games')
-      .insert({
-        organization_id: effectiveOrgId,
+      .upsert({
+        id:               sessionId,
+        organization_id:  effectiveOrgId,
         owner_id:         user.id,
         owner_name:       user.name,
         title:            gameTitle,
         html_content:     gameCode,
+        updated_at:       new Date().toISOString(),
       })
       .select('id')
       .single();
-    setPublishing(false);
-    if (insertError || !data) {
-      setError('Could not publish the game — please try again.');
+    setSaving(false);
+    if (saveError || !data) {
+      setError('Could not save the game — please try again.');
       return;
     }
+    setIsExistingGame(true);
+    refreshMyGames();
     navigate(`/tech-skills/games/${data.id}`);
-  }, [user, gameCode, effectiveOrgId, publishing, title, navigate]);
+  }, [user, gameCode, effectiveOrgId, saving, title, sessionId, navigate, refreshMyGames]);
 
   const harnessedHtml = gameCode ? buildHarnessedHtml(gameCode) : null;
 
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600">
-            <Gamepad2 size={22} className="text-white" />
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600">
+              <Gamepad2 size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Create Game</h1>
+              <p className="text-sm text-gray-500">Describe a game idea — Claude builds it, tests it, and you save it.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Create Game</h1>
-            <p className="text-sm text-gray-500">Describe a game idea — Claude builds it, tests it, and you publish it.</p>
-          </div>
+          {(gameCode || myGames.length > 0) && (
+            <button
+              onClick={handleStartNew}
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-emerald-600 border border-gray-200 hover:border-emerald-200 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
+            >
+              <Plus size={13} /> New game
+            </button>
+          )}
         </div>
+
+        {myGames.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 mb-6">
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-1.5">
+              <FolderOpen size={13} /> Your games
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {myGames.map(game => (
+                <button
+                  key={game.id}
+                  onClick={() => loadGame(game)}
+                  disabled={loadingGame}
+                  className={`text-xs font-medium rounded-full px-3 py-1.5 border transition-colors disabled:opacity-40 ${
+                    isExistingGame && game.id === sessionId
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'text-gray-500 border-gray-200 hover:text-emerald-600 hover:border-emerald-200'
+                  }`}
+                >
+                  {game.title}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ── Chat panel ─────────────────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-2xl flex flex-col h-[70vh]">
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {chatHistory.length === 0 && (
-                <p className="text-sm text-gray-400">
-                  Describe the game you want — for example: "a game where you click a bouncing ball to score points before it escapes the screen."
-                </p>
+                <div className="text-sm text-gray-400 space-y-2">
+                  <p>
+                    Describe the game you want — for example: "a game where you click a bouncing ball to score points before it escapes the screen."
+                  </p>
+                  <p>
+                    Once your game is generated, keep asking for changes right here to improve it — then save when you're happy with it.
+                  </p>
+                </div>
               )}
               {chatHistory.map((m, i) => (
                 <div key={i} className="rounded-2xl px-4 py-2.5 bg-purple-600 text-white ml-auto max-w-[85%]">
@@ -282,12 +391,12 @@ const CreateGamePage: React.FC = () => {
                   className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
                 />
                 <button
-                  onClick={handlePublish}
-                  disabled={publishing || !effectiveOrgId}
+                  onClick={handleSave}
+                  disabled={saving || !effectiveOrgId}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex-shrink-0"
                 >
-                  {publishing ? <Loader2 size={15} className="animate-spin" /> : <Rocket size={15} />}
-                  Publish
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : isExistingGame ? <Save size={15} /> : <Rocket size={15} />}
+                  {isExistingGame ? 'Save' : 'Publish'}
                 </button>
               </div>
             )}
