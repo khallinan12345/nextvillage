@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/site-page/:siteId/:slug", "destination": "/api/site-page?siteId=:siteId&slug=:slug" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [

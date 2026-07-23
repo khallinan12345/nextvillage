@@ -7,16 +7,26 @@
 // access rules rather than trusting RLS, except here the rule is simply
 // "public").
 //
-// This is a flat file taking siteId/slug as query params — NOT a
-// [siteId]/[slug].js bracket-folder dynamic route. That was tried first
-// and confirmed (via direct build-log/response inspection) not to be
-// recognized as a function by this project's Vercel build; requests fell
-// through to the SPA catch-all and served index.html instead. The pretty
-// path /api/site-page/:siteId/:slug (needed so relative links in the
-// generated HTML resolve correctly — query strings don't participate in
-// relative-path resolution) is produced by a vercel.json rewrite mapping
-// that path to this file with siteId/slug as query params, placed before
-// the SPA catch-all rewrite.
+// Takes siteId/slug as query params (?siteId=...&slug=...), not path
+// segments. A path-segment version (api/site-page/[siteId]/[slug].js, then
+// a flat file + vercel.json rewrite from a pretty path to this file) were
+// both tried first — the bracket-folder route was never recognized as a
+// function by this project's Vercel build at all, and the rewrite version,
+// despite generating a structurally correct routes manifest (verified via
+// `vercel build` locally), empirically did not work against the real
+// deployment either. Query params, confirmed working by direct testing,
+// are the reliable option here.
+//
+// Since query strings don't participate in relative-path URL resolution,
+// a bare relative link in the generated HTML (<a href="about">) can't
+// resolve correctly on its own against a query-param URL — so internal
+// nav links matching the slug format the generation prompt requires
+// (WebsiteBuilderPage.tsx's GENERATION_SYSTEM_PROMPT: lowercase,
+// hyphenated, no leading slash, no extension) are rewritten here, at
+// serve time, into full ?siteId=...&slug=... URLs before the response is
+// sent. This also means any accidental drift in the AI's storage format
+// doesn't need to stay bug-compatible across every already-published page
+// forever — the rewrite always uses the current siteId/rules.
 //
 // The Content-Security-Policy: sandbox header is the important safety net
 // here — it forces the browser to treat this response as sandboxed with an
@@ -32,6 +42,17 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+// Matches href="slug-like-text" — lowercase letters/digits/hyphens only,
+// no leading slash, no protocol, no hash — exactly the format the
+// generation prompt requires for internal nav links. Deliberately narrow
+// so it never touches href="#section", href="https://...", href="/foo",
+// or href="mailto:...".
+const RELATIVE_NAV_HREF_RE = /href="([a-z0-9][a-z0-9-]*)"/g;
+
+function rewriteInternalLinks(html, siteId) {
+  return html.replace(RELATIVE_NAV_HREF_RE, (match, slug) => `href="/api/site-page?siteId=${siteId}&slug=${slug}"`);
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -59,7 +80,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(page.html_content);
+    return res.status(200).send(rewriteInternalLinks(page.html_content, siteId));
   } catch (err) {
     console.error('[site-page] Error:', err);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
