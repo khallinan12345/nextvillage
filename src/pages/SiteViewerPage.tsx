@@ -3,10 +3,11 @@
 // The public, shareable link for a published Website Builder site
 // (src/pages/tech-skills/WebsiteBuilderPage.tsx). No login required — not
 // wrapped in AppLayout. The actual page content is fetched by the browser
-// from api/site-page/[siteId]/[slug].js inside a sandboxed iframe; this
+// from api/site-page.js (query params, not path segments — see that
+// file's header comment for why) inside a sandboxed iframe; this
 // component just resolves which page to show from the URL and provides a
-// minimal frame around it. The generated site's own internal nav links
-// (see WebsiteBuilderPage's generation prompt) let visitors click between
+// minimal frame around it. api/site-page.js rewrites the generated site's
+// own internal nav links at serve time so visitors can click between
 // pages inside that iframe.
 
 import React from 'react';
@@ -24,7 +25,7 @@ const SiteViewerPage: React.FC = () => {
       </div>
       <iframe
         title="Published site"
-        src={`/api/site-page/${siteId}/${slug}`}
+        src={`/api/site-page?siteId=${siteId}&slug=${slug}`}
         sandbox="allow-scripts"
         className="flex-1 w-full border-0"
       />
