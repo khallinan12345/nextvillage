@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { supabase } from '../../lib/supabaseClient';
+import { buildSafeHtml } from '../../lib/sandboxSafety';
 import { ArrowLeft, Loader2, Gamepad2 } from 'lucide-react';
 
 interface StudentGame {
@@ -63,7 +64,7 @@ const PlayGamePage: React.FC = () => {
             </div>
             <iframe
               title={game.title}
-              srcDoc={game.html_content}
+              srcDoc={buildSafeHtml(game.html_content)}
               sandbox="allow-scripts"
               className="w-full border-0 h-[75vh]"
             />

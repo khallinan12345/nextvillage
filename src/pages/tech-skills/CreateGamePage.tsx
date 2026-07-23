@@ -49,6 +49,7 @@ STRICT REQUIREMENTS:
 - Must use a single <canvas> element as the game area.
 - Controls: mouse/trackpad ONLY. Use mousemove, mousedown, mouseup, and click events on the canvas. Do NOT use keyboard events (keydown/keyup), do NOT use the contextmenu/right-click event, and do NOT rely on pointer lock.
 - Do NOT call alert(), confirm(), or prompt() — the game runs in a sandboxed iframe where these are silently blocked. Show score, win/lose, and restart state by drawing text on the canvas instead.
+- Do NOT use localStorage, sessionStorage, cookies, or any other persistence API — the sandboxed iframe blocks them and touching them can crash the whole game. Keep all state (including high scores) in plain JavaScript variables that reset each time the game loads.
 - Keep the game genuinely playable and visually clear: draw a background, the player-controlled element, and any obstacles/targets every frame via requestAnimationFrame.
 - Wrap the game loop defensively so a single bad frame can't crash the whole page.`;
 
@@ -190,17 +191,31 @@ const CreateGamePage: React.FC = () => {
         page: 'CreateGamePage',
         system: GENERATION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 4000,
+        max_tokens: 8000,
         temperature: 0.6,
       }));
+
+      // A response cut off by the token limit mid-script is a real failure
+      // mode, not just an edge case — a game with several obstacle/particle
+      // classes can run past 4000 tokens, and the truncated HTML has no
+      // closing tags and often ends mid-statement, which fails to parse at
+      // all in the preview iframe. Catch it here rather than silently
+      // saving/rendering broken content.
+      if (!/<\/html>/i.test(html)) {
+        throw new Error('truncated');
+      }
 
       setGameCode(html);
       setIframeVersion(v => v + 1);
       setVerdict(null);
       smoke.reset();
       reviewedRef.current = false;
-    } catch {
-      setError("Claude couldn't generate the game just now — please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === 'truncated'
+          ? "That game was too complex to finish in one go — try describing something a bit simpler, or ask for one feature at a time."
+          : "Claude couldn't generate the game just now — please try again."
+      );
     } finally {
       setGenerating(false);
     }

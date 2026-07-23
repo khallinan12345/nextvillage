@@ -22,6 +22,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatJSON } from '../../lib/chatClient';
+import { buildSafeHtml } from '../../lib/sandboxSafety';
 import { Globe, Send, Loader2, ImagePlus, Rocket, Save, FolderOpen, Plus } from 'lucide-react';
 
 interface SitePage {
@@ -54,6 +55,7 @@ STRICT REQUIREMENTS:
 - Every page must include the SAME simple navigation bar linking to every other page, using bare relative slugs as the href — e.g. <a href="about">About</a>, <a href="home">Home</a> — never a leading slash, never a file extension, never a full URL.
 - Slugs must be short, lowercase, URL-safe (letters, numbers, hyphens only) and unique within the site. Always include a "home" page.
 - If uploaded images are listed below, use their exact URLs as CSS background-image values or <img src="..."> tags wherever they fit what the student describes — never invent placeholder image URLs.
+- Do NOT use localStorage, sessionStorage, cookies, or any other persistence API — the sandboxed iframe blocks them and touching them can crash the whole page. Keep all state in plain JavaScript variables that reset each time the page loads.
 - Keep the design clean and readable: sensible spacing, a coherent color scheme, and real placeholder content based on what the student described (not lorem ipsum).`;
 
 function buildPrompt(userMessage: string, pages: SitePage[] | null, images: UploadedImage[]): string {
@@ -395,7 +397,7 @@ const WebsiteBuilderPage: React.FC = () => {
                 <iframe
                   key={activeSlug}
                   title="Website preview"
-                  srcDoc={activePage?.html ?? ''}
+                  srcDoc={activePage ? buildSafeHtml(activePage.html) : ''}
                   sandbox="allow-scripts"
                   className="flex-1 w-full border-0"
                 />
