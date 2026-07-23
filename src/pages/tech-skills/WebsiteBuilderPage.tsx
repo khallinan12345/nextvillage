@@ -200,24 +200,33 @@ const WebsiteBuilderPage: React.FC = () => {
     setUploadingImage(true);
     setError('');
     try {
-      // getSession() validates the current token's expiry and transparently
-      // refreshes it via the stored refresh token if needed. Without this, a
-      // session that's gone stale (tab left open across a long editing
-      // session) can send an expired access token to Storage — Postgres then
-      // correctly rejects the insert under the bucket's `TO authenticated`
-      // RLS policy, which surfaces as a confusing "row-level security
-      // policy" error instead of the actual auth problem.
+      // Uploading directly to Supabase Storage from the browser (the
+      // standard approach, and the one every other per-user-folder bucket
+      // in this project uses successfully) reliably fails on the
+      // site-assets bucket specifically with "new row violates row-level
+      // security policy" — confirmed not to be about session freshness,
+      // the bucket's public flag, its allowed_mime_types, or the RLS
+      // policy's role scope (all tested directly). Routing through this
+      // server-side endpoint, which uploads with the service-role key
+      // instead of the browser's own session, reliably works. See
+      // api/upload-site-asset.js for the full writeup.
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Your session has expired — please refresh the page and sign in again.');
 
-      const storagePath = `${user.id}/${sessionId}/${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('site-assets')
-        .upload(storagePath, file, { contentType: file.type, upsert: true });
-      if (uploadError) throw new Error(uploadError.message);
+      const res = await fetch('/api/upload-site-asset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-session-id': sessionId,
+          'x-filename': encodeURIComponent(file.name),
+        },
+        body: file,
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || `Upload failed (${res.status})`);
 
-      const { data: urlData } = supabase.storage.from('site-assets').getPublicUrl(storagePath);
-      const publicUrl = urlData?.publicUrl ?? '';
+      const publicUrl = data?.url ?? '';
       setUploadedImages(prev => [...prev.filter(i => i.filename !== file.name), { filename: file.name, url: publicUrl }]);
     } catch (err: any) {
       console.error('[WebsiteBuilder] Image upload failed:', err);
