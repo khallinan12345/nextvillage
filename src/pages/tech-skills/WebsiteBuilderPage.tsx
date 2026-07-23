@@ -200,6 +200,16 @@ const WebsiteBuilderPage: React.FC = () => {
     setUploadingImage(true);
     setError('');
     try {
+      // getSession() validates the current token's expiry and transparently
+      // refreshes it via the stored refresh token if needed. Without this, a
+      // session that's gone stale (tab left open across a long editing
+      // session) can send an expired access token to Storage — Postgres then
+      // correctly rejects the insert under the bucket's `TO authenticated`
+      // RLS policy, which surfaces as a confusing "row-level security
+      // policy" error instead of the actual auth problem.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Your session has expired — please refresh the page and sign in again.');
+
       const storagePath = `${user.id}/${sessionId}/${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('site-assets')
@@ -210,6 +220,7 @@ const WebsiteBuilderPage: React.FC = () => {
       const publicUrl = urlData?.publicUrl ?? '';
       setUploadedImages(prev => [...prev.filter(i => i.filename !== file.name), { filename: file.name, url: publicUrl }]);
     } catch (err: any) {
+      console.error('[WebsiteBuilder] Image upload failed:', err);
       setError(`Image upload failed: ${err.message}`);
     } finally {
       setUploadingImage(false);
