@@ -190,17 +190,31 @@ const CreateGamePage: React.FC = () => {
         page: 'CreateGamePage',
         system: GENERATION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 4000,
+        max_tokens: 8000,
         temperature: 0.6,
       }));
+
+      // A response cut off by the token limit mid-script is a real failure
+      // mode, not just an edge case — a game with several obstacle/particle
+      // classes can run past 4000 tokens, and the truncated HTML has no
+      // closing tags and often ends mid-statement, which fails to parse at
+      // all in the preview iframe. Catch it here rather than silently
+      // saving/rendering broken content.
+      if (!/<\/html>/i.test(html)) {
+        throw new Error('truncated');
+      }
 
       setGameCode(html);
       setIframeVersion(v => v + 1);
       setVerdict(null);
       smoke.reset();
       reviewedRef.current = false;
-    } catch {
-      setError("Claude couldn't generate the game just now — please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === 'truncated'
+          ? "That game was too complex to finish in one go — try describing something a bit simpler, or ask for one feature at a time."
+          : "Claude couldn't generate the game just now — please try again."
+      );
     } finally {
       setGenerating(false);
     }
