@@ -155,7 +155,7 @@ const WebsiteBuilderPage: React.FC = () => {
         page: 'WebsiteBuilderPage',
         system: GENERATION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 6000,
+        max_tokens: 12000,
         temperature: 0.6,
       });
       const newPages: SitePage[] = Array.isArray(result?.pages)
@@ -164,8 +164,19 @@ const WebsiteBuilderPage: React.FC = () => {
       if (!newPages.length) throw new Error('empty');
       setPages(newPages);
       setActiveSlug(prev => (prev && newPages.some(p => p.slug === prev)) ? prev : newPages[0].slug);
-    } catch {
-      setError("Claude couldn't generate the site just now — please try again.");
+    } catch (err) {
+      // A multi-page site with substantial per-page CSS can run past the
+      // token budget — chatJSON throws a recognizable "Failed to parse
+      // JSON response" error when that happens (the response gets cut off
+      // mid-string, which is never valid JSON). Give a specific, actionable
+      // message for that case rather than a generic "try again" — matches
+      // the same failure mode already handled in CreateGamePage.tsx.
+      const isTruncated = err instanceof Error && err.message.startsWith('Failed to parse JSON response');
+      setError(
+        isTruncated
+          ? "That site was too complex to finish in one go — try describing fewer pages, or ask for one page at a time."
+          : "Claude couldn't generate the site just now — please try again."
+      );
     } finally {
       setGenerating(false);
     }
