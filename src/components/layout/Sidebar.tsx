@@ -18,6 +18,12 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
+interface NavGroup {
+  id: string;
+  label: string;
+  items: NavItem[];
+}
+
 interface SectionConfig {
   id: string;
   label: string;
@@ -29,6 +35,9 @@ interface SectionConfig {
   sectionBg: string;
   headerText: string;
   items: NavItem[];
+  // Optional second accordion level — when set, rendered instead of `items`
+  // (Tech Workshop only, for now: the flat list got too long to scan).
+  groups?: NavGroup[];
 }
 
 const Sidebar: React.FC = () => {
@@ -106,24 +115,43 @@ const Sidebar: React.FC = () => {
       activeText: 'text-emerald-700',
       sectionBg: 'bg-emerald-50/40',
       headerText: 'text-emerald-600',
-      items: [
-        { name: 'Vibe Coding',         path: '/tech-skills/vibe-coding',            icon: <Wand2 size={20} />         },
-        { name: 'Create Game',         path: '/tech-skills/create-game',            icon: <Gamepad2 size={20} />      },
-        { name: 'Website Builder',     path: '/tech-skills/website-builder',        icon: <Globe size={20} />         },
-        { name: 'Web Development',     path: '/tech-skills/web-development',         icon: <Code size={20} />          },
-        { name: 'Full-Stack Dev',      path: '/tech-skills/full-stack-development',  icon: <Layers size={20} />        },
-        { name: 'AI Image Creation',   path: '/tech-skills/ai-image-creation',       icon: <ImagePlus size={20} />     },
-        { name: 'AI Voice Creation',   path: '/tech-skills/ai-voice-creation',       icon: <Mic size={20} />           },
-        { name: 'AI Video Creation',   path: '/tech-skills/ai-video-creation',       icon: <Video size={20} />         },
-        { name: 'AI Video Studio',     path: '/tech-skills/ai-video-studio',         icon: <Film size={20} />          },
-        { name: 'AI Content Creation', path: '/tech-skills/ai-content-creation',     icon: <PenLine size={20} />       },
-        { name: 'AI Workflow Dev',     path: '/tech-skills/ai-workflow-development', icon: <Zap size={20} />           },
-        { name: 'AI for Business',     path: '/tech-skills/ai-for-business',         icon: <Briefcase size={20} />     },
-        { name: 'Microsoft AI-900',    path: '/tech-skills/microsoft-ai900',         icon: <GraduationCap size={20} /> },
-        { name: 'Microsoft DP-900',    path: '/tech-skills/microsoft-dp900',         icon: <Database size={20} />      },
-        { name: 'Microsoft AB-730',    path: '/tech-skills/microsoft-ab730',         icon: <Briefcase size={20} />     },
-        { name: 'GitHub GH-300',       path: '/tech-skills/github-gh300',            icon: <GitBranch size={20} />     },
-        { name: 'Employable Tech Skills Prep',       path: '/tech-skills',            icon: <GitBranch size={20} />     },
+      items: [],
+      groups: [
+        {
+          id: 'coding',
+          label: 'Coding',
+          items: [
+            { name: 'Vibe Coding',      path: '/tech-skills/vibe-coding',            icon: <Wand2 size={20} />         },
+            { name: 'Website Builder',  path: '/tech-skills/website-builder',        icon: <Globe size={20} />         },
+            { name: 'Web Development',  path: '/tech-skills/web-development',        icon: <Code size={20} />          },
+            { name: 'Full-Stack Dev',   path: '/tech-skills/full-stack-development', icon: <Layers size={20} />        },
+            { name: 'AI Workflow Dev',  path: '/tech-skills/ai-workflow-development',icon: <Zap size={20} />           },
+            { name: 'GitHub GH-300',    path: '/tech-skills/github-gh300',           icon: <GitBranch size={20} />     },
+          ],
+        },
+        {
+          id: 'creative-ai',
+          label: 'Creative AI',
+          items: [
+            { name: 'Create Game',         path: '/tech-skills/create-game',        icon: <Gamepad2 size={20} />      },
+            { name: 'AI Image Creation',   path: '/tech-skills/ai-image-creation',  icon: <ImagePlus size={20} />     },
+            { name: 'AI Voice Creation',   path: '/tech-skills/ai-voice-creation',  icon: <Mic size={20} />           },
+            { name: 'AI Video Creation',   path: '/tech-skills/ai-video-creation',  icon: <Video size={20} />         },
+            { name: 'AI Video Studio',     path: '/tech-skills/ai-video-studio',    icon: <Film size={20} />          },
+            { name: 'AI Content Creation', path: '/tech-skills/ai-content-creation',icon: <PenLine size={20} />       },
+          ],
+        },
+        {
+          id: 'workforce-skills',
+          label: 'Workforce Skills',
+          items: [
+            { name: 'AI for Business',               path: '/tech-skills/ai-for-business',   icon: <Briefcase size={20} />     },
+            { name: 'Microsoft AI-900',               path: '/tech-skills/microsoft-ai900',   icon: <GraduationCap size={20} /> },
+            { name: 'Microsoft DP-900',               path: '/tech-skills/microsoft-dp900',   icon: <Database size={20} />      },
+            { name: 'Microsoft AB-730',               path: '/tech-skills/microsoft-ab730',   icon: <Briefcase size={20} />     },
+            { name: 'Employable Tech Skills Prep',    path: '/tech-skills',                   icon: <GitBranch size={20} />     },
+          ],
+        },
       ],
     },
     {
@@ -186,12 +214,25 @@ const Sidebar: React.FC = () => {
   const getInitialOpen = (): Record<string, boolean> => {
     const state: Record<string, boolean> = {};
     sections.forEach(s => {
-      state[s.id] = s.items.some(item => isActive(item.path));
+      const flatActive  = s.items.some(item => isActive(item.path));
+      const groupActive = s.groups?.some(g => g.items.some(item => isActive(item.path))) ?? false;
+      state[s.id] = flatActive || groupActive;
+    });
+    return state;
+  };
+
+  const getInitialOpenGroups = (): Record<string, boolean> => {
+    const state: Record<string, boolean> = {};
+    sections.forEach(s => {
+      s.groups?.forEach(g => {
+        state[`${s.id}:${g.id}`] = g.items.some(item => isActive(item.path));
+      });
     });
     return state;
   };
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(getInitialOpen);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(getInitialOpenGroups);
   const [researchItems, setResearchItems] = useState<NavItem[]>([
     { name: 'AI Learning Lab', path: '/research/ai-learning-lab', icon: <FlaskConical size={20} /> },
     { name: 'IGiTREE',         path: '/research/igitree',         icon: <Leaf size={20} />         },
@@ -218,6 +259,9 @@ const Sidebar: React.FC = () => {
 
   const toggle = (id: string) =>
     setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const toggleGroup = (key: string) =>
+    setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
 
   const renderNavItem = (item: NavItem, activeBg: string, activeText: string) => {
     const active = isActive(item.path);
@@ -279,9 +323,36 @@ const Sidebar: React.FC = () => {
                   </button>
 
                   {isOpen && (
-                    <div className={`space-y-0.5 ${section.sectionBg} rounded-lg p-1.5`}>
-                      {(section.id === 'research' ? researchItems : section.items).map(item =>
-                        renderNavItem(item, section.activeBg, section.activeText)
+                    <div className={`space-y-1 ${section.sectionBg} rounded-lg p-1.5`}>
+                      {section.groups ? (
+                        section.groups.map(group => {
+                          const groupKey  = `${section.id}:${group.id}`;
+                          const groupOpen = openGroups[groupKey] ?? false;
+                          return (
+                            <div key={group.id}>
+                              <button
+                                onClick={() => toggleGroup(groupKey)}
+                                className="w-full flex items-center justify-between gap-1.5 px-2 py-1 rounded-md hover:bg-white/60 transition-colors"
+                              >
+                                <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                                  {group.label}
+                                </span>
+                                {groupOpen
+                                  ? <ChevronUp size={10} className="text-gray-400 flex-shrink-0" />
+                                  : <ChevronDown size={10} className="text-gray-400 flex-shrink-0" />}
+                              </button>
+                              {groupOpen && (
+                                <div className="space-y-0.5 mt-0.5">
+                                  {group.items.map(item => renderNavItem(item, section.activeBg, section.activeText))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        (section.id === 'research' ? researchItems : section.items).map(item =>
+                          renderNavItem(item, section.activeBg, section.activeText)
+                        )
                       )}
                     </div>
                   )}
