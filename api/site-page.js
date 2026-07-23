@@ -35,6 +35,15 @@
 // someone navigates to this URL directly. Without it, a <script> in
 // AI-generated (or prompt-injected) page content served on this app's own
 // origin could reach a real visitor's session storage.
+//
+// STORAGE_SHIM_SCRIPT below is a duplicate of src/lib/sandboxSafety.ts's
+// STORAGE_SHIM_SCRIPT — this is a serverless function, not part of the
+// frontend bundle, so it can't import that module directly. Keep both
+// copies in sync: a sandboxed opaque-origin document throws SecurityError
+// on ANY localStorage/sessionStorage access (not just no-ops), and
+// generated page code reaching for it near the top of a script (a
+// "remember your preference" pattern is a natural instinct) can abort the
+// rest of that script entirely if left unhandled.
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -52,6 +61,49 @@ const RELATIVE_NAV_HREF_RE = /href="([a-z0-9][a-z0-9-]*)"/g;
 
 function rewriteInternalLinks(html, siteId) {
   return html.replace(RELATIVE_NAV_HREF_RE, (match, slug) => `href="/api/site-page?siteId=${siteId}&slug=${slug}"`);
+}
+
+const STORAGE_SHIM_SCRIPT = `
+<script>
+(function () {
+  function makeMemoryStorage() {
+    var data = {};
+    return {
+      getItem: function (k) { return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function (k, v) { data[k] = String(v); },
+      removeItem: function (k) { delete data[k]; },
+      clear: function () { data = {}; },
+      key: function (i) { return Object.keys(data)[i] || null; },
+      get length() { return Object.keys(data).length; },
+    };
+  }
+  function shimIfThrows(name) {
+    try {
+      window[name]; // eslint-disable-line no-unused-expressions
+    } catch (e) {
+      var mem = makeMemoryStorage();
+      try {
+        Object.defineProperty(window, name, { get: function () { return mem; }, configurable: true });
+      } catch (e2) {}
+    }
+  }
+  shimIfThrows('localStorage');
+  shimIfThrows('sessionStorage');
+})();
+</script>`;
+
+function injectEarly(html, script) {
+  const headOpenMatch = html.match(/<head[^>]*>/i);
+  if (headOpenMatch) {
+    const insertAt = headOpenMatch.index + headOpenMatch[0].length;
+    return html.slice(0, insertAt) + script + html.slice(insertAt);
+  }
+  const htmlOpenMatch = html.match(/<html[^>]*>/i);
+  if (htmlOpenMatch) {
+    const insertAt = htmlOpenMatch.index + htmlOpenMatch[0].length;
+    return html.slice(0, insertAt) + script + html.slice(insertAt);
+  }
+  return script + html;
 }
 
 export default async function handler(req, res) {
@@ -80,7 +132,8 @@ export default async function handler(req, res) {
     }
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(rewriteInternalLinks(page.html_content, siteId));
+    const safeHtml = injectEarly(page.html_content, STORAGE_SHIM_SCRIPT);
+    return res.status(200).send(rewriteInternalLinks(safeHtml, siteId));
   } catch (err) {
     console.error('[site-page] Error:', err);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

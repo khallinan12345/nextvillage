@@ -15,6 +15,7 @@
 // this flag for exactly that reason.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { injectEarly, STORAGE_SHIM_SCRIPT } from './sandboxSafety';
 
 export interface GameTestReport {
   hadCanvas: boolean;
@@ -147,26 +148,14 @@ function mouseTestScript(): string {
 </script>`;
 }
 
-function injectEarly(html: string, script: string): string {
-  const headOpenMatch = html.match(/<head[^>]*>/i);
-  if (headOpenMatch && headOpenMatch.index !== undefined) {
-    const insertAt = headOpenMatch.index + headOpenMatch[0].length;
-    return html.slice(0, insertAt) + script + html.slice(insertAt);
-  }
-  const htmlOpenMatch = html.match(/<html[^>]*>/i);
-  if (htmlOpenMatch && htmlOpenMatch.index !== undefined) {
-    const insertAt = htmlOpenMatch.index + htmlOpenMatch[0].length;
-    return html.slice(0, insertAt) + script + html.slice(insertAt);
-  }
-  return script + html;
-}
-
 export function buildHarnessedHtml(rawHtml: string): string {
-  const withEarlyScript = injectEarly(rawHtml, errorCaptureScript());
-  const closeBodyIdx = withEarlyScript.search(/<\/body>/i);
+  // Storage shim first, then error capture — both need to run before the
+  // game's own <script> tags, order between the two doesn't matter.
+  const withEarlyScripts = injectEarly(injectEarly(rawHtml, STORAGE_SHIM_SCRIPT), errorCaptureScript());
+  const closeBodyIdx = withEarlyScripts.search(/<\/body>/i);
   const tailScript = mouseTestScript();
-  if (closeBodyIdx === -1) return withEarlyScript + tailScript;
-  return withEarlyScript.slice(0, closeBodyIdx) + tailScript + withEarlyScript.slice(closeBodyIdx);
+  if (closeBodyIdx === -1) return withEarlyScripts + tailScript;
+  return withEarlyScripts.slice(0, closeBodyIdx) + tailScript + withEarlyScripts.slice(closeBodyIdx);
 }
 
 export function useGameSmokeTest(iframeRef: React.RefObject<HTMLIFrameElement>) {
