@@ -49,6 +49,7 @@ STRICT REQUIREMENTS:
 - Must use a single <canvas> element as the game area.
 - Controls: mouse/trackpad ONLY. Use mousemove, mousedown, mouseup, and click events on the canvas. Do NOT use keyboard events (keydown/keyup), do NOT use the contextmenu/right-click event, and do NOT rely on pointer lock.
 - Do NOT call alert(), confirm(), or prompt() — the game runs in a sandboxed iframe where these are silently blocked. Show score, win/lose, and restart state by drawing text on the canvas instead.
+- Do NOT use localStorage, sessionStorage, cookies, or any other persistence API — the sandboxed iframe blocks them and touching them can crash the whole game. Keep all state (including high scores) in plain JavaScript variables that reset each time the game loads.
 - Keep the game genuinely playable and visually clear: draw a background, the player-controlled element, and any obstacles/targets every frame via requestAnimationFrame.
 - Wrap the game loop defensively so a single bad frame can't crash the whole page.`;
 
