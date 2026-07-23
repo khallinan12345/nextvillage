@@ -4,19 +4,25 @@
 // (src/pages/tech-skills/WebDevelopmentPage.tsx). A student describes a
 // website in chat; Claude generates a complete multi-page static site
 // behind the scenes (code stays hidden — the student only sees the
-// rendered preview and chat). Students can upload images to use as
-// backgrounds or in page content. Once satisfied, the student publishes
-// the site — each page gets saved to `student_site_pages` and becomes
-// publicly viewable at /tech-skills/sites/:siteId/:slug, served raw by
-// api/site-page/[siteId]/[slug].js (see SiteViewerPage.tsx).
+// rendered preview and chat), and can keep asking for changes to improve
+// it before saving. Students can upload images to use as backgrounds or
+// in page content. Saving persists the site — each page gets written to
+// `student_site_pages` and becomes publicly viewable at
+// /tech-skills/sites/:siteId/:slug, served raw (query params, not path
+// segments — see api/site-page.js's header comment for why) by
+// api/site-page.js (see SiteViewerPage.tsx). A student can reopen any of
+// their own previously saved sites from the "Your websites" list to keep
+// improving it — saving again updates that same site in place (same
+// `student_sites.id`, so its public URL never changes) rather than
+// creating a duplicate.
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatJSON } from '../../lib/chatClient';
-import { Globe, Send, Loader2, ImagePlus, Rocket } from 'lucide-react';
+import { Globe, Send, Loader2, ImagePlus, Rocket, Save, FolderOpen, Plus } from 'lucide-react';
 
 interface SitePage {
   slug: string;
@@ -32,6 +38,12 @@ interface UploadedImage {
 interface ChatEntry {
   role: 'user';
   content: string;
+}
+
+interface SavedSite {
+  id: string;
+  title: string;
+  updated_at: string;
 }
 
 const GENERATION_SYSTEM_PROMPT = `You are generating a small multi-page static website designed by a student.
@@ -59,7 +71,8 @@ const WebsiteBuilderPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
+  const [isExistingSite, setIsExistingSite] = useState(false);
   const [effectiveOrgId, setEffectiveOrgId] = useState<string | null>(null);
 
   const [chatHistory, setChatHistory] = useState<ChatEntry[]>([]);
@@ -74,13 +87,61 @@ const WebsiteBuilderPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState('');
-  const [publishing, setPublishing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  React.useEffect(() => {
+  const [mySites, setMySites] = useState<SavedSite[]>([]);
+  const [loadingSite, setLoadingSite] = useState(false);
+
+  const refreshMySites = useCallback(() => {
+    if (!user?.id) return;
+    supabase
+      .from('student_sites')
+      .select('id, title, updated_at')
+      .eq('owner_id', user.id)
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => setMySites(data ?? []));
+  }, [user?.id]);
+
+  useEffect(() => {
     supabase.rpc('get_my_effective_profile').then(({ data }) => {
       setEffectiveOrgId(data?.[0]?.organization_id ?? null);
     });
+  }, []);
+
+  useEffect(() => { refreshMySites(); }, [refreshMySites]);
+
+  const loadSite = useCallback(async (site: SavedSite) => {
+    setLoadingSite(true);
+    setError('');
+    const { data, error: loadError } = await supabase
+      .from('student_site_pages')
+      .select('slug, title, html_content, sort_order')
+      .eq('site_id', site.id)
+      .order('sort_order', { ascending: true });
+    setLoadingSite(false);
+    if (loadError || !data || !data.length) {
+      setError('Could not load that website — please try again.');
+      return;
+    }
+    setSessionId(site.id);
+    setIsExistingSite(true);
+    setTitle(site.title);
+    setPages(data.map(p => ({ slug: p.slug, title: p.title, html: p.html_content })));
+    setActiveSlug(data[0].slug);
+    setChatHistory([]);
+    setUploadedImages([]);
+  }, []);
+
+  const handleStartNew = useCallback(() => {
+    setSessionId(crypto.randomUUID());
+    setIsExistingSite(false);
+    setTitle('');
+    setPages(null);
+    setActiveSlug(null);
+    setChatHistory([]);
+    setUploadedImages([]);
+    setError('');
   }, []);
 
   const runGeneration = useCallback(async (userMessage: string) => {
@@ -139,22 +200,35 @@ const WebsiteBuilderPage: React.FC = () => {
     }
   }, [user?.id, sessionId]);
 
-  const handlePublish = useCallback(async () => {
-    if (!user?.id || !pages || !pages.length || !effectiveOrgId || publishing) return;
+  const handleSave = useCallback(async () => {
+    if (!user?.id || !pages || !pages.length || !effectiveOrgId || saving) return;
     const siteTitle = title.trim() || 'My Website';
-    setPublishing(true);
+    setSaving(true);
     setError('');
 
-    const { error: siteError } = await supabase.from('student_sites').insert({
+    // Upsert rather than plain insert so re-saving an already-loaded site
+    // updates it in place (same id → same public URL) instead of failing
+    // on the primary-key conflict a plain insert would hit.
+    const { error: siteError } = await supabase.from('student_sites').upsert({
       id:               sessionId,
       organization_id:  effectiveOrgId,
       owner_id:         user.id,
       owner_name:       user.name,
       title:            siteTitle,
+      updated_at:       new Date().toISOString(),
     });
     if (siteError) {
-      setPublishing(false);
-      setError('Could not publish the site — please try again.');
+      setSaving(false);
+      setError('Could not save the website — please try again.');
+      return;
+    }
+
+    // Pages can be added/removed/renamed between edits, so replace the
+    // whole set rather than trying to reconcile individual rows.
+    const { error: deleteError } = await supabase.from('student_site_pages').delete().eq('site_id', sessionId);
+    if (deleteError) {
+      setSaving(false);
+      setError('Could not save the website — please try again.');
       return;
     }
 
@@ -167,39 +241,83 @@ const WebsiteBuilderPage: React.FC = () => {
         sort_order:   i,
       }))
     );
-    setPublishing(false);
+    setSaving(false);
     if (pagesError) {
-      setError('The site was created but its pages failed to save — please try again.');
+      setError('The website was saved but its pages failed to save — please try again.');
       return;
     }
 
+    setIsExistingSite(true);
+    refreshMySites();
     const homeSlug = pages.some(p => p.slug === 'home') ? 'home' : pages[0].slug;
     navigate(`/tech-skills/sites/${sessionId}/${homeSlug}`);
-  }, [user, pages, effectiveOrgId, publishing, title, sessionId, navigate]);
+  }, [user, pages, effectiveOrgId, saving, title, sessionId, navigate, refreshMySites]);
 
   const activePage = pages?.find(p => p.slug === activeSlug) ?? null;
 
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600">
-            <Globe size={22} className="text-white" />
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600">
+              <Globe size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Website Builder</h1>
+              <p className="text-sm text-gray-500">Describe a website — Claude builds every page, and you save it.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Website Builder</h1>
-            <p className="text-sm text-gray-500">Describe a website — Claude builds every page, and you publish it.</p>
-          </div>
+          {(pages || mySites.length > 0) && (
+            <button
+              onClick={handleStartNew}
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-sky-600 border border-gray-200 hover:border-sky-200 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
+            >
+              <Plus size={13} /> New website
+            </button>
+          )}
         </div>
+
+        {mySites.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 mb-6">
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-1.5">
+              <FolderOpen size={13} /> Your websites
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {mySites.map(site => (
+                <button
+                  key={site.id}
+                  onClick={() => loadSite(site)}
+                  disabled={loadingSite}
+                  className={`text-xs font-medium rounded-full px-3 py-1.5 border transition-colors disabled:opacity-40 ${
+                    isExistingSite && site.id === sessionId
+                      ? 'bg-sky-50 text-sky-700 border-sky-200'
+                      : 'text-gray-500 border-gray-200 hover:text-sky-600 hover:border-sky-200'
+                  }`}
+                >
+                  {site.title}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ── Chat panel ─────────────────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-2xl flex flex-col h-[70vh]">
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {chatHistory.length === 0 && (
-                <p className="text-sm text-gray-400">
-                  Describe the website you want — for example: "a website for my dog-walking business, with a Home page, an About page, and a Contact page."
-                </p>
+                <div className="text-sm text-gray-400 space-y-2">
+                  <p>
+                    Describe the website you want — for example: "a website for my dog-walking business, with a Home page, an About page, and a Contact page."
+                  </p>
+                  <p>
+                    Have a photo to include? Click the <ImagePlus size={13} className="inline align-text-bottom" /> image icon to upload it, then tell Claude what to use it for — e.g. "use this as the background of the Home page" or "put this in the About page."
+                  </p>
+                  <p>
+                    Once your site is generated, keep asking for changes right here to improve it — then save when you're happy with it.
+                  </p>
+                </div>
               )}
               {chatHistory.map((m, i) => (
                 <div key={i} className="rounded-2xl px-4 py-2.5 bg-purple-600 text-white ml-auto max-w-[85%]">
@@ -298,12 +416,12 @@ const WebsiteBuilderPage: React.FC = () => {
                   className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400"
                 />
                 <button
-                  onClick={handlePublish}
-                  disabled={publishing || !effectiveOrgId}
+                  onClick={handleSave}
+                  disabled={saving || !effectiveOrgId}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex-shrink-0"
                 >
-                  {publishing ? <Loader2 size={15} className="animate-spin" /> : <Rocket size={15} />}
-                  Publish
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : isExistingSite ? <Save size={15} /> : <Rocket size={15} />}
+                  {isExistingSite ? 'Save' : 'Publish'}
                 </button>
               </div>
             )}
