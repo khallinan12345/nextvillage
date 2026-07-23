@@ -7,7 +7,7 @@ import {
   Code, Database, Layers, ImagePlus, Video, Mic, PenLine, Zap,
   Briefcase, Code2, Film, ImagePlus as ImagePlusIcon, Mic as MicIcon,
   Cpu, Wand2, ChevronDown, ChevronUp, ShieldCheck, Users, Sprout, Fish, Heart,
-  GitBranch, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2
+  GitBranch, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -109,6 +109,7 @@ const Sidebar: React.FC = () => {
       items: [
         { name: 'Vibe Coding',         path: '/tech-skills/vibe-coding',            icon: <Wand2 size={20} />         },
         { name: 'Create Game',         path: '/tech-skills/create-game',            icon: <Gamepad2 size={20} />      },
+        { name: 'Website Builder',     path: '/tech-skills/website-builder',        icon: <Globe size={20} />         },
         { name: 'Web Development',     path: '/tech-skills/web-development',         icon: <Code size={20} />          },
         { name: 'Full-Stack Dev',      path: '/tech-skills/full-stack-development',  icon: <Layers size={20} />        },
         { name: 'AI Image Creation',   path: '/tech-skills/ai-image-creation',       icon: <ImagePlus size={20} />     },
