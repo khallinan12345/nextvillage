@@ -17,7 +17,7 @@ import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { BACK_TO_BASICS_ORG_ID } from '../lib/backToBasicsScope';
-import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare } from 'lucide-react';
+import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X } from 'lucide-react';
 
 const QUOTA_TOKENS    = 25000;
 const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
@@ -68,6 +68,9 @@ const PlaygroundTogetherPage: React.FC = () => {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [newRoomName, setNewRoomName] = useState('');
   const [creatingRoom, setCreatingRoom] = useState(false);
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [renaming, setRenaming] = useState(false);
 
   const [activeRoom, setActiveRoom] = useState<TogetherRoom | null>(null);
   const [messages, setMessages] = useState<TogetherMessage[]>([]);
@@ -304,6 +307,37 @@ const PlaygroundTogetherPage: React.FC = () => {
     if (activeRoom?.id === room.id) backToList();
   };
 
+  const startEditingRoom = (room: TogetherRoom) => {
+    setEditingRoomId(room.id);
+    setEditingName(room.name);
+  };
+
+  const cancelEditingRoom = () => {
+    setEditingRoomId(null);
+    setEditingName('');
+  };
+
+  const handleRenameRoom = async (room: TogetherRoom) => {
+    if (!canDeleteRoom(room) || renaming) return;
+    const trimmed = editingName.trim();
+    if (!trimmed) { cancelEditingRoom(); return; }
+    if (trimmed === room.name) { cancelEditingRoom(); return; }
+    setRenaming(true);
+    const { data, error } = await supabase
+      .from('together_rooms')
+      .update({ name: trimmed })
+      .eq('id', room.id)
+      .select('*')
+      .single();
+    setRenaming(false);
+    if (error) { setRoomError('Could not rename the room — please try again.'); return; }
+    if (data) {
+      setRooms(prev => prev.map(r => r.id === room.id ? data : r));
+      if (activeRoom?.id === room.id) setActiveRoom(data);
+    }
+    cancelEditingRoom();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
@@ -367,26 +401,70 @@ const PlaygroundTogetherPage: React.FC = () => {
                 {rooms.map(room => (
                   <div
                     key={room.id}
-                    className="group bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-sm transition-all flex items-center justify-between"
+                    className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-sm transition-all flex items-center justify-between gap-2"
                   >
-                    <button
-                      onClick={() => openRoom(room)}
-                      className="flex-1 min-w-0 text-left flex items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{room.name}</p>
-                        <p className="text-xs text-gray-400">Started by {room.created_by_name}</p>
-                      </div>
-                      <ArrowLeft size={16} className="text-gray-300 rotate-180 flex-shrink-0" />
-                    </button>
-                    {canDeleteRoom(room) && (
-                      <button
-                        onClick={() => handleDeleteRoom(room)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 ml-2 text-gray-300 hover:text-red-500 transition-all flex-shrink-0"
-                        title="Delete room"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                    {editingRoomId === room.id ? (
+                      <>
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={e => setEditingName(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') { e.preventDefault(); handleRenameRoom(room); }
+                            if (e.key === 'Escape') { e.preventDefault(); cancelEditingRoom(); }
+                          }}
+                          maxLength={100}
+                          disabled={renaming}
+                          className="flex-1 min-w-0 border border-purple-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-purple-200"
+                        />
+                        <button
+                          onClick={() => handleRenameRoom(room)}
+                          disabled={renaming || !editingName.trim()}
+                          className="p-1.5 text-gray-400 hover:text-emerald-600 disabled:opacity-40 transition-colors flex-shrink-0"
+                          title="Save name"
+                        >
+                          {renaming ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                        </button>
+                        <button
+                          onClick={cancelEditingRoom}
+                          disabled={renaming}
+                          className="p-1.5 text-gray-400 hover:text-gray-700 disabled:opacity-40 transition-colors flex-shrink-0"
+                          title="Cancel"
+                        >
+                          <X size={15} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => openRoom(room)}
+                          className="flex-1 min-w-0 text-left flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{room.name}</p>
+                            <p className="text-xs text-gray-400">Started by {room.created_by_name}</p>
+                          </div>
+                          <ArrowLeft size={16} className="text-gray-300 rotate-180 flex-shrink-0" />
+                        </button>
+                        {canDeleteRoom(room) && (
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => startEditingRoom(room)}
+                              className="p-1.5 text-gray-300 hover:text-purple-600 transition-colors"
+                              title="Rename room"
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteRoom(room)}
+                              className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                              title="Delete room"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 ))}
