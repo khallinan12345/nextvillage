@@ -1,4 +1,4 @@
-// api/site-page/[siteId]/[slug].js
+// api/site-page.js
 //
 // Publicly serves one published page of a "Website Builder" site
 // (src/pages/tech-skills/WebsiteBuilderPage.tsx) as raw HTML — no login
@@ -7,10 +7,16 @@
 // access rules rather than trusting RLS, except here the rule is simply
 // "public").
 //
-// Path segments (not query params) are deliberate: a relative link inside
-// the generated HTML (e.g. <a href="about">) needs to resolve against this
-// URL's path, and query strings don't participate in relative-path
-// resolution the way path segments do.
+// This is a flat file taking siteId/slug as query params — NOT a
+// [siteId]/[slug].js bracket-folder dynamic route. That was tried first
+// and confirmed (via direct build-log/response inspection) not to be
+// recognized as a function by this project's Vercel build; requests fell
+// through to the SPA catch-all and served index.html instead. The pretty
+// path /api/site-page/:siteId/:slug (needed so relative links in the
+// generated HTML resolve correctly — query strings don't participate in
+// relative-path resolution) is produced by a vercel.json rewrite mapping
+// that path to this file with siteId/slug as query params, placed before
+// the SPA catch-all rewrite.
 //
 // The Content-Security-Policy: sandbox header is the important safety net
 // here — it forces the browser to treat this response as sandboxed with an
