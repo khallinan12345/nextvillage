@@ -155,7 +155,10 @@ const WebsiteBuilderPage: React.FC = () => {
         page: 'WebsiteBuilderPage',
         system: GENERATION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 12000,
+        // Now routed to claude-sonnet-5 (api/chat.js), whose tokenizer produces
+        // ~30% more tokens for the same text than Haiku's — raised well past
+        // 12000 so multi-page sites get real headroom under the new tokenizer.
+        max_tokens: 20000,
         temperature: 0.6,
       });
       const newPages: SitePage[] = Array.isArray(result?.pages)
