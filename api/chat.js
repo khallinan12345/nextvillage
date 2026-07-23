@@ -15,6 +15,14 @@
 //         task-instruction calls from WebDevelopmentPage all go through the free-tier
 //         chain with Haiku as the final fallback, not Haiku as the primary.
 //
+//   page = 'CreateGamePage' | 'WebsiteBuilderPage'
+//     → taskType === 'coding' (or omitted, the default for these pages)
+//         → Anthropic claude-sonnet-5 (more capable generation for complex
+//           games/sites — these two students report hitting quality/error
+//           ceilings on Haiku as their projects grow more elaborate)
+//     → taskType === 'non-coding'
+//         → Groq (primary) → ... → Anthropic Haiku (final)
+//
 //   page = 'AIPlaygroundPage'
 //     → Anthropic claude-haiku-4-5-20251001 (default)
 //        OR claude-sonnet-4-6 if playgroundModel === 'claude-sonnet-4-6'
@@ -71,6 +79,15 @@ const HYBRID_CODING_PAGES = new Set([
   'WebsiteBuilderPage',
 ]);
 
+// Of the hybrid coding pages, these two route their 'coding' calls to
+// claude-sonnet-5 instead of Haiku — students building games/sites here
+// were hitting errors as their projects grew more complex, and Sonnet 5
+// handles that complexity more reliably than Haiku.
+const SONNET5_CODING_PAGES = new Set([
+  'CreateGamePage',
+  'WebsiteBuilderPage',
+]);
+
 // Certification pages — always Haiku; structured JSON eval must be reliable
 const CERT_PAGES = new Set([
   'AIReadySkillsPage',
@@ -101,8 +118,9 @@ const CERT_PAGES = new Set([
 //   );
 
 const DEFAULT_MODELS = {
-  anthropic_haiku:  'claude-haiku-4-5-20251001',
-  anthropic_sonnet: 'claude-sonnet-4-6',
+  anthropic_haiku:   'claude-haiku-4-5-20251001',
+  anthropic_sonnet:  'claude-sonnet-4-6',
+  anthropic_sonnet5: 'claude-sonnet-5',
   groq:             'llama-3.3-70b-versatile',
   cerebras:         'gpt-oss-120b',             // llama3.1-8b was deprecated/removed (confirmed via /v1/models, Jul 2026); chose 120B for quality over gemma-4-31b's speed/quota headroom
   deepseek:         'deepseek-chat',            // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
@@ -154,6 +172,7 @@ async function refreshModels() {
 // ── Pricing table (per million tokens, USD) ───────────────────────────────────
 
 const PRICING = {
+  'claude-sonnet-5':             { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
   'claude-sonnet-4-6':           { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
   'claude-haiku-4-5-20251001':   { input: 1.00,  output: 5.00,  cacheWrite: 1.25,  cacheRead: 0.10  },
   'llama-3.3-70b-versatile':     { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
@@ -362,6 +381,9 @@ function resolveRoute(page, playgroundModel, taskType) {
     const isCoding = taskType === 'coding'
       || (taskType == null && page !== 'WebDevelopmentPage');
     if (isCoding) {
+      if (SONNET5_CODING_PAGES.has(page)) {
+        return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
+      }
       return { provider: 'anthropic', model: MODELS.anthropic_haiku };
     }
     // non-coding (or WebDevelopmentPage with no taskType) → free-tier chain
@@ -420,6 +442,13 @@ function applyCacheToLastAssistant(messages) {
 
 // ── Anthropic call (with prompt caching on system prompt) ──────────────────────
 
+// Claude Sonnet 5 (and the Opus 4.7+/Fable 5 family) reject a non-default
+// `temperature` with a 400 — only send it for models that still accept it.
+// See api/chat-stream.js's identical gate for the incident this fixed.
+function modelAllowsCustomTemperature(model) {
+  return !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+}
+
 async function callAnthropic(model, messages, system, max_tokens, temperature) {
   const systemPayload = system
     ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
@@ -430,7 +459,7 @@ async function callAnthropic(model, messages, system, max_tokens, temperature) {
   const requestBody = {
     model,
     max_tokens,
-    temperature,
+    ...(modelAllowsCustomTemperature(model) ? { temperature } : {}),
     messages: cachedMessages,
     ...(systemPayload ? { system: systemPayload } : {}),
   };
@@ -891,7 +920,7 @@ async function callAnthropicStreaming(model, messages, system, max_tokens, tempe
     body: JSON.stringify({
       model,
       max_tokens,
-      temperature,
+      ...(modelAllowsCustomTemperature(model) ? { temperature } : {}),
       messages: cachedMessages,
       stream: true,
       ...(systemPayload ? { system: systemPayload } : {}),
@@ -1002,7 +1031,8 @@ export default async function handler(req, res) {
         'openrouter/llama-3.3-70b:free (free fallback)',
         'mistral/small (free fallback)',
         'deepseek/deepseek-chat (paid fallback, ~71% cheaper than Haiku)',
-        'anthropic/haiku (final paid fallback + coding tasks)',
+        'anthropic/haiku (final paid fallback + most coding tasks)',
+        'anthropic/sonnet-5 (Create Game + Website Builder coding tasks)',
       ],
       method:    'GET',
       timestamp: new Date().toISOString(),
