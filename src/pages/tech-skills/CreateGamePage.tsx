@@ -21,7 +21,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { buildHarnessedHtml, useGameSmokeTest, GameTestReport } from '../../lib/gameTestHarness';
-import { Gamepad2, Send, Loader2, Sparkles, CheckCircle2, AlertTriangle, Rocket, Save, FolderOpen, Plus, X } from 'lucide-react';
+import { Gamepad2, Send, Loader2, Sparkles, CheckCircle2, AlertTriangle, Rocket, Save, FolderOpen, Plus, X, Trash2 } from 'lucide-react';
 
 interface ChatEntry {
   role: 'user' | 'assistant';
@@ -140,6 +140,14 @@ const CreateGamePage: React.FC = () => {
     reviewedRef.current = false;
     setError('');
   }, [smoke]);
+
+  const handleDeleteGame = useCallback(async (game: SavedGame) => {
+    if (!window.confirm(`Delete "${game.title}"? This cannot be undone — its public link will stop working.`)) return;
+    const { error: deleteError } = await supabase.from('student_games').delete().eq('id', game.id);
+    if (deleteError) { setError('Could not delete that game — please try again.'); return; }
+    setMyGames(prev => prev.filter(g => g.id !== game.id));
+    if (isExistingGame && game.id === sessionId) handleStartNew();
+  }, [isExistingGame, sessionId, handleStartNew]);
 
   // ── AI review of the smoke-test report, once it lands ──────────────────────
   useEffect(() => {
@@ -295,18 +303,30 @@ const CreateGamePage: React.FC = () => {
             </p>
             <div className="flex flex-wrap gap-2">
               {myGames.map(game => (
-                <button
+                <div
                   key={game.id}
-                  onClick={() => loadGame(game)}
-                  disabled={loadingGame}
-                  className={`text-xs font-medium rounded-full px-3 py-1.5 border transition-colors disabled:opacity-40 ${
+                  className={`flex items-center gap-1 text-xs font-medium rounded-full pl-3 pr-1.5 py-1.5 border transition-colors ${
                     isExistingGame && game.id === sessionId
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'text-gray-500 border-gray-200 hover:text-emerald-600 hover:border-emerald-200'
+                      : 'text-gray-500 border-gray-200'
                   }`}
                 >
-                  {game.title}
-                </button>
+                  <button
+                    onClick={() => loadGame(game)}
+                    disabled={loadingGame}
+                    className="disabled:opacity-40 hover:text-emerald-600"
+                  >
+                    {game.title}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteGame(game)}
+                    disabled={loadingGame}
+                    title="Delete game"
+                    className="p-1 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>

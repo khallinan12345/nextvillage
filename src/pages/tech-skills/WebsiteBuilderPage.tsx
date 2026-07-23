@@ -23,7 +23,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatJSON } from '../../lib/chatClient';
 import { buildSafeHtml } from '../../lib/sandboxSafety';
-import { Globe, Send, Loader2, ImagePlus, Rocket, Save, FolderOpen, Plus } from 'lucide-react';
+import { Globe, Send, Loader2, ImagePlus, Rocket, Save, FolderOpen, Plus, Trash2 } from 'lucide-react';
 
 interface SitePage {
   slug: string;
@@ -145,6 +145,14 @@ const WebsiteBuilderPage: React.FC = () => {
     setUploadedImages([]);
     setError('');
   }, []);
+
+  const handleDeleteSite = useCallback(async (site: SavedSite) => {
+    if (!window.confirm(`Delete "${site.title}"? This cannot be undone — its public link will stop working.`)) return;
+    const { error: deleteError } = await supabase.from('student_sites').delete().eq('id', site.id);
+    if (deleteError) { setError('Could not delete that website — please try again.'); return; }
+    setMySites(prev => prev.filter(s => s.id !== site.id));
+    if (isExistingSite && site.id === sessionId) handleStartNew();
+  }, [isExistingSite, sessionId, handleStartNew]);
 
   const runGeneration = useCallback(async (userMessage: string) => {
     setGenerating(true);
@@ -321,18 +329,30 @@ const WebsiteBuilderPage: React.FC = () => {
             </p>
             <div className="flex flex-wrap gap-2">
               {mySites.map(site => (
-                <button
+                <div
                   key={site.id}
-                  onClick={() => loadSite(site)}
-                  disabled={loadingSite}
-                  className={`text-xs font-medium rounded-full px-3 py-1.5 border transition-colors disabled:opacity-40 ${
+                  className={`flex items-center gap-1 text-xs font-medium rounded-full pl-3 pr-1.5 py-1.5 border transition-colors ${
                     isExistingSite && site.id === sessionId
                       ? 'bg-sky-50 text-sky-700 border-sky-200'
-                      : 'text-gray-500 border-gray-200 hover:text-sky-600 hover:border-sky-200'
+                      : 'text-gray-500 border-gray-200'
                   }`}
                 >
-                  {site.title}
-                </button>
+                  <button
+                    onClick={() => loadSite(site)}
+                    disabled={loadingSite}
+                    className="disabled:opacity-40 hover:text-sky-600"
+                  >
+                    {site.title}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSite(site)}
+                    disabled={loadingSite}
+                    title="Delete website"
+                    className="p-1 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
