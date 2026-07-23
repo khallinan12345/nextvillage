@@ -25,6 +25,7 @@ const PAGE_NAMES: Record<string, string> = {
   // Priority 2
   '/tech-skills/vibe-coding':                       'vibe_coding',
   '/tech-skills/create-game':                       'create_game',
+  '/tech-skills/website-builder':                   'website_builder',
   '/tech-skills/web-development':                   'web_development',
   '/tech-skills/full-stack-development':            'full_stack_development',
   '/tech-skills/ai-image-creation':                 'ai_image_creation',
