@@ -191,7 +191,10 @@ const CreateGamePage: React.FC = () => {
         page: 'CreateGamePage',
         system: GENERATION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 8000,
+        // Now routed to claude-sonnet-5 (api/chat.js), whose tokenizer produces
+        // ~30% more tokens for the same text than Haiku's — the old 8000 cap
+        // started truncating games that fit comfortably before the model switch.
+        max_tokens: 16000,
         temperature: 0.6,
       }));
 
