@@ -41,6 +41,25 @@ const ALLOWED_MIME_TYPES = new Set([
 ]);
 const MAX_BYTES = 10 * 1024 * 1024; // matches the site-assets bucket's file_size_limit
 
+// Vercel's default body parser only reliably populates req.body for
+// application/json and form-encoded bodies — an image body with
+// Content-Type: image/png otherwise arrived empty. Disable it and read the
+// raw request stream ourselves.
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -88,10 +107,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Unsupported content type: ${contentType}` });
   }
 
-  // Vercel's default body parser hands back non-JSON, non-form bodies as a
-  // Buffer already — no manual stream collection needed.
-  const buffer = req.body;
-  if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+  const buffer = await readRawBody(req);
+  if (!buffer.length) {
     return res.status(400).json({ error: 'Empty or unreadable request body' });
   }
   if (buffer.length > MAX_BYTES) {
