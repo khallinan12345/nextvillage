@@ -3077,39 +3077,32 @@ Provide assessment now:`;
     
     try {
       const isSkillsLearning = currentModuleCategory === 'Skills' && currentModuleLearningOrCert === 'learning';
-      
-      // Guard: Handle mock activities gracefully
-      const isMockActivity = String(selectedActivity.id ?? '').startsWith('mock-');
 
       if (isSkillsLearning && currentModuleSubCategory) {
         console.log('[Save Session] Performing full rubric assessment');
-        
+
         const rubricEvaluation = await callSkillsRubricAssessmentFull(
           chatHistory,
           currentModuleSubCategory,
           aiAssessmentInstructions,
           successMetrics
         );
-        
-        if (!isMockActivity) {
-          await updateSkillsRubricEvaluation(
-            selectedActivity.id,
-            currentModuleSubCategory,
-            rubricEvaluation,
-            chatHistory,
-            false // Don't force completion
-          );
-        } else {
-          console.log('[Save Session] Saving mock activity to localStorage only');
-          try {
-            const key = `SkillsDevelopmentPage_historyCache_${selectedActivity.id}`;
-            localStorage.setItem(key, JSON.stringify(chatHistory));
-          } catch (err) {
-            console.warn('[Save Session] Failed to save mock activity to localStorage:', err);
-          }
-        }
-        
-        alert('Session saved successfully!');
+
+        // updateSkillsRubricEvaluation has its own mock-vs-real branch internally
+        // (mock activities update local state only, real ones write to Supabase),
+        // so it's safe to call unconditionally here.
+        await updateSkillsRubricEvaluation(
+          selectedActivity.id,
+          currentModuleSubCategory,
+          rubricEvaluation,
+          chatHistory,
+          false // Don't force completion
+        );
+
+        // Show the same evaluation popup that Complete Session shows, so the
+        // learner can see scores and evidence without leaving the page.
+        setEvaluationResult(rubricEvaluation);
+        setShowEvaluationModal(true);
       } else {
         // Just save chat history for non-Skills activities
         await updateChatHistory(selectedActivity.id, chatHistory);
