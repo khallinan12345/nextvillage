@@ -847,6 +847,52 @@ function buildSkillsMockActivities(): DashboardActivity[] {
   return mockActivities;
 }
 
+// Dayton (Back to Basics Youth Education) Skills catalog — unlike the
+// Nigeria/Oloibiri mock catalog above (hand-authored, solar-themed titles
+// with no real learning_modules row behind them), this pulls the real
+// Dayton-tailored rows generated for city_town='Dayton' so that starting a
+// session loads the actual localized title/description/facilitator+
+// assessment instructions via fetchActivityDetails(learning_module_id)
+// instead of falling back to generic text. The catalog `id` still gets a
+// 'mock-' prefix so the existing isMockActivity guards (which skip writing
+// to the real `dashboard` table for browse-only catalog entries) still apply.
+async function fetchDaytonSkillsActivities(): Promise<DashboardActivity[]> {
+  const { data, error } = await supabase
+    .from('learning_modules')
+    .select('learning_module_id, title, description, sub_category, learning_or_certification, updated_at')
+    .eq('category', 'Skills')
+    .eq('city_town', 'Dayton')
+    .eq('public', 1)
+    .neq('sub_category', 'Vibe Coding')
+    .order('sub_category', { ascending: true });
+
+  if (error) {
+    console.error('[Skills Activities] Error fetching Dayton modules:', error);
+    return [];
+  }
+
+  return (data || []).map((row) => ({
+    id: `mock-${row.learning_module_id}`,
+    activity: row.title,
+    title: row.title,
+    category_activity: 'Skills',
+    sub_category: row.sub_category,
+    progress: 'not started' as const,
+    learning_module_id: row.learning_module_id,
+    description: row.description,
+    updated_at: row.updated_at || new Date().toISOString(),
+    certification_evaluation_score: null,
+    certification_evaluation_evidence: null,
+    learning_modules: {
+      category: 'Skills',
+      sub_category: row.sub_category,
+      learning_or_certification: row.learning_or_certification ?? 'learning',
+      public: 1,
+    },
+    isPublic: true,
+  }));
+}
+
 // Define rubric dimensions for each sub-category
 const RUBRIC_DEFINITIONS: Record<string, string[]> = {
   'Vibe Coding': [
@@ -1831,9 +1877,16 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
 
       console.log('[Skills Activities] Loaded', dashboardData?.length || 0, 'total activities');
       console.log('[Skills Activities] Filtered to', skillsActivities.length, 'Skills activities');
-      
-      // Force full mock activity list regardless of DB results
-      setAllSkillsActivities(buildSkillsMockActivities());
+
+      // Dayton (Back to Basics) learners get the real, Dayton-tailored catalog
+      // generated for their city; everyone else keeps the existing mock catalog.
+      if (cityTown === 'Dayton') {
+        const daytonActivities = await fetchDaytonSkillsActivities();
+        setAllSkillsActivities(daytonActivities.length > 0 ? daytonActivities : buildSkillsMockActivities());
+      } else {
+        // Force full mock activity list regardless of DB results
+        setAllSkillsActivities(buildSkillsMockActivities());
+      }
     } catch (err) {
       console.error('[Skills Activities] Error loading:', err);
 
