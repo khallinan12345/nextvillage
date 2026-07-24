@@ -403,7 +403,7 @@ async function insertModules(
     country,
     continent,
     user_id: null,
-    public: 0,
+    public: 1,
     application: 0,
     created_at: now,
     updated_at: now,
