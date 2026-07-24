@@ -2102,7 +2102,7 @@ CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown.
         page: 'AILearningPage',
         messages: [{ role: 'user', content: comprehensivePrompt }],
         system: 'You are a UNESCO AI Competency evaluator. Respond ONLY with valid JSON. Do not include any other text.',
-        max_tokens: 1200,
+        max_tokens: 3000,
         temperature: 0.2,
       });
 
@@ -2835,7 +2835,7 @@ Respond ONLY with valid JSON:
           }
         ],
         system: standardInstructions,
-        max_tokens: 1200,
+        max_tokens: 3000,
         temperature: 0.2
       });
 

@@ -2595,7 +2595,7 @@ Provide assessment now:`;
         page: 'SkillsDevelopmentPage',
         messages,
         system: 'You are an expert AI assessment evaluator for comprehensive skill evaluation. Respond only with valid JSON.',
-        max_tokens: 2000,
+        max_tokens: 3000,
         temperature: 0.3
       });
 
@@ -2649,13 +2649,33 @@ Provide assessment now:`;
       const shouldComplete = evaluationScore === 3;
       const newProgress = shouldComplete ? 'completed' : 'started';
 
+      const aggregateEvidence = rubricEvaluation.dimensions
+        .map(dim => `${dim.dimension.replace(/_/g, ' ')}: ${dim.evidence}`)
+        .join(' | ');
+
+      // Map dimensions to the same per-dimension columns the real-DB branch
+      // uses, so cards/redisplays show full evidence for mock (Dayton, etc.)
+      // activities too, not just the aggregate score.
+      const colMap = RUBRIC_COLUMN_MAP[subCategory] || {};
+      const dimensionData: Record<string, number | string> = {};
+      for (const dim of rubricEvaluation.dimensions) {
+        const dimensionKey = dim.dimension.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const cols = colMap[dimensionKey];
+        if (cols) {
+          dimensionData[cols.score] = dim.score;
+          dimensionData[cols.evidence] = dim.evidence;
+        }
+      }
+
       setAllSkillsActivities(prev =>
         prev.map(activity =>
           activity.id === activityId
             ? {
                 ...activity,
                 certification_evaluation_score: evaluationScore,
-                progress: newProgress as 'not started' | 'started' | 'completed'
+                certification_evaluation_evidence: aggregateEvidence,
+                progress: newProgress as 'not started' | 'started' | 'completed',
+                ...dimensionData
               }
             : activity
         )
@@ -2665,7 +2685,9 @@ Provide assessment now:`;
         setSelectedActivity(prev => prev ? {
           ...prev,
           certification_evaluation_score: evaluationScore,
-          progress: newProgress as 'not started' | 'started' | 'completed'
+          certification_evaluation_evidence: aggregateEvidence,
+          progress: newProgress as 'not started' | 'started' | 'completed',
+          ...dimensionData
         } : null);
       }
 
