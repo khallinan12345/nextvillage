@@ -2642,7 +2642,6 @@ Respond ONLY with valid JSON:
         unescoScores: assessment.unesco_scores
       });
       setShowEvaluationModal(true);
-      handleBackToOverview();
 
     } catch (error) {
       console.error('Error saving session:', error);
