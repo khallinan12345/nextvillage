@@ -1783,8 +1783,9 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
     try {
       setLoading(true);
 
-      // Resolve which city_town to show: Ibiade users see Ibiade modules, everyone else sees Oloibiri
-      const cityTown = city === 'Ibiade' ? 'Ibiade' : 'Oloibiri';
+      // Resolve which city_town to show: Ibiade users see Ibiade modules, Dayton
+      // (Back to Basics Youth Education) users see Dayton modules, everyone else sees Oloibiri
+      const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
       console.log('[Skills Activities] Querying with JOIN to learning_modules');
       console.log('[Skills Activities] User ID:', user.id);
@@ -3698,7 +3699,8 @@ Provide assessment now:`;
       const now = new Date().toISOString();
 
       // Resolve city_town for module so it appears in the correct cohort's activity list
-      const moduleCityTown = userContinent === 'North America' ? 'Cincinnati'
+      const moduleCityTown = userCity === 'Dayton' ? 'Dayton'
+                           : userContinent === 'North America' ? 'Cincinnati'
                            : (userCity === 'Ibiade' ? 'Ibiade' : 'Oloibiri');
 
       // NA-aware assessment and metrics text

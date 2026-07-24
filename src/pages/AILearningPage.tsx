@@ -1453,8 +1453,9 @@ go deeper immediately — do not praise and move on.`;
     if (!user?.id) return;
   
     try {
-      // Resolve which city_town to show: Ibiade users see Ibiade modules, everyone else sees Oloibiri
-      const cityTown = city === 'Ibiade' ? 'Ibiade' : 'Oloibiri';
+      // Resolve which city_town to show: Ibiade users see Ibiade modules, Dayton
+      // (Back to Basics Youth Education) users see Dayton modules, everyone else sees Oloibiri
+      const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
       // 1. Fetch all relevant learning modules filtered by city_town
       const { data, error } = await supabase
@@ -3134,7 +3135,8 @@ Respond ONLY with valid JSON:
       const metricsForSuccess = await generateMetricsForSuccess(createForm.category, context);
       const newModuleId = crypto.randomUUID();
       // Resolve city_town for module so it appears in the correct cohort's activity list
-      const moduleCityTown = continent === 'North America' ? 'Cincinnati'
+      const moduleCityTown = userCity === 'Dayton' ? 'Dayton'
+                           : continent === 'North America' ? 'Cincinnati'
                            : (userCity === 'Ibiade' ? 'Ibiade' : 'Oloibiri');
 
       const { error: insertError } = await supabase.from('learning_modules').insert({

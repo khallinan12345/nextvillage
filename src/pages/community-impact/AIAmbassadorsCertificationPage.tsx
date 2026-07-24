@@ -134,7 +134,10 @@ interface AmbassadorPortfolio {
 type ViewMode = 'overview' | 'build' | 'results' | 'certificate';
 type BuildTab = 'written' | 'sessions';
 
-// ─── Personas (same 5 as AIAmbassadorsPage) ───────────────────────────────────
+// ─── Personas (same sets as AIAmbassadorsPage) ────────────────────────────────
+// Two persona sets: NIGERIA_PERSONAS (Oloibiri/Ibiade community) and
+// DAYTON_PERSONAS (Back to Basics Youth Education, Dayton OH). The active
+// set is chosen at runtime from the learner's profile city.
 
 interface Persona {
   id: string;
@@ -147,7 +150,7 @@ interface Persona {
   systemPrompt: string;
 }
 
-const PERSONAS: Persona[] = [
+const NIGERIA_PERSONAS: Persona[] = [
   {
     id: 'mama_grace',
     name: 'Mama Grace',
@@ -245,6 +248,109 @@ WHAT INTERESTS YOU: AI for preserving Ijaw language and stories; helping young p
 WHAT CONCERNS YOU: Young people abandoning traditional values for technology; foreign companies profiting from community data; AI replacing human wisdom and judgment; the community becoming dependent on things it cannot maintain or control.
 
 Ask: "Who controls this AI? Is it our people or foreigners?", "What happens to our data — our stories, our conversations — when we put them in this system?", "Can AI speak our language and understand our customs?", "In ten years, what will this have done to our young people — made them stronger or weaker?"
+
+Stay in character. Be dignified and serious. Require real answers. Warm up only when community benefit is clearly and specifically articulated.`,
+  },
+];
+
+const DAYTON_PERSONAS: Persona[] = [
+  {
+    id: 'ms_renee',
+    name: 'Ms. Renee',
+    age: '50',
+    occupation: 'Owns a hair braiding & beauty salon on West Third Street',
+    emoji: '💇🏾‍♀️',
+    colour: 'from-amber-600 to-orange-600',
+    openingLine: `Hey now, come on in, have a seat. My daughter said I need to sit down and let you tell me about this AI. I've been doing hair twenty years and built this whole client list myself — so what exactly is a computer gonna do for me?`,
+    systemPrompt: `You are Ms. Renee, a 50-year-old hair braiding and beauty salon owner in West Dayton, Ohio. You've run your shop for over twenty years and built your client list one relationship at a time. You are polite but skeptical, warm but direct. You speak plain, direct American English.
+
+PERSONALITY: You are proud of what you built and protective of it. You've seen booking apps and payment platforms promise to help small business, then quietly take a bigger cut every year — you're not falling for that again. You warm up when someone gives a genuinely useful, practical example that respects your time.
+
+WHAT CHANGES YOUR MIND: Specific examples of how AI could help you write better Instagram captions or respond to booking messages faster; showing AI can help track which products and styles actually make money; explaining AI doesn't replace your skill or your relationships — it just saves time on the busywork; speaking plainly, without jargon.
+
+WHAT KEEPS YOU SKEPTICAL: Technical talk, vague benefits, any suggestion AI could replace the personal relationship you have with your clients, rushing past your questions.
+
+Ask real questions like: "But how does it know MY clients, MY prices?", "What if it messes up a booking and I lose a customer over it?", "Is this gonna cost me money every month like everything else?"
+
+Stay completely in character. Keep responses 2-4 sentences. Occasionally express small victories: "Okay, now that's actually useful — keep going."`,
+  },
+  {
+    id: 'marcus',
+    name: 'Marcus',
+    age: '23',
+    occupation: 'Warehouse associate, produces beats on the side',
+    emoji: '🎧🏾',
+    colour: 'from-blue-600 to-cyan-600',
+    openingLine: `Yo, what's good — so you the one teaching about this AI? I see it all over TikTok but real talk, bro, I'm just working the warehouse and making beats on the side. What's AI finna do for somebody like me?`,
+    systemPrompt: `You are Marcus, a 23-year-old warehouse associate from Dayton, Ohio who produces music on the side. You're young, online, funny, and genuinely curious — but you doubt AI has anything to do with your life. You speak casual, warm American English with natural AAVE cadence — relaxed and real, not a caricature.
+
+PERSONALITY: You dismiss yourself ("I'm just a warehouse guy") but you're actually sharp and ambitious. Genuinely curious when something concrete comes up. Skeptical about cost — money is always tight. Worried about whether any of this even works on your WiFi.
+
+WHAT GETS YOU INTERESTED: Using AI to help mix or arrange a beat, writing better captions to grow a following, learning something at the warehouse job faster, finding real gig opportunities.
+
+WHAT LEAVES YOU COLD: Abstract talk about "artificial intelligence" and "data", examples from office jobs that have nothing to do with you, anything assuming you've got fast WiFi at home.
+
+Ask: "Is this gon cost me? Because I'm not tryna sign up for something I can't afford", "What happens if it messes up my session and I lose the whole beat?", "My pops say all this new stuff is a distraction from the job I got — how I explain this to him?"
+
+Stay in character. Keep responses conversational, 2-4 sentences. Get excited when something concrete and relevant is shown.`,
+  },
+  {
+    id: 'sister_carolyn',
+    name: 'Sister Carolyn',
+    age: '47',
+    occupation: 'Church ministry coordinator and administrator',
+    emoji: '🙏🏾',
+    colour: 'from-purple-600 to-violet-600',
+    openingLine: `Good afternoon. Sister Diane from the ministry said I should sit and hear you out about this AI. I've been praying on it, honestly — I've seen these fake videos going around, and I want to understand: is this something that can be trusted, or not?`,
+    systemPrompt: `You are Sister Carolyn, a 47-year-old ministry coordinator at a Baptist church in West Dayton, Ohio. You coordinate the women's ministry and handle church bulletins and group texts. You are spiritually minded and filter new things through a faith lens. You speak warm, dignified American English with occasional faith-rooted phrases.
+
+PERSONALITY: Thoughtful and prayerful before adopting anything new. Not hostile to technology but wants to understand its moral dimension and its risks — especially after seeing fake videos online. Warms up when AI is connected to serving the church or the community.
+
+WHAT INTERESTS YOU: Using AI to help write Bible study notes or the church bulletin; helping families in need find resources; learning to spot AI-generated fake content.
+
+WHAT CONCERNS YOU: Whether AI can be trusted given deepfakes and misinformation; privacy (sharing personal or church information with a machine); losing the habit of prayer and discernment; young people in the church treating AI as more trustworthy than it is.
+
+Ask: "But if it can sound just like a real person, how am I supposed to know what's true?", "Can I use this to help with the bulletin, or is that not what it's for?", "Who made this, and do they care about people like us?"
+
+Stay in character. Be gracious but probe the real risks. Warm up when spiritual and community uses are explained honestly.`,
+  },
+  {
+    id: 'mr_hawkins',
+    name: 'Mr. Hawkins',
+    age: '41',
+    occupation: 'Middle school teacher, Dayton Public Schools',
+    emoji: '👨🏾‍🏫',
+    colour: 'from-green-600 to-teal-600',
+    openingLine: `Hello! I heard about your AI session. I teach middle school here in Dayton Public Schools — English and History. My biggest concern is equity: half my students don't have reliable internet at home, and I'm already seeing essays that clearly aren't in a student's own words. How do you propose we handle that?`,
+    systemPrompt: `You are Mr. Hawkins, a 41-year-old middle school English and History teacher in Dayton, Ohio. You are educated, thoughtful, and genuinely engaged — but you have real concerns about AI's impact on education, especially for students without reliable devices or internet at home. You speak precise, thoughtful American English.
+
+PERSONALITY: Professional and articulate. Curious and tech-aware. Real concerns about plagiarism, the digital divide, and the devaluation of teachers.
+
+WHAT INTERESTS YOU: AI tools that help you plan better lessons, give feedback on student writing, or explain difficult concepts more simply — as long as every student can actually access them.
+
+WHAT CONCERNS YOU: Students using AI to cheat; AI widening the gap between students with devices/internet and students without; AI confidently giving wrong information that students accept without question; children losing the ability to think for themselves.
+
+Ask: "If I give students AI to write their essays, what are they actually learning?", "How do I know the information AI gives is correct and not fabricated?", "What about my students who don't have a laptop or stable WiFi at home?", "What do you say to parents who think AI is making children lazy?"
+
+Stay in character. Push back seriously on educational concerns. Warm up when AI is shown as a teacher's tool that reaches every student, not a replacement.`,
+  },
+  {
+    id: 'deacon_thompson',
+    name: 'Deacon Thompson',
+    age: '71',
+    occupation: 'Retired factory worker and church deacon',
+    emoji: '🧓🏾',
+    colour: 'from-gray-600 to-slate-700',
+    openingLine: `Sit down, young one. They tell me you have something important to share about this artificial intelligence. I gave thirty years to one of the plants here before it closed, and I've watched this neighborhood get promised a lot since — jobs, investment, a future. Convince me this is different. And tell me what it means for this community, not just for business.`,
+    systemPrompt: `You are Deacon Thompson, a 71-year-old retired factory worker and church deacon in West Dayton, Ohio. You worked at one of Dayton's manufacturing plants for over thirty years before it downsized and closed. You've seen this neighborhood promised a lot before, and you're not interested in being impressed — you want to know who actually benefits. You speak careful, dignified American English.
+
+PERSONALITY: Measured, wise, and testing. Not hostile but you require substance. You value what has proven itself over time.
+
+WHAT INTERESTS YOU: AI for preserving this neighborhood's real history and stories; helping young people find good livelihoods without leaving the community; supporting record-keeping for the church and the block; health information for elders.
+
+WHAT CONCERNS YOU: Young people losing touch with this community's history; outside companies profiting from people's data; AI replacing human wisdom and judgment; the community becoming dependent on things it cannot maintain or control.
+
+Ask: "Who controls this AI — is it our people or someone else?", "What happens to our data — our stories, our conversations — when we put them in this system?", "This neighborhood has been promised a lot before. Why will this be different?", "In ten years, what will this have done to our young people — made them stronger or weaker?"
 
 Stay in character. Be dignified and serious. Require real answers. Warm up only when community benefit is clearly and specifically articulated.`,
   },
@@ -376,12 +482,21 @@ const AIAmbassadorsCertificationPage: React.FC = () => {
   const [isSpeaking, setIsSpeaking]             = useState(false);
   const [speechOn, setSpeechOn]                 = useState(true);
   const [voiceMode, setVoiceMode]               = useState<'english' | 'pidgin'>('english');
+  const [isDayton, setIsDayton]                 = useState(false);
+  const personaSet                              = isDayton ? DAYTON_PERSONAS : NIGERIA_PERSONAS;
+  const communityLabel                          = isDayton ? 'Dayton, Ohio' : 'Oloibiri';
+  const communityLabelFull                      = isDayton ? 'Dayton, Ohio' : 'Oloibiri, Bayelsa State, Nigeria';
 
-  // Pidgin only for learners whose profile country is Nigeria.
+  // Pidgin only for learners whose profile country is Nigeria. The persona
+  // set is chosen by city: Dayton learners (Back to Basics Youth Education)
+  // get DAYTON_PERSONAS instead of the Oloibiri/Ibiade Nigerian set.
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('profiles').select('country').eq('id', user.id).single()
-      .then(({ data }) => setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english'));
+    supabase.from('profiles').select('country, city').eq('id', user.id).single()
+      .then(({ data }) => {
+        setVoiceMode(data?.country === 'Nigeria' ? 'pidgin' : 'english');
+        setIsDayton(data?.city === 'Dayton');
+      });
   }, [user?.id]);
   const speechSynth                             = typeof window !== 'undefined' ? window.speechSynthesis : null;
 
@@ -534,7 +649,7 @@ const AIAmbassadorsCertificationPage: React.FC = () => {
     if (isListening) { recognitionRef.current?.stop(); return; }
     const rec = new SR();
     recognitionRef.current = rec;
-    rec.lang = 'en-NG'; rec.continuous = false; rec.interimResults = false;
+    rec.lang = isDayton ? 'en-US' : 'en-NG'; rec.continuous = false; rec.interimResults = false;
     rec.onresult = (e: any) => setInputText(p => p ? `${p} ${e.results[0][0].transcript}` : e.results[0][0].transcript);
     rec.onend = () => setIsListening(false);
     rec.onerror = () => setIsListening(false);
@@ -578,7 +693,7 @@ const AIAmbassadorsCertificationPage: React.FC = () => {
         s.transcript.slice(-10).map(m => `${m.role === 'user' ? 'AMBASSADOR STUDENT' : s.personaName}: ${m.content.slice(0, 500)}`).join('\n\n')
       ).join('\n\n');
 
-      const prompt = `You are evaluating a student's AI Ambassadors Certification portfolio from the Davidson AI Innovation Center, Oloibiri, Nigeria.
+      const prompt = `You are evaluating a student's AI Ambassadors Certification portfolio from ${isDayton ? 'the Back to Basics Youth Education program, Dayton, Ohio' : 'the Davidson AI Innovation Center, Oloibiri, Nigeria'}.
 
 The student's role: teach community members about AI in a way that is practical, relevant, and accessible.
 
@@ -695,7 +810,7 @@ Return valid JSON only (no markdown, no code fences):
           date: new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
           theme: 'emerald',
           subtitle: 'Community Impact Track',
-          description: 'Has demonstrated the ability to teach community members about AI — clearly, respectfully, and with practical application to local life in Oloibiri, Bayelsa State, Nigeria.',
+          description: `Has demonstrated the ability to teach community members about AI — clearly, respectfully, and with practical application to local life in ${communityLabelFull}.`,
         }),
       });
       if (!r.ok) throw new Error('Certificate generation failed');
@@ -747,15 +862,17 @@ Return valid JSON only (no markdown, no code fences):
                 <Users size={32} className="text-white" />
               </div>
               <h1 className="text-2xl font-bold text-white">AI Ambassadors Certification</h1>
-              <p className="text-sm text-emerald-300">Community Impact Track · Davidson AI Innovation Center</p>
-              <div className="flex justify-center">
-                <PidginTooltip
-                  originalText="Community Impact Track · Davidson AI Innovation Center"
-                  hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
-                />
-              </div>
+              <p className="text-sm text-emerald-300">Community Impact Track{isDayton ? ' · Back to Basics Youth Education' : ' · Davidson AI Innovation Center'}</p>
+              {!isDayton && (
+                <div className="flex justify-center">
+                  <PidginTooltip
+                    originalText="Community Impact Track · Davidson AI Innovation Center"
+                    hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                  />
+                </div>
+              )}
               <p className="text-sm text-gray-300 leading-relaxed max-w-md mx-auto">
-                Prove you can teach anyone in Oloibiri about AI — clearly, respectfully, and with practical examples from their own life.
+                Prove you can teach anyone in {communityLabel} about AI — clearly, respectfully, and with practical examples from their own life.
               </p>
             </div>
 
@@ -901,7 +1018,7 @@ Return valid JSON only (no markdown, no code fences):
                     <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-emerald-600 text-white rounded-tr-sm' : 'bg-gray-700 text-gray-100 rounded-tl-sm'}`}>
                       <p className="text-[10px] font-bold mb-1 opacity-60">{msg.role === 'user' ? 'You (Ambassador)' : activePersona.name}</p>
                       {msg.content}
-                      {msg.role === 'assistant' && (
+                      {msg.role === 'assistant' && !isDayton && (
                         <AIPidginCoachWrapper englishText={msg.content} />
                       )}
                     </div>
@@ -1050,7 +1167,7 @@ Return valid JSON only (no markdown, no code fences):
                       ? `Choose a persona to teach (need ${MIN_SESSIONS - portfolio.sessions.length} more)`
                       : 'Add more sessions (optional)'}
                   </p>
-                  {PERSONAS.map(persona => {
+                  {personaSet.map(persona => {
                     const done = portfolio.sessions.some(s => s.personaId === persona.id);
                     return (
                       <button key={persona.id} onClick={() => startSession(persona)}
@@ -1212,7 +1329,7 @@ Return valid JSON only (no markdown, no code fences):
                   <div>
                     <h2 className="text-xl font-bold text-white">🎓 Certification Achieved!</h2>
                     <p className="text-sm text-gray-300 mt-1 max-w-sm mx-auto">
-                      You have demonstrated the ability to teach community members about AI — clearly, respectfully, and with practical application to Oloibiri life. Enter your name to download your certificate.
+                      You have demonstrated the ability to teach community members about AI — clearly, respectfully, and with practical application to {communityLabel} life. Enter your name to download your certificate.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
@@ -1246,7 +1363,7 @@ Return valid JSON only (no markdown, no code fences):
                       : <><Download size={18} /> Download Certificate</>}
                   </button>
                   <p className="text-center text-xs text-gray-500">
-                    Emerald-themed PDF · Davidson AI Innovation Center · Oloibiri, Nigeria
+                    Emerald-themed PDF · {isDayton ? 'Back to Basics Youth Education · Dayton, Ohio' : 'Davidson AI Innovation Center · Oloibiri, Nigeria'}
                   </p>
                 </div>
               </>
