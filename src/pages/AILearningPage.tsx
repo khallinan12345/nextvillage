@@ -3977,7 +3977,7 @@ Respond ONLY with valid JSON:
                 >
                   {evaluating
                     ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
-                    : <><Save size={18} /> Save Session</>}
+                    : <><Save size={18} /> Evaluate Me / Save Session</>}
                 </Button>
                 <button
                   onClick={handleCompleteSession}
