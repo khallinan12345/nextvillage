@@ -965,6 +965,7 @@ const FullStackDevelopmentPage: React.FC = () => {
         projectFiles: fileSummary, sessionContext: ctx,
         completedTasks: TASKS.slice(0, idx).map(t => t.id),
         communicationStrategy, learningStrategy,
+        gradeLevel: userGradeLevel,
         supabaseConnected: !!(creds.url && creds.anonKey),
       });
       setTaskInstruction(result as TaskInstruction);
@@ -1043,7 +1044,7 @@ const FullStackDevelopmentPage: React.FC = () => {
         examplePrompt: seeds[0].question,
       });
     } finally { setLoadingInstruction(false); }
-  }, [communicationStrategy, learningStrategy, creds]);
+  }, [communicationStrategy, learningStrategy, userGradeLevel, creds]);
 
   useEffect(() => {
     if (taskIndex > 0) fetchTaskInstruction(taskIndex, projectFiles, sessionContext);
@@ -1498,6 +1499,7 @@ const FullStackDevelopmentPage: React.FC = () => {
                 {currentTask.id === 'load_web_project' ? (
                   <WebProjectLoader
                     userId={userId}
+                    gradeLevel={userGradeLevel}
                     onProjectLoaded={(projName, dataAnswer, projFiles) => {
                       setSessionName(projName + ' (Full-Stack)');
                       if (projFiles && projFiles.length > 0) {

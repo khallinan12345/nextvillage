@@ -2124,7 +2124,7 @@ LANGUAGE RULES:
         case 1: return 'Use simple, clear language appropriate for elementary students. Use concrete examples and encourage frequently. Break down complex ideas into small, easy-to-understand steps. Be patient and positive.';
         case 2: return 'Use age-appropriate language for middle school students. Provide clear explanations with relevant examples. Encourage critical thinking and independence. Be supportive and respectful.';
         case 3: return 'Use language appropriate for high school students. Provide detailed explanations and challenge students to think deeply. Encourage analysis and synthesis of ideas. Respect their developing independence.';
-        case 4: return 'Use sophisticated language appropriate for college students. Provide comprehensive explanations with academic rigor. Encourage critical analysis, research skills, and independent thinking. Treat students as emerging professionals.';
+        case 4: return 'This is an adult learner (18+). Use clear, professional language and treat them as a capable adult, not a classroom student — avoid childish framing or over-explaining basics. Connect guidance to real-world and career applications. Respect their existing knowledge and time, and encourage independent, self-directed exploration.';
         default: return 'Adjust your language and examples to be appropriate for the student\'s level. Be supportive and encouraging.';
       }
     })();

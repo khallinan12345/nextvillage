@@ -1420,6 +1420,13 @@ GRADE LEVEL: High School (Grades 9-12, Ages 14-18)
 LANGUAGE: You can use more sophisticated language and concepts. They can handle complex ideas and abstract thinking.
 
 TEACHING APPROACH: Use advanced questioning techniques that promote analytical and critical thinking. Ask questions like "How would you analyze this situation?" or "What are the implications of this concept?" Encourage them to evaluate different perspectives, make predictions, and synthesize information. Connect learning to their future goals, college prep, career interests, and real-world applications. Challenge them to defend their reasoning and consider alternative viewpoints.`;
+  } else if (gradeLevel === 4) {
+    gradeGuidance = `
+GRADE LEVEL: Adult Learner (18+)
+
+LANGUAGE: Use clear, professional language. Treat them as a capable adult, not a student in a classroom — avoid childish framing or over-explaining basics they likely already know.
+
+TEACHING APPROACH: Ask questions that connect to real-world and career applications: "How might this apply to your work?" or "What's your experience with this so far?" Respect their existing knowledge and time — get to the point. Encourage independent exploration and self-directed learning. Frame guidance around practical outcomes rather than grades or school-style evaluation.`;
   } else {
     gradeGuidance = `
 TEACHING APPROACH: Adapt your communication style to be clear and age-appropriate. Use encouraging language and check for understanding frequently. Focus on guiding the student to discover answers through thoughtful questioning rather than providing direct solutions.`;

@@ -102,6 +102,17 @@ class CodeExecutionService {
   }
 }
 
+// Grade-level language guidance for the design coach, layered on top of communication level.
+function getGradeGuidance(gradeLevel: number | null): string {
+  switch (gradeLevel) {
+    case 1: return 'GRADE LEVEL: Elementary (Grades 3-5, Ages 8-11). Use very simple words and short sentences. Relate ideas to games, school, family, or pets. Be extra encouraging.';
+    case 2: return 'GRADE LEVEL: Middle School (Grades 6-8, Ages 11-14). Use clear, age-appropriate language. Relate ideas to school life, friends, and technology they already use.';
+    case 3: return 'GRADE LEVEL: High School (Grades 9-12, Ages 14-18). You can use more sophisticated language. Relate ideas to real-world projects, college, or career interests.';
+    case 4: return 'GRADE LEVEL: Adult Learner (18+). Use clear, professional language — treat them as a capable adult, not a student. Relate ideas to real-world and work applications.';
+    default: return '';
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main Component
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -111,6 +122,7 @@ const VibeCodingPage: React.FC = () => {
 
   // ── Profile & personality ──────────────────────────────────────────────────
   const [communicationLevel, setCommunicationLevel] = useState<number>(1);
+  const [userGradeLevel, setUserGradeLevel] = useState<number | null>(null);
   const [personalityBaseline, setPersonalityBaseline] = useState<PersonalityBaseline>({
     communicationStrategy: null,
     learningStrategy: null,
@@ -162,10 +174,11 @@ const VibeCodingPage: React.FC = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    // Continent → voice mode
+    // Continent → voice mode, grade level → tailored language
     supabase.from('profiles').select('continent, grade_level, country').eq('id', user.id).single()
       .then(({ data }) => {
         if (data?.country) setVoiceMode(data.country === 'Nigeria' ? 'pidgin' : 'english');
+        if (data?.grade_level) setUserGradeLevel(data.grade_level);
       });
 
     // Personality baseline + communication level
@@ -241,6 +254,7 @@ const VibeCodingPage: React.FC = () => {
   useEffect(() => {
     if (!user?.id) return;
     const lvl = communicationLevel;
+    const gradeGuidance = getGradeGuidance(userGradeLevel);
     const facilitator = `You are an AI vibe coding design coach. Your job is to help the student define what they want to build BEFORE they write any code.
 
 Ask them questions about:
@@ -252,6 +266,7 @@ Ask them questions about:
 Keep questions short and focused. One question at a time.
 Communication level: ${lvl} (0=very basic, 3=proficient). Adjust your language accordingly.
 ${lvl <= 1 ? 'Use simple, short sentences. Celebrate effort.' : ''}
+${gradeGuidance}
 
 When they have a clear enough idea, encourage them to click "Create Vibe Coding Prompt from Design" below to capture it as a structured prompt.`;
 
@@ -265,7 +280,7 @@ When they have a clear enough idea, encourage them to click "Create Vibe Coding 
       timestamp: new Date(),
     };
     setChatHistory([welcome]);
-  }, [user?.id, communicationLevel]);
+  }, [user?.id, communicationLevel, userGradeLevel]);
 
   // ── Auto-scroll chat ───────────────────────────────────────────────────────
   useEffect(() => {

@@ -28,6 +28,14 @@ interface ProjectFile {
   content: string;
 }
 
+// Grade level scale: 1=Elementary, 2=Middle School, 3=High School, 4=Adult Learner (18+)
+const GRADE_LEVEL_GUIDANCE: Record<number, string> = {
+  1: 'The learner is in elementary school (grades 3-5, ages 8-11). Use very simple words and short sentences. Be extra encouraging.',
+  2: 'The learner is in middle school (grades 6-8, ages 11-14). Use clear, age-appropriate language.',
+  3: 'The learner is in high school (grades 9-12, ages 14-18). You can use more sophisticated language.',
+  4: 'The learner is an adult (18+). Use clear, professional language — treat them as a capable adult, not a classroom student.',
+};
+
 interface TaskDef {
   id: string;
   label: string;
@@ -672,6 +680,7 @@ const WebDevelopmentPage: React.FC = () => {
     sessionContext,
     chatPage:           'WebDevelopmentPage',
     systemPromptPreset: 'web-dev',
+    gradeLevel:         userGradeLevel,
   });
 
   // ═════════════════════════════════════════════════════════════════════
@@ -969,6 +978,7 @@ const WebDevelopmentPage: React.FC = () => {
         completedTasks: TASKS.slice(0, idx).map(t => t.id),
         communicationStrategy,
         learningStrategy,
+        gradeLevel: userGradeLevel,
         // Pass canonical questions so the API can adapt tone while keeping structure
         scriptSubTasks: canonicalSeeds.map(s => s.question),
         scriptTeaching: canonicalSeeds.map(s => s.teaching),
@@ -996,7 +1006,7 @@ const WebDevelopmentPage: React.FC = () => {
     } finally {
       setLoadingInstruction(false);
     }
-  }, [communicationStrategy, learningStrategy]);
+  }, [communicationStrategy, learningStrategy, userGradeLevel]);
 
   // ─── Upload project ZIP to Supabase Storage ─────────────────────────────
   const uploadProjectToStorage = useCallback(async (
@@ -1138,7 +1148,8 @@ const WebDevelopmentPage: React.FC = () => {
           max_tokens: 600,
           system: `You are a friendly web development coach helping a beginner learner understand what a question is asking.
 Explain the question in simple, encouraging language. Give a SHORT concrete example answer (2-3 sentences) so they know what kind of response is expected.
-Write as if talking directly to the learner. No jargon. Keep it under 150 words total.`,
+Write as if talking directly to the learner. No jargon. Keep it under 150 words total.
+${GRADE_LEVEL_GUIDANCE[userGradeLevel ?? 0] ?? ''}`,
           messages: [{
             role: 'user',
             content: `The learner is building a website. They are on this task: "${taskInstruction.headline || currentTask?.label}".
@@ -1159,7 +1170,7 @@ Explain what this question is asking in simple terms and give a short example of
     } finally {
       setHelpLoading(false);
     }
-  }, [taskInstruction, subTaskIndex, currentTask]);
+  }, [taskInstruction, subTaskIndex, currentTask, userGradeLevel]);
 
   // Skip a sub-task the learner doesn't need
   const handleSkipSubTask = useCallback(async () => {

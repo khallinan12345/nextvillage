@@ -755,7 +755,7 @@ Respond ONLY in this JSON format:
         .eq('id', user.id)
         .single();
 
-      const userGradeLevel = profile?.grade_level || 5;
+      const userGradeLevel: number | null = profile?.grade_level ?? null;
       const userContinent = profile?.continent || 'North America';
 
       // Map assessment names to learning module categories/sub-categories
@@ -775,9 +775,15 @@ Respond ONLY in this JSON format:
         .select('learning_module_id, title, description, category, sub_category, grade_level')
         .eq('category', mapping.category)
         .eq('public', 1)
-        .lte('grade_level', userGradeLevel + 2) // Allow up to 2 grades above
-        .gte('grade_level', Math.max(1, userGradeLevel - 2)) // Allow up to 2 grades below
         .limit(5);
+
+      // Only narrow by grade when we actually know the learner's grade level —
+      // an unknown grade should see the full 1-4 range, not be pushed toward older content.
+      if (userGradeLevel !== null) {
+        query = query
+          .lte('grade_level', userGradeLevel + 2) // Allow up to 2 grades above
+          .gte('grade_level', Math.max(1, userGradeLevel - 2)); // Allow up to 2 grades below
+      }
 
       // Prefer modules from user's continent but don't require it
       const { data: continentModules } = await query.eq('continent', userContinent);

@@ -942,6 +942,12 @@ TEACHING APPROACH: Ask thought-provoking questions that build on their developin
 Important: This student is in high school (grades 9-12). You can use more sophisticated language and concepts appropriate for a 14-18 year old. They can handle complex ideas and abstract thinking.
 
 TEACHING APPROACH: Use advanced questioning techniques that promote analytical and critical thinking. Ask questions like "How would you analyze this situation?" or "What are the implications of this concept?" Encourage them to evaluate different perspectives, make predictions, and synthesize information. Connect learning to their future goals, college prep, career interests, and real-world applications. Challenge them to defend their reasoning and consider alternative viewpoints.`;
+    } else if (gradeLevel === 4) {
+      return `${commonGuidance}
+
+Important: This is an adult learner (18+). Use clear, professional language and treat them as a capable adult, not a classroom student — avoid childish framing or over-explaining basics.
+
+TEACHING APPROACH: Ask questions that connect to real-world and career applications: "How might this apply to your work?" or "What's your experience with this so far?" Respect their existing knowledge and time. Encourage independent exploration and self-directed learning. Frame guidance around practical outcomes rather than school-style evaluation.`;
     } else {
       return `${commonGuidance}
 
