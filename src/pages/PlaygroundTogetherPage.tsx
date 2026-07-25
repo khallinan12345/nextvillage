@@ -30,6 +30,35 @@ function escapeHtml(s: string): string {
 // the book panel directly — no need to know the "View Book" button exists.
 const BOOK_REQUEST_PATTERN = /\b(show|see|view|open|read|pull up|bring up|look at)\b[\s\S]{0,30}\b(book|story)\b/i;
 
+// Claude wraps ONLY actual book/story text in these markers (see the system
+// prompt in api/chat-room.js) — everything else in a reply is conversational
+// and stays out of the book artifact entirely, not just visually hidden.
+const BOOK_MARKER_RE = /<<<BOOK_START>>>([\s\S]*?)<<<BOOK_END>>>/g;
+
+function extractBookSegments(content: string): string[] {
+  const segments: string[] = [];
+  for (const match of content.matchAll(BOOK_MARKER_RE)) {
+    const seg = match[1].trim();
+    if (seg) segments.push(seg);
+  }
+  return segments;
+}
+
+// For the chat bubble: keep Claude's full reply (including any book text,
+// since the chat is the full transcript) but hide the raw marker tokens.
+function stripBookMarkers(content: string): string {
+  return content.replace(/<<<BOOK_START>>>/g, '').replace(/<<<BOOK_END>>>/g, '').trim();
+}
+
+interface BookEntry {
+  id: string;
+  type: 'text' | 'image';
+  text?: string;
+  image_url?: string;
+  caption?: string;
+  sender_name: string;
+}
+
 // Matches the leader-role set enforced by RLS (together_rooms_update /
 // together_messages_update_moderate) — keep in sync with the migration.
 const LEADER_ROLES = new Set(['teacher', 'site_leader', 'facilitator', 'leader', 'research_lead']);
@@ -353,23 +382,35 @@ const PlaygroundTogetherPage: React.FC = () => {
     }
   };
 
-  // ── "Our Book" — everything Claude has written plus every shared image,
-  // in the order it happened. Derived straight from the messages already
+  // ── "Our Book" — ONLY the story text Claude marked as book content, plus
+  // every shared image, in the order it happened. No chat commentary — a
+  // Claude reply that's purely conversational (no <<<BOOK_START>>> markers)
+  // contributes nothing here. Derived straight from the messages already
   // loaded/subscribed above, so it updates live as the room does. ──────────
-  const bookEntries = useMemo(
-    () => messages.filter(m => !m.deleted_at && (m.role === 'assistant' || m.image_url)),
-    [messages]
-  );
+  const bookEntries = useMemo<BookEntry[]>(() => {
+    const entries: BookEntry[] = [];
+    for (const m of messages) {
+      if (m.deleted_at) continue;
+      if (m.image_url) {
+        entries.push({ id: m.id, type: 'image', image_url: m.image_url, caption: m.content || undefined, sender_name: m.sender_name });
+      } else if (m.role === 'assistant') {
+        extractBookSegments(m.content).forEach((text, i) => {
+          entries.push({ id: `${m.id}-${i}`, type: 'text', text, sender_name: m.sender_name });
+        });
+      }
+    }
+    return entries;
+  }, [messages]);
 
   const handleDownloadBook = () => {
     const title = activeRoom?.name || 'Our Book';
     const body = bookEntries.map(entry => {
-      if (entry.image_url) {
-        const caption = entry.content?.trim()
-          ? `<p style="font-size:14px;color:#666;margin-top:4px;">${escapeHtml(entry.content)}</p>` : '';
+      if (entry.type === 'image') {
+        const caption = entry.caption?.trim()
+          ? `<p style="font-size:14px;color:#666;margin-top:4px;">${escapeHtml(entry.caption)}</p>` : '';
         return `<figure style="margin:24px 0;"><img src="${entry.image_url}" style="max-width:100%;border-radius:12px;" />${caption}<figcaption style="font-size:12px;color:#999;margin-top:4px;">Shared by ${escapeHtml(entry.sender_name)}</figcaption></figure>`;
       }
-      return `<p style="white-space:pre-wrap;line-height:1.6;margin:16px 0;">${escapeHtml(entry.content)}</p>`;
+      return `<p style="white-space:pre-wrap;line-height:1.6;margin:16px 0;">${escapeHtml(entry.text || '')}</p>`;
     }).join('\n');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head>
 <body style="max-width:700px;margin:40px auto;font-family:Georgia,serif;padding:0 20px;">
@@ -631,6 +672,10 @@ ${body}
                   const isAssistant = msg.role === 'assistant';
                   const isDeleted = !!msg.deleted_at;
                   const label = isAssistant ? 'Claude' : isMe ? 'You' : msg.sender_name;
+                  // The chat shows the full reply, just without the raw
+                  // <<<BOOK_START>>>/<<<BOOK_END>>> marker tokens — those
+                  // exist only to tell the book panel what to extract.
+                  const displayContent = isAssistant ? stripBookMarkers(msg.content) : msg.content;
                   return (
                     <div key={msg.id} className="group flex items-start gap-2">
                       <div className={`flex-1 rounded-2xl px-4 py-2.5 max-w-[85%] ${
@@ -649,7 +694,7 @@ ${body}
                             {msg.content && <p className="text-sm whitespace-pre-wrap break-words mt-1.5">{msg.content}</p>}
                           </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words">{displayContent}</p>
                         )}
                       </div>
                       {isLeader && !isDeleted && !isAssistant && (
@@ -747,14 +792,14 @@ ${body}
                 ) : (
                   bookEntries.map(entry => (
                     <div key={entry.id} className="mb-6">
-                      {entry.image_url ? (
+                      {entry.type === 'image' ? (
                         <figure>
-                          <img src={entry.image_url} alt={entry.content || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
-                          {entry.content && <p className="text-sm text-gray-600 text-center mt-2">{entry.content}</p>}
+                          <img src={entry.image_url} alt={entry.caption || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
+                          {entry.caption && <p className="text-sm text-gray-600 text-center mt-2">{entry.caption}</p>}
                           <figcaption className="text-xs text-gray-400 text-center mt-1">Shared by {entry.sender_name}</figcaption>
                         </figure>
                       ) : (
-                        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+                        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{entry.text}</p>
                       )}
                     </div>
                   ))
