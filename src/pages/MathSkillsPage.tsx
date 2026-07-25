@@ -508,11 +508,11 @@ const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
   }
 
   if (evaluation.is_complete) {
-    speech += `Incredible achievement — you have reached Advanced in every skill! This stage is fully complete and the next stage is now unlocked. `;
+    speech += `Incredible achievement — you have reached Advanced in every skill! This stage is fully complete. `;
   } else if (evaluation.can_advance) {
-    speech += `You are Proficient in every skill — the next stage is now unlocked! Keep practising here to reach Advanced and fully master this stage. `;
+    speech += `You are Proficient in every skill! Keep practising here to reach Advanced and fully master this stage. `;
   } else {
-    speech += `Keep going — reach Proficient in all skills to unlock the next stage. Every session builds your mathematical mind. `;
+    speech += `Keep going — reach Proficient in all skills to master this stage. Every session builds your mathematical mind. `;
   }
 
   speech += `Mathematics is a journey, not a race. I am proud of the thinking you showed today. Let us keep going!`;
@@ -541,14 +541,10 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
 
 // ─── Derive progress from saved sessions ─────────────────────────────────────
 
-// ─── Strict Progression: Stage N only unlocks if Stage N-1 is Proficient+ ───────────────
-const canAccessStage = (stageIndex: number, stageLevels: (string | null)[]): boolean => {
-  // Stage 0 always accessible
-  if (stageIndex === 0) return true;
-  // Stage N requires Stage N-1 to be 'Proficient' or 'Advanced'
-  const previousStageLevel = stageLevels[stageIndex - 1];
-  if (!previousStageLevel) return false;
-  return previousStageLevel === 'Proficient' || previousStageLevel === 'Advanced';
+// All Foundations stages are open to everyone — no prerequisite gating.
+// Finishing an earlier stage is no longer required to access a later one.
+const canAccessStage = (_stageIndex: number, _stageLevels: (string | null)[]): boolean => {
+  return true;
 };
 
 const isStrongLevel = (level: ProficiencyLevel) => level === 'Proficient' || level === 'Advanced';
@@ -701,21 +697,21 @@ const EvaluationModal: React.FC<{
             <div className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
               <p className="text-green-800 text-sm font-medium">
-                🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete and the next stage is now unlocked!
+                🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete!
               </p>
             </div>
           ) : evaluation.can_advance ? (
             <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-blue-700 flex-shrink-0 mt-0.5" />
               <p className="text-blue-800 text-sm font-medium">
-                ✅ You are <strong>Proficient</strong> in all skill areas — the next stage is unlocked! Keep practising here to reach Advanced and fully master this stage.
+                ✅ You are <strong>Proficient</strong> in all skill areas! Keep practising here to reach Advanced and fully master this stage.
               </p>
             </div>
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
               <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
               <p className="text-gray-600 text-sm">
-                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to unlock the next stage.
+                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to master this stage.
               </p>
             </div>
           )}
@@ -833,7 +829,7 @@ const MathSkillsPage: React.FC = () => {
     if (view === 'stages' && !hasSpokenStagesIntro.current && !loadingProgress) {
       hasSpokenStagesIntro.current = true;
       const t = setTimeout(() => speak(
-        'Welcome to Math Skills. There are seven stages to master, from counting and number sense all the way to algebra and geometry. Complete each stage to unlock the next. Tap a stage card to begin.'
+        'Welcome to Math Skills. There are seven stages, from counting and number sense all the way to algebra and geometry, and all of them are open. Tap any stage card to begin.'
       ), 800);
       return () => clearTimeout(t);
     }
@@ -1285,13 +1281,6 @@ LANGUAGE RULES:
                           {!isCompleted && scoreBadge && (
                             <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
                               {scoreBadge}
-                            </span>
-                          )}
-                          {!isActive && isLocked && !isCompleted && (
-                            <span className="text-sm bg-gray-300/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-400/60">
-                              {idx === 0
-                                ? '🔒 Not yet unlocked'
-                                : `🔒 Complete Stage ${idx} to unlock`}
                             </span>
                           )}
                         </div>

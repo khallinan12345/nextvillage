@@ -497,11 +497,11 @@ const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
   }
 
   if (evaluation.is_complete) {
-    speech += `Incredible — you have reached Advanced in every skill! This stage is completely finished and the next stage is now unlocked. `;
+    speech += `Incredible — you have reached Advanced in every skill! This stage is completely finished. `;
   } else if (evaluation.can_advance) {
-    speech += `You have reached Proficient in every skill — the next stage is now unlocked! Keep practising here to reach Advanced and fully complete this stage. `;
+    speech += `You have reached Proficient in every skill! Keep practising here to reach Advanced and fully complete this stage. `;
   } else {
-    speech += `Keep going — reach Proficient in all skills to unlock the next stage. `;
+    speech += `Keep going — reach Proficient in all skills to master this stage. `;
   }
 
   speech += `Remember, I am here with you every step of the way. You are doing something amazing, and I am proud of your effort. Let us keep going together!`;
@@ -511,18 +511,10 @@ const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
 
 // ─── Message renderer — detects ✅ correction lines → green bold ─────────────
 
-// Returns the minimum unlockedUpTo based on communication_level alone.
-// Level 0-1 → only Stage 1 accessible (floor = 0)
-// Level 2   → Stages 3 & 4 accessible (floor = 3), Stage 5 still earned
-// Level 3   → Stages 2-5 accessible  (floor = 4)
-// ─── Strict Progression: Stage N only unlocks if Stage N-1 is Proficient+ ───────────────
-const canAccessStage = (stageIndex: number, stageLevels: (string | null)[]): boolean => {
-  // Stage 0 always accessible
-  if (stageIndex === 0) return true;
-  // Stage N requires Stage N-1 to be 'Proficient' or 'Advanced'
-  const previousStageLevel = stageLevels[stageIndex - 1];
-  if (!previousStageLevel) return false;
-  return previousStageLevel === 'Proficient' || previousStageLevel === 'Advanced';
+// All Foundations stages are open to everyone — no prerequisite gating.
+// Finishing an earlier stage is no longer required to access a later one.
+const canAccessStage = (_stageIndex: number, _stageLevels: (string | null)[]): boolean => {
+  return true;
 };
 
 const levelFloor = (communicationLevel: number): number => {
@@ -678,21 +670,21 @@ const EvaluationModal: React.FC<{
             <div className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
               <p className="text-green-800 text-sm font-medium">
-                🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete and the next stage is now unlocked!
+                🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete!
               </p>
             </div>
           ) : evaluation.can_advance ? (
             <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-blue-700 flex-shrink-0 mt-0.5" />
               <p className="text-blue-800 text-sm font-medium">
-                ✅ You are <strong>Proficient</strong> in all skill areas — the next stage is unlocked! Keep practising here to reach Advanced and fully complete this stage.
+                ✅ You are <strong>Proficient</strong> in all skill areas! Keep practising here to reach Advanced and fully complete this stage.
               </p>
             </div>
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
               <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
               <p className="text-gray-600 text-sm">
-                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to unlock the next stage.
+                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to master this stage.
               </p>
             </div>
           )}
@@ -815,7 +807,7 @@ const EnglishSkillsPage: React.FC = () => {
   useEffect(() => {
     if (view === 'stages' && !hasSpokenStagesIntro.current && !loadingProgress) {
       hasSpokenStagesIntro.current = true;
-      const t = setTimeout(() => speak('Welcome to English Skills. There are five stages to complete in order. Start with Stage 1: Oral Expression. Each stage will unlock after you reach Proficient level in all skills. Tap a stage card to begin.'), 800);
+      const t = setTimeout(() => speak('Welcome to English Skills. There are five stages, and all of them are open. Tap any stage card to begin.'), 800);
       return () => clearTimeout(t);
     }
   }, [view, loadingProgress, speak]);
@@ -1236,12 +1228,12 @@ Respond ONLY with valid JSON:
                 </div>
                 <p className="text-xl text-teal-100 max-w-2xl mx-auto">
                   Grow your English communication through real conversations with an AI coach.
-                  Complete each stage to unlock the next — at your own pace.
+                  All five stages are open — start wherever you like, at your own pace.
                 </p>
               </div>
               <div className="mt-4">
                 <PidginTooltip
-                  originalText="Grow your English communication through real conversations with an AI coach. Complete each stage to unlock the next — at your own pace."
+                  originalText="Grow your English communication through real conversations with an AI coach. All five stages are open — start wherever you like, at your own pace."
                   hintText="Tap to translate this introduction into Nigerian Pidgin."
                 />
               </div>
@@ -1371,13 +1363,6 @@ Respond ONLY with valid JSON:
                             {!isCompleted && scoreBadge && (
                               <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
                                 {scoreBadge}
-                              </span>
-                            )}
-                            {!isActive && isLocked && !isCompleted && (
-                              <span className="text-sm bg-gray-300/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-400/60">
-                                {idx === 0
-                                  ? '🔒 Not yet unlocked'
-                                  : `🔒 Complete Stage ${idx} to unlock`}
                               </span>
                             )}
                           </div>
