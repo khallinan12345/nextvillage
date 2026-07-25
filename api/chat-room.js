@@ -157,7 +157,7 @@ export default async function handler(req, res) {
     // the oldest), then reverse back to chronological order for Anthropic.
     const { data: recentHistory, error: historyErr } = await supabase
       .from('together_messages')
-      .select('sender_name, role, content')
+      .select('sender_name, role, content, image_url')
       .eq('room_id', room_id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -166,13 +166,21 @@ export default async function handler(req, res) {
     if (historyErr) throw historyErr;
     const history = (recentHistory || []).reverse();
 
-    const anthropicMessages = (history || []).map(m => ({
-      role: m.role,
-      // Anthropic has no concept of "which of several humans is speaking" —
-      // prefix each user turn with the sender's name at request-build time
-      // only (never stored this way in the DB) so Claude can track speakers.
-      content: m.role === 'user' ? `[${m.sender_name}]: ${m.content}` : m.content,
-    }));
+    const anthropicMessages = (history || []).map(m => {
+      // Images are visual-only for now — Claude never sees the picture
+      // itself, only that one was shared (and any caption), so it stays
+      // aware of the moment without receiving image content.
+      const body = m.image_url
+        ? (m.content?.trim() ? `${m.content} (shared an image)` : '(shared an image)')
+        : m.content;
+      return {
+        role: m.role,
+        // Anthropic has no concept of "which of several humans is speaking" —
+        // prefix each user turn with the sender's name at request-build time
+        // only (never stored this way in the DB) so Claude can track speakers.
+        content: m.role === 'user' ? `[${m.sender_name}]: ${body}` : body,
+      };
+    });
 
     if (!anthropicMessages.length || anthropicMessages[anthropicMessages.length - 1].role !== 'user') {
       // Nothing new to respond to (e.g. the triggering message was itself

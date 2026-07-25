@@ -11,16 +11,20 @@
 // Back to Basics Youth Education stays exempt from the usage quota below —
 // keep in sync with src/lib/backToBasicsScope.ts.
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { BACK_TO_BASICS_ORG_ID } from '../lib/backToBasicsScope';
-import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X } from 'lucide-react';
+import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X, Image as ImageIcon, BookOpen, Download } from 'lucide-react';
 
 const QUOTA_TOKENS    = 25000;
 const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 // Matches the leader-role set enforced by RLS (together_rooms_update /
 // together_messages_update_moderate) — keep in sync with the migration.
@@ -45,6 +49,7 @@ interface TogetherMessage {
   sender_name: string;
   role: 'user' | 'assistant';
   content: string;
+  image_url: string | null;
   created_at: string;
   deleted_at: string | null;
   deleted_by: string | null;
@@ -79,6 +84,11 @@ const PlaygroundTogetherPage: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [claudeThinking, setClaudeThinking] = useState(false);
   const [roomError, setRoomError] = useState('');
+
+  // ── Image sharing + book view ────────────────────────────────────────────
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [showBookModal, setShowBookModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const roomsChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -277,6 +287,89 @@ const PlaygroundTogetherPage: React.FC = () => {
     } finally {
       setClaudeThinking(false);
     }
+  };
+
+  // Images are visual-only — shared straight into the room without asking
+  // Claude to reply (api/chat-room.js never sees the picture itself, see
+  // that file for how a share still shows up in Claude's context).
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file || !user?.id || !activeRoom || uploadingImage) return;
+
+    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)) {
+      setRoomError('Please choose a PNG, JPEG, GIF, or WEBP image.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setRoomError('That image is too large — please choose one under 10MB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setRoomError('');
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('no_session');
+
+      const res = await fetch('/api/upload-together-asset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+          'Authorization': `Bearer ${accessToken}`,
+          'x-room-id': activeRoom.id,
+          'x-filename': encodeURIComponent(file.name),
+        },
+        body: file,
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.url) throw new Error(data?.error || 'upload_failed');
+
+      const { error } = await supabase.from('together_messages').insert({
+        room_id:     activeRoom.id,
+        sender_id:   user.id,
+        sender_name: user.name,
+        role:        'user',
+        content:     '',
+        image_url:   data.url,
+      });
+      if (error) throw error;
+    } catch {
+      setRoomError('Image upload failed — please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // ── "Our Book" — everything Claude has written plus every shared image,
+  // in the order it happened. Derived straight from the messages already
+  // loaded/subscribed above, so it updates live as the room does. ──────────
+  const bookEntries = useMemo(
+    () => messages.filter(m => !m.deleted_at && (m.role === 'assistant' || m.image_url)),
+    [messages]
+  );
+
+  const handleDownloadBook = () => {
+    const title = activeRoom?.name || 'Our Book';
+    const body = bookEntries.map(entry => {
+      if (entry.image_url) {
+        const caption = entry.content?.trim()
+          ? `<p style="font-size:14px;color:#666;margin-top:4px;">${escapeHtml(entry.content)}</p>` : '';
+        return `<figure style="margin:24px 0;"><img src="${entry.image_url}" style="max-width:100%;border-radius:12px;" />${caption}<figcaption style="font-size:12px;color:#999;margin-top:4px;">Shared by ${escapeHtml(entry.sender_name)}</figcaption></figure>`;
+      }
+      return `<p style="white-space:pre-wrap;line-height:1.6;margin:16px 0;">${escapeHtml(entry.content)}</p>`;
+    }).join('\n');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head>
+<body style="max-width:700px;margin:40px auto;font-family:Georgia,serif;padding:0 20px;">
+<h1>${escapeHtml(title)}</h1>
+${body}
+</body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${title.replace(/\s+/g, '-').toLowerCase()}.html`;
+    a.click();
   };
 
   const handleDeleteMessage = async (messageId: string) => {
@@ -486,6 +579,12 @@ const PlaygroundTogetherPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setShowBookModal(true)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 border border-purple-200 hover:border-purple-300 bg-purple-50 rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  <BookOpen size={13} /> View Book
+                </button>
                 {isLeader && activeRoom?.status === 'active' && (
                   <button
                     onClick={handleCloseRoom}
@@ -528,6 +627,11 @@ const PlaygroundTogetherPage: React.FC = () => {
                         </p>
                         {isDeleted ? (
                           <p className={`text-sm italic ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>[message removed]</p>
+                        ) : msg.image_url ? (
+                          <div>
+                            <img src={msg.image_url} alt={msg.content || 'Shared image'} className="rounded-xl max-w-full max-h-64 object-contain" />
+                            {msg.content && <p className="text-sm whitespace-pre-wrap break-words mt-1.5">{msg.content}</p>}
+                          </div>
                         ) : (
                           <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                         )}
@@ -561,6 +665,21 @@ const PlaygroundTogetherPage: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-end gap-2 px-5 py-3 border-t border-gray-100">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  title="Share an image"
+                  className="flex-shrink-0 w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-purple-600 hover:border-purple-300 disabled:opacity-40 transition-colors"
+                >
+                  {uploadingImage ? <Loader2 size={15} className="animate-spin" /> : <ImageIcon size={15} />}
+                </button>
                 <textarea
                   value={input}
                   onChange={e => setInput(e.target.value)}
@@ -582,6 +701,53 @@ const PlaygroundTogetherPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── "Our Book" artifact view — everything Claude has written plus
+          every shared image, formatted like a document instead of a chat. ── */}
+      {showBookModal && activeRoom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <BookOpen size={18} className="text-purple-600" /> {activeRoom.name}
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadBook}
+                  disabled={bookEntries.length === 0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 border border-purple-200 hover:border-purple-300 bg-purple-50 rounded-lg transition-colors disabled:opacity-40"
+                >
+                  <Download size={13} /> Download
+                </button>
+                <button onClick={() => setShowBookModal(false)} className="p-1 text-gray-400 hover:text-gray-700">
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-8 py-6" style={{ fontFamily: 'Georgia, serif' }}>
+              {bookEntries.length === 0 ? (
+                <p className="text-center text-gray-400 text-sm py-12">
+                  Nothing in the book yet — keep chatting with Claude and share images to build it up.
+                </p>
+              ) : (
+                bookEntries.map(entry => (
+                  <div key={entry.id} className="mb-6">
+                    {entry.image_url ? (
+                      <figure>
+                        <img src={entry.image_url} alt={entry.content || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
+                        {entry.content && <p className="text-sm text-gray-600 text-center mt-2">{entry.content}</p>}
+                        <figcaption className="text-xs text-gray-400 text-center mt-1">Shared by {entry.sender_name}</figcaption>
+                      </figure>
+                    ) : (
+                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 };
