@@ -26,6 +26,10 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// A room member asking to see the compiled book (in their own words) opens
+// the book panel directly — no need to know the "View Book" button exists.
+const BOOK_REQUEST_PATTERN = /\b(show|see|view|open|read|pull up|bring up|look at)\b[\s\S]{0,30}\b(book|story)\b/i;
+
 // Matches the leader-role set enforced by RLS (together_rooms_update /
 // together_messages_update_moderate) — keep in sync with the migration.
 const LEADER_ROLES = new Set(['teacher', 'site_leader', 'facilitator', 'leader', 'research_lead']);
@@ -87,7 +91,7 @@ const PlaygroundTogetherPage: React.FC = () => {
 
   // ── Image sharing + book view ────────────────────────────────────────────
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [showBookModal, setShowBookModal] = useState(false);
+  const [bookPanelOpen, setBookPanelOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -267,6 +271,13 @@ const PlaygroundTogetherPage: React.FC = () => {
 
     setSending(false);
     if (error) { setRoomError('Message failed to send — please try again.'); return; }
+
+    // Asking to see the book is a navigation request, not new story content —
+    // open the panel directly instead of spending a Claude turn on it.
+    if (BOOK_REQUEST_PATTERN.test(text)) {
+      setBookPanelOpen(true);
+      return;
+    }
 
     setClaudeThinking(true);
     try {
@@ -448,7 +459,7 @@ ${body}
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto">
+      <div className={view === 'room' && bookPanelOpen ? 'max-w-6xl mx-auto' : 'max-w-4xl mx-auto'}>
         {view === 'list' ? (
           <div>
             <div className="flex items-center gap-3 mb-6">
@@ -565,7 +576,8 @@ ${body}
             )}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl flex flex-col h-[75vh]">
+          <div className="flex gap-4 h-[75vh]">
+          <div className={`bg-white border border-gray-200 rounded-2xl flex flex-col min-w-0 transition-all duration-300 ${bookPanelOpen ? 'w-1/2' : 'flex-1'}`}>
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
               <div className="flex items-center gap-3 min-w-0">
                 <button onClick={backToList} className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0">
@@ -580,10 +592,14 @@ ${body}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
-                  onClick={() => setShowBookModal(true)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 border border-purple-200 hover:border-purple-300 bg-purple-50 rounded-lg px-3 py-1.5 transition-colors"
+                  onClick={() => setBookPanelOpen(o => !o)}
+                  className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
+                    bookPanelOpen
+                      ? 'text-white bg-purple-600 border-purple-600 hover:bg-purple-700'
+                      : 'text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300 bg-purple-50'
+                  }`}
                 >
-                  <BookOpen size={13} /> View Book
+                  <BookOpen size={13} /> {bookPanelOpen ? 'Hide Book' : 'View Book'}
                 </button>
                 {isLeader && activeRoom?.status === 'active' && (
                   <button
@@ -699,55 +715,56 @@ ${body}
               </div>
             )}
           </div>
-        )}
-      </div>
 
-      {/* ── "Our Book" artifact view — everything Claude has written plus
-          every shared image, formatted like a document instead of a chat. ── */}
-      {showBookModal && activeRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <BookOpen size={18} className="text-purple-600" /> {activeRoom.name}
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleDownloadBook}
-                  disabled={bookEntries.length === 0}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 border border-purple-200 hover:border-purple-300 bg-purple-50 rounded-lg transition-colors disabled:opacity-40"
-                >
-                  <Download size={13} /> Download
-                </button>
-                <button onClick={() => setShowBookModal(false)} className="p-1 text-gray-400 hover:text-gray-700">
-                  <X size={18} />
-                </button>
+          {/* ── "Our Book" artifact panel — everything Claude has written plus
+              every shared image, formatted like a document instead of a chat.
+              Lives beside the conversation, the same way Vibe Coding and the
+              other tools show their artifact window next to the chat. ── */}
+          {bookPanelOpen && activeRoom && (
+            <div className="w-1/2 min-w-0 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden flex-shrink-0">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2 min-w-0">
+                  <BookOpen size={16} className="text-purple-600 flex-shrink-0" /> <span className="truncate">{activeRoom.name}</span>
+                </h2>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={handleDownloadBook}
+                    disabled={bookEntries.length === 0}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 border border-purple-200 hover:border-purple-300 bg-purple-50 rounded-lg transition-colors disabled:opacity-40"
+                  >
+                    <Download size={12} /> Download
+                  </button>
+                  <button onClick={() => setBookPanelOpen(false)} className="p-1 text-gray-400 hover:text-gray-700" title="Close panel">
+                    <X size={17} />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-5" style={{ fontFamily: 'Georgia, serif' }}>
+                {bookEntries.length === 0 ? (
+                  <p className="text-center text-gray-400 text-sm py-12">
+                    Nothing in the book yet — keep chatting with Claude and share images to build it up.
+                  </p>
+                ) : (
+                  bookEntries.map(entry => (
+                    <div key={entry.id} className="mb-6">
+                      {entry.image_url ? (
+                        <figure>
+                          <img src={entry.image_url} alt={entry.content || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
+                          {entry.content && <p className="text-sm text-gray-600 text-center mt-2">{entry.content}</p>}
+                          <figcaption className="text-xs text-gray-400 text-center mt-1">Shared by {entry.sender_name}</figcaption>
+                        </figure>
+                      ) : (
+                        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto px-8 py-6" style={{ fontFamily: 'Georgia, serif' }}>
-              {bookEntries.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-12">
-                  Nothing in the book yet — keep chatting with Claude and share images to build it up.
-                </p>
-              ) : (
-                bookEntries.map(entry => (
-                  <div key={entry.id} className="mb-6">
-                    {entry.image_url ? (
-                      <figure>
-                        <img src={entry.image_url} alt={entry.content || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
-                        {entry.content && <p className="text-sm text-gray-600 text-center mt-2">{entry.content}</p>}
-                        <figcaption className="text-xs text-gray-400 text-center mt-1">Shared by {entry.sender_name}</figcaption>
-                      </figure>
-                    ) : (
-                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
+          )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </AppLayout>
   );
 };
