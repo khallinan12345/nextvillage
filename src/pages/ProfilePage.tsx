@@ -23,6 +23,14 @@ import {
 import classNames from 'classnames';
 import { useAuth } from '../hooks/useAuth';
 
+// Grade level scale used platform-wide: 1=Elementary, 2=Middle School, 3=High School, 4=Adult Learner (18+)
+const GRADE_LEVEL_LABELS = {
+  '1': { name: 'Elementary (Grades 3–5)', ages: 'Ages 8–11' },
+  '2': { name: 'Middle School (Grades 6–8)', ages: 'Ages 11–14' },
+  '3': { name: 'High School (Grades 9–12)', ages: 'Ages 14–18' },
+  '4': { name: 'Adult Learner (18+)', ages: 'Ages 18+' },
+} as const;
+
 interface UserProfile {
   id: string;
   name: string;
@@ -767,7 +775,7 @@ const ProfilePage: React.FC = () => {
                           Grade Level *
                         </label>
                         <div className="space-y-2">
-                          {(['1', '2', '3'] as const).map((grade) => (
+                          {(['1', '2', '3', '4'] as const).map((grade) => (
                             <label key={grade} className="flex items-start">
                               <input
                                 type="radio"
@@ -780,18 +788,10 @@ const ProfilePage: React.FC = () => {
                               />
                               <div>
                                 <div className="font-medium text-gray-900">
-                                  {grade === '1'
-                                    ? 'Elementary (Grades 3–5)'
-                                    : grade === '2'
-                                    ? 'Middle School (Grades 6–8)'
-                                    : 'High School (Grades 9–12)'}
+                                  {GRADE_LEVEL_LABELS[grade].name}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  {grade === '1'
-                                    ? 'Ages 8–11'
-                                    : grade === '2'
-                                    ? 'Ages 11–14'
-                                    : 'Ages 14–18'}
+                                  {GRADE_LEVEL_LABELS[grade].ages}
                                 </div>
                               </div>
                             </label>
@@ -1084,11 +1084,7 @@ const ProfilePage: React.FC = () => {
                           <Award className="h-4 w-4 mr-2 text-purple-500" />
                           <span className="font-medium">Grade Level:</span>
                           <span className="ml-1">
-                            {profile.grade_level === 1
-                              ? 'Elementary (3-5)'
-                              : profile.grade_level === 2
-                              ? 'Middle School (6-8)'
-                              : 'High School (9-12)'}
+                            {GRADE_LEVEL_LABELS[String(profile.grade_level) as keyof typeof GRADE_LEVEL_LABELS]?.name ?? 'High School (9-12)'}
                           </span>
                         </div>
                       )}

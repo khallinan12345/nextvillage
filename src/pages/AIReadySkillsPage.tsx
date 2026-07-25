@@ -777,7 +777,7 @@ Respond ONLY in this JSON format:
         .eq('id', user.id)
         .single();
 
-      const userGradeLevel = profile?.grade_level || 5;
+      const userGradeLevel = profile?.grade_level ?? null;
       const userContinent = profile?.continent || 'North America';
 
       const categoryMap: Record<string, Record<string, { category: string; sub_category: string }>> = {
@@ -831,7 +831,7 @@ Respond ONLY in this JSON format:
 
   const queryLearningModules = async (
     mapping: { category: string; sub_category: string },
-    gradeLevel: number,
+    gradeLevel: number | null,
     continent: string,
     assessmentName: string
   ): Promise<LearningModule[]> => {
@@ -840,9 +840,15 @@ Respond ONLY in this JSON format:
       .select('learning_module_id, title, description, category, sub_category, grade_level')
       .eq('category', mapping.category)
       .eq('public', 1)
-      .lte('grade_level', gradeLevel + 2)
-      .gte('grade_level', Math.max(1, gradeLevel - 2))
       .limit(5);
+
+    // Only narrow by grade when we actually know the learner's grade level —
+    // an unknown grade should see the full 1-4 range, not be pushed toward older content.
+    if (gradeLevel !== null) {
+      query = query
+        .lte('grade_level', gradeLevel + 2)
+        .gte('grade_level', Math.max(1, gradeLevel - 2));
+    }
 
     const { data: continentModules } = await query.eq('continent', continent);
     const { data: allModules } = await query;

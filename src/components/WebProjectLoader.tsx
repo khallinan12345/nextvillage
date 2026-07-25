@@ -86,10 +86,20 @@ const PLANNING_TASKS: PlanningTask[] = [
   },
 ];
 
+// Grade level scale: 1=Elementary, 2=Middle School, 3=High School, 4=Adult Learner (18+)
+const GRADE_LEVEL_GUIDANCE: Record<number, string> = {
+  1: 'The learner is in elementary school (grades 3-5, ages 8-11). Use very simple words and short sentences. Be extra encouraging.',
+  2: 'The learner is in middle school (grades 6-8, ages 11-14). Use clear, age-appropriate language.',
+  3: 'The learner is in high school (grades 9-12, ages 14-18). You can use more sophisticated language.',
+  4: 'The learner is an adult (18+). Use clear, professional language — treat them as a capable adult, not a classroom student.',
+};
+
 const WebProjectLoader: React.FC<{
   userId: string | null;
   onProjectLoaded: (projName: string, planSummary: string, files: ProjectFile[]) => void;
-}> = ({ userId, onProjectLoaded }) => {
+  gradeLevel?: number | null;
+}> = ({ userId, onProjectLoaded, gradeLevel = null }) => {
+  const gradeGuidance = gradeLevel ? GRADE_LEVEL_GUIDANCE[gradeLevel] ?? '' : '';
 
   const [projects, setProjects]           = React.useState<WebProject[]>([]);
   const [loading, setLoading]             = React.useState(true);
@@ -123,6 +133,7 @@ const WebProjectLoader: React.FC<{
     taskContext:        selected?.name,
     chatPage:           'WebDevelopmentPage',
     systemPromptPreset: 'web-dev',
+    gradeLevel,
   });
 
   // Load web projects from dashboard
@@ -206,7 +217,8 @@ const WebProjectLoader: React.FC<{
             'Your job: read the planning document and identify the specific user roles or audiences described (e.g. visitors, community members, admins, leaders). ' +
             'Then ask ONE question (under 60 words) that asks the learner to describe — for each of THOSE specific roles — ' +
             'what data they would want to submit, save, or come back to retrieve. ' +
-            'Name the actual roles from their document. Be specific. No preamble. No generic question.',
+            'Name the actual roles from their document. Be specific. No preamble. No generic question.' +
+            (gradeGuidance ? ' ' + gradeGuidance : ''),
           messages: [
             {
               role:    'user',
@@ -264,7 +276,8 @@ const WebProjectLoader: React.FC<{
             (isLastTask
               ? 'This is their final planning step — end with genuine encouragement that they are ready to build.'
               : 'End with a brief bridge to the next planning step.') +
-            ' Plain English. Warm but not effusive. No bullet points.',
+            ' Plain English. Warm but not effusive. No bullet points.' +
+            (gradeGuidance ? ' ' + gradeGuidance : ''),
           messages: [{ role: 'user', content: currentAnswer.trim() }],
         }),
       });
@@ -308,7 +321,8 @@ const WebProjectLoader: React.FC<{
             (isLastTask
               ? 'End with encouragement — they are ready to build.'
               : 'End with a one-sentence bridge to what comes next.') +
-            ' 2-3 sentences. Plain English. No bullet points.',
+            ' 2-3 sentences. Plain English. No bullet points.' +
+            (gradeGuidance ? ' ' + gradeGuidance : ''),
           messages: [{ role: 'user', content: revisionAnswer.trim() }],
         }),
       });

@@ -13,7 +13,7 @@ export interface UserProfile {
   name?: string;
   avatar_url?: string;
   role: 'student' | 'teacher' | 'facilitator';
-  /** 1=Grades 3–5, 2=Grades 6–8, 3=Grades 9–12, 4=All grades */
+  /** 1=Grades 3–5, 2=Grades 6–8, 3=Grades 9–12, 4=Adult Learner (18+) */
   grade_level?: 1 | 2 | 3 | 4;
   continent?: string;
   country?: string;
@@ -60,8 +60,8 @@ export interface Team {
 export interface ProfileCompletionData {
   name: string;
   role: 'student' | 'teacher';
-  /** '1' → Grades 3–5, '2' → Grades 6–8, '3' → Grades 9–12, '4' → All grades */
-  grade_level: '1' | '2' | '3' ;
+  /** '1' → Grades 3–5, '2' → Grades 6–8, '3' → Grades 9–12, '4' → Adult Learner (18+) */
+  grade_level: '1' | '2' | '3' | '4';
   continent: string;
   country: string;
   school_name?: string;
@@ -72,4 +72,4 @@ export interface ProfileCompletionData {
 /////////////////////////////////////////////////////////////
 
 /** Union of allowed grade_level codes */
-export type GradeLevel = '1' | '2' | '3' ;
+export type GradeLevel = '1' | '2' | '3' | '4';
