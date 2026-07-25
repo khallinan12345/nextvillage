@@ -512,6 +512,7 @@ const AIForBusinessPage: React.FC = () => {
         taskId: task.id, taskLabel: task.label, phase: task.phase,
         sessionContext: ctx, completedTasks: TASKS.slice(0, idx).map(t => t.id),
         communicationStrategy, learningStrategy, communicationLevel: lvl,
+        gradeLevel: userGradeLevel,
         canvas,
       });
       setTaskInstruction(result as TaskInstruction);
@@ -582,7 +583,7 @@ const AIForBusinessPage: React.FC = () => {
         examplePrompt: seeds[0].question,
       });
     } finally { setLoadingInstruction(false); }
-  }, [communicationStrategy, learningStrategy, lvl, canvas]);
+  }, [communicationStrategy, learningStrategy, lvl, userGradeLevel, canvas]);
 
   useEffect(() => {
     if (taskIndex > 0) fetchTaskInstruction(taskIndex, sessionContext);
@@ -608,6 +609,7 @@ const AIForBusinessPage: React.FC = () => {
         action: entry.action, prompt: prompt.trim(),
         taskId: currentTask?.id, taskLabel: currentTask?.label, phase: currentTask?.phase,
         sessionContext, communicationStrategy, learningStrategy, communicationLevel: lvl,
+        gradeLevel: userGradeLevel,
         canvas,
       });
 
@@ -639,6 +641,7 @@ const AIForBusinessPage: React.FC = () => {
             mode: 'critique', prompt: prompt.trim(),
             subTaskQuestion: taskInstruction?.subTasks[subTaskIndex] || '',
             taskId: currentTask?.id, communicationStrategy, learningStrategy, communicationLevel: lvl,
+            gradeLevel: userGradeLevel,
           }),
         }).then(r => r.ok ? r.json() : null).then(d => {
           if (d?.feedback) {
@@ -658,7 +661,7 @@ const AIForBusinessPage: React.FC = () => {
     finally { setIsGenerating(false); }
   }, [prompt, isGenerating, currentTask, taskInstruction, subTaskIndex,
       canvas, sessionContext, promptHistory, taskHasGeneration,
-      communicationStrategy, learningStrategy, lvl,
+      communicationStrategy, learningStrategy, lvl, userGradeLevel,
       ensureSession, persistSession, voiceOutputEnabled]);
 
   const handleCritique = useCallback(async () => {
@@ -672,11 +675,12 @@ const AIForBusinessPage: React.FC = () => {
           mode: 'critique', prompt: prompt.trim(),
           subTaskQuestion: taskInstruction?.subTasks[subTaskIndex] || '',
           taskId: currentTask?.id, communicationStrategy, learningStrategy, communicationLevel: lvl,
+          gradeLevel: userGradeLevel,
         }),
       });
       if (res.ok) { const d = await res.json(); if (d?.feedback) setSubTaskCritique({ hasSuggestions: !!d.hasSuggestions, feedback: d.feedback }); }
     } catch {} finally { setIsCritiquing(false); }
-  }, [prompt, isCritiquing, currentTask, taskInstruction, subTaskIndex, communicationStrategy, learningStrategy, lvl]);
+  }, [prompt, isCritiquing, currentTask, taskInstruction, subTaskIndex, communicationStrategy, learningStrategy, lvl, userGradeLevel]);
 
   const handleMoveToNextStep = () => {
     const next = subTaskIndex + 1;
@@ -708,7 +712,7 @@ const AIForBusinessPage: React.FC = () => {
     try {
       const r = await callEvaluateAPI({
         promptHistory: promptHistory.map(e => ({ action: e.action, prompt: e.prompt, response: e.aiResponse })),
-        canvas, sessionContext,
+        canvas, sessionContext, gradeLevel: userGradeLevel,
       });
       setEvaluation(r.evaluation ?? null); setEvalAdvice(r.advice ?? null);
     } catch (err: any) { setEvalError(err.message || 'Evaluation failed'); }
@@ -721,7 +725,7 @@ const AIForBusinessPage: React.FC = () => {
     try {
       let evalScores: any = null; let advice: string | null = null;
       try {
-        const r = await callEvaluateAPI({ promptHistory: promptHistory.map(e => ({ action: e.action, prompt: e.prompt, response: e.aiResponse })), canvas, sessionContext });
+        const r = await callEvaluateAPI({ promptHistory: promptHistory.map(e => ({ action: e.action, prompt: e.prompt, response: e.aiResponse })), canvas, sessionContext, gradeLevel: userGradeLevel });
         evalScores = r.evaluation ?? null; advice = r.advice ?? null;
       } catch {}
       await supabase.from('dashboard').update({
@@ -733,7 +737,7 @@ const AIForBusinessPage: React.FC = () => {
       setLastSaved(new Date());
     } catch (err: any) { setSaveError(err.message || 'Save failed'); }
     finally { setIsSaving(false); }
-  }, [userId, canvas, promptHistory, taskIndex, sessionContext, sessionName, ensureSession]);
+  }, [userId, canvas, promptHistory, taskIndex, sessionContext, sessionName, userGradeLevel, ensureSession]);
 
   // ── Download canvas as text ───────────────────────────────────────────
   const handleDownload = () => {
