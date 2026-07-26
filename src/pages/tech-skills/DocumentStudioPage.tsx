@@ -1127,7 +1127,7 @@ const DocumentStudioPage: React.FC = () => {
                                 onChange={e => updateBlock(block.id, b => ({ ...b, content: e.target.value } as TextBlock))}
                                 onBlur={() => { pushUndo(); setEditingBlockId(null); }}
                                 placeholder="Type your text here…"
-                                className="w-full min-h-[60px] bg-transparent resize-y outline-none p-2"
+                                className="w-full min-h-[60px] max-h-[400px] overflow-y-auto bg-transparent resize-y outline-none p-2"
                                 style={{
                                   fontFamily: block.fontFamily,
                                   fontSize: block.fontSize,
@@ -1140,7 +1140,7 @@ const DocumentStudioPage: React.FC = () => {
                               />
                             ) : (
                               <div
-                                className={classNames('p-2 min-h-[30px] cursor-text whitespace-pre-wrap', !block.content && 'text-slate-300 italic')}
+                                className={classNames('p-2 min-h-[30px] max-h-[400px] overflow-y-auto cursor-text whitespace-pre-wrap', !block.content && 'text-slate-300 italic')}
                                 style={{
                                   fontFamily: block.fontFamily,
                                   fontSize: block.fontSize,
