@@ -100,6 +100,30 @@ interface Collaborator {
 
 const COLLAB_COLORS = ['#f97316','#22d3ee','#a78bfa','#34d399','#fb7185','#facc15','#60a5fa','#e879f9'];
 
+// ─── Amazon KDP trim sizes (inches → mm for jsPDF) ───────────────────────────
+
+const IN_TO_MM = 25.4;
+
+interface TrimSize {
+  label: string;
+  widthIn: number;
+  heightIn: number;
+  gutterIn: number;     // inside margin (binding side) — assumes ~200pp
+  marginTopIn: number;
+  marginBottomIn: number;
+  marginOuterIn: number;
+  description: string;
+}
+
+const KDP_TRIM_SIZES: TrimSize[] = [
+  { label: '5" × 8"',      widthIn: 5,    heightIn: 8,    gutterIn: 0.625, marginTopIn: 0.5,  marginBottomIn: 0.5,  marginOuterIn: 0.5,  description: 'Compact — fiction, poetry' },
+  { label: '5.25" × 8"',   widthIn: 5.25, heightIn: 8,    gutterIn: 0.625, marginTopIn: 0.5,  marginBottomIn: 0.5,  marginOuterIn: 0.5,  description: 'Pocket paperback' },
+  { label: '5.5" × 8.5"',  widthIn: 5.5,  heightIn: 8.5,  gutterIn: 0.625, marginTopIn: 0.5,  marginBottomIn: 0.5,  marginOuterIn: 0.5,  description: 'Popular — fiction, nonfiction' },
+  { label: '6" × 9"',      widthIn: 6,    heightIn: 9,    gutterIn: 0.75,  marginTopIn: 0.625, marginBottomIn: 0.625, marginOuterIn: 0.5,  description: 'Standard — nonfiction, textbooks' },
+  { label: '7" × 10"',     widthIn: 7,    heightIn: 10,   gutterIn: 0.875, marginTopIn: 0.75, marginBottomIn: 0.75, marginOuterIn: 0.625, description: 'Large — workbooks, illustrated' },
+  { label: '8.5" × 11"',   widthIn: 8.5,  heightIn: 11,   gutterIn: 0.875, marginTopIn: 0.75, marginBottomIn: 0.75, marginOuterIn: 0.625, description: 'Full page — manuals, magazines' },
+];
+
 // ─── Fonts available ──────────────────────────────────────────────────────────
 
 const FONT_FAMILIES = [
@@ -186,6 +210,7 @@ const DocumentStudioPage: React.FC = () => {
   // ── PDF export ──────────────────────────────────────────────────────────────
   const [isExporting, setIsExporting] = useState(false);
   const [exportMsg, setExportMsg] = useState('');
+  const [trimSizeIdx, setTrimSizeIdx] = useState(3); // default: 6×9
 
   // ── Collaboration ───────────────────────────────────────────────────────────
   const [collabEnabled, setCollabEnabled] = useState(false);
@@ -640,27 +665,50 @@ const DocumentStudioPage: React.FC = () => {
         return;
       }
       const { jsPDF } = jsPDFModule;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 15;
-      const maxWidth = pageWidth - margin * 2;
+
+      // ── Amazon KDP trim dimensions ──────────────────────────────────────
+      const trim = KDP_TRIM_SIZES[trimSizeIdx];
+      const pageW = trim.widthIn * IN_TO_MM;
+      const pageH = trim.heightIn * IN_TO_MM;
+      const gutterMm = trim.gutterIn * IN_TO_MM;
+      const marginTopMm = trim.marginTopIn * IN_TO_MM;
+      const marginBotMm = trim.marginBottomIn * IN_TO_MM;
+      const marginOutMm = trim.marginOuterIn * IN_TO_MM;
+      const colGapMm = 5; // gap between columns in multi-col layouts
+
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [pageW, pageH],
+      });
 
       for (let pIdx = 0; pIdx < pages.length; pIdx++) {
-        if (pIdx > 0) doc.addPage();
+        if (pIdx > 0) doc.addPage([pageW, pageH]);
         const page = pages[pIdx];
-        let y = margin;
 
-        const colWidth = (maxWidth - (page.columns - 1) * 4) / page.columns;
+        // Alternating inside/outside margins for book binding:
+        // odd pages (right-hand, 1-indexed) → gutter on LEFT
+        // even pages (left-hand) → gutter on RIGHT
+        const pageNum = pIdx + 1; // 1-indexed
+        const isRightPage = pageNum % 2 === 1;
+        const marginLeft = isRightPage ? gutterMm : marginOutMm;
+        const marginRight = isRightPage ? marginOutMm : gutterMm;
+        const contentWidth = pageW - marginLeft - marginRight;
+        const contentHeight = pageH - marginTopMm - marginBotMm;
 
+        const colWidth = (contentWidth - (page.columns - 1) * colGapMm) / page.columns;
+
+        // ── Render each column / frame ────────────────────────────────────
         for (let fIdx = 0; fIdx < page.frames.length; fIdx++) {
           const frame = page.frames[fIdx];
-          const colX = margin + fIdx * (colWidth + 4);
-          let colY = margin;
+          const colX = marginLeft + fIdx * (colWidth + colGapMm);
+          let colY = marginTopMm;
 
           for (const block of frame.blocks) {
             if (block.type === 'text' && block.content.trim()) {
-              const fontSize = Math.min(block.fontSize * 0.35, 24);
+              // Scale font: screen px → print pt (roughly 0.75 conversion,
+              // clamped to KDP-friendly range)
+              const fontSize = Math.max(8, Math.min(block.fontSize * 0.75, 36));
               doc.setFontSize(fontSize);
 
               const isBold = block.fontWeight === 'bold';
@@ -676,18 +724,22 @@ const DocumentStudioPage: React.FC = () => {
 
               doc.setFont(family, style);
 
-              // Set text color
+              // Text color
               const hex = block.color.replace('#', '');
               const r = parseInt(hex.substring(0, 2), 16);
               const g = parseInt(hex.substring(2, 4), 16);
               const b = parseInt(hex.substring(4, 6), 16);
               doc.setTextColor(r, g, b);
 
+              // Line height: convert multiplier to mm spacing
+              const lineH = fontSize * 0.3528 * (block.lineHeight ?? 1.6);
               const lines: string[] = doc.splitTextToSize(block.content, colWidth);
-              const lineH = fontSize * 0.5;
 
               for (const line of lines) {
-                if (colY + lineH > pageHeight - margin) break;
+                if (colY + lineH > pageH - marginBotMm) {
+                  // Content overflows this page — stop for now
+                  break;
+                }
 
                 let textX = colX;
                 if (block.textAlign === 'center') textX = colX + colWidth / 2;
@@ -700,6 +752,7 @@ const DocumentStudioPage: React.FC = () => {
                 colY += lineH;
               }
               colY += 3;
+
             } else if (block.type === 'image') {
               try {
                 setExportMsg(`Embedding image on page ${pIdx + 1}…`);
@@ -716,16 +769,17 @@ const DocumentStudioPage: React.FC = () => {
                 const ratio = props.width / props.height;
                 let dispWidth = colWidth;
                 let dispHeight = dispWidth / ratio;
-                const maxImgH = 80;
+                // Cap image height to ~60% of content area
+                const maxImgH = contentHeight * 0.6;
                 if (dispHeight > maxImgH) { dispHeight = maxImgH; dispWidth = dispHeight * ratio; }
-                if (colY + dispHeight > pageHeight - margin) break;
+                if (colY + dispHeight > pageH - marginBotMm) break;
 
                 doc.addImage(base64, format, colX + (colWidth - dispWidth) / 2, colY, dispWidth, dispHeight);
                 colY += dispHeight + 2;
 
                 if (block.caption) {
                   doc.setFontSize(9);
-                  doc.setFont('helvetica', 'italic');
+                  doc.setFont('times', 'italic');
                   doc.setTextColor(100, 100, 100);
                   for (const line of doc.splitTextToSize(block.caption, colWidth)) {
                     doc.text(line, colX, colY); colY += 4;
@@ -737,8 +791,18 @@ const DocumentStudioPage: React.FC = () => {
               }
             }
           }
-          y = Math.max(y, colY);
         }
+
+        // ── Page number (centered at bottom, outside the margin area) ─────
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(80, 80, 80);
+        doc.text(
+          String(pageNum),
+          pageW / 2,
+          pageH - marginBotMm / 2,
+          { align: 'center' }
+        );
       }
 
       const safeName = projectName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'document';
@@ -880,6 +944,16 @@ const DocumentStudioPage: React.FC = () => {
                 ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {saveMsg}</>
                 : <><Save size={13} /> Save</>}
             </button>
+            {/* Book trim size */}
+            <select
+              value={trimSizeIdx}
+              onChange={e => setTrimSizeIdx(Number(e.target.value))}
+              title="Amazon KDP trim size"
+              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
+              {KDP_TRIM_SIZES.map((t, i) => (
+                <option key={i} value={i}>{t.label} — {t.description}</option>
+              ))}
+            </select>
             {/* Export PDF */}
             <button onClick={handleExportPDF} disabled={isExporting}
               className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
