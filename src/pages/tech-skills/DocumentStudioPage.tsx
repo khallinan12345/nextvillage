@@ -682,32 +682,54 @@ const DocumentStudioPage: React.FC = () => {
         format: [pageW, pageH],
       });
 
+      // Track actual PDF page count (may exceed pages.length when content overflows)
+      let pdfPageNum = 0;
+
+      // Helper: add a new PDF page, stamp page number on current, return fresh Y
+      const addPdfPage = () => {
+        // Stamp page number on the page we're leaving
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(80, 80, 80);
+        doc.text(String(pdfPageNum + 1), pageW / 2, pageH - marginBotMm / 2, { align: 'center' });
+
+        doc.addPage([pageW, pageH]);
+        pdfPageNum++;
+        return marginTopMm;
+      };
+
+      // Margin helpers — alternate gutter side per PDF page
+      const getMarginsForPage = (num: number) => {
+        const isRight = (num + 1) % 2 === 1; // 1-indexed odd = right-hand
+        const mL = isRight ? gutterMm : marginOutMm;
+        const mR = isRight ? marginOutMm : gutterMm;
+        return { marginLeft: mL, marginRight: mR, contentWidth: pageW - mL - mR };
+      };
+
       for (let pIdx = 0; pIdx < pages.length; pIdx++) {
-        if (pIdx > 0) doc.addPage([pageW, pageH]);
+        if (pIdx > 0) {
+          // Stamp page number before moving on
+          doc.setFont('times', 'normal');
+          doc.setFontSize(10);
+          doc.setTextColor(80, 80, 80);
+          doc.text(String(pdfPageNum + 1), pageW / 2, pageH - marginBotMm / 2, { align: 'center' });
+
+          doc.addPage([pageW, pageH]);
+          pdfPageNum++;
+        }
         const page = pages[pIdx];
 
-        // Alternating inside/outside margins for book binding:
-        // odd pages (right-hand, 1-indexed) → gutter on LEFT
-        // even pages (left-hand) → gutter on RIGHT
-        const pageNum = pIdx + 1; // 1-indexed
-        const isRightPage = pageNum % 2 === 1;
-        const marginLeft = isRightPage ? gutterMm : marginOutMm;
-        const marginRight = isRightPage ? marginOutMm : gutterMm;
-        const contentWidth = pageW - marginLeft - marginRight;
-        const contentHeight = pageH - marginTopMm - marginBotMm;
-
+        let { marginLeft, contentWidth } = getMarginsForPage(pdfPageNum);
         const colWidth = (contentWidth - (page.columns - 1) * colGapMm) / page.columns;
 
         // ── Render each column / frame ────────────────────────────────────
         for (let fIdx = 0; fIdx < page.frames.length; fIdx++) {
           const frame = page.frames[fIdx];
-          const colX = marginLeft + fIdx * (colWidth + colGapMm);
+          let curColX = marginLeft + fIdx * (colWidth + colGapMm);
           let colY = marginTopMm;
 
           for (const block of frame.blocks) {
             if (block.type === 'text' && block.content.trim()) {
-              // Scale font: screen px → print pt (roughly 0.75 conversion,
-              // clamped to KDP-friendly range)
               const fontSize = Math.max(8, Math.min(block.fontSize * 0.75, 36));
               doc.setFontSize(fontSize);
 
@@ -724,26 +746,30 @@ const DocumentStudioPage: React.FC = () => {
 
               doc.setFont(family, style);
 
-              // Text color
               const hex = block.color.replace('#', '');
               const r = parseInt(hex.substring(0, 2), 16);
               const g = parseInt(hex.substring(2, 4), 16);
               const b = parseInt(hex.substring(4, 6), 16);
               doc.setTextColor(r, g, b);
 
-              // Line height: convert multiplier to mm spacing
               const lineH = fontSize * 0.3528 * (block.lineHeight ?? 1.6);
               const lines: string[] = doc.splitTextToSize(block.content, colWidth);
 
               for (const line of lines) {
+                // Overflow → new PDF page, recalculate margins for binding side
                 if (colY + lineH > pageH - marginBotMm) {
-                  // Content overflows this page — stop for now
-                  break;
+                  colY = addPdfPage();
+                  const m = getMarginsForPage(pdfPageNum);
+                  curColX = m.marginLeft + fIdx * (colWidth + colGapMm);
+                  // Re-apply font after page break (jsPDF carries state, but be safe)
+                  doc.setFont(family, style);
+                  doc.setFontSize(fontSize);
+                  doc.setTextColor(r, g, b);
                 }
 
-                let textX = colX;
-                if (block.textAlign === 'center') textX = colX + colWidth / 2;
-                else if (block.textAlign === 'right') textX = colX + colWidth;
+                let textX = curColX;
+                if (block.textAlign === 'center') textX = curColX + colWidth / 2;
+                else if (block.textAlign === 'right') textX = curColX + colWidth;
 
                 doc.text(line, textX, colY, {
                   align: block.textAlign === 'center' ? 'center'
@@ -755,7 +781,7 @@ const DocumentStudioPage: React.FC = () => {
 
             } else if (block.type === 'image') {
               try {
-                setExportMsg(`Embedding image on page ${pIdx + 1}…`);
+                setExportMsg(`Embedding image on page ${pdfPageNum + 1}…`);
                 const res = await fetch(block.src);
                 const blob = await res.blob();
                 const base64 = await new Promise<string>((resolve, reject) => {
@@ -769,12 +795,18 @@ const DocumentStudioPage: React.FC = () => {
                 const ratio = props.width / props.height;
                 let dispWidth = colWidth;
                 let dispHeight = dispWidth / ratio;
-                // Cap image height to ~60% of content area
-                const maxImgH = contentHeight * 0.6;
+                const contentH = pageH - marginTopMm - marginBotMm;
+                const maxImgH = contentH * 0.6;
                 if (dispHeight > maxImgH) { dispHeight = maxImgH; dispWidth = dispHeight * ratio; }
-                if (colY + dispHeight > pageH - marginBotMm) break;
 
-                doc.addImage(base64, format, colX + (colWidth - dispWidth) / 2, colY, dispWidth, dispHeight);
+                // Overflow → new page for image
+                if (colY + dispHeight > pageH - marginBotMm) {
+                  colY = addPdfPage();
+                  const m = getMarginsForPage(pdfPageNum);
+                  curColX = m.marginLeft + fIdx * (colWidth + colGapMm);
+                }
+
+                doc.addImage(base64, format, curColX + (colWidth - dispWidth) / 2, colY, dispWidth, dispHeight);
                 colY += dispHeight + 2;
 
                 if (block.caption) {
@@ -782,7 +814,15 @@ const DocumentStudioPage: React.FC = () => {
                   doc.setFont('times', 'italic');
                   doc.setTextColor(100, 100, 100);
                   for (const line of doc.splitTextToSize(block.caption, colWidth)) {
-                    doc.text(line, colX, colY); colY += 4;
+                    if (colY + 4 > pageH - marginBotMm) {
+                      colY = addPdfPage();
+                      const m = getMarginsForPage(pdfPageNum);
+                      curColX = m.marginLeft + fIdx * (colWidth + colGapMm);
+                      doc.setFontSize(9);
+                      doc.setFont('times', 'italic');
+                      doc.setTextColor(100, 100, 100);
+                    }
+                    doc.text(line, curColX, colY); colY += 4;
                   }
                 }
                 colY += 3;
@@ -792,18 +832,13 @@ const DocumentStudioPage: React.FC = () => {
             }
           }
         }
-
-        // ── Page number (centered at bottom, outside the margin area) ─────
-        doc.setFont('times', 'normal');
-        doc.setFontSize(10);
-        doc.setTextColor(80, 80, 80);
-        doc.text(
-          String(pageNum),
-          pageW / 2,
-          pageH - marginBotMm / 2,
-          { align: 'center' }
-        );
       }
+
+      // Stamp page number on the final page
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      doc.text(String(pdfPageNum + 1), pageW / 2, pageH - marginBotMm / 2, { align: 'center' });
 
       const safeName = projectName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'document';
       doc.save(`${safeName}.pdf`);
@@ -1507,4 +1542,4 @@ Add to your router (e.g. App.tsx):
   <Route path="/tech-skills/document-studio" element={<DocumentStudioPage />} />
 
 ────────────────────────────────────────────────────────────────────────────────
-*/
+*/ 
