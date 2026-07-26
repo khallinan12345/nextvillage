@@ -95,6 +95,7 @@ const Navbar: React.FC = () => {
           label: 'Creative AI',
           items: [
             { name: 'Create Game', path: '/tech-skills/create-game' },
+            { name: 'Document Studio', path: '/tech-skills/document-studio' },
             { name: 'AI Image Creation', path: '/tech-skills/ai-image-creation' },
             { name: 'AI Voice Creation', path: '/tech-skills/ai-voice-creation' },
             { name: 'AI Video Creation', path: '/tech-skills/ai-video-creation' },

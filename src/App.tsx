@@ -56,6 +56,7 @@ const FullStackDevelopmentPage = lazy(() => import('./pages/tech-skills/FullStac
 const ImageGenerationPage = lazy(() => import('./pages/tech-skills/ImageGenerationPage'));
 const VideoGenerationPage = lazy(() => import('./pages/tech-skills/VideoGenerationPage'));
 const VideoStudioPage = lazy(() => import('./pages/tech-skills/VideoStudioPage'));
+const DocumentStudioPage = lazy(() => import('./pages/tech-skills/DocumentStudioPage'));
 const VoiceCreationPage = lazy(() => import('./pages/tech-skills/VoiceCreationPage'));
 const AIContentCreationPage = lazy(() => import('./pages/AIContentCreationPage'));
 const AIWorkflowDevPage = lazy(() => import('./pages/tech-skills/AIWorkflowDevPage'));
@@ -253,6 +254,7 @@ export const AppContent: React.FC = () => {
         <Route path="/tech-skills/ai-voice-creation" element={<VoiceCreationPage />} />
         <Route path="/tech-skills/ai-video-creation" element={<VideoGenerationPage />} />
         <Route path="/tech-skills/ai-video-studio" element={<VideoStudioPage />} />
+        <Route path="/tech-skills/document-studio" element={<DocumentStudioPage />} />
         <Route path="/tech-skills/ai-content-creation" element={<AIContentCreationPage />} />
         <Route path="/tech-skills/ai-workflow-development" element={<AIWorkflowDevPage />} />
         <Route path="/tech-skills/ai-for-business" element={<AIForBusinessPage />} />

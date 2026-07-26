@@ -1,0 +1,1436 @@
+// src/pages/tech-skills/DocumentStudioPage.tsx
+//
+// "Document Studio" — an Adobe InDesign-style page layout editor for
+// articles and books. Users create pages with 1/2/3-column frames, drop
+// in text and images, control typography, then export to PDF or save to
+// Supabase. Team members can collaborate in real-time via Supabase
+// Realtime broadcast channels (same org-scoped pattern as "Use Claude
+// Together").
+//
+// Dependencies that may need installing:
+//   npm i jspdf html2canvas
+//   (jspdf is already used in PlaygroundTogetherPage)
+
+import React, {
+  useState, useEffect, useRef, useCallback, useMemo,
+} from 'react';
+import AppLayout from '../../components/layout/AppLayout';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
+import { PidginTooltip } from '../../components/PidginTooltip';
+import classNames from 'classnames';
+import {
+  FileText, Plus, Trash2, Download, Upload, Save, Layers,
+  X, Check, AlertTriangle, FolderOpen, Clock, Image as ImageIcon,
+  Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic,
+  ChevronLeft, ChevronRight, Columns, Copy, Eye, Edit3,
+  Users, Wifi, WifiOff, Undo2, Redo2, Move, Maximize2,
+  BookOpen, Loader2, GripVertical,
+} from 'lucide-react';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type ColumnLayout = 1 | 2 | 3;
+type TextAlign = 'left' | 'center' | 'right';
+type BlockType = 'text' | 'image';
+
+interface TextBlock {
+  type: 'text';
+  id: string;
+  content: string;          // raw text (can contain newlines)
+  fontFamily: string;
+  fontSize: number;         // px
+  fontWeight: 'normal' | 'bold';
+  fontStyle: 'normal' | 'italic';
+  textAlign: TextAlign;
+  color: string;
+  lineHeight: number;       // multiplier, e.g. 1.6
+}
+
+interface ImageBlock {
+  type: 'image';
+  id: string;
+  src: string;              // object URL or Supabase public URL
+  alt: string;
+  fit: 'cover' | 'contain';
+  caption: string;
+}
+
+type ContentBlock = TextBlock | ImageBlock;
+
+interface PageFrame {
+  id: string;
+  columnIndex: number;      // 0-based
+  blocks: ContentBlock[];
+}
+
+interface DocPage {
+  id: string;
+  columns: ColumnLayout;
+  frames: PageFrame[];      // one per column
+  backgroundColor: string;
+  marginPx: number;
+  gapPx: number;
+}
+
+interface DocProject {
+  id: string;
+  name: string;
+  pages: DocPage[];
+  pageWidth: number;        // mm for PDF (default A4 = 210)
+  pageHeight: number;       // mm for PDF (default A4 = 297)
+  createdAt: string;
+}
+
+interface SavedProject {
+  id: string;
+  name: string;
+  savedAt: string;
+  projectData: Omit<DocProject, 'id'> | null;
+}
+
+// ─── Collaborator type for presence ───────────────────────────────────────────
+
+interface Collaborator {
+  userId: string;
+  name: string;
+  color: string;
+  activePage: number;
+}
+
+const COLLAB_COLORS = ['#f97316','#22d3ee','#a78bfa','#34d399','#fb7185','#facc15','#60a5fa','#e879f9'];
+
+// ─── Fonts available ──────────────────────────────────────────────────────────
+
+const FONT_FAMILIES = [
+  'Inter, sans-serif',
+  'Georgia, serif',
+  'Times New Roman, serif',
+  'Arial, sans-serif',
+  'Verdana, sans-serif',
+  'Courier New, monospace',
+  'Trebuchet MS, sans-serif',
+  'Palatino Linotype, serif',
+];
+
+const FONT_SIZES = [10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 42, 48, 56, 64, 72];
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+const makeTextBlock = (overrides?: Partial<TextBlock>): TextBlock => ({
+  type: 'text',
+  id: uid(),
+  content: '',
+  fontFamily: 'Inter, sans-serif',
+  fontSize: 14,
+  fontWeight: 'normal',
+  fontStyle: 'normal',
+  textAlign: 'left',
+  color: '#1e293b',
+  lineHeight: 1.6,
+  ...overrides,
+});
+
+const makeImageBlock = (src: string, alt = ''): ImageBlock => ({
+  type: 'image',
+  id: uid(),
+  src,
+  alt,
+  fit: 'contain',
+  caption: '',
+});
+
+const makePage = (columns: ColumnLayout = 1): DocPage => {
+  const id = uid();
+  const frames: PageFrame[] = Array.from({ length: columns }, (_, i) => ({
+    id: uid(),
+    columnIndex: i,
+    blocks: [makeTextBlock()],
+  }));
+  return {
+    id,
+    columns,
+    frames,
+    backgroundColor: '#ffffff',
+    marginPx: 40,
+    gapPx: 24,
+  };
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+const DocumentStudioPage: React.FC = () => {
+  const { user } = useAuth();
+
+  // ── Project state ───────────────────────────────────────────────────────────
+  const [projectName, setProjectName] = useState('Untitled Document');
+  const [pages, setPages] = useState<DocPage[]>([makePage(1)]);
+  const [activePageIdx, setActivePageIdx] = useState(0);
+
+  // ── Selection state ─────────────────────────────────────────────────────────
+  const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+
+  // ── View mode ───────────────────────────────────────────────────────────────
+  const [studioView, setStudioView] = useState<'edit' | 'preview' | 'history'>('edit');
+
+  // ── Save / load ─────────────────────────────────────────────────────────────
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+  const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+
+  // ── PDF export ──────────────────────────────────────────────────────────────
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportMsg, setExportMsg] = useState('');
+
+  // ── Collaboration ───────────────────────────────────────────────────────────
+  const [collabEnabled, setCollabEnabled] = useState(false);
+  const [collabProjectId, setCollabProjectId] = useState<string | null>(null);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // ── Undo / redo ─────────────────────────────────────────────────────────────
+  const [undoStack, setUndoStack] = useState<DocPage[][]>([]);
+  const [redoStack, setRedoStack] = useState<DocPage[][]>([]);
+  const pushUndo = useCallback(() => {
+    setUndoStack(prev => [...prev.slice(-30), pages]);
+    setRedoStack([]);
+  }, [pages]);
+
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) return;
+    setRedoStack(prev => [pages, ...prev]);
+    const prev = undoStack[undoStack.length - 1];
+    setUndoStack(s => s.slice(0, -1));
+    setPages(prev);
+  }, [undoStack, pages]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStack.length === 0) return;
+    setUndoStack(prev => [...prev, pages]);
+    const next = redoStack[0];
+    setRedoStack(s => s.slice(1));
+    setPages(next);
+  }, [redoStack, pages]);
+
+  // ── Refs ────────────────────────────────────────────────────────────────────
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Derived ─────────────────────────────────────────────────────────────────
+  const activePage = pages[activePageIdx] ?? pages[0];
+  const selectedBlock = useMemo(() => {
+    if (!selectedBlockId) return null;
+    for (const frame of (activePage?.frames ?? [])) {
+      const block = frame.blocks.find(b => b.id === selectedBlockId);
+      if (block) return block;
+    }
+    return null;
+  }, [activePage, selectedBlockId]);
+
+  // ── Load projects on mount ────────────────────────────────────────────────
+  useEffect(() => { if (user?.id) loadProjects(); }, [user?.id]);
+
+  // ── Keyboard shortcuts ────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) handleRedo(); else handleUndo();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSaveProject();
+      }
+      if (e.key === 'Delete' && selectedBlockId && !editingBlockId) {
+        e.preventDefault();
+        removeBlock(selectedBlockId);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleUndo, handleRedo, selectedBlockId, editingBlockId]);
+
+  // ── Collaboration: broadcast page changes ─────────────────────────────────
+  useEffect(() => {
+    if (!collabEnabled || !collabProjectId || !user?.id) return;
+
+    const channel = supabase.channel(`doc-studio-${collabProjectId}`, {
+      config: { broadcast: { self: false }, presence: { key: user.id } },
+    });
+
+    channel
+      .on('broadcast', { event: 'page-update' }, ({ payload }) => {
+        if (payload.userId !== user.id) {
+          setPages(payload.pages);
+        }
+      })
+      .on('broadcast', { event: 'cursor-move' }, ({ payload }) => {
+        setCollaborators(prev => {
+          const existing = prev.find(c => c.userId === payload.userId);
+          if (existing) {
+            return prev.map(c => c.userId === payload.userId
+              ? { ...c, activePage: payload.activePage } : c);
+          }
+          return [...prev, {
+            userId: payload.userId,
+            name: payload.name,
+            color: COLLAB_COLORS[prev.length % COLLAB_COLORS.length],
+            activePage: payload.activePage,
+          }];
+        });
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        setCollaborators(prev => prev.filter(c => c.userId !== key));
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            userId: user.id,
+            name: user.name,
+            joinedAt: new Date().toISOString(),
+          });
+        }
+      });
+
+    channelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+      channelRef.current = null;
+      setCollaborators([]);
+    };
+  }, [collabEnabled, collabProjectId, user?.id]);
+
+  // Broadcast page changes to collaborators
+  const broadcastPageUpdate = useCallback((updatedPages: DocPage[]) => {
+    if (channelRef.current && collabEnabled && user?.id) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'page-update',
+        payload: { userId: user.id, pages: updatedPages },
+      });
+    }
+  }, [collabEnabled, user?.id]);
+
+  // Broadcast active page index
+  useEffect(() => {
+    if (channelRef.current && collabEnabled && user?.id) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'cursor-move',
+        payload: { userId: user.id, name: user.name, activePage: activePageIdx },
+      });
+    }
+  }, [activePageIdx, collabEnabled, user?.id]);
+
+  // ── Page operations ───────────────────────────────────────────────────────
+
+  const addPage = (columns: ColumnLayout = 1) => {
+    pushUndo();
+    const newPage = makePage(columns);
+    const updated = [...pages, newPage];
+    setPages(updated);
+    setActivePageIdx(updated.length - 1);
+    broadcastPageUpdate(updated);
+  };
+
+  const removePage = (idx: number) => {
+    if (pages.length <= 1) return;
+    pushUndo();
+    const updated = pages.filter((_, i) => i !== idx);
+    setPages(updated);
+    if (activePageIdx >= updated.length) setActivePageIdx(updated.length - 1);
+    broadcastPageUpdate(updated);
+  };
+
+  const duplicatePage = (idx: number) => {
+    pushUndo();
+    const original = pages[idx];
+    const clone: DocPage = JSON.parse(JSON.stringify(original));
+    clone.id = uid();
+    clone.frames.forEach(f => { f.id = uid(); f.blocks.forEach(b => { b.id = uid(); }); });
+    const updated = [...pages.slice(0, idx + 1), clone, ...pages.slice(idx + 1)];
+    setPages(updated);
+    setActivePageIdx(idx + 1);
+    broadcastPageUpdate(updated);
+  };
+
+  const changePageColumns = (pageId: string, columns: ColumnLayout) => {
+    pushUndo();
+    const updated = pages.map(p => {
+      if (p.id !== pageId) return p;
+      // Gather all existing blocks
+      const allBlocks = p.frames.flatMap(f => f.blocks);
+      // Redistribute into new column count
+      const frames: PageFrame[] = Array.from({ length: columns }, (_, i) => ({
+        id: uid(),
+        columnIndex: i,
+        blocks: [] as ContentBlock[],
+      }));
+      allBlocks.forEach((block, i) => {
+        frames[i % columns].blocks.push(block);
+      });
+      // Ensure each frame has at least one text block
+      frames.forEach(f => {
+        if (f.blocks.length === 0) f.blocks.push(makeTextBlock());
+      });
+      return { ...p, columns, frames };
+    });
+    setPages(updated);
+    broadcastPageUpdate(updated);
+  };
+
+  // ── Block operations ──────────────────────────────────────────────────────
+
+  const updateBlock = (blockId: string, updater: (b: ContentBlock) => ContentBlock) => {
+    const updated = pages.map(p => ({
+      ...p,
+      frames: p.frames.map(f => ({
+        ...f,
+        blocks: f.blocks.map(b => b.id === blockId ? updater(b) : b),
+      })),
+    }));
+    setPages(updated);
+    broadcastPageUpdate(updated);
+  };
+
+  const updateBlockWithUndo = (blockId: string, updater: (b: ContentBlock) => ContentBlock) => {
+    pushUndo();
+    updateBlock(blockId, updater);
+  };
+
+  const addTextBlock = (frameId: string) => {
+    pushUndo();
+    const block = makeTextBlock();
+    const updated = pages.map(p => ({
+      ...p,
+      frames: p.frames.map(f =>
+        f.id === frameId ? { ...f, blocks: [...f.blocks, block] } : f
+      ),
+    }));
+    setPages(updated);
+    setSelectedBlockId(block.id);
+    setEditingBlockId(block.id);
+    broadcastPageUpdate(updated);
+  };
+
+  const addImageToFrame = (frameId: string, src: string, alt = '') => {
+    pushUndo();
+    const block = makeImageBlock(src, alt);
+    const updated = pages.map(p => ({
+      ...p,
+      frames: p.frames.map(f =>
+        f.id === frameId ? { ...f, blocks: [...f.blocks, block] } : f
+      ),
+    }));
+    setPages(updated);
+    setSelectedBlockId(block.id);
+    broadcastPageUpdate(updated);
+  };
+
+  const removeBlock = (blockId: string) => {
+    pushUndo();
+    const updated = pages.map(p => ({
+      ...p,
+      frames: p.frames.map(f => ({
+        ...f,
+        blocks: f.blocks.filter(b => b.id !== blockId),
+      })),
+    }));
+    setPages(updated);
+    if (selectedBlockId === blockId) setSelectedBlockId(null);
+    if (editingBlockId === blockId) setEditingBlockId(null);
+    broadcastPageUpdate(updated);
+  };
+
+  const moveBlockInFrame = (frameId: string, blockId: string, direction: -1 | 1) => {
+    pushUndo();
+    const updated = pages.map(p => ({
+      ...p,
+      frames: p.frames.map(f => {
+        if (f.id !== frameId) return f;
+        const idx = f.blocks.findIndex(b => b.id === blockId);
+        if (idx < 0) return f;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= f.blocks.length) return f;
+        const blocks = [...f.blocks];
+        [blocks[idx], blocks[newIdx]] = [blocks[newIdx], blocks[idx]];
+        return { ...f, blocks };
+      }),
+    }));
+    setPages(updated);
+    broadcastPageUpdate(updated);
+  };
+
+  // ── Image upload ──────────────────────────────────────────────────────────
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, frameId: string) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !user?.id) return;
+
+    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)) {
+      alert('Please choose a PNG, JPEG, GIF, or WEBP image.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image is too large — please choose one under 10 MB.');
+      return;
+    }
+
+    // Upload to Supabase storage
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `doc-studio/${user.id}/${uid()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from('together-assets')
+      .upload(path, file, { contentType: file.type, upsert: false });
+
+    if (uploadErr) {
+      // Fall back to local object URL if bucket doesn't exist yet
+      const localUrl = URL.createObjectURL(file);
+      addImageToFrame(frameId, localUrl, file.name);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('together-assets')
+      .getPublicUrl(path);
+
+    addImageToFrame(frameId, publicUrl, file.name);
+  };
+
+  // ── Drag-and-drop image onto frame ────────────────────────────────────────
+
+  const handleFrameDrop = async (e: React.DragEvent, frameId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) continue;
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `doc-studio/${user?.id}/${uid()}.${ext}`;
+      const { error } = await supabase.storage
+        .from('together-assets')
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      if (error) {
+        addImageToFrame(frameId, URL.createObjectURL(file), file.name);
+      } else {
+        const { data: { publicUrl } } = supabase.storage.from('together-assets').getPublicUrl(path);
+        addImageToFrame(frameId, publicUrl, file.name);
+      }
+    }
+  };
+
+  // ── Save project ──────────────────────────────────────────────────────────
+
+  const handleSaveProject = async () => {
+    if (!user?.id) return;
+    setIsSaving(true);
+    setSaveMsg('Saving…');
+    try {
+      const projectData = { name: projectName, pages, pageWidth: 210, pageHeight: 297, createdAt: new Date().toISOString() };
+      const projectId = collabProjectId || uid();
+
+      if (collabProjectId) {
+        // Update existing project
+        const { error } = await supabase
+          .from('document_studio_projects')
+          .update({ name: projectName.trim() || 'Untitled', project_data: projectData })
+          .eq('id', collabProjectId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('document_studio_projects')
+          .insert({
+            id:           projectId,
+            user_id:      user.id,
+            name:         projectName.trim() || 'Untitled',
+            project_data: projectData,
+            created_at:   new Date().toISOString(),
+          });
+        if (error) throw error;
+        setCollabProjectId(projectId);
+      }
+
+      setSaveMsg('Saved!');
+      await loadProjects();
+      await new Promise(r => setTimeout(r, 2000));
+    } catch (err: any) {
+      console.error('[DocStudio] Save failed:', err);
+      setSaveMsg('Error: ' + (err.message ?? 'Save failed'));
+      await new Promise(r => setTimeout(r, 3000));
+    } finally {
+      setIsSaving(false);
+      setSaveMsg('');
+    }
+  };
+
+  // ── Load projects ─────────────────────────────────────────────────────────
+
+  const loadProjects = async () => {
+    if (!user?.id) return;
+    setLoadingProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from('document_studio_projects')
+        .select('id, name, created_at, project_data')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) console.warn('[DocStudio] loadProjects error:', error.message);
+      if (data) {
+        setSavedProjects(data.map((d: any) => ({
+          id:          d.id,
+          name:        d.name,
+          savedAt:     d.created_at,
+          projectData: d.project_data ?? null,
+        })));
+      }
+    } catch (e) { console.error('[DocStudio] loadProjects exception:', e); }
+    setLoadingProjects(false);
+  };
+
+  const handleLoadProject = (project: SavedProject) => {
+    try {
+      const pd = project.projectData;
+      if (!pd || !pd.pages) { alert('Project data is corrupt or empty.'); return; }
+      setProjectName(pd.name || project.name || 'Untitled');
+      setPages(pd.pages);
+      setActivePageIdx(0);
+      setCollabProjectId(project.id);
+      setStudioView('edit');
+      setSelectedBlockId(null);
+      setEditingBlockId(null);
+      setUndoStack([]);
+      setRedoStack([]);
+    } catch {
+      alert('Could not load project — data may be corrupt.');
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!window.confirm('Delete this project? This cannot be undone.')) return;
+    await supabase.from('document_studio_projects').delete().eq('id', projectId);
+    setSavedProjects(prev => prev.filter(p => p.id !== projectId));
+    if (collabProjectId === projectId) {
+      setCollabProjectId(null);
+      setPages([makePage(1)]);
+      setProjectName('Untitled Document');
+    }
+  };
+
+  // ── PDF export ────────────────────────────────────────────────────────────
+
+  const handleExportPDF = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    setExportMsg('Preparing PDF…');
+
+    try {
+      const jsPDFModule = await import('jspdf').catch(() => null);
+      if (!jsPDFModule) {
+        alert('PDF generation is not available. Please install jspdf: npm i jspdf');
+        return;
+      }
+      const { jsPDF } = jsPDFModule;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const maxWidth = pageWidth - margin * 2;
+
+      for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+        if (pIdx > 0) doc.addPage();
+        const page = pages[pIdx];
+        let y = margin;
+
+        const colWidth = (maxWidth - (page.columns - 1) * 4) / page.columns;
+
+        for (let fIdx = 0; fIdx < page.frames.length; fIdx++) {
+          const frame = page.frames[fIdx];
+          const colX = margin + fIdx * (colWidth + 4);
+          let colY = margin;
+
+          for (const block of frame.blocks) {
+            if (block.type === 'text' && block.content.trim()) {
+              const fontSize = Math.min(block.fontSize * 0.35, 24);
+              doc.setFontSize(fontSize);
+
+              const isBold = block.fontWeight === 'bold';
+              const isItalic = block.fontStyle === 'italic';
+              let style = 'normal';
+              if (isBold && isItalic) style = 'bolditalic';
+              else if (isBold) style = 'bold';
+              else if (isItalic) style = 'italic';
+
+              const family = block.fontFamily.includes('serif') && !block.fontFamily.includes('sans')
+                ? 'times' : block.fontFamily.includes('monospace') || block.fontFamily.includes('Courier')
+                ? 'courier' : 'helvetica';
+
+              doc.setFont(family, style);
+
+              // Set text color
+              const hex = block.color.replace('#', '');
+              const r = parseInt(hex.substring(0, 2), 16);
+              const g = parseInt(hex.substring(2, 4), 16);
+              const b = parseInt(hex.substring(4, 6), 16);
+              doc.setTextColor(r, g, b);
+
+              const lines: string[] = doc.splitTextToSize(block.content, colWidth);
+              const lineH = fontSize * 0.5;
+
+              for (const line of lines) {
+                if (colY + lineH > pageHeight - margin) break;
+
+                let textX = colX;
+                if (block.textAlign === 'center') textX = colX + colWidth / 2;
+                else if (block.textAlign === 'right') textX = colX + colWidth;
+
+                doc.text(line, textX, colY, {
+                  align: block.textAlign === 'center' ? 'center'
+                    : block.textAlign === 'right' ? 'right' : 'left',
+                });
+                colY += lineH;
+              }
+              colY += 3;
+            } else if (block.type === 'image') {
+              try {
+                setExportMsg(`Embedding image on page ${pIdx + 1}…`);
+                const res = await fetch(block.src);
+                const blob = await res.blob();
+                const base64 = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = () => reject(new Error('read failed'));
+                  reader.readAsDataURL(blob);
+                });
+                const format = blob.type.includes('png') ? 'PNG' : 'JPEG';
+                const props = doc.getImageProperties(base64);
+                const ratio = props.width / props.height;
+                let dispWidth = colWidth;
+                let dispHeight = dispWidth / ratio;
+                const maxImgH = 80;
+                if (dispHeight > maxImgH) { dispHeight = maxImgH; dispWidth = dispHeight * ratio; }
+                if (colY + dispHeight > pageHeight - margin) break;
+
+                doc.addImage(base64, format, colX + (colWidth - dispWidth) / 2, colY, dispWidth, dispHeight);
+                colY += dispHeight + 2;
+
+                if (block.caption) {
+                  doc.setFontSize(9);
+                  doc.setFont('helvetica', 'italic');
+                  doc.setTextColor(100, 100, 100);
+                  for (const line of doc.splitTextToSize(block.caption, colWidth)) {
+                    doc.text(line, colX, colY); colY += 4;
+                  }
+                }
+                colY += 3;
+              } catch {
+                // Skip images that fail to load
+              }
+            }
+          }
+          y = Math.max(y, colY);
+        }
+      }
+
+      const safeName = projectName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'document';
+      doc.save(`${safeName}.pdf`);
+      setExportMsg('PDF downloaded!');
+      await new Promise(r => setTimeout(r, 2000));
+    } catch (err: any) {
+      console.error('[DocStudio] PDF export error:', err);
+      setExportMsg('Export failed: ' + (err.message ?? 'unknown error'));
+      await new Promise(r => setTimeout(r, 3000));
+    } finally {
+      setIsExporting(false);
+      setExportMsg('');
+    }
+  };
+
+  // ── Enable / disable collaboration ────────────────────────────────────────
+
+  const toggleCollab = async () => {
+    if (!collabProjectId) {
+      // Save first
+      await handleSaveProject();
+    }
+    setCollabEnabled(prev => !prev);
+  };
+
+  // ── PX_PER_PAGE for the canvas zoom ───────────────────────────────────────
+  const PAGE_CANVAS_WIDTH = 680;
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  return (
+    <AppLayout>
+      <style>{`
+        .doc-studio-root {
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        .page-canvas {
+          background: white;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.08);
+          transition: transform 0.2s ease;
+        }
+        .frame-column {
+          min-height: 200px;
+          transition: background-color 0.15s ease;
+        }
+        .frame-column.drag-over {
+          background-color: rgba(59, 130, 246, 0.08) !important;
+          outline: 2px dashed #3b82f6;
+          outline-offset: -2px;
+        }
+        .block-wrapper {
+          position: relative;
+          transition: outline 0.1s ease;
+        }
+        .block-wrapper:hover {
+          outline: 1px solid #93c5fd;
+        }
+        .block-wrapper.selected {
+          outline: 2px solid #3b82f6;
+        }
+        .block-wrapper .block-toolbar {
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.15s ease;
+        }
+        .block-wrapper:hover .block-toolbar,
+        .block-wrapper.selected .block-toolbar {
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .text-editing {
+          outline: 2px solid #8b5cf6 !important;
+          background: rgba(139, 92, 246, 0.04);
+        }
+        .page-thumb {
+          transition: all 0.15s ease;
+        }
+        .page-thumb:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .page-thumb.active {
+          outline: 2px solid #8b5cf6;
+        }
+      `}</style>
+
+      <div className="doc-studio-root fixed top-14 left-0 right-0 bottom-0 flex flex-col bg-slate-950 overflow-hidden">
+
+        {/* ── Top bar ─────────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-5 py-3 bg-slate-900 border-b border-slate-700/60 shrink-0 flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-lg leading-tight">Document Studio</h1>
+              <p className="text-slate-400 text-xs">Layout · Design · Collaborate · Publish</p>
+              <div className="mt-1">
+                <PidginTooltip
+                  originalText="Layout · Design · Collaborate · Publish"
+                  hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* View toggle */}
+            <div className="flex bg-slate-800 rounded-lg p-0.5 border border-slate-700">
+              {(['edit', 'preview', 'history'] as const).map(v => (
+                <button key={v} onClick={() => { setStudioView(v); if (v === 'history') loadProjects(); }}
+                  className={classNames('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors', studioView === v ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-slate-200')}>
+                  {v === 'edit' ? <><Edit3 size={12} /> Edit</> : v === 'preview' ? <><Eye size={12} /> Preview</> : <><Clock size={12} /> Projects</>}
+                </button>
+              ))}
+            </div>
+            {/* Project name */}
+            <input
+              type="text" value={projectName} onChange={e => setProjectName(e.target.value)}
+              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-40 focus:outline-none focus:border-violet-400 placeholder-slate-500"
+              placeholder="Document name…"
+            />
+            {/* Undo / Redo */}
+            <div className="flex gap-0.5">
+              <button onClick={handleUndo} disabled={undoStack.length === 0} title="Undo (Ctrl+Z)"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 transition-colors">
+                <Undo2 size={14} />
+              </button>
+              <button onClick={handleRedo} disabled={redoStack.length === 0} title="Redo (Ctrl+Shift+Z)"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 transition-colors">
+                <Redo2 size={14} />
+              </button>
+            </div>
+            {/* Save */}
+            <button onClick={handleSaveProject} disabled={isSaving}
+              className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
+              {isSaving
+                ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {saveMsg}</>
+                : <><Save size={13} /> Save</>}
+            </button>
+            {/* Export PDF */}
+            <button onClick={handleExportPDF} disabled={isExporting}
+              className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
+              {isExporting
+                ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {exportMsg}</>
+                : <><Download size={13} /> Export PDF</>}
+            </button>
+            {/* Collab toggle */}
+            <button onClick={toggleCollab}
+              className={classNames('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0',
+                collabEnabled ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300')}>
+              {collabEnabled ? <><Wifi size={13} /> Live</> : <><Users size={13} /> Collaborate</>}
+            </button>
+            {/* Collaborator avatars */}
+            {collaborators.length > 0 && (
+              <div className="flex -space-x-1">
+                {collaborators.map(c => (
+                  <div key={c.userId} title={c.name}
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-slate-900"
+                    style={{ backgroundColor: c.color }}>
+                    {c.name?.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── History / Projects view ─────────────────────────────────────── */}
+        {studioView === 'history' && (
+          <div className="flex-1 overflow-y-auto p-6 bg-slate-950">
+            <h2 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+              <FolderOpen size={18} className="text-violet-400" /> Saved Documents
+            </h2>
+            {loadingProjects ? (
+              <div className="flex justify-center py-16">
+                <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : savedProjects.length === 0 ? (
+              <div className="text-center py-16 text-slate-500">
+                <Save size={40} className="mx-auto mb-3 opacity-30" />
+                <p>No saved documents yet.</p>
+                <p className="text-xs mt-1">Create something in the editor and hit Save.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {savedProjects.map(p => (
+                  <div key={p.id}
+                    className="group bg-slate-900 border border-slate-700/60 rounded-xl overflow-hidden cursor-pointer hover:border-violet-500/60 transition-colors">
+                    <div className="relative bg-slate-800" style={{ aspectRatio: '3/4' }}
+                      onClick={() => handleLoadProject(p)}>
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FileText size={28} className="text-slate-600" />
+                      </div>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-violet-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
+                          Open
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-3 py-2 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-200 font-semibold truncate">{p.name}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {new Date(p.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                        </p>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }}
+                        className="p-1 text-slate-600 hover:text-red-400 transition-colors" title="Delete project">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Main edit / preview area ─────────────────────────────────────── */}
+        {(studioView === 'edit' || studioView === 'preview') && (
+          <div className="flex flex-1 min-h-0">
+
+            {/* ── Left panel: page navigator + controls ─────────────────────── */}
+            {studioView === 'edit' && (
+            <div className="w-56 shrink-0 bg-slate-900/80 border-r border-slate-700/50 flex flex-col">
+              {/* Page list header */}
+              <div className="px-3 py-3 border-b border-slate-700/50">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pages</p>
+                <div className="flex gap-1">
+                  <button onClick={() => addPage(1)} title="Add 1-column page"
+                    className="flex-1 flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 border border-dashed border-slate-600 rounded-lg py-1.5 text-xs text-slate-400 transition-colors">
+                    <Plus size={11} /> 1 col
+                  </button>
+                  <button onClick={() => addPage(2)} title="Add 2-column page"
+                    className="flex-1 flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 border border-dashed border-slate-600 rounded-lg py-1.5 text-xs text-slate-400 transition-colors">
+                    <Plus size={11} /> 2 col
+                  </button>
+                  <button onClick={() => addPage(3)} title="Add 3-column page"
+                    className="flex-1 flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 border border-dashed border-slate-600 rounded-lg py-1.5 text-xs text-slate-400 transition-colors">
+                    <Plus size={11} /> 3 col
+                  </button>
+                </div>
+              </div>
+
+              {/* Page thumbnails */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                {pages.map((page, idx) => {
+                  const collabsHere = collaborators.filter(c => c.activePage === idx);
+                  return (
+                    <div key={page.id}
+                      onClick={() => setActivePageIdx(idx)}
+                      className={classNames('page-thumb group relative bg-white rounded-lg overflow-hidden cursor-pointer', activePageIdx === idx && 'active')}>
+                      {/* Mini page preview */}
+                      <div className="p-2" style={{ aspectRatio: '210/297' }}>
+                        <div className="w-full h-full flex gap-0.5">
+                          {page.frames.map((f, fi) => (
+                            <div key={f.id} className="flex-1 bg-slate-100 rounded-sm p-0.5">
+                              {f.blocks.slice(0, 3).map(b => (
+                                <div key={b.id} className={classNames('mb-0.5 rounded-sm', b.type === 'text' ? 'bg-slate-200 h-1.5' : 'bg-blue-200 h-3')} />
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Page number and controls */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-slate-900/90 px-2 py-1 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-300 font-medium">Page {idx + 1}</span>
+                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={e => { e.stopPropagation(); duplicatePage(idx); }}
+                            className="p-0.5 text-slate-400 hover:text-white" title="Duplicate page">
+                            <Copy size={10} />
+                          </button>
+                          {pages.length > 1 && (
+                            <button onClick={e => { e.stopPropagation(); removePage(idx); }}
+                              className="p-0.5 text-slate-400 hover:text-red-400" title="Remove page">
+                              <Trash2 size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {/* Collaborator indicators */}
+                      {collabsHere.length > 0 && (
+                        <div className="absolute top-1 right-1 flex -space-x-1">
+                          {collabsHere.map(c => (
+                            <div key={c.userId} className="w-4 h-4 rounded-full text-[8px] font-bold text-white flex items-center justify-center border border-white"
+                              style={{ backgroundColor: c.color }}>
+                              {c.name?.charAt(0)?.toUpperCase()}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Page layout controls */}
+              <div className="px-3 py-3 border-t border-slate-700/50">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Page Layout</p>
+                <div className="flex gap-1 mb-2">
+                  {([1, 2, 3] as ColumnLayout[]).map(cols => (
+                    <button key={cols} onClick={() => changePageColumns(activePage.id, cols)}
+                      className={classNames('flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors',
+                        activePage.columns === cols
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700')}>
+                      {cols} col
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* ── Center: page canvas ───────────────────────────────────────── */}
+            <div className="flex-1 overflow-auto bg-slate-800/40 p-8 flex justify-center">
+              <div ref={canvasRef}
+                className="page-canvas rounded-sm"
+                style={{
+                  width: PAGE_CANVAS_WIDTH,
+                  minHeight: PAGE_CANVAS_WIDTH * (297 / 210),
+                  padding: activePage.marginPx,
+                  backgroundColor: activePage.backgroundColor,
+                }}
+                onClick={() => { setSelectedBlockId(null); setEditingBlockId(null); setSelectedFrameId(null); }}>
+
+                <div className="flex gap-0" style={{ gap: activePage.gapPx }}>
+                  {activePage.frames.map(frame => (
+                    <div key={frame.id}
+                      className={classNames('frame-column flex-1 rounded-sm relative')}
+                      onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
+                      onDragLeave={e => e.currentTarget.classList.remove('drag-over')}
+                      onDrop={e => { e.currentTarget.classList.remove('drag-over'); handleFrameDrop(e, frame.id); }}
+                      onClick={e => { e.stopPropagation(); setSelectedFrameId(frame.id); }}>
+
+                      {/* Blocks */}
+                      {frame.blocks.map((block, blockIdx) => (
+                        <div key={block.id}
+                          className={classNames(
+                            'block-wrapper mb-2',
+                            selectedBlockId === block.id && 'selected',
+                            editingBlockId === block.id && 'text-editing',
+                          )}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedBlockId(block.id);
+                            setSelectedFrameId(frame.id);
+                          }}
+                          onDoubleClick={e => {
+                            e.stopPropagation();
+                            if (block.type === 'text') {
+                              setEditingBlockId(block.id);
+                            }
+                          }}>
+
+                          {/* Block toolbar */}
+                          <div className="block-toolbar absolute -top-6 left-0 right-0 flex items-center gap-1 z-10">
+                            <div className="flex items-center gap-0.5 bg-slate-900 rounded-md px-1 py-0.5 shadow-lg border border-slate-700">
+                              {blockIdx > 0 && (
+                                <button onClick={e => { e.stopPropagation(); moveBlockInFrame(frame.id, block.id, -1); }}
+                                  className="p-0.5 text-slate-400 hover:text-white" title="Move up">
+                                  <ChevronLeft size={10} />
+                                </button>
+                              )}
+                              {blockIdx < frame.blocks.length - 1 && (
+                                <button onClick={e => { e.stopPropagation(); moveBlockInFrame(frame.id, block.id, 1); }}
+                                  className="p-0.5 text-slate-400 hover:text-white" title="Move down">
+                                  <ChevronRight size={10} />
+                                </button>
+                              )}
+                              <button onClick={e => { e.stopPropagation(); removeBlock(block.id); }}
+                                className="p-0.5 text-slate-400 hover:text-red-400" title="Delete block">
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Render block */}
+                          {block.type === 'text' ? (
+                            editingBlockId === block.id ? (
+                              <textarea
+                                autoFocus
+                                value={block.content}
+                                onChange={e => updateBlock(block.id, b => ({ ...b, content: e.target.value } as TextBlock))}
+                                onBlur={() => { pushUndo(); setEditingBlockId(null); }}
+                                placeholder="Type your text here…"
+                                className="w-full min-h-[60px] bg-transparent resize-y outline-none p-2"
+                                style={{
+                                  fontFamily: block.fontFamily,
+                                  fontSize: block.fontSize,
+                                  fontWeight: block.fontWeight,
+                                  fontStyle: block.fontStyle,
+                                  textAlign: block.textAlign,
+                                  color: block.color,
+                                  lineHeight: block.lineHeight,
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className={classNames('p-2 min-h-[30px] cursor-text whitespace-pre-wrap', !block.content && 'text-slate-300 italic')}
+                                style={{
+                                  fontFamily: block.fontFamily,
+                                  fontSize: block.fontSize,
+                                  fontWeight: block.fontWeight,
+                                  fontStyle: block.fontStyle,
+                                  textAlign: block.textAlign,
+                                  color: block.content ? block.color : undefined,
+                                  lineHeight: block.lineHeight,
+                                }}>
+                                {block.content || 'Double-click to edit…'}
+                              </div>
+                            )
+                          ) : block.type === 'image' ? (
+                            <div className="relative">
+                              <img
+                                src={block.src}
+                                alt={block.alt}
+                                className="w-full rounded-sm"
+                                style={{ objectFit: block.fit, maxHeight: 400 }}
+                              />
+                              {selectedBlockId === block.id && (
+                                <input
+                                  type="text"
+                                  value={block.caption}
+                                  onChange={e => updateBlock(block.id, b => ({ ...b, caption: e.target.value } as ImageBlock))}
+                                  onBlur={() => pushUndo()}
+                                  placeholder="Add caption…"
+                                  className="w-full mt-1 bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded outline-none"
+                                />
+                              )}
+                              {block.caption && selectedBlockId !== block.id && (
+                                <p className="text-xs text-slate-500 italic mt-1 px-1">{block.caption}</p>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+
+                      {/* Add block buttons */}
+                      {studioView === 'edit' && (
+                        <div className="flex gap-1 mt-2 pt-2 border-t border-dashed border-slate-200">
+                          <button onClick={e => { e.stopPropagation(); addTextBlock(frame.id); }}
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
+                            <Type size={11} /> Text
+                          </button>
+                          <label className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors cursor-pointer">
+                            <ImageIcon size={11} /> Image
+                            <input type="file" accept="image/*" className="hidden"
+                              onChange={e => handleImageUpload(e, frame.id)} />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Right panel: block properties ────────────────────────────── */}
+            {studioView === 'edit' && (
+            <div className="w-56 shrink-0 bg-slate-900/80 border-l border-slate-700/50 flex flex-col overflow-y-auto">
+              <div className="px-3 py-3 border-b border-slate-700/50">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Properties</p>
+              </div>
+
+              {selectedBlock && selectedBlock.type === 'text' ? (
+                <div className="p-3 space-y-3">
+                  {/* Font family */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Font</label>
+                    <select
+                      value={selectedBlock.fontFamily}
+                      onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontFamily: e.target.value } as TextBlock))}
+                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
+                      {FONT_FAMILIES.map(f => (
+                        <option key={f} value={f} style={{ fontFamily: f }}>{f.split(',')[0]}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Font size */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Size</label>
+                    <select
+                      value={selectedBlock.fontSize}
+                      onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontSize: Number(e.target.value) } as TextBlock))}
+                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
+                      {FONT_SIZES.map(s => (
+                        <option key={s} value={s}>{s}px</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Bold / Italic */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Style</label>
+                    <div className="flex gap-1 mt-1">
+                      <button
+                        onClick={() => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontWeight: (b as TextBlock).fontWeight === 'bold' ? 'normal' : 'bold' } as TextBlock))}
+                        className={classNames('flex-1 flex items-center justify-center py-1.5 rounded-md text-xs font-semibold transition-colors',
+                          selectedBlock.fontWeight === 'bold' ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white')}>
+                        <Bold size={13} />
+                      </button>
+                      <button
+                        onClick={() => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontStyle: (b as TextBlock).fontStyle === 'italic' ? 'normal' : 'italic' } as TextBlock))}
+                        className={classNames('flex-1 flex items-center justify-center py-1.5 rounded-md text-xs font-semibold transition-colors',
+                          selectedBlock.fontStyle === 'italic' ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white')}>
+                        <Italic size={13} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Alignment */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Alignment</label>
+                    <div className="flex gap-1 mt-1">
+                      {([
+                        { align: 'left' as TextAlign, icon: AlignLeft },
+                        { align: 'center' as TextAlign, icon: AlignCenter },
+                        { align: 'right' as TextAlign, icon: AlignRight },
+                      ]).map(({ align, icon: Icon }) => (
+                        <button key={align}
+                          onClick={() => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, textAlign: align } as TextBlock))}
+                          className={classNames('flex-1 flex items-center justify-center py-1.5 rounded-md text-xs transition-colors',
+                            selectedBlock.textAlign === align ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white')}>
+                          <Icon size={13} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Color */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Color</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="color"
+                        value={selectedBlock.color}
+                        onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, color: e.target.value } as TextBlock))}
+                        className="w-8 h-8 rounded-md border border-slate-700 cursor-pointer bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={selectedBlock.color}
+                        onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, color: e.target.value } as TextBlock))}
+                        className="flex-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Line height */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Line Height</label>
+                    <input
+                      type="range" min="1" max="2.5" step="0.1"
+                      value={selectedBlock.lineHeight}
+                      onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, lineHeight: Number(e.target.value) } as TextBlock))}
+                      className="w-full mt-1 accent-violet-500"
+                    />
+                    <span className="text-[10px] text-slate-500">{selectedBlock.lineHeight}×</span>
+                  </div>
+                </div>
+              ) : selectedBlock && selectedBlock.type === 'image' ? (
+                <div className="p-3 space-y-3">
+                  {/* Image fit */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Fit</label>
+                    <div className="flex gap-1 mt-1">
+                      {(['contain', 'cover'] as const).map(fit => (
+                        <button key={fit}
+                          onClick={() => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fit } as ImageBlock))}
+                          className={classNames('flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors',
+                            (selectedBlock as ImageBlock).fit === fit ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white')}>
+                          {fit === 'contain' ? 'Fit' : 'Fill'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Alt text */}
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Alt Text</label>
+                    <input
+                      type="text"
+                      value={(selectedBlock as ImageBlock).alt}
+                      onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, alt: e.target.value } as ImageBlock))}
+                      placeholder="Describe this image…"
+                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400 placeholder-slate-500"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-center">
+                  <Type size={24} className="mx-auto mb-2 text-slate-600 opacity-40" />
+                  <p className="text-xs text-slate-500">Select a text or image block to see its properties.</p>
+                  <p className="text-[10px] text-slate-600 mt-1">Double-click text to start editing.</p>
+                </div>
+              )}
+
+              {/* Page properties */}
+              <div className="mt-auto px-3 py-3 border-t border-slate-700/50 space-y-2">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Page Settings</p>
+                <div>
+                  <label className="text-[10px] text-slate-500">Background</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="color"
+                      value={activePage.backgroundColor}
+                      onChange={e => {
+                        pushUndo();
+                        const bg = e.target.value;
+                        const updated = pages.map(p => p.id === activePage.id ? { ...p, backgroundColor: bg } : p);
+                        setPages(updated);
+                        broadcastPageUpdate(updated);
+                      }}
+                      className="w-6 h-6 rounded border border-slate-700 cursor-pointer bg-transparent"
+                    />
+                    <span className="text-[10px] text-slate-400">{activePage.backgroundColor}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500">Margin</label>
+                  <input
+                    type="range" min="10" max="80" step="5"
+                    value={activePage.marginPx}
+                    onChange={e => {
+                      const m = Number(e.target.value);
+                      const updated = pages.map(p => p.id === activePage.id ? { ...p, marginPx: m } : p);
+                      setPages(updated);
+                      broadcastPageUpdate(updated);
+                    }}
+                    className="w-full mt-1 accent-violet-500"
+                  />
+                  <span className="text-[10px] text-slate-500">{activePage.marginPx}px</span>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500">Column Gap</label>
+                  <input
+                    type="range" min="0" max="60" step="4"
+                    value={activePage.gapPx}
+                    onChange={e => {
+                      const g = Number(e.target.value);
+                      const updated = pages.map(p => p.id === activePage.id ? { ...p, gapPx: g } : p);
+                      setPages(updated);
+                      broadcastPageUpdate(updated);
+                    }}
+                    className="w-full mt-1 accent-violet-500"
+                  />
+                  <span className="text-[10px] text-slate-500">{activePage.gapPx}px</span>
+                </div>
+              </div>
+            </div>
+            )}
+          </div>
+        )}
+      </div>
+    </AppLayout>
+  );
+};
+
+export default DocumentStudioPage;
+
+/*
+── DATABASE TABLE ──────────────────────────────────────────────────────────────
+
+Run this in Supabase SQL editor to create the project table:
+
+CREATE TABLE IF NOT EXISTS document_studio_projects (
+  id            text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id       uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name          text NOT NULL DEFAULT 'Untitled',
+  project_data  jsonb,
+  thumbnail_url text,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE document_studio_projects ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own doc studio projects"
+  ON document_studio_projects
+  FOR ALL
+  USING  (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+── ROUTING ────────────────────────────────────────────────────────────────────
+
+Add to your router (e.g. App.tsx):
+
+  import DocumentStudioPage from './pages/tech-skills/DocumentStudioPage';
+  <Route path="/tech-skills/document-studio" element={<DocumentStudioPage />} />
+
+────────────────────────────────────────────────────────────────────────────────
+*/
