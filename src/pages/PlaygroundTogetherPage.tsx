@@ -22,39 +22,16 @@ import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare
 const QUOTA_TOKENS    = 25000;
 const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 // A room member asking to see the compiled book (in their own words) opens
 // the book panel directly — no need to know the "View Book" button exists.
 const BOOK_REQUEST_PATTERN = /\b(show|see|view|open|read|pull up|bring up|look at)\b[\s\S]{0,30}\b(book|story)\b/i;
 
-// Claude wraps ONLY actual book/story text in these markers (see the system
-// prompt in api/chat-room.js) — everything else in a reply is conversational
-// and stays out of the book artifact entirely, not just visually hidden.
-const BOOK_MARKER_RE = /<<<BOOK_START>>>([\s\S]*?)<<<BOOK_END>>>/g;
-
-function extractBookSegments(content: string): string[] {
-  const segments: string[] = [];
-  for (const match of content.matchAll(BOOK_MARKER_RE)) {
-    const seg = match[1].trim();
-    if (seg) segments.push(seg);
-  }
-  return segments;
-}
-
-// For the chat bubble: keep Claude's full reply (including any book text,
-// since the chat is the full transcript) but hide the raw marker tokens.
-function stripBookMarkers(content: string): string {
-  return content.replace(/<<<BOOK_START>>>/g, '').replace(/<<<BOOK_END>>>/g, '').trim();
-}
-
-interface BookEntry {
+// Every shared image, in upload order — shown after the book text since the
+// canonical book_content (see api/chat-room.js) is rewritten in full on each
+// edit and has no stable per-paragraph anchor to place an image against.
+interface BookImage {
   id: string;
-  type: 'text' | 'image';
-  text?: string;
-  image_url?: string;
+  image_url: string;
   caption?: string;
   sender_name: string;
 }
@@ -73,6 +50,8 @@ interface TogetherRoom {
   created_at: string;
   closed_at: string | null;
   closed_by: string | null;
+  book_content: string | null;
+  book_updated_at: string | null;
 }
 
 interface TogetherMessage {
@@ -382,46 +361,102 @@ const PlaygroundTogetherPage: React.FC = () => {
     }
   };
 
-  // ── "Our Book" — ONLY the story text Claude marked as book content, plus
-  // every shared image, in the order it happened. No chat commentary — a
-  // Claude reply that's purely conversational (no <<<BOOK_START>>> markers)
-  // contributes nothing here. Derived straight from the messages already
-  // loaded/subscribed above, so it updates live as the room does. ──────────
-  const bookEntries = useMemo<BookEntry[]>(() => {
-    const entries: BookEntry[] = [];
-    for (const m of messages) {
-      if (m.deleted_at) continue;
-      if (m.image_url) {
-        entries.push({ id: m.id, type: 'image', image_url: m.image_url, caption: m.content || undefined, sender_name: m.sender_name });
-      } else if (m.role === 'assistant') {
-        extractBookSegments(m.content).forEach((text, i) => {
-          entries.push({ id: `${m.id}-${i}`, type: 'text', text, sender_name: m.sender_name });
-        });
-      }
-    }
-    return entries;
-  }, [messages]);
+  // ── "Our Book" — the room's ONE canonical document (api/chat-room.js
+  // rewrites it in full whenever a turn adds to or edits the book, never a
+  // fragment) plus every shared image. Lives on the room itself, not
+  // reconstructed from chat messages, so it updates live via the same
+  // together_rooms realtime subscription already wired up above. ─────────
+  const bookText = (activeRoom?.book_content || '').trim();
+  const bookParagraphs = useMemo(
+    () => bookText ? bookText.split(/\n{2,}/).map(p => p.trim()).filter(Boolean) : [],
+    [bookText]
+  );
+  const bookImages = useMemo<BookImage[]>(
+    () => messages
+      .filter(m => !m.deleted_at && m.image_url)
+      .map(m => ({ id: m.id, image_url: m.image_url as string, caption: m.content || undefined, sender_name: m.sender_name })),
+    [messages]
+  );
+  const bookIsEmpty = bookParagraphs.length === 0 && bookImages.length === 0;
 
-  const handleDownloadBook = () => {
-    const title = activeRoom?.name || 'Our Book';
-    const body = bookEntries.map(entry => {
-      if (entry.type === 'image') {
-        const caption = entry.caption?.trim()
-          ? `<p style="font-size:14px;color:#666;margin-top:4px;">${escapeHtml(entry.caption)}</p>` : '';
-        return `<figure style="margin:24px 0;"><img src="${entry.image_url}" style="max-width:100%;border-radius:12px;" />${caption}<figcaption style="font-size:12px;color:#999;margin-top:4px;">Shared by ${escapeHtml(entry.sender_name)}</figcaption></figure>`;
+  const [downloadingBook, setDownloadingBook] = useState(false);
+  const handleDownloadBookPDF = async () => {
+    if (downloadingBook || bookIsEmpty) return;
+    setDownloadingBook(true);
+    try {
+      const jsPDFModule = await import('jspdf').catch(() => null);
+      if (!jsPDFModule) { setRoomError('PDF generation is not available right now.'); return; }
+      const { jsPDF } = jsPDFModule;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxWidth = pageWidth - margin * 2;
+      let y = margin;
+
+      const ensureSpace = (needed: number) => {
+        if (y + needed > pageHeight - margin) { doc.addPage(); y = margin; }
+      };
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      for (const line of doc.splitTextToSize(activeRoom?.name || 'Our Book', maxWidth)) {
+        ensureSpace(10); doc.text(line, margin, y); y += 10;
       }
-      return `<p style="white-space:pre-wrap;line-height:1.6;margin:16px 0;">${escapeHtml(entry.text || '')}</p>`;
-    }).join('\n');
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head>
-<body style="max-width:700px;margin:40px auto;font-family:Georgia,serif;padding:0 20px;">
-<h1>${escapeHtml(title)}</h1>
-${body}
-</body></html>`;
-    const blob = new Blob([html], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${title.replace(/\s+/g, '-').toLowerCase()}.html`;
-    a.click();
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      if (bookParagraphs.length) {
+        for (const para of bookParagraphs) {
+          for (const line of doc.splitTextToSize(para, maxWidth)) {
+            ensureSpace(7); doc.text(line, margin, y); y += 7;
+          }
+          y += 4;
+        }
+      } else {
+        doc.text('Nothing written yet.', margin, y);
+      }
+
+      for (const img of bookImages) {
+        try {
+          const res = await fetch(img.image_url);
+          const blob = await res.blob();
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('read failed'));
+            reader.readAsDataURL(blob);
+          });
+          const format = blob.type.includes('png') ? 'PNG' : 'JPEG';
+          const props = doc.getImageProperties(base64);
+          const ratio = props.width / props.height;
+          let dispWidth = maxWidth;
+          let dispHeight = dispWidth / ratio;
+          const maxImgHeight = 140;
+          if (dispHeight > maxImgHeight) { dispHeight = maxImgHeight; dispWidth = dispHeight * ratio; }
+
+          doc.addPage();
+          y = margin;
+          doc.addImage(base64, format, margin + (maxWidth - dispWidth) / 2, y, dispWidth, dispHeight);
+          y += dispHeight + 6;
+          if (img.caption) {
+            doc.setFontSize(10);
+            for (const line of doc.splitTextToSize(img.caption, maxWidth)) { doc.text(line, margin, y); y += 5; }
+            doc.setFontSize(12);
+          }
+          doc.setFontSize(9);
+          doc.text(`Shared by ${img.sender_name}`, margin, y);
+          doc.setFontSize(12);
+        } catch {
+          // Skip an image that fails to load rather than break the whole PDF.
+        }
+      }
+
+      doc.save(`${(activeRoom?.name || 'our-book').replace(/\s+/g, '-').toLowerCase()}.pdf`);
+    } finally {
+      setDownloadingBook(false);
+    }
   };
 
   const handleDeleteMessage = async (messageId: string) => {
@@ -672,10 +707,6 @@ ${body}
                   const isAssistant = msg.role === 'assistant';
                   const isDeleted = !!msg.deleted_at;
                   const label = isAssistant ? 'Claude' : isMe ? 'You' : msg.sender_name;
-                  // The chat shows the full reply, just without the raw
-                  // <<<BOOK_START>>>/<<<BOOK_END>>> marker tokens — those
-                  // exist only to tell the book panel what to extract.
-                  const displayContent = isAssistant ? stripBookMarkers(msg.content) : msg.content;
                   return (
                     <div key={msg.id} className="group flex items-start gap-2">
                       <div className={`flex-1 rounded-2xl px-4 py-2.5 max-w-[85%] ${
@@ -694,7 +725,7 @@ ${body}
                             {msg.content && <p className="text-sm whitespace-pre-wrap break-words mt-1.5">{msg.content}</p>}
                           </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap break-words">{displayContent}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                         )}
                       </div>
                       {isLeader && !isDeleted && !isAssistant && (
@@ -773,11 +804,11 @@ ${body}
                 </h2>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
-                    onClick={handleDownloadBook}
-                    disabled={bookEntries.length === 0}
+                    onClick={handleDownloadBookPDF}
+                    disabled={bookIsEmpty || downloadingBook}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 border border-purple-200 hover:border-purple-300 bg-purple-50 rounded-lg transition-colors disabled:opacity-40"
                   >
-                    <Download size={12} /> Download
+                    {downloadingBook ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} PDF
                   </button>
                   <button onClick={() => setBookPanelOpen(false)} className="p-1 text-gray-400 hover:text-gray-700" title="Close panel">
                     <X size={17} />
@@ -785,24 +816,23 @@ ${body}
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto px-6 py-5" style={{ fontFamily: 'Georgia, serif' }}>
-                {bookEntries.length === 0 ? (
+                {bookIsEmpty ? (
                   <p className="text-center text-gray-400 text-sm py-12">
                     Nothing in the book yet — keep chatting with Claude and share images to build it up.
                   </p>
                 ) : (
-                  bookEntries.map(entry => (
-                    <div key={entry.id} className="mb-6">
-                      {entry.type === 'image' ? (
-                        <figure>
-                          <img src={entry.image_url} alt={entry.caption || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
-                          {entry.caption && <p className="text-sm text-gray-600 text-center mt-2">{entry.caption}</p>}
-                          <figcaption className="text-xs text-gray-400 text-center mt-1">Shared by {entry.sender_name}</figcaption>
-                        </figure>
-                      ) : (
-                        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{entry.text}</p>
-                      )}
-                    </div>
-                  ))
+                  <>
+                    {bookParagraphs.map((para, i) => (
+                      <p key={i} className="text-gray-800 leading-relaxed whitespace-pre-wrap mb-4">{para}</p>
+                    ))}
+                    {bookImages.map(img => (
+                      <figure key={img.id} className="mb-6">
+                        <img src={img.image_url} alt={img.caption || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
+                        {img.caption && <p className="text-sm text-gray-600 text-center mt-2">{img.caption}</p>}
+                        <figcaption className="text-xs text-gray-400 text-center mt-1">Shared by {img.sender_name}</figcaption>
+                      </figure>
+                    ))}
+                  </>
                 )}
               </div>
             </div>

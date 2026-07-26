@@ -83,7 +83,7 @@ export default async function handler(req, res) {
     // ── Room must exist and be active ──────────────────────────────────────
     const { data: room, error: roomErr } = await supabase
       .from('together_rooms')
-      .select('id, name, status, model, organization_id, organizations(name)')
+      .select('id, name, status, model, organization_id, book_content, organizations(name)')
       .eq('id', room_id)
       .single();
 
@@ -190,46 +190,87 @@ export default async function handler(req, res) {
 
     const model = room.model || 'claude-sonnet-5';
     const orgName = room.organizations?.name || 'this organization';
+    const currentBook = (room.book_content || '').trim();
     const systemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at ${orgName}. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Contribute naturally to whatever the group is building (for example, a community story) — build on what's already been said, don't repeat yourself, and prioritize direction from a leader. Keep replies focused and not overly long — this is a live group conversation, not a report.
 
 Respond to whoever sent the most recent message — don't address, praise, or ask a follow-up question of some other named participant instead (e.g. the person who started the room) just because they spoke earlier or more often. If you want the group's input, ask an open question to everyone rather than singling out one person by name.
 
-This room's conversation is also compiled into a shared "book" that the group can view separately from the chat, as a clean document with no chat commentary — so mark your text precisely:
-- When you write actual story/book text the group is co-authoring (narrative prose, dialogue, a scene, a chapter) — wrap ONLY that text in <<<BOOK_START>>> and <<<BOOK_END>>> markers, with nothing else inside them. No questions, no praise, no meta-commentary between the markers — just the story text itself, exactly as it should appear in the finished book.
-- Everything else in your reply — questions to the group, feedback, encouragement, logistics — stays OUTSIDE the markers. It will appear in the chat but not in the book.
-- If your reply is purely conversational with no new book text, don't use the markers at all.
-- Never mention the markers to the group — they are invisible formatting, not something to discuss.`;
+This room also maintains ONE canonical "book" document, shown to the group separately from this chat, as a clean document with no chat commentary in it — just the story/document text itself.
+
+CURRENT BOOK CONTENT:
+"""
+${currentBook || '(empty — nothing written yet)'}
+"""
+
+When your reply adds new text to, edits, expands, lengthens, or continues the book/story, call the update_book tool with the FULL updated book text — never a diff, snippet, or just the new part; include everything previously written plus this change. Never call it for a purely conversational reply that doesn't change the book (answering a question about direction, asking the group something, discussing logistics). Your normal text reply should stay conversational and short — don't paste the book content into it too, since it already lives in the book document; a brief acknowledgement is enough (e.g. "Here's the expanded chapter!").`;
+
+    const UPDATE_BOOK_TOOL = {
+      name: 'update_book',
+      description: 'Call this when your reply adds new text to, or edits, the shared book/story document. Do NOT call this for purely conversational replies (questions, feedback, logistics) that don\'t change the book.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          bookContent: {
+            type: 'string',
+            description: 'The FULL, complete, updated text of the book after this turn — never a diff or just the new part. Include everything previously written plus whatever is being added, edited, or expanded now. Contains ONLY the actual story/document text — no questions, no meta-commentary, no chat framing.',
+          },
+        },
+        required: ['bookContent'],
+      },
+    };
 
     const createParams = {
       model,
-      max_tokens: 2000,
+      max_tokens: 8000,
       system: systemPrompt,
       messages: anthropicMessages,
+      tools: [UPDATE_BOOK_TOOL],
     };
     if (modelAllowsCustomTemperature(model)) {
       createParams.temperature = 0.7;
     }
 
     const msg = await anthropic.messages.create(createParams);
-    const replyText = msg.content.find(b => b.type === 'text')?.text ?? '';
+    // Structured via a real tool call (not free-text JSON) — the API itself
+    // guarantees a well-formed object when the model invokes it, unlike
+    // asking the model to emit raw JSON in its text response, which proved
+    // unreliable across long, iterative editing sessions (the model would
+    // sometimes preface the JSON with prose, or drift into plain text
+    // entirely after many turns).
+    const replyText = msg.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    const toolUse = msg.content.find(b => b.type === 'tool_use' && b.name === 'update_book');
+    const bookContent = toolUse?.input?.bookContent && typeof toolUse.input.bookContent === 'string' && toolUse.input.bookContent.trim()
+      ? toolUse.input.bookContent.trim()
+      : null;
 
-    if (!replyText.trim()) {
+    if (!replyText && !bookContent) {
       return res.status(200).json({ success: true, message: null });
     }
 
-    const { data: inserted, error: insertErr } = await supabase
-      .from('together_messages')
-      .insert({
-        room_id,
-        sender_id:   null,
-        sender_name: 'Claude',
-        role:        'assistant',
-        content:     replyText,
-      })
-      .select('id, content, created_at')
-      .single();
+    let inserted = null;
+    if (replyText) {
+      const { data, error: insertErr } = await supabase
+        .from('together_messages')
+        .insert({
+          room_id,
+          sender_id:   null,
+          sender_name: 'Claude',
+          role:        'assistant',
+          content:     replyText,
+        })
+        .select('id, content, created_at')
+        .single();
+      if (insertErr) throw insertErr;
+      inserted = data;
+    }
 
-    if (insertErr) throw insertErr;
+    if (bookContent && bookContent !== currentBook) {
+      const { error: bookErr } = await supabase
+        .from('together_rooms')
+        .update({ book_content: bookContent, book_updated_at: new Date().toISOString() })
+        .eq('id', room_id);
+      if (bookErr) console.error('[chat-room] Failed to update book_content:', bookErr);
+    }
 
     logCost({
       model,
