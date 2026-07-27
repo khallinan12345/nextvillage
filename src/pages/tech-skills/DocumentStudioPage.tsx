@@ -37,9 +37,9 @@ type BlockType = 'text' | 'image';
 interface TextBlock {
   type: 'text';
   id: string;
-  content: string;          // raw text (can contain newlines)
+  content: string;          // HTML content (contentEditable output)
   fontFamily: string;
-  fontSize: number;         // px
+  fontSize: number;         // px — block default
   fontWeight: 'normal' | 'bold';
   fontStyle: 'normal' | 'italic';
   textAlign: TextAlign;
@@ -244,6 +244,87 @@ const DocumentStudioPage: React.FC = () => {
   // ── Refs ────────────────────────────────────────────────────────────────────
   const canvasRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const ceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const inlineImgInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Rich-text helpers (execCommand on the active contentEditable) ──────────
+
+  const execOnSelection = useCallback((cmd: string, value?: string) => {
+    document.execCommand('styleWithCSS', false, 'true');
+    document.execCommand(cmd, false, value ?? '');
+  }, []);
+
+  const applyFontSizeToSelection = useCallback((sizePx: number) => {
+    // execCommand fontSize only takes 1-7; workaround: apply size 7, then replace
+    document.execCommand('styleWithCSS', false, 'false');
+    document.execCommand('fontSize', false, '7');
+    const el = ceRefs.current.get(selectedBlockId ?? '');
+    if (!el) return;
+    el.querySelectorAll('font[size="7"], span[style*="xxx-large"]').forEach(node => {
+      const span = document.createElement('span');
+      span.style.fontSize = `${sizePx}px`;
+      span.innerHTML = node.innerHTML;
+      node.parentNode?.replaceChild(span, node);
+    });
+    // Sync back
+    const block = selectedBlockId;
+    if (block) updateBlock(block, b => ({ ...b, content: el.innerHTML } as TextBlock));
+  }, [selectedBlockId]);
+
+  const applyFontFamilyToSelection = useCallback((family: string) => {
+    document.execCommand('styleWithCSS', false, 'true');
+    document.execCommand('fontName', false, family);
+    const el = ceRefs.current.get(selectedBlockId ?? '');
+    if (el && selectedBlockId) updateBlock(selectedBlockId, b => ({ ...b, content: el.innerHTML } as TextBlock));
+  }, [selectedBlockId]);
+
+  const applyColorToSelection = useCallback((color: string) => {
+    document.execCommand('styleWithCSS', false, 'true');
+    document.execCommand('foreColor', false, color);
+    const el = ceRefs.current.get(selectedBlockId ?? '');
+    if (el && selectedBlockId) updateBlock(selectedBlockId, b => ({ ...b, content: el.innerHTML } as TextBlock));
+  }, [selectedBlockId]);
+
+  const hasSelection = useCallback(() => {
+    const sel = window.getSelection();
+    return sel && !sel.isCollapsed;
+  }, []);
+
+  // Insert an inline image at the cursor inside a contentEditable
+  const insertInlineImage = useCallback(async (file: File) => {
+    if (!selectedBlockId) return;
+    const el = ceRefs.current.get(selectedBlockId);
+    if (!el) return;
+    el.focus();
+
+    let src: string;
+    if (user?.id) {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `doc-studio/${user.id}/${uid()}.${ext}`;
+      const { error } = await supabase.storage
+        .from('together-assets')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) {
+        src = URL.createObjectURL(file);
+      } else {
+        const { data: { publicUrl } } = supabase.storage.from('together-assets').getPublicUrl(path);
+        src = publicUrl;
+      }
+    } else {
+      src = URL.createObjectURL(file);
+    }
+
+    document.execCommand('insertImage', false, src);
+    // Style the inserted image
+    el.querySelectorAll('img').forEach(img => {
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      img.style.borderRadius = '4px';
+      img.style.margin = '4px 0';
+      img.style.display = 'block';
+    });
+    updateBlock(selectedBlockId, b => ({ ...b, content: el.innerHTML } as TextBlock));
+  }, [selectedBlockId, user?.id]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const activePage = pages[activePageIdx] ?? pages[0];
@@ -728,54 +809,97 @@ const DocumentStudioPage: React.FC = () => {
 
           for (const block of frame.blocks) {
             if (block.type === 'text' && block.content.trim()) {
-              const fontSize = Math.max(8, Math.min(block.fontSize * 0.75, 36));
-              doc.setFontSize(fontSize);
+              // Parse HTML content: extract text and inline images
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = block.content;
 
-              const isBold = block.fontWeight === 'bold';
-              const isItalic = block.fontStyle === 'italic';
-              let style = 'normal';
-              if (isBold && isItalic) style = 'bolditalic';
-              else if (isBold) style = 'bold';
-              else if (isItalic) style = 'italic';
+              // Collect inline images for separate rendering after text
+              const inlineImgs: string[] = [];
+              tempDiv.querySelectorAll('img').forEach(img => {
+                inlineImgs.push(img.getAttribute('src') || '');
+                img.replaceWith('\n'); // replace img with line break in text
+              });
 
-              const family = block.fontFamily.includes('serif') && !block.fontFamily.includes('sans')
-                ? 'times' : block.fontFamily.includes('monospace') || block.fontFamily.includes('Courier')
-                ? 'courier' : 'helvetica';
+              // Convert HTML to plain text preserving line breaks
+              const plainText = tempDiv.innerText || tempDiv.textContent || '';
 
-              doc.setFont(family, style);
+              if (plainText.trim()) {
+                const fontSize = Math.max(8, Math.min(block.fontSize * 0.75, 36));
+                doc.setFontSize(fontSize);
 
-              const hex = block.color.replace('#', '');
-              const r = parseInt(hex.substring(0, 2), 16);
-              const g = parseInt(hex.substring(2, 4), 16);
-              const b = parseInt(hex.substring(4, 6), 16);
-              doc.setTextColor(r, g, b);
+                const isBold = block.fontWeight === 'bold';
+                const isItalic = block.fontStyle === 'italic';
+                let style = 'normal';
+                if (isBold && isItalic) style = 'bolditalic';
+                else if (isBold) style = 'bold';
+                else if (isItalic) style = 'italic';
 
-              const lineH = fontSize * 0.3528 * (block.lineHeight ?? 1.6);
-              const lines: string[] = doc.splitTextToSize(block.content, colWidth);
+                const family = block.fontFamily.includes('serif') && !block.fontFamily.includes('sans')
+                  ? 'times' : block.fontFamily.includes('monospace') || block.fontFamily.includes('Courier')
+                  ? 'courier' : 'helvetica';
 
-              for (const line of lines) {
-                // Overflow → new PDF page, recalculate margins for binding side
-                if (colY + lineH > pageH - marginBotMm) {
-                  colY = addPdfPage();
-                  const m = getMarginsForPage(pdfPageNum);
-                  curColX = m.marginLeft + fIdx * (colWidth + colGapMm);
-                  // Re-apply font after page break (jsPDF carries state, but be safe)
-                  doc.setFont(family, style);
-                  doc.setFontSize(fontSize);
-                  doc.setTextColor(r, g, b);
+                doc.setFont(family, style);
+
+                const hex = block.color.replace('#', '');
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                doc.setTextColor(r, g, b);
+
+                const lineH = fontSize * 0.3528 * (block.lineHeight ?? 1.6);
+                const lines: string[] = doc.splitTextToSize(plainText, colWidth);
+
+                for (const line of lines) {
+                  if (colY + lineH > pageH - marginBotMm) {
+                    colY = addPdfPage();
+                    const m = getMarginsForPage(pdfPageNum);
+                    curColX = m.marginLeft + fIdx * (colWidth + colGapMm);
+                    doc.setFont(family, style);
+                    doc.setFontSize(fontSize);
+                    doc.setTextColor(r, g, b);
+                  }
+
+                  let textX = curColX;
+                  if (block.textAlign === 'center') textX = curColX + colWidth / 2;
+                  else if (block.textAlign === 'right') textX = curColX + colWidth;
+
+                  doc.text(line, textX, colY, {
+                    align: block.textAlign === 'center' ? 'center'
+                      : block.textAlign === 'right' ? 'right' : 'left',
+                  });
+                  colY += lineH;
                 }
-
-                let textX = curColX;
-                if (block.textAlign === 'center') textX = curColX + colWidth / 2;
-                else if (block.textAlign === 'right') textX = curColX + colWidth;
-
-                doc.text(line, textX, colY, {
-                  align: block.textAlign === 'center' ? 'center'
-                    : block.textAlign === 'right' ? 'right' : 'left',
-                });
-                colY += lineH;
+                colY += 3;
               }
-              colY += 3;
+
+              // Render inline images found in the HTML
+              for (const imgSrc of inlineImgs) {
+                if (!imgSrc) continue;
+                try {
+                  const res = await fetch(imgSrc);
+                  const blob = await res.blob();
+                  const base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = () => reject(new Error('read failed'));
+                    reader.readAsDataURL(blob);
+                  });
+                  const format = blob.type.includes('png') ? 'PNG' : 'JPEG';
+                  const props = doc.getImageProperties(base64);
+                  const ratio = props.width / props.height;
+                  let dispWidth = colWidth * 0.8;
+                  let dispHeight = dispWidth / ratio;
+                  const contentH = pageH - marginTopMm - marginBotMm;
+                  if (dispHeight > contentH * 0.4) { dispHeight = contentH * 0.4; dispWidth = dispHeight * ratio; }
+                  if (colY + dispHeight > pageH - marginBotMm) {
+                    colY = addPdfPage();
+                    const m = getMarginsForPage(pdfPageNum);
+                    curColX = m.marginLeft + fIdx * (colWidth + colGapMm);
+                  }
+                  doc.addImage(base64, format, curColX + (colWidth - dispWidth) / 2, colY, dispWidth, dispHeight);
+                  colY += dispHeight + 3;
+                } catch { /* skip failed inline images */ }
+              }
 
             } else if (block.type === 'image') {
               try {
@@ -910,6 +1034,28 @@ const DocumentStudioPage: React.FC = () => {
         .text-editing {
           outline: 2px solid #8b5cf6 !important;
           background: rgba(139, 92, 246, 0.04);
+        }
+        .rich-text-block:focus {
+          outline: 2px solid #8b5cf6;
+          background: rgba(139, 92, 246, 0.04);
+        }
+        .rich-text-block:empty::before,
+        .rich-text-block.empty-block:not(:focus)::before {
+          content: attr(data-placeholder);
+          color: #94a3b8;
+          font-style: italic;
+          pointer-events: none;
+        }
+        .rich-text-block img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 4px;
+          margin: 4px 0;
+          display: block;
+          cursor: pointer;
+        }
+        .rich-text-block img:hover {
+          outline: 2px solid #3b82f6;
         }
         .page-thumb {
           transition: all 0.15s ease;
@@ -1221,42 +1367,52 @@ const DocumentStudioPage: React.FC = () => {
 
                           {/* Render block */}
                           {block.type === 'text' ? (
-                            selectedBlockId === block.id ? (
-                              <textarea
-                                autoFocus
-                                value={block.content}
-                                onChange={e => updateBlock(block.id, b => ({ ...b, content: e.target.value } as TextBlock))}
-                                onMouseDown={e => e.stopPropagation()}
-                                onKeyDown={e => e.stopPropagation()}
-                                onFocus={e => e.stopPropagation()}
-                                onBlur={() => { pushUndo(); }}
-                                placeholder="Start typing…"
-                                className="w-full min-h-[60px] max-h-[400px] overflow-y-auto bg-transparent resize-y outline-none p-2 cursor-text"
-                                style={{
-                                  fontFamily: block.fontFamily,
-                                  fontSize: block.fontSize,
-                                  fontWeight: block.fontWeight,
-                                  fontStyle: block.fontStyle,
-                                  textAlign: block.textAlign,
-                                  color: block.color,
-                                  lineHeight: block.lineHeight,
-                                }}
-                              />
-                            ) : (
-                              <div
-                                className={classNames('p-2 min-h-[30px] max-h-[400px] overflow-y-auto cursor-text whitespace-pre-wrap', !block.content && 'text-slate-300 italic')}
-                                style={{
-                                  fontFamily: block.fontFamily,
-                                  fontSize: block.fontSize,
-                                  fontWeight: block.fontWeight,
-                                  fontStyle: block.fontStyle,
-                                  textAlign: block.textAlign,
-                                  color: block.content ? block.color : undefined,
-                                  lineHeight: block.lineHeight,
-                                }}>
-                                {block.content || 'Click to edit…'}
-                              </div>
-                            )
+                            <div
+                              ref={el => { if (el) ceRefs.current.set(block.id, el); else ceRefs.current.delete(block.id); }}
+                              contentEditable={studioView === 'edit'}
+                              suppressContentEditableWarning
+                              onInput={e => {
+                                const html = (e.currentTarget as HTMLDivElement).innerHTML;
+                                updateBlock(block.id, b => ({ ...b, content: html } as TextBlock));
+                              }}
+                              onBlur={() => pushUndo()}
+                              onMouseDown={e => e.stopPropagation()}
+                              onKeyDown={e => e.stopPropagation()}
+                              onClick={e => e.stopPropagation()}
+                              onPaste={e => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const html = e.clipboardData.getData('text/html');
+                                const text = e.clipboardData.getData('text/plain');
+                                if (html) {
+                                  document.execCommand('insertHTML', false, html);
+                                } else {
+                                  document.execCommand('insertText', false, text);
+                                }
+                              }}
+                              data-placeholder="Start typing…"
+                              className={classNames(
+                                'p-2 min-h-[40px] outline-none cursor-text rich-text-block',
+                                !block.content && 'empty-block',
+                                !block.content && !selectedBlockId && 'text-slate-300 italic',
+                              )}
+                              style={{
+                                fontFamily: block.fontFamily,
+                                fontSize: block.fontSize,
+                                fontWeight: block.fontWeight,
+                                fontStyle: block.fontStyle,
+                                textAlign: block.textAlign,
+                                color: block.color,
+                                lineHeight: block.lineHeight,
+                                wordBreak: 'break-word',
+                              }}
+                              dangerouslySetInnerHTML={
+                                // Only set HTML from state when NOT focused (avoids cursor jump)
+                                document.activeElement !== ceRefs.current.get(block.id)
+                                  ? { __html: block.content || '' }
+                                  : undefined
+                              }
+                            />
                           ) : block.type === 'image' ? (
                             <div className="relative">
                               <img
@@ -1316,8 +1472,16 @@ const DocumentStudioPage: React.FC = () => {
                   <div>
                     <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Font</label>
                     <select
+                      onMouseDown={e => { if (hasSelection()) e.preventDefault(); }}
                       value={selectedBlock.fontFamily}
-                      onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontFamily: e.target.value } as TextBlock))}
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (hasSelection()) {
+                          applyFontFamilyToSelection(val);
+                        } else {
+                          updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontFamily: val } as TextBlock));
+                        }
+                      }}
                       className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
                       {FONT_FAMILIES.map(f => (
                         <option key={f} value={f} style={{ fontFamily: f }}>{f.split(',')[0]}</option>
@@ -1329,8 +1493,16 @@ const DocumentStudioPage: React.FC = () => {
                   <div>
                     <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Size</label>
                     <select
+                      onMouseDown={e => { if (hasSelection()) e.preventDefault(); }}
                       value={selectedBlock.fontSize}
-                      onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontSize: Number(e.target.value) } as TextBlock))}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (hasSelection()) {
+                          applyFontSizeToSelection(val);
+                        } else {
+                          updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontSize: val } as TextBlock));
+                        }
+                      }}
                       className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
                       {FONT_SIZES.map(s => (
                         <option key={s} value={s}>{s}px</option>
@@ -1343,13 +1515,31 @@ const DocumentStudioPage: React.FC = () => {
                     <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Style</label>
                     <div className="flex gap-1 mt-1">
                       <button
-                        onClick={() => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontWeight: (b as TextBlock).fontWeight === 'bold' ? 'normal' : 'bold' } as TextBlock))}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          if (hasSelection()) {
+                            execOnSelection('bold');
+                            const el = ceRefs.current.get(selectedBlockId!);
+                            if (el) updateBlock(selectedBlockId!, b => ({ ...b, content: el.innerHTML } as TextBlock));
+                          } else {
+                            updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontWeight: (b as TextBlock).fontWeight === 'bold' ? 'normal' : 'bold' } as TextBlock));
+                          }
+                        }}
                         className={classNames('flex-1 flex items-center justify-center py-1.5 rounded-md text-xs font-semibold transition-colors',
                           selectedBlock.fontWeight === 'bold' ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white')}>
                         <Bold size={13} />
                       </button>
                       <button
-                        onClick={() => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontStyle: (b as TextBlock).fontStyle === 'italic' ? 'normal' : 'italic' } as TextBlock))}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          if (hasSelection()) {
+                            execOnSelection('italic');
+                            const el = ceRefs.current.get(selectedBlockId!);
+                            if (el) updateBlock(selectedBlockId!, b => ({ ...b, content: el.innerHTML } as TextBlock));
+                          } else {
+                            updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontStyle: (b as TextBlock).fontStyle === 'italic' ? 'normal' : 'italic' } as TextBlock));
+                          }
+                        }}
                         className={classNames('flex-1 flex items-center justify-center py-1.5 rounded-md text-xs font-semibold transition-colors',
                           selectedBlock.fontStyle === 'italic' ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white')}>
                         <Italic size={13} />
@@ -1367,6 +1557,7 @@ const DocumentStudioPage: React.FC = () => {
                         { align: 'right' as TextAlign, icon: AlignRight },
                       ]).map(({ align, icon: Icon }) => (
                         <button key={align}
+                          onMouseDown={e => e.preventDefault()}
                           onClick={() => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, textAlign: align } as TextBlock))}
                           className={classNames('flex-1 flex items-center justify-center py-1.5 rounded-md text-xs transition-colors',
                             selectedBlock.textAlign === align ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white')}>
@@ -1382,14 +1573,25 @@ const DocumentStudioPage: React.FC = () => {
                     <div className="flex items-center gap-2 mt-1">
                       <input
                         type="color"
+                        onMouseDown={e => { if (hasSelection()) e.preventDefault(); }}
                         value={selectedBlock.color}
-                        onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, color: e.target.value } as TextBlock))}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (hasSelection()) {
+                            applyColorToSelection(val);
+                          } else {
+                            updateBlockWithUndo(selectedBlockId!, b => ({ ...b, color: val } as TextBlock));
+                          }
+                        }}
                         className="w-8 h-8 rounded-md border border-slate-700 cursor-pointer bg-transparent"
                       />
                       <input
                         type="text"
                         value={selectedBlock.color}
-                        onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, color: e.target.value } as TextBlock))}
+                        onChange={e => {
+                          const val = e.target.value;
+                          updateBlockWithUndo(selectedBlockId!, b => ({ ...b, color: val } as TextBlock));
+                        }}
                         className="flex-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400"
                       />
                     </div>
@@ -1400,11 +1602,28 @@ const DocumentStudioPage: React.FC = () => {
                     <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Line Height</label>
                     <input
                       type="range" min="1" max="2.5" step="0.1"
+                      onMouseDown={e => e.preventDefault()}
                       value={selectedBlock.lineHeight}
                       onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, lineHeight: Number(e.target.value) } as TextBlock))}
                       className="w-full mt-1 accent-violet-500"
                     />
                     <span className="text-[10px] text-slate-500">{selectedBlock.lineHeight}×</span>
+                  </div>
+
+                  {/* Insert inline image */}
+                  <div className="pt-2 border-t border-slate-700/50">
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Insert Image at Cursor</label>
+                    <label
+                      onMouseDown={e => e.preventDefault()}
+                      className="mt-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition-colors">
+                      <ImageIcon size={13} /> Choose Image
+                      <input ref={inlineImgInputRef} type="file" accept="image/*" className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          e.target.value = '';
+                          if (file) insertInlineImage(file);
+                        }} />
+                    </label>
                   </div>
                 </div>
               ) : selectedBlock && selectedBlock.type === 'image' ? (
@@ -1439,7 +1658,7 @@ const DocumentStudioPage: React.FC = () => {
                 <div className="p-4 text-center">
                   <Type size={24} className="mx-auto mb-2 text-slate-600 opacity-40" />
                   <p className="text-xs text-slate-500">Select a text or image block to see its properties.</p>
-                  <p className="text-[10px] text-slate-600 mt-1">Click a text block to start editing.</p>
+                  <p className="text-[10px] text-slate-600 mt-1">Select text to format just that selection.</p>
                 </div>
               )}
 
