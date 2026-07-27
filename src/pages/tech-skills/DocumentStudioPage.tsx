@@ -196,7 +196,6 @@ const DocumentStudioPage: React.FC = () => {
   // ── Selection state ─────────────────────────────────────────────────────────
   const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
 
   // ── View mode ───────────────────────────────────────────────────────────────
   const [studioView, setStudioView] = useState<'edit' | 'preview' | 'history'>('edit');
@@ -271,14 +270,16 @@ const DocumentStudioPage: React.FC = () => {
         e.preventDefault();
         handleSaveProject();
       }
-      if (e.key === 'Delete' && selectedBlockId && !editingBlockId) {
+      if (e.key === 'Delete' && selectedBlockId) {
+        const tag = (document.activeElement as HTMLElement)?.tagName;
+        if (tag === 'TEXTAREA' || tag === 'INPUT') return; // let normal editing work
         e.preventDefault();
         removeBlock(selectedBlockId);
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleUndo, handleRedo, selectedBlockId, editingBlockId]);
+  }, [handleUndo, handleRedo, selectedBlockId]);
 
   // ── Collaboration: broadcast page changes ─────────────────────────────────
   useEffect(() => {
@@ -439,7 +440,6 @@ const DocumentStudioPage: React.FC = () => {
     }));
     setPages(updated);
     setSelectedBlockId(block.id);
-    setEditingBlockId(block.id);
     broadcastPageUpdate(updated);
   };
 
@@ -468,7 +468,6 @@ const DocumentStudioPage: React.FC = () => {
     }));
     setPages(updated);
     if (selectedBlockId === blockId) setSelectedBlockId(null);
-    if (editingBlockId === blockId) setEditingBlockId(null);
     broadcastPageUpdate(updated);
   };
 
@@ -632,7 +631,6 @@ const DocumentStudioPage: React.FC = () => {
       setCollabProjectId(project.id);
       setStudioView('edit');
       setSelectedBlockId(null);
-      setEditingBlockId(null);
       setUndoStack([]);
       setRedoStack([]);
     } catch {
@@ -1174,7 +1172,7 @@ const DocumentStudioPage: React.FC = () => {
                   padding: activePage.marginPx,
                   backgroundColor: activePage.backgroundColor,
                 }}
-                onClick={() => { setSelectedBlockId(null); setEditingBlockId(null); setSelectedFrameId(null); }}>
+                onClick={() => { setSelectedBlockId(null); setSelectedFrameId(null); }}>
 
                 <div className="flex gap-0" style={{ gap: activePage.gapPx }}>
                   {activePage.frames.map(frame => (
@@ -1191,36 +1189,30 @@ const DocumentStudioPage: React.FC = () => {
                           className={classNames(
                             'block-wrapper mb-2',
                             selectedBlockId === block.id && 'selected',
-                            editingBlockId === block.id && 'text-editing',
+                            selectedBlockId === block.id && block.type === 'text' && 'text-editing',
                           )}
                           onClick={e => {
                             e.stopPropagation();
                             setSelectedBlockId(block.id);
                             setSelectedFrameId(frame.id);
-                          }}
-                          onDoubleClick={e => {
-                            e.stopPropagation();
-                            if (block.type === 'text') {
-                              setEditingBlockId(block.id);
-                            }
                           }}>
 
                           {/* Block toolbar */}
                           <div className="block-toolbar absolute -top-6 left-0 right-0 flex items-center gap-1 z-10">
                             <div className="flex items-center gap-0.5 bg-slate-900 rounded-md px-1 py-0.5 shadow-lg border border-slate-700">
                               {blockIdx > 0 && (
-                                <button onClick={e => { e.stopPropagation(); moveBlockInFrame(frame.id, block.id, -1); }}
+                                <button onMouseDown={e => e.preventDefault()} onClick={e => { e.stopPropagation(); moveBlockInFrame(frame.id, block.id, -1); }}
                                   className="p-0.5 text-slate-400 hover:text-white" title="Move up">
                                   <ChevronLeft size={10} />
                                 </button>
                               )}
                               {blockIdx < frame.blocks.length - 1 && (
-                                <button onClick={e => { e.stopPropagation(); moveBlockInFrame(frame.id, block.id, 1); }}
+                                <button onMouseDown={e => e.preventDefault()} onClick={e => { e.stopPropagation(); moveBlockInFrame(frame.id, block.id, 1); }}
                                   className="p-0.5 text-slate-400 hover:text-white" title="Move down">
                                   <ChevronRight size={10} />
                                 </button>
                               )}
-                              <button onClick={e => { e.stopPropagation(); removeBlock(block.id); }}
+                              <button onMouseDown={e => e.preventDefault()} onClick={e => { e.stopPropagation(); removeBlock(block.id); }}
                                 className="p-0.5 text-slate-400 hover:text-red-400" title="Delete block">
                                 <Trash2 size={10} />
                               </button>
@@ -1229,14 +1221,17 @@ const DocumentStudioPage: React.FC = () => {
 
                           {/* Render block */}
                           {block.type === 'text' ? (
-                            editingBlockId === block.id ? (
+                            selectedBlockId === block.id ? (
                               <textarea
                                 autoFocus
                                 value={block.content}
                                 onChange={e => updateBlock(block.id, b => ({ ...b, content: e.target.value } as TextBlock))}
-                                onBlur={() => { pushUndo(); setEditingBlockId(null); }}
-                                placeholder="Type your text here…"
-                                className="w-full min-h-[60px] max-h-[400px] overflow-y-auto bg-transparent resize-y outline-none p-2"
+                                onMouseDown={e => e.stopPropagation()}
+                                onKeyDown={e => e.stopPropagation()}
+                                onFocus={e => e.stopPropagation()}
+                                onBlur={() => { pushUndo(); }}
+                                placeholder="Start typing…"
+                                className="w-full min-h-[60px] max-h-[400px] overflow-y-auto bg-transparent resize-y outline-none p-2 cursor-text"
                                 style={{
                                   fontFamily: block.fontFamily,
                                   fontSize: block.fontSize,
@@ -1259,7 +1254,7 @@ const DocumentStudioPage: React.FC = () => {
                                   color: block.content ? block.color : undefined,
                                   lineHeight: block.lineHeight,
                                 }}>
-                                {block.content || 'Double-click to edit…'}
+                                {block.content || 'Click to edit…'}
                               </div>
                             )
                           ) : block.type === 'image' ? (
@@ -1444,7 +1439,7 @@ const DocumentStudioPage: React.FC = () => {
                 <div className="p-4 text-center">
                   <Type size={24} className="mx-auto mb-2 text-slate-600 opacity-40" />
                   <p className="text-xs text-slate-500">Select a text or image block to see its properties.</p>
-                  <p className="text-[10px] text-slate-600 mt-1">Double-click text to start editing.</p>
+                  <p className="text-[10px] text-slate-600 mt-1">Click a text block to start editing.</p>
                 </div>
               )}
 
@@ -1542,4 +1537,4 @@ Add to your router (e.g. App.tsx):
   <Route path="/tech-skills/document-studio" element={<DocumentStudioPage />} />
 
 ────────────────────────────────────────────────────────────────────────────────
-*/ 
+*/
