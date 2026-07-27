@@ -1010,12 +1010,12 @@ LANGUAGE RULES:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + VIZ_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + VIZ_INSTRUCTIONS;
       const welcome = await chatText({
         page: 'MathSkillsPage',
         messages: [{ role: 'user', content: `The student has chosen to practice "${selectedStage.name}" using the context of: "${t}". Give a warm 2-sentence welcome and pose your very first math question or challenge, grounded in their context. Be encouraging and make it feel like an adventure.` }],
         system: sysPrompt,
-        max_tokens: 700,
+        max_tokens: 1200,
       });
       const welcomeMsg: ChatMessage = {
         id: crypto.randomUUID(), role: 'assistant',
@@ -1059,12 +1059,12 @@ LANGUAGE RULES:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + VIZ_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + VIZ_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'MathSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
         system: sysPrompt,
-        max_tokens: 700,
+        max_tokens: 1200,
       });
       const aiMsg: ChatMessage = {
         id: crypto.randomUUID(), role: 'assistant',
