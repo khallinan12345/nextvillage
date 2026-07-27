@@ -231,6 +231,7 @@ const DocumentStudioPage: React.FC = () => {
     const prev = undoStack[undoStack.length - 1];
     setUndoStack(s => s.slice(0, -1));
     setPages(prev);
+    setCeVersion(v => v + 1);
   }, [undoStack, pages]);
 
   const handleRedo = useCallback(() => {
@@ -239,6 +240,7 @@ const DocumentStudioPage: React.FC = () => {
     const next = redoStack[0];
     setRedoStack(s => s.slice(1));
     setPages(next);
+    setCeVersion(v => v + 1);
   }, [redoStack, pages]);
 
   // ── Refs ────────────────────────────────────────────────────────────────────
@@ -246,6 +248,25 @@ const DocumentStudioPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const inlineImgInputRef = useRef<HTMLInputElement>(null);
+
+  // Version counter — bumped on undo/redo/load/collab to force content sync
+  const [ceVersion, setCeVersion] = useState(0);
+
+  // Sync React state → contentEditable innerHTML (runs on undo/redo/load/collab)
+  useEffect(() => {
+    for (const page of pages) {
+      for (const frame of page.frames) {
+        for (const block of frame.blocks) {
+          if (block.type !== 'text') continue;
+          const el = ceRefs.current.get(block.id);
+          if (!el || el === document.activeElement) continue;
+          if (el.innerHTML !== block.content) {
+            el.innerHTML = block.content || '';
+          }
+        }
+      }
+    }
+  }, [ceVersion]);
 
   // ── Rich-text helpers (execCommand on the active contentEditable) ──────────
 
@@ -374,6 +395,7 @@ const DocumentStudioPage: React.FC = () => {
       .on('broadcast', { event: 'page-update' }, ({ payload }) => {
         if (payload.userId !== user.id) {
           setPages(payload.pages);
+          setCeVersion(v => v + 1);
         }
       })
       .on('broadcast', { event: 'cursor-move' }, ({ payload }) => {
@@ -714,6 +736,7 @@ const DocumentStudioPage: React.FC = () => {
       setSelectedBlockId(null);
       setUndoStack([]);
       setRedoStack([]);
+      setCeVersion(v => v + 1);
     } catch {
       alert('Could not load project — data may be corrupt.');
     }
@@ -1039,8 +1062,7 @@ const DocumentStudioPage: React.FC = () => {
           outline: 2px solid #8b5cf6;
           background: rgba(139, 92, 246, 0.04);
         }
-        .rich-text-block:empty::before,
-        .rich-text-block.empty-block:not(:focus)::before {
+        .rich-text-block:empty::before {
           content: attr(data-placeholder);
           color: #94a3b8;
           font-style: italic;
@@ -1368,20 +1390,37 @@ const DocumentStudioPage: React.FC = () => {
                           {/* Render block */}
                           {block.type === 'text' ? (
                             <div
-                              ref={el => { if (el) ceRefs.current.set(block.id, el); else ceRefs.current.delete(block.id); }}
+                              ref={el => {
+                                if (el) {
+                                  ceRefs.current.set(block.id, el);
+                                  // Set initial content if empty DOM but state has content
+                                  if (!el.innerHTML && block.content) {
+                                    el.innerHTML = block.content;
+                                  }
+                                } else {
+                                  ceRefs.current.delete(block.id);
+                                }
+                              }}
                               contentEditable={studioView === 'edit'}
                               suppressContentEditableWarning
-                              onInput={e => {
-                                const html = (e.currentTarget as HTMLDivElement).innerHTML;
-                                updateBlock(block.id, b => ({ ...b, content: html } as TextBlock));
+                              onInput={() => {
+                                // Sync contentEditable DOM → React state (for save/collab)
+                                const el = ceRefs.current.get(block.id);
+                                if (el) {
+                                  const html = el.innerHTML;
+                                  updateBlock(block.id, b => ({ ...b, content: html } as TextBlock));
+                                }
                               }}
                               onBlur={() => pushUndo()}
                               onMouseDown={e => e.stopPropagation()}
                               onKeyDown={e => e.stopPropagation()}
-                              onClick={e => e.stopPropagation()}
+                              onFocus={() => {
+                                // Ensure this block is selected so properties panel shows
+                                setSelectedBlockId(block.id);
+                                setSelectedFrameId(frame.id);
+                              }}
                               onPaste={e => {
                                 e.preventDefault();
-                                e.stopPropagation();
                                 const html = e.clipboardData.getData('text/html');
                                 const text = e.clipboardData.getData('text/plain');
                                 if (html) {
@@ -1391,11 +1430,7 @@ const DocumentStudioPage: React.FC = () => {
                                 }
                               }}
                               data-placeholder="Start typing…"
-                              className={classNames(
-                                'p-2 min-h-[40px] outline-none cursor-text rich-text-block',
-                                !block.content && 'empty-block',
-                                !block.content && !selectedBlockId && 'text-slate-300 italic',
-                              )}
+                              className="p-2 min-h-[40px] max-h-[500px] overflow-y-auto outline-none cursor-text rich-text-block"
                               style={{
                                 fontFamily: block.fontFamily,
                                 fontSize: block.fontSize,
@@ -1406,12 +1441,6 @@ const DocumentStudioPage: React.FC = () => {
                                 lineHeight: block.lineHeight,
                                 wordBreak: 'break-word',
                               }}
-                              dangerouslySetInnerHTML={
-                                // Only set HTML from state when NOT focused (avoids cursor jump)
-                                document.activeElement !== ceRefs.current.get(block.id)
-                                  ? { __html: block.content || '' }
-                                  : undefined
-                              }
                             />
                           ) : block.type === 'image' ? (
                             <div className="relative">
