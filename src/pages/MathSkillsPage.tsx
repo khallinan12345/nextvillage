@@ -15,6 +15,7 @@ import { useVoice } from '../hooks/useVoice';
 import { PidginTooltip } from '../components/PidginTooltip';
 import { VoiceFallback } from '../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
+import { parseVizContent, stripVizForSpeech, MathVizRenderer, VIZ_INSTRUCTIONS } from '../components/MathViz';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -522,18 +523,18 @@ const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
 // ─── MessageContent renderer ──────────────────────────────────────────────────
 
 const MessageContent: React.FC<{ content: string }> = ({ content }) => {
-  const lines = content.split('\n');
+  const segments = parseVizContent(content);
   return (
     <div className="space-y-1">
-      {lines.map((line, i) => {
-        if (line.startsWith('✅')) {
-          return (
-            <p key={i} className="text-green-700 font-semibold">
-              {line}
-            </p>
-          );
-        }
-        return <p key={i}>{line}</p>;
+      {segments.map((seg, s) => {
+        if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={s} spec={seg.spec} />;
+        return (seg.text ?? '').split('\n').map((line, i) => {
+          if (!line.trim()) return null;
+          if (line.startsWith('✅')) {
+            return <p key={`${s}-${i}`} className="text-green-700 font-semibold">{line}</p>;
+          }
+          return <p key={`${s}-${i}`}>{line}</p>;
+        });
       })}
     </div>
   );
@@ -847,7 +848,7 @@ const MathSkillsPage: React.FC = () => {
 
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (last?.role === 'assistant') speak(last.content);
+    if (last?.role === 'assistant') speak(stripVizForSpeech(last.content));
   }, [messages, speak]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -1009,12 +1010,12 @@ LANGUAGE RULES:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + VIZ_INSTRUCTIONS;
       const welcome = await chatText({
         page: 'MathSkillsPage',
         messages: [{ role: 'user', content: `The student has chosen to practice "${selectedStage.name}" using the context of: "${t}". Give a warm 2-sentence welcome and pose your very first math question or challenge, grounded in their context. Be encouraging and make it feel like an adventure.` }],
         system: sysPrompt,
-        max_tokens: 400,
+        max_tokens: 700,
       });
       const welcomeMsg: ChatMessage = {
         id: crypto.randomUUID(), role: 'assistant',
@@ -1058,12 +1059,12 @@ LANGUAGE RULES:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + VIZ_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'MathSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
         system: sysPrompt,
-        max_tokens: 400,
+        max_tokens: 700,
       });
       const aiMsg: ChatMessage = {
         id: crypto.randomUUID(), role: 'assistant',
@@ -1556,7 +1557,7 @@ LANGUAGE RULES:
                   >
                     <MessageContent content={msg.content} />
                     {msg.role === 'assistant' && (
-                      <AIPidginCoachWrapper englishText={msg.content} />
+                      <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
                     )}
                   </div>
                 </div>
