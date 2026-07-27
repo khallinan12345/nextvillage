@@ -25,6 +25,7 @@ import { useVoice } from '../hooks/useVoice';
 import { PidginTooltip } from '../components/PidginTooltip';
 import { VoiceFallback } from '../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
+import { parseVizContent, stripVizForSpeech, MathVizRenderer, VIZ_INSTRUCTIONS } from '../components/MathViz';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -687,11 +688,14 @@ const renderInline = (text: string, key: string | number): React.ReactNode => {
 };
 
 const MessageContent: React.FC<{ content: string }> = ({ content }) => {
-  // Split into blocks separated by blank lines
-  const blocks = content.split(/\n{2,}/);
+  const vizSegments = parseVizContent(content);
   return (
     <div className="space-y-3">
-      {blocks.map((block, bi) => {
+      {vizSegments.map((seg, s) => {
+        if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={s} spec={seg.spec} />;
+        // Text segment — run through the existing block renderer
+        const blocks = (seg.text ?? '').split(/\n{2,}/);
+        return blocks.map((block, bi) => {
         const lines = block.split('\n').filter(l => l !== '');
         if (lines.length === 0) return null;
 
@@ -728,6 +732,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
             ))}
           </p>
         );
+        });
       })}
     </div>
   );
@@ -1018,7 +1023,7 @@ const ScienceSkillsPage: React.FC = () => {
   useEffect(() => { if (view !== 'topic') hasSpokenIntro.current = false; }, [view]);
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (last?.role === 'assistant') speak(last.content);
+    if (last?.role === 'assistant') speak(stripVizForSpeech(last.content));
   }, [messages, speak]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -1212,11 +1217,11 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     const withUser = [...messages, userMsg];
     setMessages(withUser);
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel) + VIZ_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'ScienceSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
-        system: sysPrompt, max_tokens: 400,
+        system: sysPrompt, max_tokens: 1200,
       });
       const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: aiText, timestamp: new Date().toISOString() };
       const finalMsgs = [...withUser, aiMsg];
@@ -1762,7 +1767,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     ${msg.role === 'user' ? 'bg-slate-700 text-white rounded-tr-sm' : 'bg-gray-50 border border-gray-200 text-gray-800 rounded-tl-sm'}`}>
                     <MessageContent content={msg.content} />
                     {msg.role === 'assistant' && (
-                      <AIPidginCoachWrapper englishText={msg.content} />
+                      <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
                     )}
                   </div>
                 </div>
