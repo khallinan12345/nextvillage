@@ -406,12 +406,11 @@ const DocumentStudioPage: React.FC = () => {
           ),
         }));
         setPages(updated);
-        broadcastPageUpdate(updated);
         return newBlock.id;
       }
     }
     return null;
-  }, [pages, broadcastPageUpdate]);
+  }, [pages]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const activePage = pages[activePageIdx] ?? pages[0];
