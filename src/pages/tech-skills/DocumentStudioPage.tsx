@@ -16,6 +16,7 @@ import React, {
 } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import classNames from 'classnames';
@@ -87,6 +88,7 @@ interface SavedProject {
   name: string;
   savedAt: string;
   projectData: Omit<DocProject, 'id'> | null;
+  ownerId?: string | null;
 }
 
 // ─── Collaborator type for presence ───────────────────────────────────────────
@@ -186,7 +188,25 @@ const makePage = (columns: ColumnLayout = 1): DocPage => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const DocumentStudioPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // ── Org resolution (same pattern as PlaygroundTogetherPage) ────────────────
+  const [effectiveOrgId, setEffectiveOrgId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { navigate('/home', { replace: true }); return; }
+    supabase
+      .rpc('get_my_effective_profile')
+      .then(({ data }) => {
+        const orgId = data?.[0]?.organization_id ?? null;
+        setEffectiveOrgId(orgId);
+        setAuthChecked(true);
+        if (!orgId) navigate('/home', { replace: true });
+      });
+  }, [user, authLoading, navigate]);
 
   // ── Project state ───────────────────────────────────────────────────────────
   const [projectName, setProjectName] = useState('Untitled Document');
@@ -312,40 +332,86 @@ const DocumentStudioPage: React.FC = () => {
   }, []);
 
   // Insert an inline image at the cursor inside a contentEditable
-  const insertInlineImage = useCallback(async (file: File) => {
-    if (!selectedBlockId) return;
-    const el = ceRefs.current.get(selectedBlockId);
-    if (!el) return;
-    el.focus();
-
-    let src: string;
+  // Upload a file to Supabase storage and return the public URL (or fallback to object URL)
+  const uploadImageFile = useCallback(async (file: File): Promise<string> => {
     if (user?.id) {
       const ext = file.name.split('.').pop() || 'png';
       const path = `doc-studio/${user.id}/${uid()}.${ext}`;
       const { error } = await supabase.storage
         .from('together-assets')
         .upload(path, file, { contentType: file.type, upsert: false });
-      if (error) {
-        src = URL.createObjectURL(file);
-      } else {
+      if (!error) {
         const { data: { publicUrl } } = supabase.storage.from('together-assets').getPublicUrl(path);
-        src = publicUrl;
+        return publicUrl;
       }
-    } else {
-      src = URL.createObjectURL(file);
+    }
+    return URL.createObjectURL(file);
+  }, [user?.id]);
+
+  // Insert an image inline into a text block's contentEditable
+  // If targetBlockId is given, use that block; otherwise use selectedBlockId.
+  // If the block has no cursor, the image appends at the end.
+  const insertInlineImage = useCallback(async (file: File, targetBlockId?: string) => {
+    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)) {
+      alert('Please choose a PNG, JPEG, GIF, or WEBP image.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image is too large — please choose one under 10 MB.');
+      return;
     }
 
-    document.execCommand('insertImage', false, src);
-    // Style the inserted image
-    el.querySelectorAll('img').forEach(img => {
-      img.style.maxWidth = '100%';
-      img.style.height = 'auto';
-      img.style.borderRadius = '4px';
-      img.style.margin = '4px 0';
-      img.style.display = 'block';
-    });
-    updateBlock(selectedBlockId, b => ({ ...b, content: el.innerHTML } as TextBlock));
-  }, [selectedBlockId, user?.id]);
+    const blockId = targetBlockId || selectedBlockId;
+    if (!blockId) return;
+    const el = ceRefs.current.get(blockId);
+    if (!el) return;
+
+    pushUndo();
+    const src = await uploadImageFile(file);
+
+    // Build the image HTML
+    const imgHtml = `<img src="${src}" alt="${file.name}" style="max-width:100%;height:auto;border-radius:4px;margin:8px 0;display:block;cursor:grab;" />`;
+
+    // Focus the contentEditable
+    el.focus();
+
+    // Try to insert at cursor position using execCommand
+    const sel = window.getSelection();
+    const hasActiveCursor = sel && sel.rangeCount > 0 && el.contains(sel.anchorNode);
+
+    if (hasActiveCursor) {
+      document.execCommand('insertHTML', false, imgHtml);
+    } else {
+      // No cursor in this block — append at end
+      el.innerHTML += imgHtml;
+    }
+
+    // Sync back to state
+    updateBlock(blockId, b => ({ ...b, content: el.innerHTML } as TextBlock));
+  }, [selectedBlockId, uploadImageFile, pushUndo]);
+
+  // Find the first text block in a frame, or create one if none exist
+  const getOrCreateTextBlockInFrame = useCallback((frameId: string): string | null => {
+    for (const page of pages) {
+      for (const frame of page.frames) {
+        if (frame.id !== frameId) continue;
+        const textBlock = frame.blocks.find(b => b.type === 'text');
+        if (textBlock) return textBlock.id;
+        // No text block — create one
+        const newBlock = makeTextBlock();
+        const updated = pages.map(p => ({
+          ...p,
+          frames: p.frames.map(f =>
+            f.id === frameId ? { ...f, blocks: [newBlock, ...f.blocks] } : f
+          ),
+        }));
+        setPages(updated);
+        broadcastPageUpdate(updated);
+        return newBlock.id;
+      }
+    }
+    return null;
+  }, [pages, broadcastPageUpdate]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const activePage = pages[activePageIdx] ?? pages[0];
@@ -359,7 +425,7 @@ const DocumentStudioPage: React.FC = () => {
   }, [activePage, selectedBlockId]);
 
   // ── Load projects on mount ────────────────────────────────────────────────
-  useEffect(() => { if (user?.id) loadProjects(); }, [user?.id]);
+  useEffect(() => { if (authChecked && effectiveOrgId) loadProjects(); }, [authChecked, effectiveOrgId]);
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useEffect(() => {
@@ -593,44 +659,26 @@ const DocumentStudioPage: React.FC = () => {
     broadcastPageUpdate(updated);
   };
 
-  // ── Image upload ──────────────────────────────────────────────────────────
+  // ── Image upload (inserts inline into a text block) ────────────────────────
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, frameId: string) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file || !user?.id) return;
 
-    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)) {
-      alert('Please choose a PNG, JPEG, GIF, or WEBP image.');
-      return;
+    // Find the target text block: use selectedBlockId if it's in this frame, else first text block
+    let targetId = selectedBlockId;
+    const frameBlocks = pages.flatMap(p => p.frames).find(f => f.id === frameId)?.blocks ?? [];
+    const selectedInFrame = targetId && frameBlocks.some(b => b.id === targetId && b.type === 'text');
+    if (!selectedInFrame) {
+      targetId = getOrCreateTextBlockInFrame(frameId);
     }
-    if (file.size > 10 * 1024 * 1024) {
-      alert('Image is too large — please choose one under 10 MB.');
-      return;
-    }
+    if (!targetId) return;
 
-    // Upload to Supabase storage
-    const ext = file.name.split('.').pop() || 'png';
-    const path = `doc-studio/${user.id}/${uid()}.${ext}`;
-    const { error: uploadErr } = await supabase.storage
-      .from('together-assets')
-      .upload(path, file, { contentType: file.type, upsert: false });
-
-    if (uploadErr) {
-      // Fall back to local object URL if bucket doesn't exist yet
-      const localUrl = URL.createObjectURL(file);
-      addImageToFrame(frameId, localUrl, file.name);
-      return;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('together-assets')
-      .getPublicUrl(path);
-
-    addImageToFrame(frameId, publicUrl, file.name);
+    await insertInlineImage(file, targetId);
   };
 
-  // ── Drag-and-drop image onto frame ────────────────────────────────────────
+  // ── Drag-and-drop image onto frame (inserts inline) ───────────────────────
 
   const handleFrameDrop = async (e: React.DragEvent, frameId: string) => {
     e.preventDefault();
@@ -638,35 +686,35 @@ const DocumentStudioPage: React.FC = () => {
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
     if (files.length === 0) return;
 
-    for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) continue;
-      const ext = file.name.split('.').pop() || 'png';
-      const path = `doc-studio/${user?.id}/${uid()}.${ext}`;
-      const { error } = await supabase.storage
-        .from('together-assets')
-        .upload(path, file, { contentType: file.type, upsert: false });
+    let targetId = selectedBlockId;
+    const frameBlocks = pages.flatMap(p => p.frames).find(f => f.id === frameId)?.blocks ?? [];
+    const selectedInFrame = targetId && frameBlocks.some(b => b.id === targetId && b.type === 'text');
+    if (!selectedInFrame) {
+      targetId = getOrCreateTextBlockInFrame(frameId);
+    }
+    if (!targetId) return;
 
-      if (error) {
-        addImageToFrame(frameId, URL.createObjectURL(file), file.name);
-      } else {
-        const { data: { publicUrl } } = supabase.storage.from('together-assets').getPublicUrl(path);
-        addImageToFrame(frameId, publicUrl, file.name);
-      }
+    for (const file of files) {
+      await insertInlineImage(file, targetId);
     }
   };
 
   // ── Save project ──────────────────────────────────────────────────────────
 
   const handleSaveProject = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !effectiveOrgId) return;
     setIsSaving(true);
     setSaveMsg('Saving…');
     try {
+      // Sync any focused contentEditable before saving
+      ceRefs.current.forEach((el, blockId) => {
+        updateBlock(blockId, b => b.type === 'text' ? { ...b, content: el.innerHTML } as TextBlock : b);
+      });
+
       const projectData = { name: projectName, pages, pageWidth: 210, pageHeight: 297, createdAt: new Date().toISOString() };
       const projectId = collabProjectId || uid();
 
       if (collabProjectId) {
-        // Update existing project
         const { error } = await supabase
           .from('document_studio_projects')
           .update({ name: projectName.trim() || 'Untitled', project_data: projectData })
@@ -676,11 +724,12 @@ const DocumentStudioPage: React.FC = () => {
         const { error } = await supabase
           .from('document_studio_projects')
           .insert({
-            id:           projectId,
-            user_id:      user.id,
-            name:         projectName.trim() || 'Untitled',
-            project_data: projectData,
-            created_at:   new Date().toISOString(),
+            id:              projectId,
+            user_id:         user.id,
+            organization_id: effectiveOrgId,
+            name:            projectName.trim() || 'Untitled',
+            project_data:    projectData,
+            created_at:      new Date().toISOString(),
           });
         if (error) throw error;
         setCollabProjectId(projectId);
@@ -702,15 +751,15 @@ const DocumentStudioPage: React.FC = () => {
   // ── Load projects ─────────────────────────────────────────────────────────
 
   const loadProjects = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !effectiveOrgId) return;
     setLoadingProjects(true);
     try {
+      // RLS filters to same org automatically — no need to pass org_id here
       const { data, error } = await supabase
         .from('document_studio_projects')
-        .select('id, name, created_at, project_data')
-        .eq('user_id', user.id)
+        .select('id, name, created_at, project_data, user_id')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(30);
       if (error) console.warn('[DocStudio] loadProjects error:', error.message);
       if (data) {
         setSavedProjects(data.map((d: any) => ({
@@ -718,6 +767,7 @@ const DocumentStudioPage: React.FC = () => {
           name:        d.name,
           savedAt:     d.created_at,
           projectData: d.project_data ?? null,
+          ownerId:     d.user_id ?? null,
         })));
       }
     } catch (e) { console.error('[DocStudio] loadProjects exception:', e); }
@@ -1072,12 +1122,21 @@ const DocumentStudioPage: React.FC = () => {
           max-width: 100%;
           height: auto;
           border-radius: 4px;
-          margin: 4px 0;
+          margin: 8px 0;
           display: block;
-          cursor: pointer;
+          cursor: grab;
+          user-select: all;
+          transition: outline 0.15s ease, box-shadow 0.15s ease;
         }
         .rich-text-block img:hover {
           outline: 2px solid #3b82f6;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+        }
+        .rich-text-block img::selection {
+          background: rgba(139, 92, 246, 0.3);
+        }
+        .rich-text-block img:active {
+          cursor: grabbing;
         }
         .page-thumb {
           transition: all 0.15s ease;
@@ -1220,12 +1279,20 @@ const DocumentStudioPage: React.FC = () => {
                         <p className="text-sm text-slate-200 font-semibold truncate">{p.name}</p>
                         <p className="text-[11px] text-slate-500 mt-0.5">
                           {new Date(p.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                          {p.ownerId && p.ownerId !== user?.id && (
+                            <span className="ml-1.5 px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded text-[9px] font-medium">shared</span>
+                          )}
+                          {p.ownerId && p.ownerId === user?.id && (
+                            <span className="ml-1.5 px-1.5 py-0.5 bg-violet-900/50 text-violet-300 rounded text-[9px] font-medium">yours</span>
+                          )}
                         </p>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }}
-                        className="p-1 text-slate-600 hover:text-red-400 transition-colors" title="Delete project">
-                        <Trash2 size={14} />
-                      </button>
+                      {(!p.ownerId || p.ownerId === user?.id) && (
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }}
+                          className="p-1 text-slate-600 hover:text-red-400 transition-colors" title="Delete project">
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1475,7 +1542,9 @@ const DocumentStudioPage: React.FC = () => {
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
                             <Type size={11} /> Text
                           </button>
-                          <label className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors cursor-pointer">
+                          <label
+                            onMouseDown={e => e.preventDefault()}
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors cursor-pointer">
                             <ImageIcon size={11} /> Image
                             <input type="file" accept="image/*" className="hidden"
                               onChange={e => handleImageUpload(e, frame.id)} />
@@ -1755,27 +1824,52 @@ const DocumentStudioPage: React.FC = () => {
 export default DocumentStudioPage;
 
 /*
-── DATABASE TABLE ──────────────────────────────────────────────────────────────
+── DATABASE MIGRATION ─────────────────────────────────────────────────────────
 
-Run this in Supabase SQL editor to create the project table:
+If you already created the table, run this to add org-scoped collaboration:
 
-CREATE TABLE IF NOT EXISTS document_studio_projects (
-  id            text PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  user_id       uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name          text NOT NULL DEFAULT 'Untitled',
-  project_data  jsonb,
-  thumbnail_url text,
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  updated_at    timestamptz NOT NULL DEFAULT now()
-);
+ALTER TABLE document_studio_projects
+  ADD COLUMN IF NOT EXISTS organization_id uuid;
 
-ALTER TABLE document_studio_projects ENABLE ROW LEVEL SECURITY;
+-- Drop the old owner-only policy
+DROP POLICY IF EXISTS "Users can manage own doc studio projects"
+  ON document_studio_projects;
 
-CREATE POLICY "Users can manage own doc studio projects"
+-- New: any org member can read org documents
+CREATE POLICY "Org members can view doc studio projects"
   ON document_studio_projects
-  FOR ALL
-  USING  (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  FOR SELECT
+  USING (
+    organization_id IN (
+      SELECT organization_id FROM get_my_effective_profile()
+    )
+  );
+
+-- New: any org member can insert into their org
+CREATE POLICY "Org members can create doc studio projects"
+  ON document_studio_projects
+  FOR INSERT
+  WITH CHECK (
+    organization_id IN (
+      SELECT organization_id FROM get_my_effective_profile()
+    )
+  );
+
+-- New: any org member can update org documents
+CREATE POLICY "Org members can update doc studio projects"
+  ON document_studio_projects
+  FOR UPDATE
+  USING (
+    organization_id IN (
+      SELECT organization_id FROM get_my_effective_profile()
+    )
+  );
+
+-- Delete restricted to owner
+CREATE POLICY "Owner can delete doc studio projects"
+  ON document_studio_projects
+  FOR DELETE
+  USING (auth.uid() = user_id);
 
 ── ROUTING ────────────────────────────────────────────────────────────────────
 
