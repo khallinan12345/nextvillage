@@ -24,7 +24,7 @@ import {
   ImagePlus, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
   Volume2, VolumeX, Wand2, MessageSquare, Lightbulb,
-  Save, AlertTriangle,
+  Save, AlertTriangle, Trash2,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -85,8 +85,9 @@ async function callEdgeFunction(
 
 // ─── History card ─────────────────────────────────────────────────────────────
 
-const ImageCard: React.FC<{ job: ImageJob; onReuse: (p: string) => void }> = ({ job, onReuse }) => {
+const ImageCard: React.FC<{ job: ImageJob; onReuse: (p: string) => void; onDelete: (id: string) => void }> = ({ job, onReuse, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const cfg = STATUS_CONFIG[job.status];
   const displayUrl = job.saved_image_url ?? job.image_url;
   return (
@@ -117,6 +118,16 @@ const ImageCard: React.FC<{ job: ImageJob; onReuse: (p: string) => void }> = ({ 
                 <Download size={12} /> Download
               </button>
             )}
+            <button
+              disabled={deleting}
+              onClick={async () => {
+                if (!window.confirm('Delete this image? This cannot be undone.')) return;
+                setDeleting(true);
+                onDelete(job.id);
+              }}
+              className="flex items-center gap-1.5 text-xs bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-full px-3 py-1.5 transition-colors disabled:opacity-40 ml-auto">
+              <Trash2 size={12} /> Delete
+            </button>
           </div>
         </div>
       )}
@@ -271,6 +282,13 @@ const ImageGenerationPage: React.FC = () => {
   }, [user?.id]);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  // ── Delete a history item ─────────────────────────────────────────────────
+  const handleDeleteJob = async (id: string) => {
+    setHistory(prev => prev.filter(j => j.id !== id));
+    const { error } = await supabase.from('image_generations').delete().eq('id', id);
+    if (error) { setError('Could not delete that image — please try again.'); loadHistory(); }
+  };
 
   // ── Weekly reset helper ───────────────────────────────────────────────────
   const daysUntilReset = () => 7 - new Date().getDay();
@@ -863,7 +881,9 @@ const ImageGenerationPage: React.FC = () => {
               </div>
             ) : (
               history.map(job => (
-                <ImageCard key={job.id} job={job} onReuse={(p) => { setPrompt(p); setView('generate'); handleReset(); }} />
+                <ImageCard key={job.id} job={job}
+                  onReuse={(p) => { setPrompt(p); setView('generate'); handleReset(); }}
+                  onDelete={handleDeleteJob} />
               ))
             )}
           </div>

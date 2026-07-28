@@ -14,6 +14,15 @@ const REPLICATE_T2V = 'https://api.replicate.com/v1/models/wan-video/wan-2.2-t2v
 const REPLICATE_I2V = 'https://api.replicate.com/v1/models/vidu/q3-pro/predictions';
 const FRAME_BUCKET  = 'video-frames'; // Supabase Storage bucket — must be public
 
+// Appended server-side only to what's sent to the model — never shown to the
+// learner and never stored as part of their prompt (video_generations.prompt
+// stays exactly what they typed, for display/reuse). Applied unconditionally
+// regardless of what negative_prompt the client sends, since that field is
+// user-editable in the UI and can't be relied on to carry a safety
+// constraint the learner isn't meant to see or clear.
+const SAFETY_SUFFIX      = 'No violence, blood, gore, weapons, or graphic injury. Family-friendly, appropriate for children.';
+const SAFETY_NEG_PROMPT  = 'violence, blood, gore, weapons, graphic injury, disturbing content';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -90,7 +99,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const safePrompt    = prompt.trim().slice(0, 1000);
-    const safeNegPrompt = (negative_prompt ?? 'low quality, blurry, distorted, watermark').slice(0, 300);
+    const safeNegPrompt = `${(negative_prompt ?? 'low quality, blurry, distorted, watermark').slice(0, 300)}, ${SAFETY_NEG_PROMPT}`;
     const safeFrames    = Math.min(Math.max(num_frames ?? 121, 25), 129);
     const hasStart      = typeof image      === 'string' && image.length > 0;
     const hasEnd        = typeof last_image === 'string' && last_image.length > 0;
@@ -143,7 +152,7 @@ Deno.serve(async (req: Request) => {
         : null;
 
       replicateInput = {
-        prompt:      safePrompt,
+        prompt:      `${safePrompt}. ${SAFETY_SUFFIX}`,
         duration:    5,
         resolution:  '720p',
         aspect_ratio: '16:9',
@@ -159,7 +168,7 @@ Deno.serve(async (req: Request) => {
       endpoint = REPLICATE_T2V;
 
       replicateInput = {
-        prompt:          safePrompt,
+        prompt:          `${safePrompt}. ${SAFETY_SUFFIX}`,
         negative_prompt: safeNegPrompt,
         num_frames:      safeFrames,
         fps:             24,
