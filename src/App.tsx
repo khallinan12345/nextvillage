@@ -44,6 +44,7 @@ const AIProficiencyPage = lazy(() => import('./pages/AIProficiencyPage'));
 const AIReadySkillsPage = lazy(() => import('./pages/AIReadySkillsPage'));
 const AIPlaygroundPage = lazy(() => import('./pages/AIPlaygroundPage'));
 const PlaygroundTogetherPage = lazy(() => import('./pages/PlaygroundTogetherPage'));
+const SystemsThinkPage = lazy(() => import('./pages/SystemsThinkPage'));
 
 // Tech Skills Pages
 const WebDevelopmentPage = lazy(() => import('./pages/tech-skills/WebDevelopmentPage'));
@@ -241,6 +242,7 @@ export const AppContent: React.FC = () => {
         <Route path="/certifications/ai-for-business" element={<AIForBusinessCertificationPage />} />
         <Route path="/playground" element={<AIPlaygroundPage />} />
         <Route path="/playground/together" element={<PlaygroundTogetherPage />} />
+        <Route path="/systems-think" element={<SystemsThinkPage />} />
 
         {/* Tech Skills Routes */}
         <Route path="/tech-skills/vibe-coding" element={<VibeCodingPage />} />

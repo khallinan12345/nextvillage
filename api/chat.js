@@ -27,6 +27,9 @@
 //     → Anthropic claude-haiku-4-5-20251001 (default)
 //        OR claude-sonnet-4-6 if playgroundModel === 'claude-sonnet-4-6'
 //
+//   page = 'SystemsThinkPage'
+//     → Anthropic claude-sonnet-5 always (no free-tier fallback)
+//
 //   all other pages / no page supplied
 //     → Anthropic claude-haiku-4-5-20251001 (default)
 //
@@ -86,6 +89,14 @@ const HYBRID_CODING_PAGES = new Set([
 const SONNET5_CODING_PAGES = new Set([
   'CreateGamePage',
   'WebsiteBuilderPage',
+]);
+
+// Pages that always route straight to Sonnet 5 — not coding, but the
+// reasoning quality bar is high enough (multi-layered Socratic dialogue,
+// judging when to shift from questioning to offering a perspective) that
+// the free-tier chain / Haiku default isn't reliable enough.
+const SONNET5_PAGES = new Set([
+  'SystemsThinkPage',
 ]);
 
 // Certification pages — always Haiku; structured JSON eval must be reliable
@@ -388,6 +399,10 @@ function resolveRoute(page, playgroundModel, taskType) {
     }
     // non-coding (or WebDevelopmentPage with no taskType) → free-tier chain
     return { provider: 'groq', model: MODELS.groq };
+  }
+
+  if (SONNET5_PAGES.has(page)) {
+    return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
   }
 
   // AIPlaygroundPage → Sonnet if profile set, otherwise free-tier chain
