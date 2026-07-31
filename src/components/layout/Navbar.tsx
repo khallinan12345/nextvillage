@@ -161,6 +161,7 @@ const Navbar: React.FC = () => {
         { name: 'Agent Builder', path: '/claude/agents' },
         { name: 'Use Claude',    path: '/playground'    },
         { name: 'Use Claude Together', path: '/playground/together' },
+        { name: 'Systems Think', path: '/systems-think' },
       ],
     },
     { name: 'Dashboard', path: '/dashboard', shorthand: 'Dashboard' },

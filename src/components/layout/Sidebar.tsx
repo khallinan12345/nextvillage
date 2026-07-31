@@ -7,7 +7,7 @@ import {
   Code, Database, Layers, ImagePlus, Video, Mic, PenLine, Zap,
   Briefcase, Code2, Film, ImagePlus as ImagePlusIcon, Mic as MicIcon,
   Cpu, Wand2, ChevronDown, ChevronUp, ShieldCheck, Users, Sprout, Fish, Heart,
-  GitBranch, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe
+  GitBranch, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe, Puzzle
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -204,6 +204,7 @@ const Sidebar: React.FC = () => {
         { name: 'Agent Builder', path: '/claude/agents', icon: <Bot size={20} /> },
         { name: 'Use Claude',    path: '/playground',    icon: <Sparkles size={20} /> },
         { name: 'Use Claude Together', path: '/playground/together', icon: <Users size={20} /> },
+        { name: 'Systems Think', path: '/systems-think', icon: <Puzzle size={20} /> },
       ],
     },
   ];
