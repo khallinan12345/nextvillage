@@ -32,10 +32,10 @@ import {
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface Attachment {
-  type: 'image' | 'text';
+  type: 'image' | 'pdf' | 'text';
   name: string;
   mimeType?: string;
-  dataUrl?: string;      // images — base64 data URI
+  dataUrl?: string;      // images/PDFs — base64 data URI
   textContent?: string;  // text files — raw content, capped server-side
 }
 
@@ -64,7 +64,8 @@ const STARTER_PROMPTS = [
 ];
 
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_PDF_BYTES   = 8 * 1024 * 1024;
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -194,22 +195,31 @@ const SystemsThinkPage: React.FC = () => {
     if (!file) return;
     setError(null);
 
-    if (file.size > MAX_ATTACHMENT_BYTES) {
-      setError('That file is too large — please choose one under 4MB.');
+    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    const isText = file.type.startsWith('text/') || /\.(txt|md)$/i.test(file.name);
+
+    if (isImage && file.size > MAX_IMAGE_BYTES) {
+      setError('That image is too large — please choose one under 4MB.');
       return;
     }
-    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
-    const isText = file.type.startsWith('text/') || /\.(txt|md)$/i.test(file.name);
+    if (isPdf && file.size > MAX_PDF_BYTES) {
+      setError('That document is too large — please choose one under 8MB.');
+      return;
+    }
 
     try {
       if (isImage) {
         const dataUrl = await readFileAsDataUrl(file);
         setPendingAttachment({ type: 'image', name: file.name, mimeType: file.type, dataUrl });
+      } else if (isPdf) {
+        const dataUrl = await readFileAsDataUrl(file);
+        setPendingAttachment({ type: 'pdf', name: file.name, mimeType: 'application/pdf', dataUrl });
       } else if (isText) {
         const text = await file.text();
         setPendingAttachment({ type: 'text', name: file.name, textContent: text.slice(0, 60000) });
       } else {
-        setError('Please attach an image (PNG/JPEG/GIF/WEBP) or a text file (.txt/.md).');
+        setError('Please attach an image (PNG/JPEG/GIF/WEBP), a PDF, or a text file (.txt/.md).');
       }
     } catch {
       setError('Could not read that file — please try again.');
@@ -396,7 +406,7 @@ const SystemsThinkPage: React.FC = () => {
                         {msg.attachment?.type === 'image' && msg.attachment.dataUrl && (
                           <img src={msg.attachment.dataUrl} alt={msg.attachment.name} className="rounded-lg max-w-full max-h-56 object-contain mb-1.5" />
                         )}
-                        {msg.attachment?.type === 'text' && (
+                        {(msg.attachment?.type === 'text' || msg.attachment?.type === 'pdf') && (
                           <p className={`text-xs mb-1.5 flex items-center gap-1 ${isMe ? 'text-violet-100' : 'text-gray-500'}`}>
                             <FileText size={11} /> {msg.attachment.name}
                           </p>
@@ -445,14 +455,14 @@ const SystemsThinkPage: React.FC = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,text/plain,text/markdown,.md"
+                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,application/pdf,.pdf,text/plain,text/markdown,.md"
                 onChange={handleFileSelect}
                 className="hidden"
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={sending || startingSession || !activeSessionId}
-                title="Attach an image or text file"
+                title="Attach an image, PDF, or text file"
                 className="flex-shrink-0 w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-violet-600 hover:border-violet-300 disabled:opacity-40 transition-colors"
               >
                 <Paperclip size={15} />

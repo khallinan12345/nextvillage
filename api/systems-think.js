@@ -25,7 +25,8 @@ const supabase = createClient(
 );
 
 const MODEL = 'claude-sonnet-5';
-const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024; // 4MB, matches other image-upload limits in this codebase
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;  // 4MB, matches other image-upload limits in this codebase
+const MAX_PDF_BYTES   = 8 * 1024 * 1024;  // 8MB — documents run larger than a single photo
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']);
 
 // ─── Cost logging (fire-and-forget) ────────────────────────────────────────
@@ -234,6 +235,7 @@ conversational turn that adds nothing new.`;
 function attachmentPlaceholder(attachment) {
   if (!attachment) return '';
   if (attachment.type === 'image') return `\n(shared an image: ${attachment.name || 'image'})`;
+  if (attachment.type === 'pdf') return `\n(shared a document: ${attachment.name || 'document'})`;
   return `\n(shared a file: ${attachment.name || 'file'})`;
 }
 
@@ -260,6 +262,19 @@ function buildAnthropicMessages(messages) {
             content: [
               { type: 'text', text: m.content || 'Here is an image I want to share.' },
               { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+            ],
+          };
+        }
+      }
+      if (m.attachment.type === 'pdf' && m.attachment.dataUrl) {
+        const match = /^data:([^;]+);base64,(.+)$/.exec(m.attachment.dataUrl);
+        if (match) {
+          const [, , base64Data] = match;
+          return {
+            role: m.role,
+            content: [
+              { type: 'text', text: m.content || 'Here is a document I want to share.' },
+              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } },
             ],
           };
         }
@@ -292,8 +307,13 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'Unsupported image type' });
       }
       const approxBytes = (attachment.dataUrl?.length || 0) * 0.75;
-      if (approxBytes > MAX_ATTACHMENT_BYTES) {
+      if (approxBytes > MAX_IMAGE_BYTES) {
         return res.status(400).json({ success: false, error: 'Image is too large (4MB limit)' });
+      }
+    } else if (attachment.type === 'pdf') {
+      const approxBytes = (attachment.dataUrl?.length || 0) * 0.75;
+      if (approxBytes > MAX_PDF_BYTES) {
+        return res.status(400).json({ success: false, error: 'Document is too large (8MB limit)' });
       }
     } else if (attachment.type === 'text') {
       if ((attachment.textContent || '').length > 60000) {
@@ -307,7 +327,12 @@ export default async function handler(req, res) {
 
     const msg = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 3000,
+      // Learners were hitting mid-sentence cutoffs on long, thorough replies
+      // (this persona writes at length). 16000 is the highest value the
+      // non-streaming API accepts for this model — anything at or above
+      // 32000 requires a streaming call instead. Verified live before
+      // shipping.
+      max_tokens: 16000,
       // claude-sonnet-5 (and the Opus 4.7+/Fable 5 family) reject a
       // non-default `temperature` with a 400 — omit it entirely rather than
       // pass a value, matching the same check in api/chat-room.js /
