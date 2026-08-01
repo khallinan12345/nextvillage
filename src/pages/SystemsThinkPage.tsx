@@ -20,14 +20,46 @@
 // generic multi-provider /api/chat) — this page only holds conversation and
 // session-persistence state.
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import {
   Puzzle, Send, Loader2, FolderOpen, Plus, Trash2, X, Bot,
   Paperclip, Image as ImageIcon, FileText, Download, BookOpen,
 } from 'lucide-react';
+
+// ─── Formatted response renderer ───────────────────────────────────────────
+// Kevin's replies and the thinking artifact are both markdown + LaTeX math
+// (see the FORMATTING instructions in api/systems-think.js's system prompt)
+// — raw asterisks/dollar-signs should never reach the screen. Applied only
+// to Kevin's own text, never the learner's (their own words render as plain
+// text, unchanged).
+const MARKDOWN_COMPONENTS = {
+  p: (props: React.ComponentProps<'p'>) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+  strong: (props: React.ComponentProps<'strong'>) => <strong className="font-semibold" {...props} />,
+  em: (props: React.ComponentProps<'em'>) => <em className="italic" {...props} />,
+  ul: (props: React.ComponentProps<'ul'>) => <ul className="list-disc pl-5 mb-3 space-y-1.5" {...props} />,
+  ol: (props: React.ComponentProps<'ol'>) => <ol className="list-decimal pl-5 mb-3 space-y-1.5" {...props} />,
+  li: (props: React.ComponentProps<'li'>) => <li className="leading-relaxed" {...props} />,
+  h1: (props: React.ComponentProps<'h1'>) => <h1 className="text-base font-bold mb-2 mt-3 first:mt-0" {...props} />,
+  h2: (props: React.ComponentProps<'h2'>) => <h2 className="text-sm font-bold mb-2 mt-3 first:mt-0" {...props} />,
+  h3: (props: React.ComponentProps<'h3'>) => <h3 className="text-sm font-semibold mb-1.5 mt-2.5 first:mt-0" {...props} />,
+  code: (props: React.ComponentProps<'code'>) => <code className="bg-black/5 rounded px-1 py-0.5 text-[0.85em] font-mono" {...props} />,
+  blockquote: (props: React.ComponentProps<'blockquote'>) => <blockquote className="border-l-2 border-violet-300 pl-3 italic text-gray-600 mb-3" {...props} />,
+};
+
+const FormattedText: React.FC<{ content: string; className?: string }> = ({ content, className }) => (
+  <div className={className}>
+    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]} components={MARKDOWN_COMPONENTS}>
+      {content}
+    </ReactMarkdown>
+  </div>
+);
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -283,6 +315,19 @@ const SystemsThinkPage: React.FC = () => {
   };
 
   // ── Artifact download (PDF) ─────────────────────────────────────────────
+  // jsPDF renders plain text only — it can't lay out KaTeX or bold/italic
+  // spans, so strip the markdown/math delimiters rather than dump them
+  // literally (e.g. "**capacity**" or "$E=mc^2$" showing up with the raw
+  // symbols in the exported PDF).
+  const stripMarkdownForPdf = (text: string): string =>
+    text
+      .replace(/\$\$([\s\S]*?)\$\$/g, '$1')
+      .replace(/\$([^$\n]+)\$/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/^[-*]\s+/gm, '• ');
+
   const handleDownloadArtifact = async () => {
     if (downloadingArtifact || !artifactContent.trim()) return;
     setDownloadingArtifact(true);
@@ -308,7 +353,8 @@ const SystemsThinkPage: React.FC = () => {
       doc.setFontSize(11);
       const paragraphs = artifactContent.trim().split(/\n{2,}/);
       for (const para of paragraphs) {
-        for (const line of doc.splitTextToSize(para.trim(), maxWidth)) { ensureSpace(6.5); doc.text(line, margin, y); y += 6.5; }
+        const cleaned = stripMarkdownForPdf(para.trim());
+        for (const line of doc.splitTextToSize(cleaned, maxWidth)) { ensureSpace(6.5); doc.text(line, margin, y); y += 6.5; }
         y += 4;
       }
       doc.save(`${title.replace(/\s+/g, '-').toLowerCase()}-artifact.pdf`);
@@ -320,10 +366,6 @@ const SystemsThinkPage: React.FC = () => {
   // Only nudge with starter prompts before the learner has said anything
   // real yet (just the hidden kickoff + Kevin's welcome present).
   const showStarterPrompts = messages.filter(m => !m.hidden).length === 0;
-  const artifactParagraphs = useMemo(
-    () => artifactContent.trim() ? artifactContent.trim().split(/\n{2,}/).map(p => p.trim()).filter(Boolean) : [],
-    [artifactContent]
-  );
 
   if (!user) {
     return (
@@ -411,7 +453,11 @@ const SystemsThinkPage: React.FC = () => {
                             <FileText size={11} /> {msg.attachment.name}
                           </p>
                         )}
-                        <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                        {isMe ? (
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                        ) : (
+                          <FormattedText content={msg.content} className="text-sm break-words" />
+                        )}
                       </div>
                     </div>
                   );
@@ -507,14 +553,12 @@ const SystemsThinkPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto px-6 py-5">
-                {artifactParagraphs.length === 0 ? (
+                {!artifactContent.trim() ? (
                   <p className="text-center text-gray-400 text-sm py-12">
                     Nothing captured yet — keep thinking it through with Kevin and a working document will build up here.
                   </p>
                 ) : (
-                  artifactParagraphs.map((para, i) => (
-                    <p key={i} className="text-gray-800 leading-relaxed whitespace-pre-wrap mb-4 text-sm">{para}</p>
-                  ))
+                  <FormattedText content={artifactContent} className="text-gray-800 text-sm" />
                 )}
               </div>
             </div>
