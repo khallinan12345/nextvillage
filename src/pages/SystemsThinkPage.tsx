@@ -31,6 +31,7 @@ import 'katex/dist/katex.min.css';
 import {
   Puzzle, Send, Loader2, FolderOpen, Plus, Trash2, X, Bot,
   Paperclip, Image as ImageIcon, FileText, Download, BookOpen,
+  Pencil, Folder, FolderPlus,
 } from 'lucide-react';
 
 // ─── Formatted response renderer ───────────────────────────────────────────
@@ -87,6 +88,13 @@ interface ThinkSession {
   messages: ThinkMessage[];
   artifact_content: string | null;
   updated_at: string;
+  project_id: string | null;
+}
+
+interface ThinkProject {
+  id: string;
+  name: string;
+  updated_at: string;
 }
 
 const STARTER_PROMPTS = [
@@ -112,6 +120,7 @@ const SystemsThinkPage: React.FC = () => {
   const { user } = useAuth();
 
   const [sessions, setSessions] = useState<ThinkSession[]>([]);
+  const [projects, setProjects] = useState<ThinkProject[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ThinkMessage[]>([]);
   const [artifactContent, setArtifactContent] = useState<string>('');
@@ -123,6 +132,13 @@ const SystemsThinkPage: React.FC = () => {
   const [artifactPanelOpen, setArtifactPanelOpen] = useState(false);
   const [downloadingArtifact, setDownloadingArtifact] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [projectNameDraft, setProjectNameDraft] = useState('');
+  const [editingSessionTitleId, setEditingSessionTitleId] = useState<string | null>(null);
+  const [sessionTitleDraft, setSessionTitleDraft] = useState('');
+  const [editingHeaderTitle, setEditingHeaderTitle] = useState(false);
+  const [headerTitleDraft, setHeaderTitleDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -178,21 +194,29 @@ const SystemsThinkPage: React.FC = () => {
   // start fresh straight away. ─────────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-    supabase
-      .from('systems_think_sessions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
-        const rows = (data ?? []) as ThinkSession[];
-        setSessions(rows);
-        if (rows.length > 0) {
-          setShowSessionPicker(true);
-        } else {
-          beginSession();
-        }
-      });
+    Promise.all([
+      supabase
+        .from('systems_think_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(30),
+      supabase
+        .from('systems_think_projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(30),
+    ]).then(([sessionsRes, projectsRes]) => {
+      const rows = (sessionsRes.data ?? []) as ThinkSession[];
+      setSessions(rows);
+      setProjects((projectsRes.data ?? []) as ThinkProject[]);
+      if (rows.length > 0) {
+        setShowSessionPicker(true);
+      } else {
+        beginSession();
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -218,6 +242,83 @@ const SystemsThinkPage: React.FC = () => {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  // ── Title editing (chat header + session list) ──────────────────────────
+  const startEditHeaderTitle = () => {
+    const current = sessions.find(s => s.id === activeSessionId);
+    setHeaderTitleDraft(current?.title || '');
+    setEditingHeaderTitle(true);
+  };
+
+  const commitHeaderTitle = async () => {
+    setEditingHeaderTitle(false);
+    const trimmed = headerTitleDraft.trim();
+    const current = sessions.find(s => s.id === activeSessionId);
+    if (!activeSessionId || !trimmed || !current || current.title === trimmed) return;
+    setSessions(prev => prev.map(s => s.id === activeSessionId ? { ...s, title: trimmed } : s));
+    await supabase.from('systems_think_sessions').update({ title: trimmed }).eq('id', activeSessionId);
+  };
+
+  const startEditSessionTitle = (s: ThinkSession) => {
+    setEditingSessionTitleId(s.id);
+    setSessionTitleDraft(s.title);
+  };
+
+  const commitSessionTitle = async (id: string) => {
+    setEditingSessionTitleId(null);
+    const trimmed = sessionTitleDraft.trim();
+    const current = sessions.find(s => s.id === id);
+    if (!trimmed || !current || current.title === trimmed) return;
+    setSessions(prev => prev.map(s => s.id === id ? { ...s, title: trimmed } : s));
+    await supabase.from('systems_think_sessions').update({ title: trimmed }).eq('id', id);
+  };
+
+  // ── Projects ─────────────────────────────────────────────────────────────
+  const createProject = async () => {
+    if (!user?.id || creatingProject) return;
+    setCreatingProject(true);
+    setError(null);
+    try {
+      const { data: row, error: insertError } = await supabase
+        .from('systems_think_projects')
+        .insert({ user_id: user.id, name: 'New Project' })
+        .select('*')
+        .single();
+      if (insertError || !row) throw insertError || new Error('insert failed');
+      setProjects(prev => [row as ThinkProject, ...prev]);
+      setEditingProjectId(row.id);
+      setProjectNameDraft(row.name);
+    } catch {
+      setError('Could not create a project — please try again.');
+    } finally {
+      setCreatingProject(false);
+    }
+  };
+
+  const startEditProject = (p: ThinkProject) => {
+    setEditingProjectId(p.id);
+    setProjectNameDraft(p.name);
+  };
+
+  const commitProjectName = async (id: string) => {
+    setEditingProjectId(null);
+    const trimmed = projectNameDraft.trim();
+    const current = projects.find(p => p.id === id);
+    if (!trimmed || !current || current.name === trimmed) return;
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, name: trimmed } : p));
+    await supabase.from('systems_think_projects').update({ name: trimmed, updated_at: new Date().toISOString() }).eq('id', id);
+  };
+
+  const deleteProject = async (id: string) => {
+    await supabase.from('systems_think_projects').delete().eq('id', id);
+    setProjects(prev => prev.filter(p => p.id !== id));
+    setSessions(prev => prev.map(s => s.project_id === id ? { ...s, project_id: null } : s));
+  };
+
+  const assignSessionToProject = async (sessionId: string, projectId: string | null) => {
+    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, project_id: projectId } : s));
+    await supabase.from('systems_think_sessions').update({ project_id: projectId }).eq('id', sessionId);
   };
 
   // ── Attachments ───────────────────────────────────────────────────────────
@@ -367,6 +468,70 @@ const SystemsThinkPage: React.FC = () => {
   // real yet (just the hidden kickoff + Kevin's welcome present).
   const showStarterPrompts = messages.filter(m => !m.hidden).length === 0;
 
+  // ── Session picker row (shared between project groups and the unfiled list) ──
+  const renderSessionRow = (s: ThinkSession) => (
+    <div key={s.id} className="p-3 bg-gray-50 hover:bg-violet-50 border border-gray-200 hover:border-violet-200 rounded-xl transition-colors">
+      <div className="flex items-center justify-between gap-2">
+        <button onClick={() => loadSession(s)} className="min-w-0 flex-1 text-left">
+          {editingSessionTitleId === s.id ? (
+            <input
+              autoFocus
+              value={sessionTitleDraft}
+              onClick={e => e.stopPropagation()}
+              onChange={e => setSessionTitleDraft(e.target.value)}
+              onBlur={() => commitSessionTitle(s.id)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') { e.preventDefault(); commitSessionTitle(s.id); }
+                if (e.key === 'Escape') { e.preventDefault(); setEditingSessionTitleId(null); }
+              }}
+              className="text-sm font-semibold text-gray-900 w-full outline-none border-b border-violet-300 bg-transparent"
+            />
+          ) : (
+            <p className="text-sm font-semibold text-gray-900 truncate">{s.title}</p>
+          )}
+          <p className="text-xs text-gray-400 mt-0.5">{new Date(s.updated_at).toLocaleDateString()}</p>
+        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={e => { e.stopPropagation(); startEditSessionTitle(s); }}
+            className="p-1.5 text-gray-400 hover:text-violet-600 rounded transition-colors"
+            title="Rename"
+          >
+            <Pencil size={13} />
+          </button>
+          {projects.length > 0 && (
+            <select
+              value={s.project_id || ''}
+              onClick={e => e.stopPropagation()}
+              onChange={e => assignSessionToProject(s.id, e.target.value || null)}
+              className="text-xs border border-gray-200 rounded-lg px-1 py-1 text-gray-500 max-w-[88px] outline-none"
+              title="Move to project"
+            >
+              <option value="">No Project</option>
+              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          )}
+          <button onClick={e => handleDeleteSession(e, s.id)} disabled={deletingId === s.id}
+            className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors">
+            {deletingId === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const sessionsByProject = new Map<string, ThinkSession[]>();
+  const unfiledSessions: ThinkSession[] = [];
+  for (const s of sessions) {
+    if (s.project_id) {
+      const arr = sessionsByProject.get(s.project_id) || [];
+      arr.push(s);
+      sessionsByProject.set(s.project_id, arr);
+    } else {
+      unfiledSessions.push(s);
+    }
+  }
+
   if (!user) {
     return (
       <AppLayout>
@@ -398,10 +563,30 @@ const SystemsThinkPage: React.FC = () => {
 
         <div className="flex gap-4 h-[70vh]">
           <div className={`bg-white border border-gray-200 rounded-2xl flex flex-col min-w-0 transition-all duration-300 ${artifactPanelOpen ? 'w-1/2' : 'flex-1'}`}>
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-shrink-0">
-              <p className="font-semibold text-gray-900 truncate min-w-0">
-                {sessions.find(s => s.id === activeSessionId)?.title || 'Systems Think'}
-              </p>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-shrink-0 gap-3">
+              {editingHeaderTitle ? (
+                <input
+                  autoFocus
+                  value={headerTitleDraft}
+                  onChange={e => setHeaderTitleDraft(e.target.value)}
+                  onBlur={commitHeaderTitle}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); commitHeaderTitle(); }
+                    if (e.key === 'Escape') { e.preventDefault(); setEditingHeaderTitle(false); }
+                  }}
+                  className="font-semibold text-gray-900 min-w-0 flex-1 outline-none border-b border-violet-300 bg-transparent"
+                />
+              ) : (
+                <button
+                  onClick={startEditHeaderTitle}
+                  disabled={!activeSessionId}
+                  title={activeSessionId ? 'Click to rename' : undefined}
+                  className="group flex items-center gap-1.5 min-w-0 font-semibold text-gray-900 text-left hover:text-violet-600 disabled:hover:text-gray-900 disabled:cursor-default"
+                >
+                  <span className="truncate">{sessions.find(s => s.id === activeSessionId)?.title || 'Systems Think'}</span>
+                  {activeSessionId && <Pencil size={12} className="opacity-0 group-hover:opacity-60 flex-shrink-0" />}
+                </button>
+              )}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => setArtifactPanelOpen(o => !o)}
@@ -574,28 +759,64 @@ const SystemsThinkPage: React.FC = () => {
               <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <FolderOpen size={18} className="text-violet-600" /> Your Sessions
               </h2>
-              {(activeSessionId || sessions.length > 0) && (
-                <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-gray-700"><X size={18} /></button>
-              )}
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {sessions.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">No sessions yet — start your first one below.</p>
-              ) : sessions.map(s => (
-                <button key={s.id} onClick={() => loadSession(s)}
-                  className="w-full text-left p-3 bg-gray-50 hover:bg-violet-50 border border-gray-200 hover:border-violet-200 rounded-xl transition-colors">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{s.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{new Date(s.updated_at).toLocaleDateString()}</p>
-                    </div>
-                    <button onClick={e => handleDeleteSession(e, s.id)} disabled={deletingId === s.id}
-                      className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors flex-shrink-0">
-                      {deletingId === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                    </button>
-                  </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={createProject}
+                  disabled={creatingProject}
+                  className="flex items-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-700 border border-violet-200 hover:border-violet-300 bg-violet-50 rounded-lg px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                >
+                  {creatingProject ? <Loader2 size={13} className="animate-spin" /> : <FolderPlus size={13} />} New Project
                 </button>
-              ))}
+                {(activeSessionId || sessions.length > 0) && (
+                  <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-gray-700"><X size={18} /></button>
+                )}
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {sessions.length === 0 && projects.length === 0 ? (
+                <p className="text-center text-gray-400 text-sm py-8">No sessions yet — start your first one below.</p>
+              ) : (
+                <>
+                  {projects.map(p => (
+                    <div key={p.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
+                        {editingProjectId === p.id ? (
+                          <input
+                            autoFocus
+                            value={projectNameDraft}
+                            onChange={e => setProjectNameDraft(e.target.value)}
+                            onBlur={() => commitProjectName(p.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') { e.preventDefault(); commitProjectName(p.id); }
+                              if (e.key === 'Escape') { e.preventDefault(); setEditingProjectId(null); }
+                            }}
+                            className="text-sm font-semibold text-gray-800 flex-1 min-w-0 outline-none border-b border-violet-300 bg-transparent"
+                          />
+                        ) : (
+                          <button onClick={() => startEditProject(p)} className="flex items-center gap-1.5 text-sm font-semibold text-gray-800 hover:text-violet-600 min-w-0 flex-1 text-left">
+                            <Folder size={13} className="flex-shrink-0" /> <span className="truncate">{p.name}</span>
+                          </button>
+                        )}
+                        <button onClick={() => deleteProject(p.id)} className="p-1 text-gray-400 hover:text-red-500 rounded flex-shrink-0" title="Delete project (sessions stay, just unfiled)">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                      <div className="p-2 space-y-1.5">
+                        {(sessionsByProject.get(p.id) || []).length === 0 ? (
+                          <p className="text-xs text-gray-400 px-2 py-1.5">No sessions in this project yet — use "Move to project" on a session below.</p>
+                        ) : (sessionsByProject.get(p.id) || []).map(renderSessionRow)}
+                      </div>
+                    </div>
+                  ))}
+
+                  {unfiledSessions.length > 0 && (
+                    <div>
+                      {projects.length > 0 && <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 mb-1.5">Unfiled</p>}
+                      <div className="space-y-1.5">{unfiledSessions.map(renderSessionRow)}</div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
             <div className="px-5 pb-4 flex-shrink-0">
               <button onClick={beginSession} disabled={startingSession}
