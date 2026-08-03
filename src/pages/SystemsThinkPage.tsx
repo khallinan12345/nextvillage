@@ -1,19 +1,26 @@
 // src/pages/SystemsThinkPage.tsx
 //
-// "Systems Think" — a reflective thinking-partner tool modeled on Kevin
-// Hallinan's own reasoning method ("Virtual Kevin"). Lives under the Claude
-// nav section alongside Use Claude / Use Claude Together.
+// "Systems Think" — a reflective thinking-partner tool. The voice in this
+// conversation is Ngozi, an original Nigerian character — not a stand-in or
+// interpreter for anyone. The reasoning method she carries (empowerment
+// over charity, systems and flows, "but that's not enough," holistic-but-
+// buildable, the mountain-teaching metaphor) originates with Kevin
+// Hallinan; his authorship is credited here and in the page's about text —
+// deliberately never inside the conversation itself. A tool built on
+// empowerment-over-charity should not, in its own dialogue, cast a Nigerian
+// voice as an American professor's interpreter. Lives under the Claude nav
+// section alongside Use Claude / Use Claude Together.
 //
 // Design intent (do not remove without re-reading this): the tool
-// deliberately makes the learner think first. Kevin opens by welcoming them
+// deliberately makes the learner think first. Ngozi opens by welcoming them
 // and asking what they're wrestling with; the system prompt (see
 // api/systems-think.js — kept verbatim there, don't fork a copy here)
 // instructs the model to ask the learner for their own thinking before ever
-// offering "how Kevin might see it," and to frame that perspective as one
-// view to compare against the learner's own, never a final answer. That
-// sequencing is the feature, not friction: it's the same empowerment-over-
-// charity principle the persona itself is built on. Don't add anything that
-// lets a learner skip straight to "what would Kevin do."
+// offering its own perspective, framed as one view to compare against the
+// learner's own, never a final answer. That sequencing is the feature, not
+// friction: it's the same empowerment-over-charity principle the persona
+// itself is built on. Don't add anything that lets a learner skip straight
+// to "what should I do."
 //
 // The actual persona + the "thinking artifact" tool-use logic live
 // server-side in api/systems-think.js (a dedicated Anthropic call, not the
@@ -35,10 +42,10 @@ import {
 } from 'lucide-react';
 
 // ─── Formatted response renderer ───────────────────────────────────────────
-// Kevin's replies and the thinking artifact are both markdown + LaTeX math
+// Ngozi's replies and the thinking artifact are both markdown + LaTeX math
 // (see the FORMATTING instructions in api/systems-think.js's system prompt)
 // — raw asterisks/dollar-signs should never reach the screen. Applied only
-// to Kevin's own text, never the learner's (their own words render as plain
+// to Ngozi's own text, never the learner's (their own words render as plain
 // text, unchanged).
 const MARKDOWN_COMPONENTS = {
   p: (props: React.ComponentProps<'p'>) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
@@ -76,7 +83,7 @@ interface ThinkMessage {
   role: 'user' | 'assistant';
   content: string;
   // The very first message of every session is a hidden kickoff that
-  // triggers Kevin's auto-generated welcome — never rendered, but kept in
+  // triggers Ngozi's auto-generated welcome — never rendered, but kept in
   // the array so the full transcript replays correctly on resume.
   hidden?: boolean;
   attachment?: Attachment;
@@ -148,7 +155,7 @@ const SystemsThinkPage: React.FC = () => {
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
 
-  // ── Kevin's opening welcome — an invisible kickoff turn so the model's
+  // ── Ngozi's opening welcome — an invisible kickoff turn so the model's
   // own "begin every conversation by welcoming them" instruction fires
   // without the learner ever seeing a synthetic first message. ────────────
   const beginSession = useCallback(async () => {
@@ -405,7 +412,7 @@ const SystemsThinkPage: React.FC = () => {
       await supabase.from('systems_think_sessions').update(dbUpdate).eq('id', activeSessionId);
       setSessions(prev => prev.map(s => s.id === activeSessionId ? { ...s, ...dbUpdate } as ThinkSession : s));
     } catch {
-      setError("Kevin couldn't respond just now — please try again.");
+      setError("Ngozi couldn't respond just now — please try again.");
     } finally {
       setSending(false);
     }
@@ -465,7 +472,7 @@ const SystemsThinkPage: React.FC = () => {
   };
 
   // Only nudge with starter prompts before the learner has said anything
-  // real yet (just the hidden kickoff + Kevin's welcome present).
+  // real yet (just the hidden kickoff + Ngozi's welcome present).
   const showStarterPrompts = messages.filter(m => !m.hidden).length === 0;
 
   // ── Session picker row (shared between project groups and the unfiled list) ──
@@ -551,13 +558,13 @@ const SystemsThinkPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Systems Think</h1>
-            <p className="text-sm text-gray-500">Practice thinking through problems the way Kevin does.</p>
+            <p className="text-sm text-gray-500">Think through problems with Ngozi, built on Kevin Hallinan's reasoning method.</p>
           </div>
         </div>
         <p className="text-sm text-gray-500 mb-6 leading-relaxed">
           This isn't an answer machine — it's a thinking partner. You'll be asked to work through
-          the problem yourself first; only after that will it offer how Kevin might come at it, as
-          one perspective to compare against your own. The goal is to strengthen <em>your</em> thinking,
+          the problem yourself first; only after that will Ngozi offer her own perspective, as
+          one view to compare against your own. The goal is to strengthen <em>your</em> thinking,
           not replace it.
         </p>
 
@@ -617,7 +624,7 @@ const SystemsThinkPage: React.FC = () => {
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
               {startingSession && messages.length === 0 ? (
                 <div className="flex items-center gap-2 text-sm text-gray-400 py-8 justify-center">
-                  <Loader2 size={16} className="animate-spin" /> Kevin is settling in…
+                  <Loader2 size={16} className="animate-spin" /> Ngozi is settling in…
                 </div>
               ) : (
                 messages.filter(m => !m.hidden).map((msg, i) => {
@@ -628,7 +635,7 @@ const SystemsThinkPage: React.FC = () => {
                         isMe ? 'bg-violet-600 text-white ml-auto' : 'bg-purple-50 border border-purple-100'
                       }`}>
                         <p className={`text-xs font-semibold mb-0.5 flex items-center gap-1 ${isMe ? 'text-violet-100' : 'text-purple-500'}`}>
-                          {!isMe && <Bot size={12} />} {isMe ? 'You' : 'Virtual Kevin'}
+                          {!isMe && <Bot size={12} />} {isMe ? 'You' : 'Ngozi'}
                         </p>
                         {msg.attachment?.type === 'image' && msg.attachment.dataUrl && (
                           <img src={msg.attachment.dataUrl} alt={msg.attachment.name} className="rounded-lg max-w-full max-h-56 object-contain mb-1.5" />
@@ -650,7 +657,7 @@ const SystemsThinkPage: React.FC = () => {
               )}
               {sending && (
                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <Loader2 size={13} className="animate-spin" /> Kevin is thinking…
+                  <Loader2 size={13} className="animate-spin" /> Ngozi is thinking…
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -703,7 +710,7 @@ const SystemsThinkPage: React.FC = () => {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 rows={1}
-                placeholder={startingSession ? 'Kevin is settling in…' : 'Share your thinking…'}
+                placeholder={startingSession ? 'Ngozi is settling in…' : 'Share your thinking…'}
                 disabled={sending || startingSession || !activeSessionId}
                 className="flex-1 resize-none outline-none text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-violet-100"
               />
@@ -740,7 +747,7 @@ const SystemsThinkPage: React.FC = () => {
               <div className="flex-1 overflow-y-auto px-6 py-5">
                 {!artifactContent.trim() ? (
                   <p className="text-center text-gray-400 text-sm py-12">
-                    Nothing captured yet — keep thinking it through with Kevin and a working document will build up here.
+                    Nothing captured yet — keep thinking it through with Ngozi and a working document will build up here.
                   </p>
                 ) : (
                   <FormattedText content={artifactContent} className="text-gray-800 text-sm" />
