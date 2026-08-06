@@ -13,6 +13,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
@@ -21,6 +22,30 @@ import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare
 
 const QUOTA_TOKENS    = 25000;
 const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+// ─── Formatted response renderer ───────────────────────────────────────────
+// Claude's replies are markdown (bold emphasis, lists, paragraphs) — render
+// them properly instead of showing raw asterisks/hashes. Applied only to
+// Claude's own messages; everyone else's text stays plain, unchanged.
+const MARKDOWN_COMPONENTS = {
+  p: (props: React.ComponentProps<'p'>) => <p className="mb-2.5 last:mb-0 leading-relaxed" {...props} />,
+  strong: (props: React.ComponentProps<'strong'>) => <strong className="font-semibold text-violet-800" {...props} />,
+  em: (props: React.ComponentProps<'em'>) => <em className="italic" {...props} />,
+  ul: (props: React.ComponentProps<'ul'>) => <ul className="list-disc pl-5 mb-2.5 space-y-1" {...props} />,
+  ol: (props: React.ComponentProps<'ol'>) => <ol className="list-decimal pl-5 mb-2.5 space-y-1" {...props} />,
+  li: (props: React.ComponentProps<'li'>) => <li className="leading-relaxed" {...props} />,
+  h1: (props: React.ComponentProps<'h1'>) => <h1 className="text-base font-bold mb-1.5 mt-2.5 first:mt-0" {...props} />,
+  h2: (props: React.ComponentProps<'h2'>) => <h2 className="text-sm font-bold mb-1.5 mt-2.5 first:mt-0" {...props} />,
+  h3: (props: React.ComponentProps<'h3'>) => <h3 className="text-sm font-semibold mb-1 mt-2 first:mt-0" {...props} />,
+  code: (props: React.ComponentProps<'code'>) => <code className="bg-black/5 rounded px-1 py-0.5 text-[0.85em] font-mono" {...props} />,
+  blockquote: (props: React.ComponentProps<'blockquote'>) => <blockquote className="border-l-2 border-violet-300 pl-3 italic text-gray-600 mb-2.5" {...props} />,
+};
+
+const FormattedText: React.FC<{ content: string; className?: string }> = ({ content, className }) => (
+  <div className={className}>
+    <ReactMarkdown components={MARKDOWN_COMPONENTS}>{content}</ReactMarkdown>
+  </div>
+);
 
 // A room member asking to see the compiled book (in their own words) opens
 // the book panel directly — no need to know the "View Book" button exists.
@@ -722,8 +747,14 @@ const PlaygroundTogetherPage: React.FC = () => {
                         ) : msg.image_url ? (
                           <div>
                             <img src={msg.image_url} alt={msg.content || 'Shared image'} className="rounded-xl max-w-full max-h-64 object-contain" />
-                            {msg.content && <p className="text-sm whitespace-pre-wrap break-words mt-1.5">{msg.content}</p>}
+                            {msg.content && (
+                              isAssistant
+                                ? <FormattedText content={msg.content} className="text-sm mt-1.5" />
+                                : <p className="text-sm whitespace-pre-wrap break-words mt-1.5">{msg.content}</p>
+                            )}
                           </div>
+                        ) : isAssistant ? (
+                          <FormattedText content={msg.content} className="text-sm" />
                         ) : (
                           <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                         )}
