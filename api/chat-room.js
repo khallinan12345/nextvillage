@@ -98,13 +98,21 @@ export default async function handler(req, res) {
     // mirrors get_my_effective_profile() in the DB. ─────────────────────────
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('organization_id, join_code_used')
+      .select('organization_id, join_code_used, role')
       .eq('id', user_id)
       .single();
 
     if (profileErr || !profile) {
       return res.status(403).json({ success: false, error: 'not_authorized' });
     }
+
+    // platform_administrator can act in any org's room — mirrors the
+    // platform_administrator bypass already present on every RLS policy for
+    // together_rooms/together_messages (see 20260806120000_together_
+    // messages_insert_admin_bypass.sql). Without this, an admin who can see
+    // and post into another org's room (e.g. one created back when this
+    // feature was single-org-only) still couldn't get a Claude reply there.
+    const isPlatformAdmin = profile.role === 'platform_administrator';
 
     let effectiveOrgId = profile.organization_id;
     if (!effectiveOrgId && profile.join_code_used?.trim()) {
@@ -126,11 +134,11 @@ export default async function handler(req, res) {
       effectiveOrgId = org?.id ?? null;
     }
 
-    if (!effectiveOrgId || effectiveOrgId !== room.organization_id) {
+    if (!isPlatformAdmin && (!effectiveOrgId || effectiveOrgId !== room.organization_id)) {
       return res.status(403).json({ success: false, error: 'not_authorized' });
     }
 
-    const isBackToBasics = effectiveOrgId === BACK_TO_BASICS_ORG_ID;
+    const isBackToBasics = room.organization_id === BACK_TO_BASICS_ORG_ID;
 
     // ── Quota: 25k tokens / 3h, everyone except Back to Basics ──────────────
     if (!isBackToBasics) {
