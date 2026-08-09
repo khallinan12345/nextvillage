@@ -572,6 +572,7 @@ const PublicLandingPage: React.FC = () => {
               <a href="#research"    className="nav-lnk">Research</a>
               <a href="#community"   className="nav-lnk">Join Us</a>
               <a href="#support"     className="nav-lnk">Support</a>
+              <Link to="/tutorials"  className="nav-lnk">Tutor</Link>
               <Link to="/login" className="pub-btn btn-amber" style={{ padding: "0.42rem 1.1rem", fontSize: "0.82rem" }}>
                 Log In / Sign Up
               </Link>
@@ -635,6 +636,18 @@ const PublicLandingPage: React.FC = () => {
                   {item.label}
                 </a>
               ))}
+              <Link
+                to="/tutorials"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  display: "block", padding: "0.85rem 2rem",
+                  color: "rgba(255,255,255,0.82)", fontWeight: 600,
+                  fontSize: "0.95rem", textDecoration: "none",
+                  borderBottom: "1px solid rgba(255,255,255,0.05)",
+                }}
+              >
+                Tutor
+              </Link>
               <div style={{ padding: "1rem 2rem 0" }}>
                 <Link
                   to="/login"
