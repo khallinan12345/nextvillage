@@ -150,7 +150,7 @@ const Navbar: React.FC = () => {
 
   // Shared style tokens — all items same size, vertically centered via items-stretch + h-full
   const navItemBase =
-    'inline-flex items-center h-full px-3 text-sm font-semibold tracking-wide transition-colors whitespace-nowrap';
+    'inline-flex items-center h-full px-2 text-sm font-semibold tracking-wide transition-colors whitespace-nowrap';
   const navItemActive =
     'text-purple-700 border-b-2 border-purple-600';
   const navItemIdle =
@@ -178,7 +178,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Desktop nav — items-stretch so border-b-2 indicators sit flush at bar bottom */}
-          <div className="hidden md:flex items-stretch h-full flex-1 min-w-0">
+          <div className="hidden xl:flex items-stretch h-full flex-1 min-w-0">
             <div className="flex items-stretch gap-0.5">
               {navigationLinks.map((link) => {
                 if (link.dropdown) {
@@ -287,7 +287,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Right-side user actions — same height/font as nav links */}
-          <div className="hidden md:flex items-stretch h-full flex-shrink-0 gap-0.5">
+          <div className="hidden xl:flex items-stretch h-full flex-shrink-0 gap-0.5">
             {isLeaderOrAdmin && (
               <Link
                 to="/admin/student-dashboard"
@@ -327,7 +327,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Mobile hamburger */}
-          <div className="md:hidden flex items-center">
+          <div className="xl:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 rounded-md text-gray-500 hover:text-purple-700 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
@@ -341,7 +341,7 @@ const Navbar: React.FC = () => {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
+        <div className="xl:hidden border-t border-gray-100 bg-white">
           <div className="px-2 pt-2 pb-3 space-y-0.5">
             {navigationLinks.map((link) => {
               if (link.dropdown) {
