@@ -136,6 +136,7 @@ const Navbar: React.FC = () => {
         { name: 'Use Claude Together', path: '/playground/together' },
       ],
     },
+    { name: 'Tutor', path: '/tutorials', shorthand: 'Tutor' },
     { name: 'Dashboard', path: '/dashboard', shorthand: 'Dashboard' },
     { name: 'About', path: '/about', shorthand: 'About' },
   ];

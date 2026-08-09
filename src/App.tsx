@@ -98,6 +98,10 @@ const IGiTREEResearchPage = lazy(() => import('./pages/research/ResearchIGiTREE'
 // Claude / Agent Builder
 const CoworkPage = lazy(() => import('./pages/CoworkPage'));
 
+// Tutorials
+const TutorialsPage = lazy(() => import('./pages/tutorials/TutorialsPage'));
+const FishMarketTutorialPage = lazy(() => import('./pages/tutorials/FishMarketTutorialPage'));
+
 // Shown briefly while a lazy-loaded route's chunk downloads. Matches the
 // full-page auth-loading spinner's style above for visual consistency.
 const RouteLoadingFallback: React.FC = () => (
@@ -275,6 +279,10 @@ export const AppContent: React.FC = () => {
 
         {/* Claude / Agent Builder */}
         <Route path="/claude/agents" element={<CoworkPage />} />
+
+        {/* Tutorials */}
+        <Route path="/tutorials" element={<TutorialsPage />} />
+        <Route path="/tutorials/fish-market" element={<FishMarketTutorialPage />} />
 
         {/* Legacy Route Redirects */}
         <Route path="/ai-proficiency" element={<Navigate to="/certifications/ai-proficiency" replace />} />
