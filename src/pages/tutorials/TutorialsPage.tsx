@@ -31,9 +31,9 @@ const TRACKS: Track[] = [
   {
     id: 'fish-market',
     path: '/tutorials/fish-market',
-    title: 'The Fish Market Build',
+    title: 'Build a Platform',
     blurb:
-      'Build one real tool three times — a poster, then a calculator, then a system that remembers. A pricing and sales helper for a family selling fish in the Oloibiri market.',
+      'The Fish Market Build — a pricing and sales helper for a family selling fish in the Oloibiri market, built using both nextVillage\'s own tools and Claude in the AI Playground. You build it three times: first with the no-code Website Builder, without ever seeing the code; then as a real website in Vite + React, the same format most professional sites are built on; then with a database added so it remembers prices and sales instead of forgetting them.',
     duration: 'about four weeks',
     totalSteps: 24,
     tags: ['Website Builder', 'Vite + React', 'Supabase', 'AI Playground'],
