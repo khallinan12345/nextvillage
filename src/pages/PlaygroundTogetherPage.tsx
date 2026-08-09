@@ -11,16 +11,55 @@
 // Back to Basics Youth Education stays exempt from the usage quota below —
 // keep in sync with src/lib/backToBasicsScope.ts.
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { BACK_TO_BASICS_ORG_ID } from '../lib/backToBasicsScope';
-import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare } from 'lucide-react';
+import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X, Image as ImageIcon, BookOpen, Download } from 'lucide-react';
 
 const QUOTA_TOKENS    = 25000;
 const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+// ─── Formatted response renderer ───────────────────────────────────────────
+// Claude's replies are markdown (bold emphasis, lists, paragraphs) — render
+// them properly instead of showing raw asterisks/hashes. Applied only to
+// Claude's own messages; everyone else's text stays plain, unchanged.
+const MARKDOWN_COMPONENTS = {
+  p: (props: React.ComponentProps<'p'>) => <p className="mb-2.5 last:mb-0 leading-relaxed" {...props} />,
+  strong: (props: React.ComponentProps<'strong'>) => <strong className="font-semibold text-violet-800" {...props} />,
+  em: (props: React.ComponentProps<'em'>) => <em className="italic" {...props} />,
+  ul: (props: React.ComponentProps<'ul'>) => <ul className="list-disc pl-5 mb-2.5 space-y-1" {...props} />,
+  ol: (props: React.ComponentProps<'ol'>) => <ol className="list-decimal pl-5 mb-2.5 space-y-1" {...props} />,
+  li: (props: React.ComponentProps<'li'>) => <li className="leading-relaxed" {...props} />,
+  h1: (props: React.ComponentProps<'h1'>) => <h1 className="text-base font-bold mb-1.5 mt-2.5 first:mt-0" {...props} />,
+  h2: (props: React.ComponentProps<'h2'>) => <h2 className="text-sm font-bold mb-1.5 mt-2.5 first:mt-0" {...props} />,
+  h3: (props: React.ComponentProps<'h3'>) => <h3 className="text-sm font-semibold mb-1 mt-2 first:mt-0" {...props} />,
+  code: (props: React.ComponentProps<'code'>) => <code className="bg-black/5 rounded px-1 py-0.5 text-[0.85em] font-mono" {...props} />,
+  blockquote: (props: React.ComponentProps<'blockquote'>) => <blockquote className="border-l-2 border-violet-300 pl-3 italic text-gray-600 mb-2.5" {...props} />,
+};
+
+const FormattedText: React.FC<{ content: string; className?: string }> = ({ content, className }) => (
+  <div className={className}>
+    <ReactMarkdown components={MARKDOWN_COMPONENTS}>{content}</ReactMarkdown>
+  </div>
+);
+
+// A room member asking to see the compiled book (in their own words) opens
+// the book panel directly — no need to know the "View Book" button exists.
+const BOOK_REQUEST_PATTERN = /\b(show|see|view|open|read|pull up|bring up|look at)\b[\s\S]{0,30}\b(book|story)\b/i;
+
+// Every shared image, in upload order — shown after the book text since the
+// canonical book_content (see api/chat-room.js) is rewritten in full on each
+// edit and has no stable per-paragraph anchor to place an image against.
+interface BookImage {
+  id: string;
+  image_url: string;
+  caption?: string;
+  sender_name: string;
+}
 
 // Matches the leader-role set enforced by RLS (together_rooms_update /
 // together_messages_update_moderate) — keep in sync with the migration.
@@ -36,6 +75,8 @@ interface TogetherRoom {
   created_at: string;
   closed_at: string | null;
   closed_by: string | null;
+  book_content: string | null;
+  book_updated_at: string | null;
 }
 
 interface TogetherMessage {
@@ -45,6 +86,7 @@ interface TogetherMessage {
   sender_name: string;
   role: 'user' | 'assistant';
   content: string;
+  image_url: string | null;
   created_at: string;
   deleted_at: string | null;
   deleted_by: string | null;
@@ -61,12 +103,16 @@ const PlaygroundTogetherPage: React.FC = () => {
   const [quotaUsed, setQuotaUsed] = useState(0);
 
   const isLeader = !!user?.role && (LEADER_ROLES.has(user.role) || user.role === 'platform_administrator');
+  const canDeleteRoom = (room: TogetherRoom) => isLeader || room.created_by === user?.id;
 
   const [view, setView] = useState<'list' | 'room'>('list');
   const [rooms, setRooms] = useState<TogetherRoom[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [newRoomName, setNewRoomName] = useState('');
   const [creatingRoom, setCreatingRoom] = useState(false);
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [renaming, setRenaming] = useState(false);
 
   const [activeRoom, setActiveRoom] = useState<TogetherRoom | null>(null);
   const [messages, setMessages] = useState<TogetherMessage[]>([]);
@@ -75,6 +121,11 @@ const PlaygroundTogetherPage: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [claudeThinking, setClaudeThinking] = useState(false);
   const [roomError, setRoomError] = useState('');
+
+  // ── Image sharing + book view ────────────────────────────────────────────
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [bookPanelOpen, setBookPanelOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const roomsChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -146,6 +197,10 @@ const PlaygroundTogetherPage: React.FC = () => {
             : prev.filter(r => r.id !== room.id)
         );
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'together_rooms' }, payload => {
+        const room = payload.old as TogetherRoom;
+        setRooms(prev => prev.filter(r => r.id !== room.id));
+      })
       .subscribe();
     roomsChannelRef.current = channel;
 
@@ -181,6 +236,9 @@ const PlaygroundTogetherPage: React.FC = () => {
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'together_rooms', filter: `id=eq.${activeRoom.id}` }, payload => {
         setActiveRoom(payload.new as TogetherRoom);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'together_rooms', filter: `id=eq.${activeRoom.id}` }, () => {
+        backToList();
       })
       .subscribe();
     messagesChannelRef.current = channel;
@@ -247,6 +305,13 @@ const PlaygroundTogetherPage: React.FC = () => {
     setSending(false);
     if (error) { setRoomError('Message failed to send — please try again.'); return; }
 
+    // Asking to see the book is a navigation request, not new story content —
+    // open the panel directly instead of spending a Claude turn on it.
+    if (BOOK_REQUEST_PATTERN.test(text)) {
+      setBookPanelOpen(true);
+      return;
+    }
+
     setClaudeThinking(true);
     try {
       const res = await fetch('/api/chat-room', {
@@ -265,6 +330,157 @@ const PlaygroundTogetherPage: React.FC = () => {
       setRoomError('Network error reaching Claude — please try again.');
     } finally {
       setClaudeThinking(false);
+    }
+  };
+
+  // Images are visual-only — shared straight into the room without asking
+  // Claude to reply (api/chat-room.js never sees the picture itself, see
+  // that file for how a share still shows up in Claude's context).
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file || !user?.id || !activeRoom || uploadingImage) return;
+
+    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'].includes(file.type)) {
+      setRoomError('Please choose a PNG, JPEG, GIF, or WEBP image.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setRoomError('That image is too large — please choose one under 10MB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setRoomError('');
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('no_session');
+
+      const res = await fetch('/api/upload-together-asset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+          'Authorization': `Bearer ${accessToken}`,
+          'x-room-id': activeRoom.id,
+          'x-filename': encodeURIComponent(file.name),
+        },
+        body: file,
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.url) throw new Error(data?.error || 'upload_failed');
+
+      const { error } = await supabase.from('together_messages').insert({
+        room_id:     activeRoom.id,
+        sender_id:   user.id,
+        sender_name: user.name,
+        role:        'user',
+        content:     '',
+        image_url:   data.url,
+      });
+      if (error) throw error;
+    } catch {
+      setRoomError('Image upload failed — please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // ── "Our Book" — the room's ONE canonical document (api/chat-room.js
+  // rewrites it in full whenever a turn adds to or edits the book, never a
+  // fragment) plus every shared image. Lives on the room itself, not
+  // reconstructed from chat messages, so it updates live via the same
+  // together_rooms realtime subscription already wired up above. ─────────
+  const bookText = (activeRoom?.book_content || '').trim();
+  const bookParagraphs = useMemo(
+    () => bookText ? bookText.split(/\n{2,}/).map(p => p.trim()).filter(Boolean) : [],
+    [bookText]
+  );
+  const bookImages = useMemo<BookImage[]>(
+    () => messages
+      .filter(m => !m.deleted_at && m.image_url)
+      .map(m => ({ id: m.id, image_url: m.image_url as string, caption: m.content || undefined, sender_name: m.sender_name })),
+    [messages]
+  );
+  const bookIsEmpty = bookParagraphs.length === 0 && bookImages.length === 0;
+
+  const [downloadingBook, setDownloadingBook] = useState(false);
+  const handleDownloadBookPDF = async () => {
+    if (downloadingBook || bookIsEmpty) return;
+    setDownloadingBook(true);
+    try {
+      const jsPDFModule = await import('jspdf').catch(() => null);
+      if (!jsPDFModule) { setRoomError('PDF generation is not available right now.'); return; }
+      const { jsPDF } = jsPDFModule;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxWidth = pageWidth - margin * 2;
+      let y = margin;
+
+      const ensureSpace = (needed: number) => {
+        if (y + needed > pageHeight - margin) { doc.addPage(); y = margin; }
+      };
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      for (const line of doc.splitTextToSize(activeRoom?.name || 'Our Book', maxWidth)) {
+        ensureSpace(10); doc.text(line, margin, y); y += 10;
+      }
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      if (bookParagraphs.length) {
+        for (const para of bookParagraphs) {
+          for (const line of doc.splitTextToSize(para, maxWidth)) {
+            ensureSpace(7); doc.text(line, margin, y); y += 7;
+          }
+          y += 4;
+        }
+      } else {
+        doc.text('Nothing written yet.', margin, y);
+      }
+
+      for (const img of bookImages) {
+        try {
+          const res = await fetch(img.image_url);
+          const blob = await res.blob();
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('read failed'));
+            reader.readAsDataURL(blob);
+          });
+          const format = blob.type.includes('png') ? 'PNG' : 'JPEG';
+          const props = doc.getImageProperties(base64);
+          const ratio = props.width / props.height;
+          let dispWidth = maxWidth;
+          let dispHeight = dispWidth / ratio;
+          const maxImgHeight = 140;
+          if (dispHeight > maxImgHeight) { dispHeight = maxImgHeight; dispWidth = dispHeight * ratio; }
+
+          doc.addPage();
+          y = margin;
+          doc.addImage(base64, format, margin + (maxWidth - dispWidth) / 2, y, dispWidth, dispHeight);
+          y += dispHeight + 6;
+          if (img.caption) {
+            doc.setFontSize(10);
+            for (const line of doc.splitTextToSize(img.caption, maxWidth)) { doc.text(line, margin, y); y += 5; }
+            doc.setFontSize(12);
+          }
+          doc.setFontSize(9);
+          doc.text(`Shared by ${img.sender_name}`, margin, y);
+          doc.setFontSize(12);
+        } catch {
+          // Skip an image that fails to load rather than break the whole PDF.
+        }
+      }
+
+      doc.save(`${(activeRoom?.name || 'our-book').replace(/\s+/g, '-').toLowerCase()}.pdf`);
+    } finally {
+      setDownloadingBook(false);
     }
   };
 
@@ -287,6 +503,46 @@ const PlaygroundTogetherPage: React.FC = () => {
     if (data) setActiveRoom(data);
   };
 
+  const handleDeleteRoom = async (room: TogetherRoom) => {
+    if (!canDeleteRoom(room)) return;
+    if (!window.confirm(`Delete "${room.name}"? This cannot be undone.`)) return;
+    const { error } = await supabase.from('together_rooms').delete().eq('id', room.id);
+    if (error) { setRoomError('Could not delete the room — please try again.'); return; }
+    setRooms(prev => prev.filter(r => r.id !== room.id));
+    if (activeRoom?.id === room.id) backToList();
+  };
+
+  const startEditingRoom = (room: TogetherRoom) => {
+    setEditingRoomId(room.id);
+    setEditingName(room.name);
+  };
+
+  const cancelEditingRoom = () => {
+    setEditingRoomId(null);
+    setEditingName('');
+  };
+
+  const handleRenameRoom = async (room: TogetherRoom) => {
+    if (!canDeleteRoom(room) || renaming) return;
+    const trimmed = editingName.trim();
+    if (!trimmed) { cancelEditingRoom(); return; }
+    if (trimmed === room.name) { cancelEditingRoom(); return; }
+    setRenaming(true);
+    const { data, error } = await supabase
+      .from('together_rooms')
+      .update({ name: trimmed })
+      .eq('id', room.id)
+      .select('*')
+      .single();
+    setRenaming(false);
+    if (error) { setRoomError('Could not rename the room — please try again.'); return; }
+    if (data) {
+      setRooms(prev => prev.map(r => r.id === room.id ? data : r));
+      if (activeRoom?.id === room.id) setActiveRoom(data);
+    }
+    cancelEditingRoom();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
@@ -304,7 +560,7 @@ const PlaygroundTogetherPage: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto">
+      <div className={view === 'room' && bookPanelOpen ? 'max-w-6xl mx-auto' : 'max-w-4xl mx-auto'}>
         {view === 'list' ? (
           <div>
             <div className="flex items-center gap-3 mb-6">
@@ -348,23 +604,81 @@ const PlaygroundTogetherPage: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 {rooms.map(room => (
-                  <button
+                  <div
                     key={room.id}
-                    onClick={() => openRoom(room)}
-                    className="w-full text-left bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-sm transition-all flex items-center justify-between"
+                    className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-sm transition-all flex items-center justify-between gap-2"
                   >
-                    <div>
-                      <p className="font-medium text-gray-900">{room.name}</p>
-                      <p className="text-xs text-gray-400">Started by {room.created_by_name}</p>
-                    </div>
-                    <ArrowLeft size={16} className="text-gray-300 rotate-180" />
-                  </button>
+                    {editingRoomId === room.id ? (
+                      <>
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={e => setEditingName(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') { e.preventDefault(); handleRenameRoom(room); }
+                            if (e.key === 'Escape') { e.preventDefault(); cancelEditingRoom(); }
+                          }}
+                          maxLength={100}
+                          disabled={renaming}
+                          className="flex-1 min-w-0 border border-purple-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-purple-200"
+                        />
+                        <button
+                          onClick={() => handleRenameRoom(room)}
+                          disabled={renaming || !editingName.trim()}
+                          className="p-1.5 text-gray-400 hover:text-emerald-600 disabled:opacity-40 transition-colors flex-shrink-0"
+                          title="Save name"
+                        >
+                          {renaming ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                        </button>
+                        <button
+                          onClick={cancelEditingRoom}
+                          disabled={renaming}
+                          className="p-1.5 text-gray-400 hover:text-gray-700 disabled:opacity-40 transition-colors flex-shrink-0"
+                          title="Cancel"
+                        >
+                          <X size={15} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => openRoom(room)}
+                          className="flex-1 min-w-0 text-left flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{room.name}</p>
+                            <p className="text-xs text-gray-400">Started by {room.created_by_name}</p>
+                          </div>
+                          <ArrowLeft size={16} className="text-gray-300 rotate-180 flex-shrink-0" />
+                        </button>
+                        {canDeleteRoom(room) && (
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => startEditingRoom(room)}
+                              className="p-1.5 text-gray-300 hover:text-purple-600 transition-colors"
+                              title="Rename room"
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteRoom(room)}
+                              className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                              title="Delete room"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl flex flex-col h-[75vh]">
+          <div className="flex gap-4 h-[75vh]">
+          <div className={`bg-white border border-gray-200 rounded-2xl flex flex-col min-w-0 transition-all duration-300 ${bookPanelOpen ? 'w-1/2' : 'flex-1'}`}>
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
               <div className="flex items-center gap-3 min-w-0">
                 <button onClick={backToList} className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0">
@@ -377,14 +691,34 @@ const PlaygroundTogetherPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              {isLeader && activeRoom?.status === 'active' && (
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button
-                  onClick={handleCloseRoom}
-                  className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
+                  onClick={() => setBookPanelOpen(o => !o)}
+                  className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
+                    bookPanelOpen
+                      ? 'text-white bg-purple-600 border-purple-600 hover:bg-purple-700'
+                      : 'text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300 bg-purple-50'
+                  }`}
                 >
-                  <Lock size={13} /> Close Room
+                  <BookOpen size={13} /> {bookPanelOpen ? 'Hide Book' : 'View Book'}
                 </button>
-              )}
+                {isLeader && activeRoom?.status === 'active' && (
+                  <button
+                    onClick={handleCloseRoom}
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    <Lock size={13} /> Close Room
+                  </button>
+                )}
+                {activeRoom && canDeleteRoom(activeRoom) && (
+                  <button
+                    onClick={() => handleDeleteRoom(activeRoom)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    <Trash2 size={13} /> Delete Room
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
@@ -410,6 +744,17 @@ const PlaygroundTogetherPage: React.FC = () => {
                         </p>
                         {isDeleted ? (
                           <p className={`text-sm italic ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>[message removed]</p>
+                        ) : msg.image_url ? (
+                          <div>
+                            <img src={msg.image_url} alt={msg.content || 'Shared image'} className="rounded-xl max-w-full max-h-64 object-contain" />
+                            {msg.content && (
+                              isAssistant
+                                ? <FormattedText content={msg.content} className="text-sm mt-1.5" />
+                                : <p className="text-sm whitespace-pre-wrap break-words mt-1.5">{msg.content}</p>
+                            )}
+                          </div>
+                        ) : isAssistant ? (
+                          <FormattedText content={msg.content} className="text-sm" />
                         ) : (
                           <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                         )}
@@ -443,6 +788,21 @@ const PlaygroundTogetherPage: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-end gap-2 px-5 py-3 border-t border-gray-100">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  title="Share an image"
+                  className="flex-shrink-0 w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-purple-600 hover:border-purple-300 disabled:opacity-40 transition-colors"
+                >
+                  {uploadingImage ? <Loader2 size={15} className="animate-spin" /> : <ImageIcon size={15} />}
+                </button>
                 <textarea
                   value={input}
                   onChange={e => setInput(e.target.value)}
@@ -461,6 +821,53 @@ const PlaygroundTogetherPage: React.FC = () => {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* ── "Our Book" artifact panel — everything Claude has written plus
+              every shared image, formatted like a document instead of a chat.
+              Lives beside the conversation, the same way Vibe Coding and the
+              other tools show their artifact window next to the chat. ── */}
+          {bookPanelOpen && activeRoom && (
+            <div className="w-1/2 min-w-0 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden flex-shrink-0">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2 min-w-0">
+                  <BookOpen size={16} className="text-purple-600 flex-shrink-0" /> <span className="truncate">{activeRoom.name}</span>
+                </h2>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={handleDownloadBookPDF}
+                    disabled={bookIsEmpty || downloadingBook}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 border border-purple-200 hover:border-purple-300 bg-purple-50 rounded-lg transition-colors disabled:opacity-40"
+                  >
+                    {downloadingBook ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} PDF
+                  </button>
+                  <button onClick={() => setBookPanelOpen(false)} className="p-1 text-gray-400 hover:text-gray-700" title="Close panel">
+                    <X size={17} />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-5" style={{ fontFamily: 'Georgia, serif' }}>
+                {bookIsEmpty ? (
+                  <p className="text-center text-gray-400 text-sm py-12">
+                    Nothing in the book yet — keep chatting with Claude and share images to build it up.
+                  </p>
+                ) : (
+                  <>
+                    {bookParagraphs.map((para, i) => (
+                      <p key={i} className="text-gray-800 leading-relaxed whitespace-pre-wrap mb-4">{para}</p>
+                    ))}
+                    {bookImages.map(img => (
+                      <figure key={img.id} className="mb-6">
+                        <img src={img.image_url} alt={img.caption || 'Shared image'} className="rounded-xl max-w-full mx-auto" />
+                        {img.caption && <p className="text-sm text-gray-600 text-center mt-2">{img.caption}</p>}
+                        <figcaption className="text-xs text-gray-400 text-center mt-1">Shared by {img.sender_name}</figcaption>
+                      </figure>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
           </div>
         )}
       </div>

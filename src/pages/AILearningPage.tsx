@@ -1420,6 +1420,13 @@ GRADE LEVEL: High School (Grades 9-12, Ages 14-18)
 LANGUAGE: You can use more sophisticated language and concepts. They can handle complex ideas and abstract thinking.
 
 TEACHING APPROACH: Use advanced questioning techniques that promote analytical and critical thinking. Ask questions like "How would you analyze this situation?" or "What are the implications of this concept?" Encourage them to evaluate different perspectives, make predictions, and synthesize information. Connect learning to their future goals, college prep, career interests, and real-world applications. Challenge them to defend their reasoning and consider alternative viewpoints.`;
+  } else if (gradeLevel === 4) {
+    gradeGuidance = `
+GRADE LEVEL: Adult Learner (18+)
+
+LANGUAGE: Use clear, professional language. Treat them as a capable adult, not a student in a classroom — avoid childish framing or over-explaining basics they likely already know.
+
+TEACHING APPROACH: Ask questions that connect to real-world and career applications: "How might this apply to your work?" or "What's your experience with this so far?" Respect their existing knowledge and time — get to the point. Encourage independent exploration and self-directed learning. Frame guidance around practical outcomes rather than grades or school-style evaluation.`;
   } else {
     gradeGuidance = `
 TEACHING APPROACH: Adapt your communication style to be clear and age-appropriate. Use encouraging language and check for understanding frequently. Focus on guiding the student to discover answers through thoughtful questioning rather than providing direct solutions.`;
@@ -1453,8 +1460,9 @@ go deeper immediately — do not praise and move on.`;
     if (!user?.id) return;
   
     try {
-      // Resolve which city_town to show: Ibiade users see Ibiade modules, everyone else sees Oloibiri
-      const cityTown = city === 'Ibiade' ? 'Ibiade' : 'Oloibiri';
+      // Resolve which city_town to show: Ibiade users see Ibiade modules, Dayton
+      // (Back to Basics Youth Education) users see Dayton modules, everyone else sees Oloibiri
+      const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
       // 1. Fetch all relevant learning modules filtered by city_town
       const { data, error } = await supabase
@@ -2101,7 +2109,7 @@ CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown.
         page: 'AILearningPage',
         messages: [{ role: 'user', content: comprehensivePrompt }],
         system: 'You are a UNESCO AI Competency evaluator. Respond ONLY with valid JSON. Do not include any other text.',
-        max_tokens: 1200,
+        max_tokens: 3000,
         temperature: 0.2,
       });
 
@@ -2641,7 +2649,6 @@ Respond ONLY with valid JSON:
         unescoScores: assessment.unesco_scores
       });
       setShowEvaluationModal(true);
-      handleBackToOverview();
 
     } catch (error) {
       console.error('Error saving session:', error);
@@ -2834,7 +2841,7 @@ Respond ONLY with valid JSON:
           }
         ],
         system: standardInstructions,
-        max_tokens: 1200,
+        max_tokens: 3000,
         temperature: 0.2
       });
 
@@ -3134,7 +3141,8 @@ Respond ONLY with valid JSON:
       const metricsForSuccess = await generateMetricsForSuccess(createForm.category, context);
       const newModuleId = crypto.randomUUID();
       // Resolve city_town for module so it appears in the correct cohort's activity list
-      const moduleCityTown = continent === 'North America' ? 'Cincinnati'
+      const moduleCityTown = userCity === 'Dayton' ? 'Dayton'
+                           : continent === 'North America' ? 'Cincinnati'
                            : (userCity === 'Ibiade' ? 'Ibiade' : 'Oloibiri');
 
       const { error: insertError } = await supabase.from('learning_modules').insert({
@@ -3976,7 +3984,7 @@ Respond ONLY with valid JSON:
                 >
                   {evaluating
                     ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
-                    : <><Save size={18} /> Save Session</>}
+                    : <><Save size={18} /> Evaluate Me / Save Session</>}
                 </Button>
                 <button
                   onClick={handleCompleteSession}

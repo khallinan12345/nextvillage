@@ -189,7 +189,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const {
     taskId, taskLabel, phase, projectFiles, sessionContext,
-    completedTasks, communicationStrategy, learningStrategy,
+    completedTasks, communicationStrategy, learningStrategy, gradeLevel,
     importedSiteName, dataRoleAnswer, supabaseConnected,
   } = req.body;
 
@@ -200,10 +200,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const commStr  = communicationStrategy ? JSON.stringify(communicationStrategy) : null;
   const learnStr = learningStrategy      ? JSON.stringify(learningStrategy)      : null;
-  const personalitySection = (commStr || learnStr)
+  // Grade level scale: 1=Elementary, 2=Middle School, 3=High School, 4=Adult Learner (18+)
+  const gradeLine: Record<number, string> = {
+    1: 'The learner is in elementary school (grades 3-5, ages 8-11). Use very simple words and short sentences. Be extra encouraging.',
+    2: 'The learner is in middle school (grades 6-8, ages 11-14). Use clear, age-appropriate language.',
+    3: 'The learner is in high school (grades 9-12, ages 14-18). You can use more sophisticated language.',
+    4: 'The learner is an adult (18+). Use clear, professional language — treat them as a capable adult, not a classroom student.',
+  };
+  const gradeStr = gradeLevel && gradeLine[gradeLevel] ? gradeLine[gradeLevel] : null;
+  const personalitySection = (commStr || learnStr || gradeStr)
     ? '\n\nLEARNER PERSONALITY PROFILE:\n'
       + (commStr  ? `Communication strategy: ${commStr}\n` : '')
       + (learnStr ? `Learning strategy: ${learnStr}\n`     : '')
+      + (gradeStr ? `Grade level: ${gradeStr}\n`           : '')
       + 'Adapt vocabulary, analogies, and sentence length to match. Teaching commentary especially should feel personally pitched.\n'
     : '';
 

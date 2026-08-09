@@ -14,6 +14,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // FLUX Schnell — official Replicate deployment, uses /v1/models/ path
 const REPLICATE_API = 'https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions';
 
+// Appended server-side only to what's sent to the model — never shown to the
+// learner and never stored as part of their prompt (image_generations.prompt
+// stays exactly what they typed, for display/reuse).
+const SAFETY_SUFFIX = 'No violence, blood, gore, weapons, or graphic injury. Family-friendly, appropriate for children.';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -118,7 +123,7 @@ Deno.serve(async (req: Request) => {
       }),
       body: JSON.stringify({
         input: {
-          prompt:       safePrompt,
+          prompt:       `${safePrompt}. ${SAFETY_SUFFIX}`,
           aspect_ratio: safeAspectRatio,
           num_outputs:  1,
           num_inference_steps: safeSteps,

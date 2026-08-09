@@ -847,6 +847,52 @@ function buildSkillsMockActivities(): DashboardActivity[] {
   return mockActivities;
 }
 
+// Dayton (Back to Basics Youth Education) Skills catalog — unlike the
+// Nigeria/Oloibiri mock catalog above (hand-authored, solar-themed titles
+// with no real learning_modules row behind them), this pulls the real
+// Dayton-tailored rows generated for city_town='Dayton' so that starting a
+// session loads the actual localized title/description/facilitator+
+// assessment instructions via fetchActivityDetails(learning_module_id)
+// instead of falling back to generic text. The catalog `id` still gets a
+// 'mock-' prefix so the existing isMockActivity guards (which skip writing
+// to the real `dashboard` table for browse-only catalog entries) still apply.
+async function fetchDaytonSkillsActivities(): Promise<DashboardActivity[]> {
+  const { data, error } = await supabase
+    .from('learning_modules')
+    .select('learning_module_id, title, description, sub_category, learning_or_certification, updated_at')
+    .eq('category', 'Skills')
+    .eq('city_town', 'Dayton')
+    .eq('public', 1)
+    .neq('sub_category', 'Vibe Coding')
+    .order('sub_category', { ascending: true });
+
+  if (error) {
+    console.error('[Skills Activities] Error fetching Dayton modules:', error);
+    return [];
+  }
+
+  return (data || []).map((row) => ({
+    id: `mock-${row.learning_module_id}`,
+    activity: row.title,
+    title: row.title,
+    category_activity: 'Skills',
+    sub_category: row.sub_category,
+    progress: 'not started' as const,
+    learning_module_id: row.learning_module_id,
+    description: row.description,
+    updated_at: row.updated_at || new Date().toISOString(),
+    certification_evaluation_score: null,
+    certification_evaluation_evidence: null,
+    learning_modules: {
+      category: 'Skills',
+      sub_category: row.sub_category,
+      learning_or_certification: row.learning_or_certification ?? 'learning',
+      public: 1,
+    },
+    isPublic: true,
+  }));
+}
+
 // Define rubric dimensions for each sub-category
 const RUBRIC_DEFINITIONS: Record<string, string[]> = {
   'Vibe Coding': [
@@ -1783,8 +1829,9 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
     try {
       setLoading(true);
 
-      // Resolve which city_town to show: Ibiade users see Ibiade modules, everyone else sees Oloibiri
-      const cityTown = city === 'Ibiade' ? 'Ibiade' : 'Oloibiri';
+      // Resolve which city_town to show: Ibiade users see Ibiade modules, Dayton
+      // (Back to Basics Youth Education) users see Dayton modules, everyone else sees Oloibiri
+      const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
       console.log('[Skills Activities] Querying with JOIN to learning_modules');
       console.log('[Skills Activities] User ID:', user.id);
@@ -1830,9 +1877,16 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
 
       console.log('[Skills Activities] Loaded', dashboardData?.length || 0, 'total activities');
       console.log('[Skills Activities] Filtered to', skillsActivities.length, 'Skills activities');
-      
-      // Force full mock activity list regardless of DB results
-      setAllSkillsActivities(buildSkillsMockActivities());
+
+      // Dayton (Back to Basics) learners get the real, Dayton-tailored catalog
+      // generated for their city; everyone else keeps the existing mock catalog.
+      if (cityTown === 'Dayton') {
+        const daytonActivities = await fetchDaytonSkillsActivities();
+        setAllSkillsActivities(daytonActivities.length > 0 ? daytonActivities : buildSkillsMockActivities());
+      } else {
+        // Force full mock activity list regardless of DB results
+        setAllSkillsActivities(buildSkillsMockActivities());
+      }
     } catch (err) {
       console.error('[Skills Activities] Error loading:', err);
 
@@ -2070,7 +2124,7 @@ LANGUAGE RULES:
         case 1: return 'Use simple, clear language appropriate for elementary students. Use concrete examples and encourage frequently. Break down complex ideas into small, easy-to-understand steps. Be patient and positive.';
         case 2: return 'Use age-appropriate language for middle school students. Provide clear explanations with relevant examples. Encourage critical thinking and independence. Be supportive and respectful.';
         case 3: return 'Use language appropriate for high school students. Provide detailed explanations and challenge students to think deeply. Encourage analysis and synthesis of ideas. Respect their developing independence.';
-        case 4: return 'Use sophisticated language appropriate for college students. Provide comprehensive explanations with academic rigor. Encourage critical analysis, research skills, and independent thinking. Treat students as emerging professionals.';
+        case 4: return 'This is an adult learner (18+). Use clear, professional language and treat them as a capable adult, not a classroom student — avoid childish framing or over-explaining basics. Connect guidance to real-world and career applications. Respect their existing knowledge and time, and encourage independent, self-directed exploration.';
         default: return 'Adjust your language and examples to be appropriate for the student\'s level. Be supportive and encouraging.';
       }
     })();
@@ -2541,7 +2595,7 @@ Provide assessment now:`;
         page: 'SkillsDevelopmentPage',
         messages,
         system: 'You are an expert AI assessment evaluator for comprehensive skill evaluation. Respond only with valid JSON.',
-        max_tokens: 2000,
+        max_tokens: 3000,
         temperature: 0.3
       });
 
@@ -2595,13 +2649,33 @@ Provide assessment now:`;
       const shouldComplete = evaluationScore === 3;
       const newProgress = shouldComplete ? 'completed' : 'started';
 
+      const aggregateEvidence = rubricEvaluation.dimensions
+        .map(dim => `${dim.dimension.replace(/_/g, ' ')}: ${dim.evidence}`)
+        .join(' | ');
+
+      // Map dimensions to the same per-dimension columns the real-DB branch
+      // uses, so cards/redisplays show full evidence for mock (Dayton, etc.)
+      // activities too, not just the aggregate score.
+      const colMap = RUBRIC_COLUMN_MAP[subCategory] || {};
+      const dimensionData: Record<string, number | string> = {};
+      for (const dim of rubricEvaluation.dimensions) {
+        const dimensionKey = dim.dimension.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const cols = colMap[dimensionKey];
+        if (cols) {
+          dimensionData[cols.score] = dim.score;
+          dimensionData[cols.evidence] = dim.evidence;
+        }
+      }
+
       setAllSkillsActivities(prev =>
         prev.map(activity =>
           activity.id === activityId
             ? {
                 ...activity,
                 certification_evaluation_score: evaluationScore,
-                progress: newProgress as 'not started' | 'started' | 'completed'
+                certification_evaluation_evidence: aggregateEvidence,
+                progress: newProgress as 'not started' | 'started' | 'completed',
+                ...dimensionData
               }
             : activity
         )
@@ -2611,7 +2685,9 @@ Provide assessment now:`;
         setSelectedActivity(prev => prev ? {
           ...prev,
           certification_evaluation_score: evaluationScore,
-          progress: newProgress as 'not started' | 'started' | 'completed'
+          certification_evaluation_evidence: aggregateEvidence,
+          progress: newProgress as 'not started' | 'started' | 'completed',
+          ...dimensionData
         } : null);
       }
 
@@ -3001,39 +3077,32 @@ Provide assessment now:`;
     
     try {
       const isSkillsLearning = currentModuleCategory === 'Skills' && currentModuleLearningOrCert === 'learning';
-      
-      // Guard: Handle mock activities gracefully
-      const isMockActivity = String(selectedActivity.id ?? '').startsWith('mock-');
 
       if (isSkillsLearning && currentModuleSubCategory) {
         console.log('[Save Session] Performing full rubric assessment');
-        
+
         const rubricEvaluation = await callSkillsRubricAssessmentFull(
           chatHistory,
           currentModuleSubCategory,
           aiAssessmentInstructions,
           successMetrics
         );
-        
-        if (!isMockActivity) {
-          await updateSkillsRubricEvaluation(
-            selectedActivity.id,
-            currentModuleSubCategory,
-            rubricEvaluation,
-            chatHistory,
-            false // Don't force completion
-          );
-        } else {
-          console.log('[Save Session] Saving mock activity to localStorage only');
-          try {
-            const key = `SkillsDevelopmentPage_historyCache_${selectedActivity.id}`;
-            localStorage.setItem(key, JSON.stringify(chatHistory));
-          } catch (err) {
-            console.warn('[Save Session] Failed to save mock activity to localStorage:', err);
-          }
-        }
-        
-        alert('Session saved successfully!');
+
+        // updateSkillsRubricEvaluation has its own mock-vs-real branch internally
+        // (mock activities update local state only, real ones write to Supabase),
+        // so it's safe to call unconditionally here.
+        await updateSkillsRubricEvaluation(
+          selectedActivity.id,
+          currentModuleSubCategory,
+          rubricEvaluation,
+          chatHistory,
+          false // Don't force completion
+        );
+
+        // Show the same evaluation popup that Complete Session shows, so the
+        // learner can see scores and evidence without leaving the page.
+        setEvaluationResult(rubricEvaluation);
+        setShowEvaluationModal(true);
       } else {
         // Just save chat history for non-Skills activities
         await updateChatHistory(selectedActivity.id, chatHistory);
@@ -3698,7 +3767,8 @@ Provide assessment now:`;
       const now = new Date().toISOString();
 
       // Resolve city_town for module so it appears in the correct cohort's activity list
-      const moduleCityTown = userContinent === 'North America' ? 'Cincinnati'
+      const moduleCityTown = userCity === 'Dayton' ? 'Dayton'
+                           : userContinent === 'North America' ? 'Cincinnati'
                            : (userCity === 'Ibiade' ? 'Ibiade' : 'Oloibiri');
 
       // NA-aware assessment and metrics text
@@ -4383,7 +4453,7 @@ Provide assessment now:`;
                     isLoading={savingSession}
                     variant="secondary"
                   >
-                    Save Session
+                    Evaluate Me / Save Session
                   </Button>
                 </div>
               </div>

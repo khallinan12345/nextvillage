@@ -53,6 +53,8 @@ export interface UseHelpMeAnswerOptions {
   systemPromptPreset?: SystemPromptPreset;
   /** Full system prompt override — only used when preset is 'custom' */
   customSystemPrompt?: string;
+  /** Learner's grade level (1=Elementary, 2=Middle School, 3=High School, 4=Adult Learner) — tailors language complexity */
+  gradeLevel?: number | null;
 }
 
 export interface UseHelpMeAnswerReturn {
@@ -78,6 +80,17 @@ export interface UseHelpMeAnswerReturn {
 
 // ─── Built-in system prompt presets ──────────────────────────────────────────
 
+// Grade level scale: 1=Elementary, 2=Middle School, 3=High School, 4=Adult Learner (18+)
+function gradeGuidance(gradeLevel?: number | null): string {
+  switch (gradeLevel) {
+    case 1: return 'The learner is in elementary school (grades 3-5, ages 8-11). Use very simple words and short sentences. Be extra encouraging.';
+    case 2: return 'The learner is in middle school (grades 6-8, ages 11-14). Use clear, age-appropriate language.';
+    case 3: return 'The learner is in high school (grades 9-12, ages 14-18). You can use more sophisticated language.';
+    case 4: return 'The learner is an adult (18+). Use clear, professional language — treat them as a capable adult, not a classroom student.';
+    default: return '';
+  }
+}
+
 function buildSystemPrompt(
   preset: SystemPromptPreset,
   question: string,
@@ -85,10 +98,12 @@ function buildSystemPrompt(
   taskLabel: string,
   sessionContext: Record<string, any>,
   customSystemPrompt?: string,
+  gradeLevel?: number | null,
 ): string {
   const ctx = Object.keys(sessionContext).length > 0
     ? `\nLearner context: ${JSON.stringify(sessionContext)}`
     : '';
+  const grade = gradeGuidance(gradeLevel);
 
   if (preset === 'custom' && customSystemPrompt) return customSystemPrompt;
 
@@ -96,6 +111,7 @@ function buildSystemPrompt(
 They are answering this question: "${question}"
 Background concept: ${teaching}
 Task: ${taskLabel}${ctx}
+${grade ? `\n${grade}` : ''}
 
 Your job:
 - Explain things in plain, simple language — no jargon
@@ -151,6 +167,7 @@ export function useHelpMeAnswer({
   chatPage = 'WebDevelopmentPage',
   systemPromptPreset = 'web-dev',
   customSystemPrompt,
+  gradeLevel = null,
 }: UseHelpMeAnswerOptions): UseHelpMeAnswerReturn {
 
   const [isOpen, setIsOpen]       = useState(false);
@@ -224,7 +241,7 @@ export function useHelpMeAnswer({
           max_tokens: 800,
           system:     buildSystemPrompt(
             systemPromptPreset, question, teaching, taskLabel,
-            sessionContext, customSystemPrompt,
+            sessionContext, customSystemPrompt, gradeLevel,
           ),
           messages: newMessages.map(m => ({ role: m.role, content: m.text })),
         }),
@@ -253,7 +270,7 @@ export function useHelpMeAnswer({
   }, [
     inputValue, isLoading, messages, chatPage,
     systemPromptPreset, question, teaching, taskLabel,
-    sessionContext, customSystemPrompt, generateDraft,
+    sessionContext, customSystemPrompt, gradeLevel, generateDraft,
   ]);
 
   // ── requestDraft ──────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
-import { Menu, X, Sparkles, LogOut, ShieldCheck } from 'lucide-react';
+import { Menu, X, Sparkles, LogOut, ShieldCheck, ChevronUp, ChevronDown } from 'lucide-react';
 import classNames from 'classnames';
 import { useBranding } from '../../lib/useBranding';
 
@@ -19,6 +19,9 @@ const Navbar: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [openMobileGroups, setOpenMobileGroups] = useState<Record<string, boolean>>({});
+  const toggleMobileGroup = (key: string) =>
+    setOpenMobileGroups(prev => ({ ...prev, [key]: !prev[key] }));
   const [researchPrograms, setResearchPrograms] = useState<{name: string; path: string}[]>([
     { name: 'AI Learning Lab', path: '/research/ai-learning-lab' },
     { name: 'IGiTREE',         path: '/research/igitree'         },
@@ -71,22 +74,46 @@ const Navbar: React.FC = () => {
     {
       name: 'Tech Skills Workshop',
       shorthand: 'Tech Skills',
-      dropdown: [
-        { name: 'Vibe Coding', path: '/tech-skills/vibe-coding' },
-        { name: 'Vite/React Web Site Development', path: '/tech-skills/web-development' },
-        { name: 'Full-Stack App Development', path: '/tech-skills/full-stack-development' },
-        { name: 'AI Image Creation', path: '/tech-skills/ai-image-creation' },
-        { name: 'AI Voice Creation', path: '/tech-skills/ai-voice-creation' },
-        { name: 'AI Video Creation', path: '/tech-skills/ai-video-creation' },
-        { name: 'AI Video Studio', path: '/tech-skills/ai-video-studio' },
-        { name: 'AI Content Creation', path: '/tech-skills/ai-content-creation' },
-        { name: 'AI Workflow Development', path: '/tech-skills/ai-workflow-development' },
-        { name: 'AI for Business', path: '/tech-skills/ai-for-business' },
-        { name: 'Microsoft AI-900 Prep', path: '/tech-skills/microsoft-ai900' },
-        { name: 'Microsoft DP-900 Prep', path: '/tech-skills/microsoft-dp900' },
-        { name: 'Microsoft AB-730 Prep', path: '/tech-skills/microsoft-ab730' },
-        { name: 'GitHub Foundations GH-300 Prep', path: '/tech-skills/github-gh300' },
-        { name: 'Employable Tech Skills Prep', path: '/tech-skills'},
+      // Grouped instead of a flat `dropdown` — the list got too long to
+      // scan. Desktop shows grouped headers (no collapse — it's already a
+      // transient hover menu); mobile gets a real per-group accordion.
+      groups: [
+        {
+          id: 'coding',
+          label: 'Coding',
+          items: [
+            { name: 'Vibe Coding', path: '/tech-skills/vibe-coding' },
+            { name: 'Website Builder', path: '/tech-skills/website-builder' },
+            { name: 'Vite/React Web Site Development', path: '/tech-skills/web-development' },
+            { name: 'Full-Stack App Development', path: '/tech-skills/full-stack-development' },
+            { name: 'AI Workflow Development', path: '/tech-skills/ai-workflow-development' },
+            { name: 'GitHub Foundations GH-300 Prep', path: '/tech-skills/github-gh300' },
+          ],
+        },
+        {
+          id: 'creative-ai',
+          label: 'Creative AI',
+          items: [
+            { name: 'Create Game', path: '/tech-skills/create-game' },
+            { name: 'Document Studio', path: '/tech-skills/document-studio' },
+            { name: 'AI Image Creation', path: '/tech-skills/ai-image-creation' },
+            { name: 'AI Voice Creation', path: '/tech-skills/ai-voice-creation' },
+            { name: 'AI Video Creation', path: '/tech-skills/ai-video-creation' },
+            { name: 'AI Video Studio', path: '/tech-skills/ai-video-studio' },
+            { name: 'AI Content Creation', path: '/tech-skills/ai-content-creation' },
+          ],
+        },
+        {
+          id: 'workforce-skills',
+          label: 'Workforce Skills',
+          items: [
+            { name: 'AI for Business', path: '/tech-skills/ai-for-business' },
+            { name: 'Microsoft AI-900 Prep', path: '/tech-skills/microsoft-ai900' },
+            { name: 'Microsoft DP-900 Prep', path: '/tech-skills/microsoft-dp900' },
+            { name: 'Microsoft AB-730 Prep', path: '/tech-skills/microsoft-ab730' },
+            { name: 'Employable Tech Skills Prep', path: '/tech-skills' },
+          ],
+        },
       ],
     },
     {
@@ -134,6 +161,7 @@ const Navbar: React.FC = () => {
         { name: 'Agent Builder', path: '/claude/agents' },
         { name: 'Use Claude',    path: '/playground'    },
         { name: 'Use Claude Together', path: '/playground/together' },
+        { name: 'Systems Think', path: '/systems-think' },
       ],
     },
     { name: 'Tutor', path: '/tutorials', shorthand: 'Tutor' },
@@ -181,10 +209,14 @@ const Navbar: React.FC = () => {
           <div className="hidden xl:flex items-stretch h-full flex-1 min-w-0">
             <div className="flex items-stretch gap-0.5">
               {navigationLinks.map((link) => {
-                if (link.dropdown) {
-                  const isAnyActive = (link.name === 'Research' ? researchPrograms : (link.dropdown as any[])).some((item: any) =>
-                    isActivePath(item.path)
-                  );
+                if (link.dropdown || link.groups) {
+                  const isAnyActive = (
+                    link.name === 'Research'
+                      ? researchPrograms
+                      : link.groups
+                        ? (link.groups as any[]).flatMap(g => g.items)
+                        : (link.dropdown as any[])
+                  ).some((item: any) => isActivePath(item.path));
                   // Research gets teal; Claude gets violet
                   const isResearch = link.name === 'Research';
                   const isClaude   = link.name === 'Claude';
@@ -200,7 +232,9 @@ const Navbar: React.FC = () => {
                     : navItemIdle;
                   const dropdownItems = link.name === 'Research'
                     ? researchPrograms
-                    : (link.dropdown as {name:string;path:string}[]);
+                    : link.groups
+                      ? null
+                      : (link.dropdown as {name:string;path:string}[]);
                   return (
                     <div
                       key={link.name}
@@ -233,36 +267,67 @@ const Navbar: React.FC = () => {
                         <div className="absolute top-full left-0 z-[200] w-full">
                           {/* Transparent bridge — keeps hover zone continuous across the gap */}
                           <div className="h-1 w-full" />
-                          <div className="bg-white rounded-md shadow-lg ring-1 ring-black/5 py-1 min-w-[210px]">
-                            {dropdownItems.map((item) => (
-                              <Link
-                                key={item.path}
-                                to={item.path}
-                                className={classNames(
-                                  'block px-4 py-2 text-sm font-medium transition-colors',
-                                  isActivePath(item.path)
-                                    ? isResearch
-                                      ? 'bg-teal-50 text-teal-700'
-                                      : isClaude
-                                      ? 'bg-violet-50 text-violet-700'
-                                      : 'bg-purple-50 text-purple-700'
-                                    : isResearch
-                                      ? 'text-gray-700 hover:bg-teal-50 hover:text-teal-700'
-                                      : isClaude
-                                      ? 'text-gray-700 hover:bg-violet-50 hover:text-violet-700'
-                                      : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
-                                )}
-                              >
-                                <span className="flex items-center gap-1.5">
-                                  {item.name}
-                                  {item.path === '/tech-skills' && (
-                                    <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
-                                      ADVANCED
-                                    </span>
+                          <div className="bg-white rounded-md shadow-lg ring-1 ring-black/5 py-1 min-w-[230px] max-h-[75vh] overflow-y-auto">
+                            {link.groups ? (
+                              (link.groups as { id: string; label: string; items: { name: string; path: string }[] }[]).map((group, gi) => (
+                                <div key={group.id} className={gi > 0 ? 'border-t border-gray-100 mt-1 pt-1' : ''}>
+                                  <div className="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                                    {group.label}
+                                  </div>
+                                  {group.items.map((item) => (
+                                    <Link
+                                      key={item.path}
+                                      to={item.path}
+                                      className={classNames(
+                                        'block px-4 py-2 text-sm font-medium transition-colors',
+                                        isActivePath(item.path)
+                                          ? 'bg-purple-50 text-purple-700'
+                                          : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
+                                      )}
+                                    >
+                                      <span className="flex items-center gap-1.5">
+                                        {item.name}
+                                        {item.path === '/tech-skills' && (
+                                          <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                            ADVANCED
+                                          </span>
+                                        )}
+                                      </span>
+                                    </Link>
+                                  ))}
+                                </div>
+                              ))
+                            ) : (
+                              dropdownItems!.map((item) => (
+                                <Link
+                                  key={item.path}
+                                  to={item.path}
+                                  className={classNames(
+                                    'block px-4 py-2 text-sm font-medium transition-colors',
+                                    isActivePath(item.path)
+                                      ? isResearch
+                                        ? 'bg-teal-50 text-teal-700'
+                                        : isClaude
+                                        ? 'bg-violet-50 text-violet-700'
+                                        : 'bg-purple-50 text-purple-700'
+                                      : isResearch
+                                        ? 'text-gray-700 hover:bg-teal-50 hover:text-teal-700'
+                                        : isClaude
+                                        ? 'text-gray-700 hover:bg-violet-50 hover:text-violet-700'
+                                        : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
                                   )}
-                                </span>
-                              </Link>
-                            ))}
+                                >
+                                  <span className="flex items-center gap-1.5">
+                                    {item.name}
+                                    {item.path === '/tech-skills' && (
+                                      <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                        ADVANCED
+                                      </span>
+                                    )}
+                                  </span>
+                                </Link>
+                              ))
+                            )}
                           </div>
                         </div>
                       )}
@@ -344,7 +409,7 @@ const Navbar: React.FC = () => {
         <div className="xl:hidden border-t border-gray-100 bg-white">
           <div className="px-2 pt-2 pb-3 space-y-0.5">
             {navigationLinks.map((link) => {
-              if (link.dropdown) {
+              if (link.dropdown || link.groups) {
                 const isResearch = link.name === 'Research';
                 const isClaude   = link.name === 'Claude';
                 return (
@@ -355,36 +420,76 @@ const Navbar: React.FC = () => {
                     )}>
                       {link.shorthand}
                     </div>
-                    {(link.name === 'Research' ? researchPrograms : (link.dropdown as any[])).map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={classNames(
-                          'block px-5 py-2 rounded-md text-sm font-medium transition-colors',
-                          isActivePath(item.path)
-                            ? isResearch
-                              ? 'bg-teal-50 text-teal-700'
-                              : isClaude
-                              ? 'bg-violet-50 text-violet-700'
-                              : 'bg-purple-50 text-purple-700'
-                            : isResearch
-                              ? 'text-gray-600 hover:bg-teal-50 hover:text-teal-700'
-                              : isClaude
-                              ? 'text-gray-600 hover:bg-violet-50 hover:text-violet-700'
-                              : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
-                        )}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          {item.name}
-                          {item.path === '/tech-skills' && (
-                            <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
-                              ADVANCED
-                            </span>
+                    {link.groups ? (
+                      (link.groups as { id: string; label: string; items: { name: string; path: string }[] }[]).map(group => {
+                        const groupKey  = `${link.name}:${group.id}`;
+                        const groupOpen = openMobileGroups[groupKey] ?? false;
+                        return (
+                          <div key={group.id}>
+                            <button
+                              onClick={() => toggleMobileGroup(groupKey)}
+                              className="w-full flex items-center justify-between px-5 py-1.5 text-xs font-bold uppercase tracking-wide text-gray-400"
+                            >
+                              {group.label}
+                              {groupOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                            </button>
+                            {groupOpen && group.items.map((item) => (
+                              <Link
+                                key={item.path}
+                                to={item.path}
+                                className={classNames(
+                                  'block px-7 py-2 rounded-md text-sm font-medium transition-colors',
+                                  isActivePath(item.path)
+                                    ? 'bg-purple-50 text-purple-700'
+                                    : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+                                )}
+                                onClick={() => setIsOpen(false)}
+                              >
+                                <span className="flex items-center gap-1.5">
+                                  {item.name}
+                                  {item.path === '/tech-skills' && (
+                                    <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                      ADVANCED
+                                    </span>
+                                  )}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      (link.name === 'Research' ? researchPrograms : (link.dropdown as any[])).map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={classNames(
+                            'block px-5 py-2 rounded-md text-sm font-medium transition-colors',
+                            isActivePath(item.path)
+                              ? isResearch
+                                ? 'bg-teal-50 text-teal-700'
+                                : isClaude
+                                ? 'bg-violet-50 text-violet-700'
+                                : 'bg-purple-50 text-purple-700'
+                              : isResearch
+                                ? 'text-gray-600 hover:bg-teal-50 hover:text-teal-700'
+                                : isClaude
+                                ? 'text-gray-600 hover:bg-violet-50 hover:text-violet-700'
+                                : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
                           )}
-                        </span>
-                      </Link>
-                    ))}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {item.name}
+                            {item.path === '/tech-skills' && (
+                              <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                ADVANCED
+                              </span>
+                            )}
+                          </span>
+                        </Link>
+                      ))
+                    )}
                   </div>
                 );
               }

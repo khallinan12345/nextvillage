@@ -83,7 +83,7 @@ export default async function handler(req, res) {
     // ── Room must exist and be active ──────────────────────────────────────
     const { data: room, error: roomErr } = await supabase
       .from('together_rooms')
-      .select('id, name, status, model, organization_id, organizations(name)')
+      .select('id, name, status, model, organization_id, book_content, organizations(name)')
       .eq('id', room_id)
       .single();
 
@@ -98,13 +98,21 @@ export default async function handler(req, res) {
     // mirrors get_my_effective_profile() in the DB. ─────────────────────────
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('organization_id, join_code_used')
+      .select('organization_id, join_code_used, role')
       .eq('id', user_id)
       .single();
 
     if (profileErr || !profile) {
       return res.status(403).json({ success: false, error: 'not_authorized' });
     }
+
+    // platform_administrator can act in any org's room — mirrors the
+    // platform_administrator bypass already present on every RLS policy for
+    // together_rooms/together_messages (see 20260806120000_together_
+    // messages_insert_admin_bypass.sql). Without this, an admin who can see
+    // and post into another org's room (e.g. one created back when this
+    // feature was single-org-only) still couldn't get a Claude reply there.
+    const isPlatformAdmin = profile.role === 'platform_administrator';
 
     let effectiveOrgId = profile.organization_id;
     if (!effectiveOrgId && profile.join_code_used?.trim()) {
@@ -126,11 +134,11 @@ export default async function handler(req, res) {
       effectiveOrgId = org?.id ?? null;
     }
 
-    if (!effectiveOrgId || effectiveOrgId !== room.organization_id) {
+    if (!isPlatformAdmin && (!effectiveOrgId || effectiveOrgId !== room.organization_id)) {
       return res.status(403).json({ success: false, error: 'not_authorized' });
     }
 
-    const isBackToBasics = effectiveOrgId === BACK_TO_BASICS_ORG_ID;
+    const isBackToBasics = room.organization_id === BACK_TO_BASICS_ORG_ID;
 
     // ── Quota: 25k tokens / 3h, everyone except Back to Basics ──────────────
     if (!isBackToBasics) {
@@ -153,23 +161,34 @@ export default async function handler(req, res) {
     }
 
     // ── Build context from recent non-deleted messages ─────────────────────
-    const { data: history, error: historyErr } = await supabase
+    // Fetch newest-first so `.limit()` keeps the most recent messages (not
+    // the oldest), then reverse back to chronological order for Anthropic.
+    const { data: recentHistory, error: historyErr } = await supabase
       .from('together_messages')
-      .select('sender_name, role, content')
+      .select('sender_name, role, content, image_url')
       .eq('room_id', room_id)
       .is('deleted_at', null)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(40);
 
     if (historyErr) throw historyErr;
+    const history = (recentHistory || []).reverse();
 
-    const anthropicMessages = (history || []).map(m => ({
-      role: m.role,
-      // Anthropic has no concept of "which of several humans is speaking" —
-      // prefix each user turn with the sender's name at request-build time
-      // only (never stored this way in the DB) so Claude can track speakers.
-      content: m.role === 'user' ? `[${m.sender_name}]: ${m.content}` : m.content,
-    }));
+    const anthropicMessages = (history || []).map(m => {
+      // Images are visual-only for now — Claude never sees the picture
+      // itself, only that one was shared (and any caption), so it stays
+      // aware of the moment without receiving image content.
+      const body = m.image_url
+        ? (m.content?.trim() ? `${m.content} (shared an image)` : '(shared an image)')
+        : m.content;
+      return {
+        role: m.role,
+        // Anthropic has no concept of "which of several humans is speaking" —
+        // prefix each user turn with the sender's name at request-build time
+        // only (never stored this way in the DB) so Claude can track speakers.
+        content: m.role === 'user' ? `[${m.sender_name}]: ${body}` : body,
+      };
+    });
 
     if (!anthropicMessages.length || anthropicMessages[anthropicMessages.length - 1].role !== 'user') {
       // Nothing new to respond to (e.g. the triggering message was itself
@@ -179,40 +198,87 @@ export default async function handler(req, res) {
 
     const model = room.model || 'claude-sonnet-5';
     const orgName = room.organizations?.name || 'this organization';
+    const currentBook = (room.book_content || '').trim();
     const systemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at ${orgName}. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Contribute naturally to whatever the group is building (for example, a community story) — build on what's already been said, don't repeat yourself, and prioritize direction from a leader. Keep replies focused and not overly long — this is a live group conversation, not a report.
 
-Respond to whoever sent the most recent message — don't address, praise, or ask a follow-up question of some other named participant instead (e.g. the person who started the room) just because they spoke earlier or more often. If you want the group's input, ask an open question to everyone rather than singling out one person by name.`;
+Respond to whoever sent the most recent message — don't address, praise, or ask a follow-up question of some other named participant instead (e.g. the person who started the room) just because they spoke earlier or more often. If you want the group's input, ask an open question to everyone rather than singling out one person by name.
+
+This room also maintains ONE canonical "book" document, shown to the group separately from this chat, as a clean document with no chat commentary in it — just the story/document text itself.
+
+CURRENT BOOK CONTENT:
+"""
+${currentBook || '(empty — nothing written yet)'}
+"""
+
+When your reply adds new text to, edits, expands, lengthens, or continues the book/story, call the update_book tool with the FULL updated book text — never a diff, snippet, or just the new part; include everything previously written plus this change. Never call it for a purely conversational reply that doesn't change the book (answering a question about direction, asking the group something, discussing logistics). Your normal text reply should stay conversational and short — don't paste the book content into it too, since it already lives in the book document; a brief acknowledgement is enough (e.g. "Here's the expanded chapter!").`;
+
+    const UPDATE_BOOK_TOOL = {
+      name: 'update_book',
+      description: 'Call this when your reply adds new text to, or edits, the shared book/story document. Do NOT call this for purely conversational replies (questions, feedback, logistics) that don\'t change the book.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          bookContent: {
+            type: 'string',
+            description: 'The FULL, complete, updated text of the book after this turn — never a diff or just the new part. Include everything previously written plus whatever is being added, edited, or expanded now. Contains ONLY the actual story/document text — no questions, no meta-commentary, no chat framing.',
+          },
+        },
+        required: ['bookContent'],
+      },
+    };
 
     const createParams = {
       model,
-      max_tokens: 2000,
+      max_tokens: 8000,
       system: systemPrompt,
       messages: anthropicMessages,
+      tools: [UPDATE_BOOK_TOOL],
     };
     if (modelAllowsCustomTemperature(model)) {
       createParams.temperature = 0.7;
     }
 
     const msg = await anthropic.messages.create(createParams);
-    const replyText = msg.content.find(b => b.type === 'text')?.text ?? '';
+    // Structured via a real tool call (not free-text JSON) — the API itself
+    // guarantees a well-formed object when the model invokes it, unlike
+    // asking the model to emit raw JSON in its text response, which proved
+    // unreliable across long, iterative editing sessions (the model would
+    // sometimes preface the JSON with prose, or drift into plain text
+    // entirely after many turns).
+    const replyText = msg.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    const toolUse = msg.content.find(b => b.type === 'tool_use' && b.name === 'update_book');
+    const bookContent = toolUse?.input?.bookContent && typeof toolUse.input.bookContent === 'string' && toolUse.input.bookContent.trim()
+      ? toolUse.input.bookContent.trim()
+      : null;
 
-    if (!replyText.trim()) {
+    if (!replyText && !bookContent) {
       return res.status(200).json({ success: true, message: null });
     }
 
-    const { data: inserted, error: insertErr } = await supabase
-      .from('together_messages')
-      .insert({
-        room_id,
-        sender_id:   null,
-        sender_name: 'Claude',
-        role:        'assistant',
-        content:     replyText,
-      })
-      .select('id, content, created_at')
-      .single();
+    let inserted = null;
+    if (replyText) {
+      const { data, error: insertErr } = await supabase
+        .from('together_messages')
+        .insert({
+          room_id,
+          sender_id:   null,
+          sender_name: 'Claude',
+          role:        'assistant',
+          content:     replyText,
+        })
+        .select('id, content, created_at')
+        .single();
+      if (insertErr) throw insertErr;
+      inserted = data;
+    }
 
-    if (insertErr) throw insertErr;
+    if (bookContent && bookContent !== currentBook) {
+      const { error: bookErr } = await supabase
+        .from('together_rooms')
+        .update({ book_content: bookContent, book_updated_at: new Date().toISOString() })
+        .eq('id', room_id);
+      if (bookErr) console.error('[chat-room] Failed to update book_content:', bookErr);
+    }
 
     logCost({
       model,

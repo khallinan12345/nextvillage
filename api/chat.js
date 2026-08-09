@@ -15,9 +15,20 @@
 //         task-instruction calls from WebDevelopmentPage all go through the free-tier
 //         chain with Haiku as the final fallback, not Haiku as the primary.
 //
+//   page = 'CreateGamePage' | 'WebsiteBuilderPage'
+//     → taskType === 'coding' (or omitted, the default for these pages)
+//         → Anthropic claude-sonnet-5 (more capable generation for complex
+//           games/sites — these two students report hitting quality/error
+//           ceilings on Haiku as their projects grow more elaborate)
+//     → taskType === 'non-coding'
+//         → Groq (primary) → ... → Anthropic Haiku (final)
+//
 //   page = 'AIPlaygroundPage'
 //     → Anthropic claude-haiku-4-5-20251001 (default)
 //        OR claude-sonnet-4-6 if playgroundModel === 'claude-sonnet-4-6'
+//
+//   page = 'SystemsThinkPage'
+//     → Anthropic claude-sonnet-5 always (no free-tier fallback)
 //
 //   all other pages / no page supplied
 //     → Anthropic claude-haiku-4-5-20251001 (default)
@@ -67,6 +78,25 @@ const HYBRID_CODING_PAGES = new Set([
   'WebDevelopmentPage',
   'FullStackDevelopmentPage',
   'AIWorkflowDevPage',
+  'CreateGamePage',
+  'WebsiteBuilderPage',
+]);
+
+// Of the hybrid coding pages, these two route their 'coding' calls to
+// claude-sonnet-5 instead of Haiku — students building games/sites here
+// were hitting errors as their projects grew more complex, and Sonnet 5
+// handles that complexity more reliably than Haiku.
+const SONNET5_CODING_PAGES = new Set([
+  'CreateGamePage',
+  'WebsiteBuilderPage',
+]);
+
+// Pages that always route straight to Sonnet 5 — not coding, but the
+// reasoning quality bar is high enough (multi-layered Socratic dialogue,
+// judging when to shift from questioning to offering a perspective) that
+// the free-tier chain / Haiku default isn't reliable enough.
+const SONNET5_PAGES = new Set([
+  'SystemsThinkPage',
 ]);
 
 // Certification pages — always Haiku; structured JSON eval must be reliable
@@ -99,8 +129,9 @@ const CERT_PAGES = new Set([
 //   );
 
 const DEFAULT_MODELS = {
-  anthropic_haiku:  'claude-haiku-4-5-20251001',
-  anthropic_sonnet: 'claude-sonnet-4-6',
+  anthropic_haiku:   'claude-haiku-4-5-20251001',
+  anthropic_sonnet:  'claude-sonnet-4-6',
+  anthropic_sonnet5: 'claude-sonnet-5',
   groq:             'llama-3.3-70b-versatile',
   cerebras:         'gpt-oss-120b',             // llama3.1-8b was deprecated/removed (confirmed via /v1/models, Jul 2026); chose 120B for quality over gemma-4-31b's speed/quota headroom
   deepseek:         'deepseek-chat',            // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
@@ -152,6 +183,7 @@ async function refreshModels() {
 // ── Pricing table (per million tokens, USD) ───────────────────────────────────
 
 const PRICING = {
+  'claude-sonnet-5':             { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
   'claude-sonnet-4-6':           { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
   'claude-haiku-4-5-20251001':   { input: 1.00,  output: 5.00,  cacheWrite: 1.25,  cacheRead: 0.10  },
   'llama-3.3-70b-versatile':     { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
@@ -360,10 +392,17 @@ function resolveRoute(page, playgroundModel, taskType) {
     const isCoding = taskType === 'coding'
       || (taskType == null && page !== 'WebDevelopmentPage');
     if (isCoding) {
+      if (SONNET5_CODING_PAGES.has(page)) {
+        return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
+      }
       return { provider: 'anthropic', model: MODELS.anthropic_haiku };
     }
     // non-coding (or WebDevelopmentPage with no taskType) → free-tier chain
     return { provider: 'groq', model: MODELS.groq };
+  }
+
+  if (SONNET5_PAGES.has(page)) {
+    return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
   }
 
   // AIPlaygroundPage → Sonnet if profile set, otherwise free-tier chain
@@ -418,6 +457,13 @@ function applyCacheToLastAssistant(messages) {
 
 // ── Anthropic call (with prompt caching on system prompt) ──────────────────────
 
+// Claude Sonnet 5 (and the Opus 4.7+/Fable 5 family) reject a non-default
+// `temperature` with a 400 — only send it for models that still accept it.
+// See api/chat-stream.js's identical gate for the incident this fixed.
+function modelAllowsCustomTemperature(model) {
+  return !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+}
+
 async function callAnthropic(model, messages, system, max_tokens, temperature) {
   const systemPayload = system
     ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
@@ -428,7 +474,7 @@ async function callAnthropic(model, messages, system, max_tokens, temperature) {
   const requestBody = {
     model,
     max_tokens,
-    temperature,
+    ...(modelAllowsCustomTemperature(model) ? { temperature } : {}),
     messages: cachedMessages,
     ...(systemPayload ? { system: systemPayload } : {}),
   };
@@ -453,7 +499,12 @@ async function callAnthropic(model, messages, system, max_tokens, temperature) {
     throw err;
   }
 
-  const text = data?.content?.[0]?.text ?? '';
+  // Sonnet 5 (and other adaptive-thinking models) run thinking on by default
+  // when `thinking` is omitted, which puts a `thinking` block at content[0]
+  // and the real answer in a later `text` block — content[0].text is
+  // undefined in that case, silently returning "". Find the text block
+  // explicitly instead of assuming it's first.
+  const text = (data?.content || []).find(b => b?.type === 'text')?.text ?? '';
   return {
     id:     data.id,
     object: 'chat.completion',
@@ -889,7 +940,7 @@ async function callAnthropicStreaming(model, messages, system, max_tokens, tempe
     body: JSON.stringify({
       model,
       max_tokens,
-      temperature,
+      ...(modelAllowsCustomTemperature(model) ? { temperature } : {}),
       messages: cachedMessages,
       stream: true,
       ...(systemPayload ? { system: systemPayload } : {}),
@@ -954,6 +1005,32 @@ async function callAnthropicStreaming(model, messages, system, max_tokens, tempe
   return { inputTokens, outputTokens, cacheHitTokens, cacheWriteTokens };
 }
 
+// ── Unicode sanitization ──────────────────────────────────────────────────────
+// Frontend pages sometimes truncate user/AI text with `.slice(0, N)` /
+// `.substring(0, N)`, which cuts by UTF-16 code unit rather than code point
+// and can split a surrogate pair (e.g. an emoji) in half. A lone surrogate
+// left in a string is embedded as-is into every provider's JSON.stringify'd
+// request body here, and each provider's own JSON/UTF-8 parser then rejects
+// the *whole* request — this took down the entire fallback chain at once
+// (Cerebras: "unexpected end of hex escape", Anthropic: "no low surrogate in
+// string", DeepSeek and OpenRouter erroring/cooling down on the same bad
+// request). Strip lone surrogates once, here, so no caller of /api/chat can
+// take down every provider with a single bad character.
+const LONE_SURROGATE_RE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+function stripLoneSurrogates(str) {
+  if (typeof str !== 'string' || !str) return str;
+  return str.replace(LONE_SURROGATE_RE, '');
+}
+function sanitizeContent(content) {
+  if (typeof content === 'string') return stripLoneSurrogates(content);
+  if (Array.isArray(content)) {
+    return content.map(block =>
+      block && typeof block.text === 'string' ? { ...block, text: stripLoneSurrogates(block.text) } : block
+    );
+  }
+  return content;
+}
+
 // ── Main handler ───────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
@@ -974,7 +1051,8 @@ export default async function handler(req, res) {
         'openrouter/llama-3.3-70b:free (free fallback)',
         'mistral/small (free fallback)',
         'deepseek/deepseek-chat (paid fallback, ~71% cheaper than Haiku)',
-        'anthropic/haiku (final paid fallback + coding tasks)',
+        'anthropic/haiku (final paid fallback + most coding tasks)',
+        'anthropic/sonnet-5 (Create Game + Website Builder coding tasks)',
       ],
       method:    'GET',
       timestamp: new Date().toISOString(),
@@ -988,8 +1066,8 @@ export default async function handler(req, res) {
 
   try {
     const {
-      messages,
-      system,
+      messages: rawMessages,
+      system:   rawSystem,
       max_tokens      = 1000,
       temperature     = 0.7,
       page            = '',
@@ -1000,22 +1078,27 @@ export default async function handler(req, res) {
       stream          = false,
     } = req.body || {};
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!rawMessages || !Array.isArray(rawMessages)) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
-    if (messages.length === 0) {
+    if (rawMessages.length === 0) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Messages array must contain at least one message' });
     }
 
-    const invalidMsg = messages.find(m => !m || typeof m.role !== 'string' || (typeof m.content !== 'string' && !Array.isArray(m.content)));
+    const invalidMsg = rawMessages.find(m => !m || typeof m.role !== 'string' || (typeof m.content !== 'string' && !Array.isArray(m.content)));
     if (invalidMsg) {
       console.error('[chat.js] Invalid message payload detected:', JSON.stringify(invalidMsg));
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Each message must have a string `role` and a `content` string or array' });
     }
+
+    // Strip any lone surrogates before this content reaches provider request
+    // bodies — see sanitizeContent/stripLoneSurrogates above.
+    const messages = rawMessages.map(m => ({ ...m, content: sanitizeContent(m.content) }));
+    const system   = stripLoneSurrogates(rawSystem);
 
     // Pick up any model_config changes (cached 5 min; falls back to defaults on failure)
     await refreshModels();

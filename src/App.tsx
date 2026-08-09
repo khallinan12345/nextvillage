@@ -44,14 +44,20 @@ const AIProficiencyPage = lazy(() => import('./pages/AIProficiencyPage'));
 const AIReadySkillsPage = lazy(() => import('./pages/AIReadySkillsPage'));
 const AIPlaygroundPage = lazy(() => import('./pages/AIPlaygroundPage'));
 const PlaygroundTogetherPage = lazy(() => import('./pages/PlaygroundTogetherPage'));
+const SystemsThinkPage = lazy(() => import('./pages/SystemsThinkPage'));
 
 // Tech Skills Pages
 const WebDevelopmentPage = lazy(() => import('./pages/tech-skills/WebDevelopmentPage'));
 const VibeCodingPage = lazy(() => import('./pages/tech-skills/VibeCodingPage'));
+const CreateGamePage = lazy(() => import('./pages/tech-skills/CreateGamePage'));
+const PlayGamePage = lazy(() => import('./pages/tech-skills/PlayGamePage'));
+const WebsiteBuilderPage = lazy(() => import('./pages/tech-skills/WebsiteBuilderPage'));
+const SiteViewerPage = lazy(() => import('./pages/SiteViewerPage'));
 const FullStackDevelopmentPage = lazy(() => import('./pages/tech-skills/FullStackDevelopmentPage'));
 const ImageGenerationPage = lazy(() => import('./pages/tech-skills/ImageGenerationPage'));
 const VideoGenerationPage = lazy(() => import('./pages/tech-skills/VideoGenerationPage'));
 const VideoStudioPage = lazy(() => import('./pages/tech-skills/VideoStudioPage'));
+const DocumentStudioPage = lazy(() => import('./pages/tech-skills/DocumentStudioPage'));
 const VoiceCreationPage = lazy(() => import('./pages/tech-skills/VoiceCreationPage'));
 const AIContentCreationPage = lazy(() => import('./pages/AIContentCreationPage'));
 const AIWorkflowDevPage = lazy(() => import('./pages/tech-skills/AIWorkflowDevPage'));
@@ -240,15 +246,21 @@ export const AppContent: React.FC = () => {
         <Route path="/certifications/ai-for-business" element={<AIForBusinessCertificationPage />} />
         <Route path="/playground" element={<AIPlaygroundPage />} />
         <Route path="/playground/together" element={<PlaygroundTogetherPage />} />
+        <Route path="/systems-think" element={<SystemsThinkPage />} />
 
         {/* Tech Skills Routes */}
         <Route path="/tech-skills/vibe-coding" element={<VibeCodingPage />} />
+        <Route path="/tech-skills/create-game" element={<CreateGamePage />} />
+        <Route path="/tech-skills/games/:gameId" element={<PlayGamePage />} />
+        <Route path="/tech-skills/website-builder" element={<WebsiteBuilderPage />} />
+        <Route path="/tech-skills/sites/:siteId/:slug" element={<SiteViewerPage />} />
         <Route path="/tech-skills/web-development" element={<WebDevelopmentPage />} />
         <Route path="/tech-skills/full-stack-development" element={<FullStackDevelopmentPage />} />
         <Route path="/tech-skills/ai-image-creation" element={<ImageGenerationPage />} />
         <Route path="/tech-skills/ai-voice-creation" element={<VoiceCreationPage />} />
         <Route path="/tech-skills/ai-video-creation" element={<VideoGenerationPage />} />
         <Route path="/tech-skills/ai-video-studio" element={<VideoStudioPage />} />
+        <Route path="/tech-skills/document-studio" element={<DocumentStudioPage />} />
         <Route path="/tech-skills/ai-content-creation" element={<AIContentCreationPage />} />
         <Route path="/tech-skills/ai-workflow-development" element={<AIWorkflowDevPage />} />
         <Route path="/tech-skills/ai-for-business" element={<AIForBusinessPage />} />

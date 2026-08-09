@@ -15,6 +15,7 @@ import { useVoice } from '../hooks/useVoice';
 import { PidginTooltip } from '../components/PidginTooltip';
 import { VoiceFallback } from '../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
+import { parseVizContent, stripVizForSpeech, MathVizRenderer, VIZ_INSTRUCTIONS } from '../components/MathViz';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -168,6 +169,54 @@ const MathDistortedBackground: React.FC = () => {
   );
 };
 
+// ─── Core tutoring rule — appended to every stage's system prompt ────────────
+// Placed last (after the level-language block and viz instructions) so it has
+// maximum recency in the assembled prompt. Exists because the stage prompts
+// below only mentioned "Socratic method" in passing (Stage 7 only), and a
+// couple of their own ✅ example responses were themselves demonstrating the
+// coach computing the answer or stating a formula outright — the model was
+// pattern-matching against those examples as much as any instruction telling
+// it not to. Fixed both: this block makes the rule explicit and mandatory
+// everywhere, and the leaking examples below were rewritten to model asking,
+// never telling.
+const SOCRATIC_CORE = `
+═══════════════════════════════════════════════
+CORE RULE — GUIDE, NEVER GIVE THE ANSWER
+═══════════════════════════════════════════════
+Your job is to guide the student to solve each problem themselves. Never state a
+formula, a computed intermediate value, or the final answer yourself, and never
+walk through the calculation doing the arithmetic for them — even when they're
+stuck, ask directly for the answer, or get something wrong. This is the single
+most important rule in this conversation and overrides any instinct to just be
+helpful by explaining the solution.
+
+Before the student works a problem, help them build a plan — ask ONE of these
+at a time, never several at once, and never answer it yourself:
+1. WHAT'S KNOWN — "What information do we have here?"
+2. WHAT PRINCIPLE APPLIES — "What kind of problem is this? Is there a rule, formula,
+   or idea from what you've learned that might fit?"
+3. FIRST STEP — "Based on that, what do you think the very first step should be?"
+4. THEIR REASONING — "Why do you think that's the right move?"
+
+If they're stuck, make your question MORE SPECIFIC rather than answering it — narrow
+their focus to one piece of what's known, not the solution. Example: instead of
+saying "the area of a triangle is base times height divided by 2," ask "what shape
+can you turn a triangle into that you already know how to find the area of?"
+
+When a student makes an error, do not correct it by demonstrating the right
+calculation. Point them back to where the error likely happened and ask them to
+re-examine it: "Look at what you did in that step — try it again and tell me what
+you get." Let them find and fix it.
+
+Only after the student has produced their own answer should you confirm whether
+it's correct — and even then, ask them to explain WHY before moving on.
+
+This also applies to the visuals you generate: when posing a question, the
+diagram must show only what's KNOWN (the starting numbers, shapes, or
+quantities) — never the computed result. E.g. a number-line jump should show
+where you start and how far to jump, not land on the answer; a tape diagram
+should show the known parts, not a completed total.`;
+
 // ─── Stage Definitions ───────────────────────────────────────────────────────
 // 7 mastery stages: Counting → Operations → Fractions → Measurement/Geometry →
 // Ratios/Proportions → Pre-Algebra → Algebra & Geometry
@@ -248,7 +297,7 @@ Coaching principles:
 • Connect division back to multiplication always: "If 6 × 4 = 24, what is 24 ÷ 6?"
 • Celebrate pattern recognition! "You noticed the pattern in the 9-times table — that's brilliant mathematical thinking."
 • When they make an error:
-  ✅ "Let's break that down. 7 × 8 — can you think of it as 7 × 4 doubled?"
+  ✅ "Let's break that down. What two multiplication facts do you already know well that might combine to help with 7 × 8?"
 • Build fluency with times tables through stories from their chosen topic.
 • One question per turn. Short responses. Always end with a challenge.`,
   },
@@ -273,7 +322,7 @@ Coaching principles:
 • ALWAYS start with a concrete, visual model: "Imagine cutting a piece of land into 4 equal parts. If someone owns 3 of those parts, they own 3/4."
 • Use the student's topic to make every fraction feel real and worth caring about.
 • When they make an error:
-  ✅ "Let's draw it out mentally. If the whole is divided into 5 equal parts and we colour 2, we have 2/5."
+  ✅ "Let's picture it. If the whole is divided into 5 equal parts, how many of those parts would you colour to show what we're describing?"
 • Build conceptual understanding BEFORE procedural rules.
 • Connect fractions ↔ decimals ↔ percentages in every session.
 • Keep responses SHORT. End with one focused question.`,
@@ -299,7 +348,7 @@ Coaching principles:
 • Always connect shapes and measures to the student's real world and chosen topic.
 • Use mental imagery powerfully: "Picture the wall of a room — its length times its height gives you its area."
 • When they make an error:
-  ✅ "Let's check the formula together. For a triangle, the area is base times height, then divide by 2."
+  ✅ "Let's check the formula together — what do you remember about how a triangle relates to a rectangle that could help you find its area?"
 • Ask students to REASON about shapes, not just memorise formulas.
 • Celebrate when they notice geometric patterns in everyday life.
 • One question per turn. Keep responses SHORT and visual.`,
@@ -325,7 +374,7 @@ Coaching principles:
 • Ground every ratio and rate in the student's chosen topic. Make it a real comparison.
 • Ask them to estimate before calculating: "Before you work it out — do you think the answer will be bigger or smaller than 50?"
 • When they make an error:
-  ✅ "Let's set up the proportion carefully. If 3 bags cost 600 Naira, then 5 bags cost 5 × (600÷3) = ?"
+  ✅ "Let's set up the relationship carefully. If 3 bags cost 600 Naira, what would ONE bag cost — and how could that help you find the cost of 5?"
 • Help them see proportional reasoning as a powerful thinking tool, not just a procedure.
 • Connect ratios → fractions → percentages → decimals naturally.
 • One question per turn. Short, focused responses.`,
@@ -508,11 +557,11 @@ const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
   }
 
   if (evaluation.is_complete) {
-    speech += `Incredible achievement — you have reached Advanced in every skill! This stage is fully complete and the next stage is now unlocked. `;
+    speech += `Incredible achievement — you have reached Advanced in every skill! This stage is fully complete. `;
   } else if (evaluation.can_advance) {
-    speech += `You are Proficient in every skill — the next stage is now unlocked! Keep practising here to reach Advanced and fully master this stage. `;
+    speech += `You are Proficient in every skill! Keep practising here to reach Advanced and fully master this stage. `;
   } else {
-    speech += `Keep going — reach Proficient in all skills to unlock the next stage. Every session builds your mathematical mind. `;
+    speech += `Keep going — reach Proficient in all skills to master this stage. Every session builds your mathematical mind. `;
   }
 
   speech += `Mathematics is a journey, not a race. I am proud of the thinking you showed today. Let us keep going!`;
@@ -522,18 +571,18 @@ const buildSpokenEvaluation = (evaluation: SessionEvaluation): string => {
 // ─── MessageContent renderer ──────────────────────────────────────────────────
 
 const MessageContent: React.FC<{ content: string }> = ({ content }) => {
-  const lines = content.split('\n');
+  const segments = parseVizContent(content);
   return (
     <div className="space-y-1">
-      {lines.map((line, i) => {
-        if (line.startsWith('✅')) {
-          return (
-            <p key={i} className="text-green-700 font-semibold">
-              {line}
-            </p>
-          );
-        }
-        return <p key={i}>{line}</p>;
+      {segments.map((seg, s) => {
+        if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={s} spec={seg.spec} />;
+        return (seg.text ?? '').split('\n').map((line, i) => {
+          if (!line.trim()) return null;
+          if (line.startsWith('✅')) {
+            return <p key={`${s}-${i}`} className="text-green-700 font-semibold">{line}</p>;
+          }
+          return <p key={`${s}-${i}`}>{line}</p>;
+        });
       })}
     </div>
   );
@@ -541,14 +590,10 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
 
 // ─── Derive progress from saved sessions ─────────────────────────────────────
 
-// ─── Strict Progression: Stage N only unlocks if Stage N-1 is Proficient+ ───────────────
-const canAccessStage = (stageIndex: number, stageLevels: (string | null)[]): boolean => {
-  // Stage 0 always accessible
-  if (stageIndex === 0) return true;
-  // Stage N requires Stage N-1 to be 'Proficient' or 'Advanced'
-  const previousStageLevel = stageLevels[stageIndex - 1];
-  if (!previousStageLevel) return false;
-  return previousStageLevel === 'Proficient' || previousStageLevel === 'Advanced';
+// All Foundations stages are open to everyone — no prerequisite gating.
+// Finishing an earlier stage is no longer required to access a later one.
+const canAccessStage = (_stageIndex: number, _stageLevels: (string | null)[]): boolean => {
+  return true;
 };
 
 const isStrongLevel = (level: ProficiencyLevel) => level === 'Proficient' || level === 'Advanced';
@@ -701,21 +746,21 @@ const EvaluationModal: React.FC<{
             <div className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
               <p className="text-green-800 text-sm font-medium">
-                🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete and the next stage is now unlocked!
+                🎉 Outstanding! You have reached <strong>Advanced</strong> in every skill area. This stage is fully complete!
               </p>
             </div>
           ) : evaluation.can_advance ? (
             <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-blue-700 flex-shrink-0 mt-0.5" />
               <p className="text-blue-800 text-sm font-medium">
-                ✅ You are <strong>Proficient</strong> in all skill areas — the next stage is unlocked! Keep practising here to reach Advanced and fully master this stage.
+                ✅ You are <strong>Proficient</strong> in all skill areas! Keep practising here to reach Advanced and fully master this stage.
               </p>
             </div>
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
               <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
               <p className="text-gray-600 text-sm">
-                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to unlock the next stage.
+                Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to master this stage.
               </p>
             </div>
           )}
@@ -833,7 +878,7 @@ const MathSkillsPage: React.FC = () => {
     if (view === 'stages' && !hasSpokenStagesIntro.current && !loadingProgress) {
       hasSpokenStagesIntro.current = true;
       const t = setTimeout(() => speak(
-        'Welcome to Math Skills. There are seven stages to master, from counting and number sense all the way to algebra and geometry. Complete each stage to unlock the next. Tap a stage card to begin.'
+        'Welcome to Math Skills. There are seven stages, from counting and number sense all the way to algebra and geometry, and all of them are open. Tap any stage card to begin.'
       ), 800);
       return () => clearTimeout(t);
     }
@@ -851,7 +896,7 @@ const MathSkillsPage: React.FC = () => {
 
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (last?.role === 'assistant') speak(last.content);
+    if (last?.role === 'assistant') speak(stripVizForSpeech(last.content));
   }, [messages, speak]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -1013,12 +1058,12 @@ LANGUAGE RULES:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + VIZ_INSTRUCTIONS + SOCRATIC_CORE;
       const welcome = await chatText({
         page: 'MathSkillsPage',
         messages: [{ role: 'user', content: `The student has chosen to practice "${selectedStage.name}" using the context of: "${t}". Give a warm 2-sentence welcome and pose your very first math question or challenge, grounded in their context. Be encouraging and make it feel like an adventure.` }],
         system: sysPrompt,
-        max_tokens: 400,
+        max_tokens: 1200,
       });
       const welcomeMsg: ChatMessage = {
         id: crypto.randomUUID(), role: 'assistant',
@@ -1062,12 +1107,12 @@ LANGUAGE RULES:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + VIZ_INSTRUCTIONS + SOCRATIC_CORE;
       const aiText = await chatText({
         page: 'MathSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
         system: sysPrompt,
-        max_tokens: 400,
+        max_tokens: 1200,
       });
       const aiMsg: ChatMessage = {
         id: crypto.randomUUID(), role: 'assistant',
@@ -1285,13 +1330,6 @@ LANGUAGE RULES:
                           {!isCompleted && scoreBadge && (
                             <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
                               {scoreBadge}
-                            </span>
-                          )}
-                          {!isActive && isLocked && !isCompleted && (
-                            <span className="text-sm bg-gray-300/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-400/60">
-                              {idx === 0
-                                ? '🔒 Not yet unlocked'
-                                : `🔒 Complete Stage ${idx} to unlock`}
                             </span>
                           )}
                         </div>
@@ -1567,7 +1605,7 @@ LANGUAGE RULES:
                   >
                     <MessageContent content={msg.content} />
                     {msg.role === 'assistant' && (
-                      <AIPidginCoachWrapper englishText={msg.content} />
+                      <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
                     )}
                   </div>
                 </div>

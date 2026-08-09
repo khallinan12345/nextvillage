@@ -20,7 +20,7 @@ import {
   Film, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
   Volume2, VolumeX, Wand2, MessageSquare, Lightbulb, Save,
-  AlertTriangle, ImagePlus, X as XIcon, ArrowRight, Mail,
+  AlertTriangle, ImagePlus, X as XIcon, ArrowRight, Mail, Trash2,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -103,9 +103,10 @@ const ProgressRing: React.FC<{ size?: number }> = ({ size = 52 }) => {
 
 // ─── History card ─────────────────────────────────────────────────────────────
 
-const VideoCard: React.FC<{ job: VideoJob; onReuse: (p: string) => void }> = ({ job, onReuse }) => {
+const VideoCard: React.FC<{ job: VideoJob; onReuse: (p: string) => void; onDelete: (id: string) => void }> = ({ job, onReuse, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const cfg = STATUS_CONFIG[job.status];
   const playUrl = (job as any).saved_video_url || job.video_url;
   return (
@@ -174,6 +175,16 @@ const VideoCard: React.FC<{ job: VideoJob; onReuse: (p: string) => void }> = ({ 
                 <Download size={12} /> Download.mp4
               </button>
             )}
+            <button
+              disabled={deleting}
+              onClick={() => {
+                if (!window.confirm('Delete this video? This cannot be undone.')) return;
+                setDeleting(true);
+                onDelete(job.id);
+              }}
+              className="flex items-center gap-1.5 text-xs bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-full px-3 py-1.5 transition-colors disabled:opacity-40 ml-auto">
+              <Trash2 size={12} /> Delete
+            </button>
           </div>
         </div>
       )}
@@ -426,6 +437,14 @@ const VideoGenerationPage: React.FC = () => {
   }, [user?.id]);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  // ── Delete a history item ─────────────────────────────────────────────────
+  const handleDeleteJob = async (id: string) => {
+    setHistory(prev => prev.filter(j => j.id !== id));
+    setSavedThumbnails(prev => prev.filter(t => t.id !== id));
+    const { error } = await supabase.from('video_generations').delete().eq('id', id);
+    if (error) { setError('Could not delete that video — please try again.'); loadHistory(); }
+  };
 
   // ── Poll for status ───────────────────────────────────────────────────────
   const startPolling = useCallback((jobId: string, token: string) => {
@@ -1896,7 +1915,8 @@ Return ONLY the improved text. No explanation, no preamble.`
             ) : (
               history.map(job => (
                 <VideoCard key={job.id} job={job}
-                  onReuse={(p) => { setPrompt(p); setView('generate'); handleReset(); }} />
+                  onReuse={(p) => { setPrompt(p); setView('generate'); handleReset(); }}
+                  onDelete={handleDeleteJob} />
               ))
             )}
           </div>

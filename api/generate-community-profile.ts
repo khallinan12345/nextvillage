@@ -92,6 +92,40 @@ function extractJSON(raw: string): string {
   return raw.trim();
 }
 
+// LLM output occasionally contains a literal newline/carriage-return inside a
+// JSON string value (e.g. a multi-sentence instructions field), which is
+// invalid per the JSON spec and makes JSON.parse throw. Walk the string
+// tracking whether we're inside a quoted value and escape any raw control
+// character we find there before parsing.
+function repairEmbeddedNewlines(json: string): string {
+  let inString = false;
+  let escaped = false;
+  let out = '';
+  for (const ch of json) {
+    if (inString) {
+      if (escaped) { out += ch; escaped = false; continue; }
+      if (ch === '\\') { out += ch; escaped = true; continue; }
+      if (ch === '"') { inString = false; out += ch; continue; }
+      if (ch === '\n') { out += '\\n'; continue; }
+      if (ch === '\r') { continue; }
+      out += ch;
+    } else {
+      if (ch === '"') inString = true;
+      out += ch;
+    }
+  }
+  return out;
+}
+
+function parseModulesJSON(raw: string): unknown {
+  const extracted = extractJSON(raw);
+  try {
+    return JSON.parse(extracted);
+  } catch {
+    return JSON.parse(repairEmbeddedNewlines(extracted));
+  }
+}
+
 // ─── Step 1: Research community profile with web search ───────────────────
 
 async function researchCommunity(
@@ -100,7 +134,7 @@ async function researchCommunity(
   country: string
 ): Promise<string> {
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-5',
     max_tokens: 4000,
     tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
     tool_choice: { type: 'auto' },
@@ -219,10 +253,14 @@ async function fetchModuleStructure(): Promise<Map<string, CategoryGroup>> {
 }
 
 // ─── Step 4: Generate contextually aligned modules via Claude ──────────────
-// Strategy: one API call per group, large groups chunked into batches of 25,
+// Strategy: one API call per group, large groups chunked into batches of 12,
 // all batches run concurrently via Promise.all.
+// (Batch size kept small and max_tokens raised because full module rows —
+// title/description/outcomes/facilitator+assessment instructions — are verbose;
+// a batch of 25 reliably exceeded the previous 8000-token output limit and
+// produced truncated, unparseable JSON.)
 
-const BATCH_SIZE = 25;
+const BATCH_SIZE = 12;
 
 async function generateBatch(
   city_town: string,
@@ -278,12 +316,16 @@ async function generateBatch(
     `- learning_or_certification: "${group.learning_or_certification}"`,
     `- assessment_category: ${group.assessment_category ? '"' + group.assessment_category + '"' : 'null'}`,
     '',
-    'Return ONLY a raw JSON array. No preamble, no markdown fences.',
+    'JSON FORMATTING RULES (strict — output will be parsed with JSON.parse):',
+    '- Return ONLY a raw JSON array. No preamble, no markdown fences, no trailing commas.',
+    '- Every string value must be a single JSON-escaped line: use \\n for any line break inside a string, never a literal newline character.',
+    '- Keep ai_facilitator_instructions and ai_assessment_instructions concise (2-4 sentences each) — do not write multi-paragraph instructions.',
+    '- Escape any double quotes or apostrophes-with-special-formatting inside string values correctly per JSON string rules.',
   ].join('\n');
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 8000,
+    model: 'claude-sonnet-5',
+    max_tokens: 16000,
     messages: [{ role: 'user', content: prompt }],
   });
 
@@ -293,7 +335,7 @@ async function generateBatch(
     .join('');
 
   try {
-    const parsed = JSON.parse(extractJSON(raw));
+    const parsed = parseModulesJSON(raw);
     if (!Array.isArray(parsed)) throw new Error('Response was not a JSON array');
     return parsed as GeneratedModule[];
   } catch {
@@ -361,7 +403,7 @@ async function insertModules(
     country,
     continent,
     user_id: null,
-    public: 0,
+    public: 1,
     application: 0,
     created_at: now,
     updated_at: now,
