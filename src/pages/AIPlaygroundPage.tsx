@@ -68,6 +68,59 @@ interface ArtifactPanel {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
+// ── markdownToHtml: string-based renderer for the downloadable/printable chat ───
+// export (handleDownload below). Mirrors the same subset of markdown the live
+// chat bubbles support (headings, bold, inline code, fenced code, lists) so a
+// downloaded transcript reads the same as it did on screen instead of dumping
+// raw "# " / "**" markup as plain text.
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const markdownToHtml = (text: string): string => {
+  const codeBlocks: string[] = [];
+  const withPlaceholders = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, _lang, body) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre><code>${escapeHtml(body.replace(/\n$/, ''))}</code></pre>`);
+    return `@@CODEBLOCK${idx}@@`;
+  });
+
+  const inline = (line: string) => {
+    let out = escapeHtml(line);
+    out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+    return out;
+  };
+
+  const htmlLines: string[] = [];
+  let inList: 'ul' | 'ol' | null = null;
+  const closeList = () => { if (inList) { htmlLines.push(`</${inList}>`); inList = null; } };
+
+  for (const line of withPlaceholders.split('\n')) {
+    const codeMatch = line.match(/^@@CODEBLOCK(\d+)@@$/);
+    if (codeMatch) { closeList(); htmlLines.push(codeBlocks[Number(codeMatch[1])]); continue; }
+    if (line.startsWith('#### ')) { closeList(); htmlLines.push(`<h4>${inline(line.slice(5))}</h4>`); continue; }
+    if (line.startsWith('### ')) { closeList(); htmlLines.push(`<h3>${inline(line.slice(4))}</h3>`); continue; }
+    if (line.startsWith('## '))  { closeList(); htmlLines.push(`<h2>${inline(line.slice(3))}</h2>`); continue; }
+    if (line.startsWith('# '))   { closeList(); htmlLines.push(`<h1>${inline(line.slice(2))}</h1>`); continue; }
+    if (line.trim() === '---')   { closeList(); htmlLines.push('<hr/>'); continue; }
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      if (inList !== 'ul') { closeList(); htmlLines.push('<ul>'); inList = 'ul'; }
+      htmlLines.push(`<li>${inline(line.slice(2))}</li>`);
+      continue;
+    }
+    if (/^\d+\.\s/.test(line)) {
+      if (inList !== 'ol') { closeList(); htmlLines.push('<ol>'); inList = 'ol'; }
+      htmlLines.push(`<li>${inline(line.replace(/^\d+\.\s/, ''))}</li>`);
+      continue;
+    }
+    closeList();
+    if (line.trim() === '') continue; // paragraph spacing comes from CSS margins, not blank lines
+    htmlLines.push(`<p>${inline(line)}</p>`);
+  }
+  closeList();
+  return htmlLines.join('\n');
+};
+
 const formatTime = (iso: string) => {
   const d = new Date(iso);
   const now = new Date();
@@ -111,6 +164,22 @@ const parseCodeBlocks = (text: string): ParsedBlock[] => {
     }
   }
   return result;
+};
+
+// ── looksLikeDocument: does this assistant reply read as a structured document ──
+// (a plan, report, curriculum, etc.) rather than a short reply or a code answer?
+// Documents get opened in the side panel and shown as a compact card in the
+// chat bubble, the same way large code files are — instead of a huge wall of
+// raw markdown dumped straight into the conversation.
+const looksLikeDocument = (text: string): boolean => {
+  if (/```/.test(text)) return false; // code responses use the code-artifact path instead
+  const headingCount = (text.match(/^#{1,4}\s+.+$/gm) || []).length;
+  return headingCount >= 2 && text.length > 800;
+};
+
+const extractDocumentTitle = (text: string): string => {
+  const match = text.match(/^#\s+(.+)$/m) ?? text.match(/^##\s+(.+)$/m);
+  return match?.[1]?.trim().replace(/[*_`]/g, '') || 'Document';
 };
 
 // ── InlineCode: styled pill with one-click copy ────────────────────────────────
@@ -230,6 +299,26 @@ const InChatCodeBlock: React.FC<{
   );
 };
 
+// ── DocumentCard: compact "open in panel" card for a structured document reply ──
+const DocumentCard: React.FC<{ title: string; text: string; onOpen: () => void }> = ({ title, text, onOpen }) => {
+  const wordCount = text.trim().split(/\s+/).length;
+  return (
+    <button
+      onClick={onOpen}
+      className="my-1 w-full flex items-center gap-3 bg-blue-50 border border-blue-200 hover:border-blue-300 rounded-xl px-4 py-3 text-left transition-colors"
+    >
+      <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+        <FileText size={16} className="text-blue-600" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-gray-800 truncate">{title}</p>
+        <p className="text-xs text-gray-500">~{wordCount.toLocaleString()} words · click to open</p>
+      </div>
+      <span className="text-blue-600 font-semibold text-xs flex-shrink-0">View →</span>
+    </button>
+  );
+};
+
 // ── MessageContent: full renderer including formatted code blocks ───────────────
 const MessageContent: React.FC<{
   text: string;
@@ -260,6 +349,7 @@ const MessageContent: React.FC<{
     const cleaned = content.replace(/<!--[\s\S]*?-->/g, '').replace(/\n{3,}/g, '\n\n');
     const lines = cleaned.split('\n');
     return lines.map((line, i) => {
+      if (line.startsWith('#### ')) return <h4 key={i} className="font-bold text-sm mt-2">{renderInlineText(line.slice(5))}</h4>;
       if (line.startsWith('### ')) return <h3 key={i} className="font-bold text-base mt-2">{renderInlineText(line.slice(4))}</h3>;
       if (line.startsWith('## '))  return <h2 key={i} className="font-bold text-lg mt-3">{renderInlineText(line.slice(3))}</h2>;
       if (line.startsWith('# '))   return <h1 key={i} className="font-bold text-xl mt-3">{renderInlineText(line.slice(2))}</h1>;
@@ -470,19 +560,27 @@ const ArtifactPanelView: React.FC<{
         ) : (
           <div className="space-y-1">
             {artifact.content.split('\n').map((line, i) => {
-              if (line.startsWith('### ')) return <h3 key={i} className="text-gray-100 font-bold text-base mt-4 mb-1">{line.slice(4)}</h3>;
-              if (line.startsWith('## '))  return <h2 key={i} className="text-gray-100 font-bold text-lg mt-5 mb-2">{line.slice(3)}</h2>;
-              if (line.startsWith('# '))   return <h1 key={i} className="text-gray-100 font-bold text-xl mt-6 mb-2">{line.slice(2)}</h1>;
+              if (line.startsWith('#### ')) return <h4 key={i} className="text-gray-100 font-bold text-sm mt-3 mb-1">{renderInlineText(line.slice(5))}</h4>;
+              if (line.startsWith('### ')) return <h3 key={i} className="text-gray-100 font-bold text-base mt-4 mb-1">{renderInlineText(line.slice(4))}</h3>;
+              if (line.startsWith('## '))  return <h2 key={i} className="text-gray-100 font-bold text-lg mt-5 mb-2">{renderInlineText(line.slice(3))}</h2>;
+              if (line.startsWith('# '))   return <h1 key={i} className="text-gray-100 font-bold text-xl mt-6 mb-2">{renderInlineText(line.slice(2))}</h1>;
               if (line.startsWith('- ') || line.startsWith('* ')) return (
-                <div key={i} className="flex gap-2 text-sm text-gray-300"><span>•</span><span>{line.slice(2)}</span></div>
+                <div key={i} className="flex gap-2 text-sm text-gray-300"><span className="mt-0.5 flex-shrink-0">•</span><span>{renderInlineText(line.slice(2))}</span></div>
               );
+              if (/^\d+\.\s/.test(line)) {
+                const dotIdx = line.indexOf('. ');
+                return (
+                  <div key={i} className="flex gap-2 text-sm text-gray-300">
+                    <span className="flex-shrink-0 font-semibold text-gray-100">{line.slice(0, dotIdx + 1)}</span>
+                    <span>{renderInlineText(line.slice(dotIdx + 2))}</span>
+                  </div>
+                );
+              }
+              if (line.trim() === '---') return <hr key={i} className="border-gray-700 my-3" />;
               if (line.trim() === '') return <div key={i} className="h-2" />;
-              const parts = line.split(/(\*\*[^*]+\*\*)/g);
               return (
                 <p key={i} className="text-sm text-gray-300 leading-relaxed">
-                  {parts.map((p, j) => p.startsWith('**') && p.endsWith('**')
-                    ? <strong key={j} className="text-gray-100">{p.slice(2, -2)}</strong>
-                    : p)}
+                  {renderInlineText(line)}
                 </p>
               );
             })}
@@ -498,7 +596,7 @@ const ArtifactPanelView: React.FC<{
             value={editInput}
             onChange={e => setEditInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onEdit(); } }}
-            placeholder="Edit this code… (e.g. add error handling, rename function)"
+            placeholder={artifact.type === 'code' ? 'Edit this code… (e.g. add error handling, rename function)' : 'Edit this document… (e.g. add a section, shorten it)'}
             disabled={isEditing}
             className="flex-1 bg-transparent text-xs text-gray-200 placeholder-gray-500 outline-none"
           />
@@ -986,12 +1084,15 @@ const AIPlaygroundPage: React.FC = () => {
     const instruction = artifactEditInput.trim();
     setArtifactEditInput('');
     try {
+      const isCode = artifact!.type === 'code';
       const streamGen = streamPlayground(
         [{
           role: 'user',
-          content: `Here is the current code (${artifact!.title}):\n\`\`\`${artifact!.type === 'code' ? 'tsx' : 'text'}\n${artifact!.content}\n\`\`\`\n\nEdit instruction: ${instruction}`,
+          content: `Here is the current ${isCode ? 'code' : 'document'} (${artifact!.title}):\n\`\`\`${isCode ? 'tsx' : 'markdown'}\n${artifact!.content}\n\`\`\`\n\nEdit instruction: ${instruction}`,
         }],
-        `You are a precise code editor. Return ONLY the complete updated code inside a single fenced code block with the correct language tag. No explanation before or after — just the fenced block. Preserve all logic not explicitly changed.`,
+        isCode
+          ? `You are a precise code editor. Return ONLY the complete updated code inside a single fenced code block with the correct language tag. No explanation before or after — just the fenced block. Preserve all logic not explicitly changed.`
+          : `You are a precise document editor. Return ONLY the complete updated document inside a single fenced markdown code block. No explanation before or after — just the fenced block. Preserve all sections and formatting not explicitly changed.`,
         playgroundModel,
         32000,
         0.2,
@@ -1041,7 +1142,7 @@ const AIPlaygroundPage: React.FC = () => {
         };
         setSessionCodeHistory(prev => [...prev, historyBlock]);
         setArtifact({
-          type: 'code',
+          type: artifact.type,
           content: updated.content,
           title: artifact.title,
           historyId: newId,
@@ -1372,6 +1473,17 @@ const AIPlaygroundPage: React.FC = () => {
         }
       }
 
+      // ── Document detection: a structured multi-section reply (a plan, report,
+      // curriculum, etc.) opens in the side panel too, the same way a full-file
+      // code response does — instead of staying a huge wall of text in the chat.
+      if (!finalCodeContent && looksLikeDocument(assistantText)) {
+        setArtifact({
+          type: 'document',
+          content: assistantText,
+          title: extractDocumentTitle(assistantText),
+        });
+      }
+
       if (voiceOutputEnabled) speak(assistantText);
 
       if (activeChatId) {
@@ -1469,16 +1581,25 @@ const AIPlaygroundPage: React.FC = () => {
       .msg { margin: 20px 0; }
       .role { font-weight: bold; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
       .user .role { color: #7c3aed; } .assistant .role { color: #059669; }
-      .bubble { padding: 14px 18px; border-radius: 8px; white-space: pre-wrap; }
-      .user .bubble { background: #f5f3ff; border-left: 3px solid #7c3aed; }
+      .bubble { padding: 14px 18px; border-radius: 8px; }
+      .user .bubble { background: #f5f3ff; border-left: 3px solid #7c3aed; white-space: pre-wrap; }
       .assistant .bubble { background: #f0fdf4; border-left: 3px solid #059669; }
+      .bubble p { margin: 0 0 10px; }
+      .bubble p:last-child { margin-bottom: 0; }
+      .bubble h1, .bubble h2, .bubble h3, .bubble h4 { border: none; padding: 0; color: inherit; margin: 14px 0 6px; }
+      .bubble h1 { font-size: 1.2rem; } .bubble h2 { font-size: 1.1rem; } .bubble h3 { font-size: 1rem; } .bubble h4 { font-size: .95rem; }
+      .bubble h1:first-child, .bubble h2:first-child, .bubble h3:first-child, .bubble h4:first-child { margin-top: 0; }
+      .bubble ul, .bubble ol { margin: 0 0 10px 1.25rem; padding: 0; }
+      .bubble li { margin-bottom: 4px; }
+      .bubble hr { border: none; border-top: 1px solid #d1d5db; margin: 16px 0; }
+      .bubble pre code { background: none; padding: 0; color: inherit; }
       pre { background: #1e1e1e; color: #86efac; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: .85rem; }
       code { background: #f3f4f6; padding: 2px 5px; border-radius: 3px; font-size: .9em; }
       .time { font-size: .75rem; color: #9ca3af; margin-top: 4px; }
     </style></head><body>
-    <h1>${activeChat.title}</h1>
+    <h1>${escapeHtml(activeChat.title)}</h1>
     <div class="meta">${new Date(activeChat.created_at).toLocaleString()} · ${messages.length} messages · Model: ${modelLabel}</div>
-    ${messages.map(m => `<div class="msg ${m.role}"><div class="role">${m.role === 'user' ? '👤 You' : '🤖 Claude'}</div><div class="bubble">${m.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div><div class="time">${new Date(m.timestamp).toLocaleTimeString()}</div></div>`).join('')}
+    ${messages.map(m => `<div class="msg ${m.role}"><div class="role">${m.role === 'user' ? '👤 You' : '🤖 Claude'}</div><div class="bubble">${m.role === 'user' ? escapeHtml(m.content) : markdownToHtml(m.content)}</div><div class="time">${new Date(m.timestamp).toLocaleTimeString()}</div></div>`).join('')}
     </body></html>`;
     const blob = new Blob([html], { type: 'text/html' });
     const url  = URL.createObjectURL(blob);
@@ -1672,6 +1793,7 @@ const AIPlaygroundPage: React.FC = () => {
 
             {messages.map((msg, msgIdx) => {
               const parsedBlocks = msg.role === 'assistant' ? parseCodeBlocks(msg.content) : [];
+              const isDocument   = msg.role === 'assistant' && looksLikeDocument(msg.content);
               return (
                 <div key={msgIdx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
@@ -1690,14 +1812,26 @@ const AIPlaygroundPage: React.FC = () => {
                     <div className={`rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'}`}>
                       {msg.role === 'assistant'
                         ? (
-                          <>
-                            <MessageContent
+                          isDocument ? (
+                            <DocumentCard
+                              title={extractDocumentTitle(msg.content)}
                               text={msg.content}
-                              parsedBlocks={parsedBlocks}
-                              onOpenBlock={(blockIdx) => openBlockInPanel(parsedBlocks[blockIdx], msgIdx, blockIdx)}
+                              onOpen={() => setArtifact({
+                                type: 'document',
+                                content: msg.content,
+                                title: extractDocumentTitle(msg.content),
+                              })}
                             />
-                            <AIPidginCoachWrapper englishText={msg.content} />
-                          </>
+                          ) : (
+                            <>
+                              <MessageContent
+                                text={msg.content}
+                                parsedBlocks={parsedBlocks}
+                                onOpenBlock={(blockIdx) => openBlockInPanel(parsedBlocks[blockIdx], msgIdx, blockIdx)}
+                              />
+                              <AIPidginCoachWrapper englishText={msg.content} />
+                            </>
+                          )
                         )
                         : <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       }
