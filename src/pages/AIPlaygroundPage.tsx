@@ -12,7 +12,7 @@ import {
   Plus, Search, Trash2, Download, Send, Paperclip,
   ChevronLeft, ChevronRight, Edit3, Check, X,
   MessageSquare, Loader2, Bot, User, Copy, FileText, Code2, Home,
-  Mic, MicOff, Volume2, VolumeX, AlertCircle, ChevronDown, History, Pin,
+  Mic, MicOff, Volume2, VolumeX, AlertCircle, ChevronDown, History, Pin, Eraser,
 } from 'lucide-react';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -1055,11 +1055,16 @@ const AIPlaygroundPage: React.FC = () => {
   };
 
 
-  // ── Request scope check: is the first message in a chat too broad? ─────────────
-  // Returns true if the request asks for multiple changes / a full build.
-  // Only called on the very first user turn (messages.length === 0).
-  const checkRequestScope = async (userText: string): Promise<boolean> => {
-    if (userText.length < 80) return false; // short messages are always focused
+  // ── Request scope check: is the first message in a chat too vague to act on? ────
+  // Classifies the opening message so we only interrupt genuinely unclear requests:
+  //   - "vague":    broad/unclear, the user hasn't said what they actually want
+  //   - "detailed": multi-part or multi-topic, but specific and well-thought-out —
+  //                 the user already did the scoping work, so it should get a
+  //                 complete answer covering every part, not a "pick one thing" nudge
+  //   - "focused":  a single, specific ask
+  // Only "vague" triggers the coaching message. Only called on the first user turn.
+  const checkRequestScope = async (userText: string): Promise<'vague' | 'detailed' | 'focused'> => {
+    if (userText.length < 80) return 'focused'; // short messages are always focused
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -1068,7 +1073,7 @@ const AIPlaygroundPage: React.FC = () => {
           page: 'AIPlaygroundPage',
           messages: [{
             role: 'user',
-            content: `Is this request asking for multiple changes, a full build, or is it vague/broad? Reply ONLY "broad" or "focused".\n\nRequest: "${userText.slice(0, 400)}"`,
+            content: `Classify this request as exactly one label:\n\n- "vague": broad, open-ended, or unclear — the user hasn't specified what they actually want (e.g. "build me an app", "help with my website", "make this better").\n- "detailed": covers multiple parts or topics, but the user has given specific, well-thought-out details — constraints, numbers, structure, named components, examples. A long multi-part request is still "detailed" (not "vague") as long as it's precise about what's wanted.\n- "focused": a single, specific ask.\n\nOnly use "vague" when it's genuinely unclear what to build or answer. Reply ONLY one word: vague, detailed, or focused.\n\nRequest: "${userText.slice(0, 2000)}"`,
           }],
           max_tokens: 5,
           temperature: 0,
@@ -1076,8 +1081,10 @@ const AIPlaygroundPage: React.FC = () => {
       });
       const data = await res.json();
       const label = (data?.content?.[0]?.text ?? data?.choices?.[0]?.message?.content ?? '').trim().toLowerCase();
-      return label.startsWith('broad');
-    } catch { return false; }
+      if (label.startsWith('vague')) return 'vague';
+      if (label.startsWith('detailed')) return 'detailed';
+      return 'focused';
+    } catch { return 'focused'; }
   };
 
   // ── Topic drift check: has the user shifted to a completely unrelated subject? ──
@@ -1134,8 +1141,8 @@ const AIPlaygroundPage: React.FC = () => {
     // If the very first message is too broad, return a coaching message immediately
     // without hitting Sonnet. Cost: one tiny Haiku call via /api/chat.
     if (messages.length === 0) {
-      const isBroad = await checkRequestScope(currentInput);
-      if (isBroad) {
+      const requestScope = await checkRequestScope(currentInput);
+      if (requestScope === 'vague') {
         const coachMsg: ChatMessage = {
           role: 'assistant',
           content: "That sounds like a big project! 🙌 To keep things focused — and to help make AI affordable for everyone on this platform — let's tackle **one specific thing at a time**.\n\nWhat's the single most important change or question you want to start with?",
@@ -1484,6 +1491,16 @@ const AIPlaygroundPage: React.FC = () => {
   const charCount     = userInput.length;
   const charWarning   = charCount > MAX_CHAR_LIMIT;
 
+  // ── Estimated tokens currently held in this chat's context ──────────────────────
+  // Same ~4 chars/token heuristic used elsewhere (estimateTokens in handleSend).
+  // Shown on the Clear button so users know what starting fresh would save.
+  const contextTokens = Math.ceil(
+    messages.reduce((sum, m) => {
+      const attachLen = m.attachment?.reduce((s, a) => s + (a.content?.length ?? 0), 0) ?? 0;
+      return sum + m.content.length + attachLen;
+    }, 0) / 4
+  );
+
   // ── Voice input ───────────────────────────────────────────────────────────────
   const toggleVoiceInput = useCallback(() => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -1608,6 +1625,16 @@ const AIPlaygroundPage: React.FC = () => {
               {activeChat && messages.length > 0 && (
                 <button onClick={handleDownload} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors border border-gray-200 hover:border-purple-200">
                   <Download size={13} />Download
+                </button>
+              )}
+              {activeChat && messages.length > 0 && (
+                <button
+                  onClick={handleNewChat}
+                  title="Start a fresh chat — this conversation is saved and still reachable from the sidebar, but won't be sent as context anymore"
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors border border-gray-200 hover:border-red-200"
+                >
+                  <Eraser size={13} />Clear
+                  <span className="text-gray-400">(save ~{contextTokens.toLocaleString()} tokens)</span>
                 </button>
               )}
             </div>
