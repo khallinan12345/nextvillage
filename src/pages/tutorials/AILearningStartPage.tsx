@@ -20,7 +20,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
-  Check, ChevronDown, ChevronRight, Compass, ExternalLink, Loader2, Sparkles,
+  Check, ChevronDown, ChevronRight, Compass, Loader2, Sparkles,
 } from 'lucide-react';
 
 const TRACK = 'ai-learning-start';
@@ -159,12 +159,14 @@ const AILearningStartPage: React.FC = () => {
     persist(next);
   };
 
-  const openAILearning = (categoryId: string) => {
+  // Visiting any suggestion (or "design your own") counts as having explored
+  // the category — add-only, unlike the manual toggle below which can undo.
+  const markExplored = (categoryId: string) => {
+    if (done.has(categoryId)) return;
     const next = new Set(done);
     next.add(categoryId);
     setDone(next);
     persist(next);
-    navigate('/learning/ai');
   };
 
   const doneCount = done.size;
@@ -241,24 +243,30 @@ const AILearningStartPage: React.FC = () => {
                   <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">A few good places to start</p>
                   <ul className="mb-4 space-y-1.5">
                     {cat.suggestions.map(s => (
-                      <li key={s} className="flex items-center gap-2 text-sm text-gray-700">
-                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                        {s}
+                      <li key={s}>
+                        <Link
+                          to={`/learning/ai?activity=${encodeURIComponent(s)}&subCategory=${encodeURIComponent(cat.label)}`}
+                          onClick={() => markExplored(cat.id)}
+                          className="flex items-center gap-2 text-sm text-gray-700 hover:text-amber-700 hover:underline"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                          {s}
+                        </Link>
                       </li>
                     ))}
-                    <li className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
-                      Or design your own activity in this category
+                    <li>
+                      <Link
+                        to={`/learning/ai?create=1&category=${cat.id}`}
+                        onClick={() => markExplored(cat.id)}
+                        className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-cyan-700 hover:underline"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
+                        Or design your own activity in this category
+                      </Link>
                     </li>
                   </ul>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      onClick={() => openAILearning(cat.id)}
-                      className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600"
-                    >
-                      Open AI Learning <ExternalLink className="h-3.5 w-3.5" />
-                    </button>
                     <button
                       onClick={() => toggleDone(cat.id)}
                       className="text-sm font-semibold text-gray-500 hover:text-gray-800"
@@ -281,13 +289,10 @@ const AILearningStartPage: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-6 flex items-center justify-between">
+        <div className="mt-6">
           <button onClick={() => navigate('/tutorials')} className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800">
             <Compass className="h-4 w-4" /> All tutorials
           </button>
-          <Link to="/learning/ai" className="text-sm font-semibold text-amber-600 hover:text-amber-700">
-            Go straight to AI Learning →
-          </Link>
         </div>
       </div>
     </AppLayout>

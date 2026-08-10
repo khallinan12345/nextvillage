@@ -1,5 +1,6 @@
 // AILearningPage.tsx - Dashboard-based AI learning with interactive activities
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
 import AppLayout from '../components/layout/AppLayout';
@@ -927,6 +928,8 @@ const SESSION_CATEGORIES = [
 
 const AILearningPage: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const deepLinkHandledRef = useRef(false);
   const [voiceInputEnabled, setVoiceInputEnabled] = useState(false);
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
   const [isImproving, setIsImproving] = useState(false);
@@ -3205,6 +3208,46 @@ Respond ONLY with valid JSON:
       }).finally(() => setLoading(false));
     }
   }, [user?.id]);
+
+  // Deep-link support for ?activity=<title>&subCategory=<...> (open a specific
+  // module) or ?create=1&category=<id> (open "design your own" preset to that
+  // category) — used by the Tutorials onboarding track. Matches against
+  // allAIActivities (already filtered to the signed-in user's city_town)
+  // rather than a raw learning_module_id, since the same activity title
+  // exists as a different row per city.
+  useEffect(() => {
+    if (deepLinkHandledRef.current) return;
+    if (allAIActivities.length === 0) return;
+    deepLinkHandledRef.current = true;
+
+    const activityTitle = searchParams.get('activity');
+    const subCategoryParam = searchParams.get('subCategory');
+    const createFlag = searchParams.get('create');
+    const categoryParam = searchParams.get('category');
+
+    if (activityTitle) {
+      const match = allAIActivities.find(a =>
+        a.title === activityTitle && (!subCategoryParam || a.sub_category === subCategoryParam)
+      );
+      if (match) {
+        const cat = aiLearningCategories.find(c => c.subCategory === match.sub_category);
+        if (cat) setActiveCategory(cat.id);
+        handleActivitySelect(match);
+        return;
+      }
+    }
+
+    if (createFlag === '1') {
+      const catMap: Record<string, string> = {
+        'understanding-ai': 'A', 'prompt-engineering': 'B',
+        'ai-ethics': 'C', 'evaluating-outputs': 'D', 'applications': 'E',
+      };
+      const catId = categoryParam && catMap[categoryParam] ? categoryParam : 'understanding-ai';
+      setCreateForm(f => ({ ...f, category: catMap[catId] || 'A' }));
+      setActiveCategory(catId);
+      setShowCreateActivity(true);
+    }
+  }, [allAIActivities, searchParams]);
 
   const currentCategory = aiLearningCategories.find(cat => cat.id === activeCategory);
   const currentActivities = getActivitiesForCategory(activeCategory) ?? [];
