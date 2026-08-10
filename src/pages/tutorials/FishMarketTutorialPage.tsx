@@ -612,7 +612,7 @@ const FishMarketTutorialPage: React.FC = () => {
         <div className="mb-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">Tutorial</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">Guide</p>
               <h1 className="mt-1 text-3xl font-extrabold">The Fish Market Build</h1>
               <p className="mt-1 max-w-xl text-sm text-slate-300">
                 Build one real tool three times — a poster, then a calculator, then a system that remembers.
@@ -856,7 +856,7 @@ const FishMarketTutorialPage: React.FC = () => {
 
         <div className="mt-8 text-center">
           <button onClick={() => navigate('/tutorials')} className="text-sm font-semibold text-gray-500 hover:text-gray-800">
-            ← All tutorials
+            ← All guides
           </button>
         </div>
       </div>

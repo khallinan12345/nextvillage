@@ -92,7 +92,7 @@ const TutorialsPage: React.FC = () => {
   return (
     <AppLayout>
       <div className="mx-auto max-w-4xl px-4 pb-20 pt-6">
-        <h1 className="text-3xl font-extrabold text-gray-900">Tutorials</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900">Guides</h1>
         <p className="mt-2 max-w-2xl text-gray-600">
           Guided tracks that walk you through a real build, step by step. Each one moves you between
           a build page and the AI Playground — because that back-and-forth is where the skill comes from.

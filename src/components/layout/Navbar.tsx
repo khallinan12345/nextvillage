@@ -164,7 +164,7 @@ const Navbar: React.FC = () => {
         { name: 'Systems Think', path: '/systems-think' },
       ],
     },
-    { name: 'Tutor', path: '/tutorials', shorthand: 'Tutor' },
+    { name: 'Guides', path: '/tutorials', shorthand: 'Guides' },
     { name: 'Dashboard', path: '/dashboard', shorthand: 'Dashboard' },
     { name: 'About', path: '/about', shorthand: 'About' },
   ];
