@@ -380,7 +380,7 @@ const AILearningStartPage: React.FC = () => {
 
         <div className="mt-6">
           <button onClick={() => navigate('/tutorials')} className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800">
-            <Compass className="h-4 w-4" /> All tutorials
+            <Compass className="h-4 w-4" /> All guides
           </button>
         </div>
       </div>
