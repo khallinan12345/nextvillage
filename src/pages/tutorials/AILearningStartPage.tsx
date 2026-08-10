@@ -2,17 +2,29 @@
 //
 // Orientation track for students who are new to the platform. Before this,
 // a first-time student landed with no guidance on where to begin — this walks
-// them through all five AI Learning categories in order, with a handful of
-// well-chosen activities suggested for each plus room to design their own.
+// them through all five AI Learning categories in order, with five
+// well-chosen activities suggested per category plus room to design their
+// own.
 //
-// Unlike the Fish Market Build, this track doesn't use the AI Playground and
-// doesn't narrate or gate steps — the actual learning happens on the AI
-// Learning page itself. This is just the map: five categories, five
-// suggestions each, "explore this category" to open AI Learning, and a
-// checkbox to mark it done. Progress uses the same tutorial_progress table
-// and localStorage-first pattern as every other track (see
-// FishMarketTutorialPage.tsx), just with one step per category instead of
-// per fine-grained action.
+// Progression is gated by real proficiency, not self-reporting: activity N+1
+// in a category stays locked until activity N has been scored Proficient or
+// better on the AI Learning page, and category N+1 stays locked until every
+// suggested activity in category N is Proficient. "Design your own" is a
+// bonus once a category's five are done — it doesn't gate anything itself,
+// since a student can create any number of these and there's no single
+// canonical one to check.
+//
+// Doesn't use the AI Playground — the actual learning and evaluation happens
+// on the AI Learning page; this is the locked map plus the deep links into it
+// (see AILearningPage.tsx's ?activity=/?create= handling).
+//
+// Scores come from `dashboard.certification_evaluation_score`, keyed by
+// learning_module_id — and that id is different per city_town (Oloibiri /
+// Dayton / Ibiade both have their own row for the same activity title). So
+// on load this resolves the signed-in student's city, looks up the matching
+// learning_modules rows for our curated titles, then fetches this student's
+// dashboard scores for exactly those rows. A title with no row in the
+// student's city is treated as unavailable — it doesn't block the sequence.
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -20,7 +32,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
-  Check, ChevronDown, ChevronRight, Compass, Loader2, Sparkles,
+  Check, ChevronDown, ChevronRight, Compass, Lock, Loader2, Sparkles,
 } from 'lucide-react';
 
 const TRACK = 'ai-learning-start';
@@ -97,79 +109,138 @@ const CATEGORIES: Category[] = [
 
 const TOTAL_STEPS = CATEGORIES.length;
 
+// dashboard.certification_evaluation_score is usually 0–3, occasionally an
+// older 0–100 percentage — same normalization AILearningPage uses.
+// 2 = Proficient, 3 = Advanced; both count as "passed" for gating.
+function isProficient(score: number | null | undefined): boolean {
+  if (score == null) return false;
+  let n = score;
+  if (n > 3) n = n <= 25 ? 0 : n <= 50 ? 1 : n <= 75 ? 2 : 3;
+  return n >= 2;
+}
+
+const moduleKey = (subCategory: string, title: string) => `${subCategory}::${title}`;
+
+type ActivityStatus = 'proficient' | 'available' | 'locked' | 'unavailable';
+
 const AILearningStartPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id;
 
-  const [done, setDone] = useState<Set<string>>(new Set());
   const [openCategory, setOpenCategory] = useState<string>(CATEGORIES[0].id);
   const [loaded, setLoaded] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  // "subCategory::title" -> learning_module_id, resolved to this student's city
+  const [moduleMap, setModuleMap] = useState<Record<string, string>>({});
+  // learning_module_id -> certification_evaluation_score
+  const [scoreMap, setScoreMap] = useState<Record<string, number | null>>({});
 
-  const lsKey = `tutorial:${TRACK}`;
-
-  /* ── load progress: localStorage first (instant, offline), then Supabase ── */
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(lsKey);
-      if (raw) setDone(new Set<string>(JSON.parse(raw).completed ?? []));
-    } catch { /* corrupt cache is not worth failing over */ }
-    setLoaded(true);
-  }, [lsKey]);
+  /* ── resolve this student's city, then their score on each suggested activity ── */
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) { setLoaded(true); return; }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
-        .from('tutorial_progress')
-        .select('completed_steps')
-        .eq('user_id', userId)
-        .eq('track', TRACK)
-        .maybeSingle();
-      if (cancelled || error || !data) return;
-      setDone(prev => new Set<string>([...prev, ...(data.completed_steps ?? [])]));
+      const { data: profile } = await supabase.from('profiles').select('city').eq('id', userId).single();
+      const city = profile?.city ?? null;
+      const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
+
+      const allTitles = CATEGORIES.flatMap(c => c.suggestions);
+      const { data: modules } = await supabase
+        .from('learning_modules')
+        .select('learning_module_id, title, sub_category')
+        .eq('category', 'AI Proficiency')
+        .eq('city_town', cityTown)
+        .in('title', allTitles);
+      if (cancelled) return;
+
+      const mMap: Record<string, string> = {};
+      (modules ?? []).forEach(m => { mMap[moduleKey(m.sub_category, m.title)] = m.learning_module_id; });
+      setModuleMap(mMap);
+
+      const moduleIds = Object.values(mMap);
+      if (moduleIds.length > 0) {
+        const { data: dash } = await supabase
+          .from('dashboard')
+          .select('learning_module_id, certification_evaluation_score')
+          .eq('user_id', userId)
+          .in('learning_module_id', moduleIds);
+        if (cancelled) return;
+        const sMap: Record<string, number | null> = {};
+        // certification_evaluation_score is Postgres `numeric`, which
+        // supabase-js returns as a string (e.g. "3.00") to preserve
+        // precision — coerce explicitly rather than relying on JS's
+        // implicit string/number comparison coercion.
+        (dash ?? []).forEach(d => {
+          const raw = d.certification_evaluation_score;
+          sMap[d.learning_module_id] = raw == null ? null : Number(raw);
+        });
+        setScoreMap(sMap);
+      }
+      setLoaded(true);
     })();
     return () => { cancelled = true; };
   }, [userId]);
 
-  const persist = useCallback((nextDone: Set<string>) => {
+  const scoreFor = useCallback((cat: Category, title: string): number | null | undefined => {
+    const moduleId = moduleMap[moduleKey(cat.label, title)];
+    if (!moduleId) return undefined; // not offered for this student's city — doesn't block the sequence
+    return scoreMap[moduleId] ?? null;
+  }, [moduleMap, scoreMap]);
+
+  const categoryComplete = useCallback((cat: Category): boolean =>
+    cat.suggestions.every(title => {
+      const score = scoreFor(cat, title);
+      return score === undefined || isProficient(score);
+    }), [scoreFor]);
+
+  const categoryUnlocked = (catIndex: number): boolean =>
+    catIndex === 0 || categoryComplete(CATEGORIES[catIndex - 1]);
+
+  // Index of the first suggestion that isn't proficient (or unavailable —
+  // unavailable doesn't block). Same cumulative pattern FishMarketTutorialPage
+  // uses for episode locking: everything up through this index is reachable,
+  // nothing after it is — regardless of whether a later item happens to
+  // already be proficient from something the student did independently
+  // before reaching this page.
+  const firstIncompleteIndex = useCallback((cat: Category): number => {
+    const idx = cat.suggestions.findIndex(title => {
+      const score = scoreFor(cat, title);
+      return !(score === undefined || isProficient(score));
+    });
+    return idx === -1 ? cat.suggestions.length : idx;
+  }, [scoreFor]);
+
+  const activityStatus = (cat: Category, idx: number): ActivityStatus => {
+    const title = cat.suggestions[idx];
+    const score = scoreFor(cat, title);
+    if (score !== undefined && isProficient(score)) return 'proficient';
+    if (score === undefined) return 'unavailable';
+    return idx <= firstIncompleteIndex(cat) ? 'available' : 'locked';
+  };
+
+  /* ── mirror category-complete set into tutorial_progress, same as every other track ── */
+
+  useEffect(() => {
+    if (!loaded || !userId) return;
+    const completed = CATEGORIES.filter(categoryComplete).map(c => c.id);
     try {
-      localStorage.setItem(lsKey, JSON.stringify({ completed: [...nextDone], updated: Date.now() }));
-    } catch { /* private browsing, quota — progress still works in memory */ }
-    if (!userId) return;
+      localStorage.setItem(`tutorial:${TRACK}`, JSON.stringify({ completed, updated: Date.now() }));
+    } catch { /* private browsing, quota — not worth failing over */ }
     setSyncing(true);
     supabase
       .from('tutorial_progress')
       .upsert({
         user_id: userId,
         track: TRACK,
-        completed_steps: [...nextDone],
+        completed_steps: completed,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,track' })
       .then(() => setSyncing(false), () => setSyncing(false));
-  }, [lsKey, userId]);
+  }, [loaded, userId, categoryComplete]);
 
-  const toggleDone = (categoryId: string) => {
-    const next = new Set(done);
-    if (next.has(categoryId)) next.delete(categoryId); else next.add(categoryId);
-    setDone(next);
-    persist(next);
-  };
-
-  // Visiting any suggestion (or "design your own") counts as having explored
-  // the category — add-only, unlike the manual toggle below which can undo.
-  const markExplored = (categoryId: string) => {
-    if (done.has(categoryId)) return;
-    const next = new Set(done);
-    next.add(categoryId);
-    setDone(next);
-    persist(next);
-  };
-
-  const doneCount = done.size;
+  const doneCount = CATEGORIES.filter(categoryComplete).length;
   const pct = Math.min(100, Math.round((doneCount / TOTAL_STEPS) * 100));
 
   if (!loaded) {
@@ -191,13 +262,13 @@ const AILearningStartPage: React.FC = () => {
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">Orientation</p>
           <h1 className="mt-1 text-3xl font-extrabold">Start Here: AI Learning</h1>
           <p className="mt-1 max-w-xl text-sm text-slate-300">
-            A map of AI Learning's five categories, with a few good activities suggested in each —
-            or design your own. No AI Playground needed; everything here happens on the AI Learning page.
+            Five categories, five activities each. Score Proficient or better on an activity to unlock
+            the next one — finish all five in a category to unlock the next category.
           </p>
 
           <div className="mt-5">
             <div className="mb-1.5 flex items-center justify-between text-xs text-slate-400">
-              <span>{doneCount} of {TOTAL_STEPS} categories explored</span>
+              <span>{doneCount} of {TOTAL_STEPS} categories complete</span>
               <span className="flex items-center gap-1.5">
                 {syncing && <Loader2 className="h-3 w-3 animate-spin" />}
                 {pct}%
@@ -206,74 +277,92 @@ const AILearningStartPage: React.FC = () => {
             <div className="h-2 overflow-hidden rounded-full bg-slate-700">
               <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
-            {!userId && (
-              <p className="mt-2 text-xs text-slate-400">
-                Your progress is saved on this device. Sign in to keep it across devices.
-              </p>
-            )}
           </div>
         </div>
 
         {/* categories */}
-        {CATEGORIES.map((cat, i) => {
-          const open = openCategory === cat.id;
-          const isDone = done.has(cat.id);
+        {CATEGORIES.map((cat, catIdx) => {
+          const unlocked = categoryUnlocked(catIdx);
+          const complete = categoryComplete(cat);
+          const open = unlocked && openCategory === cat.id;
 
           return (
             <div key={cat.id} className="mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white">
               <button
-                onClick={() => setOpenCategory(open ? '' : cat.id)}
-                className="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-gray-50"
+                onClick={() => unlocked && setOpenCategory(open ? '' : cat.id)}
+                disabled={!unlocked}
+                className={`flex w-full items-center gap-4 p-5 text-left transition-colors ${unlocked ? 'hover:bg-gray-50' : 'cursor-not-allowed opacity-60'}`}
               >
                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-extrabold ${
-                  isDone ? 'bg-green-600 text-white' : 'bg-amber-100 text-amber-800'}`}>
-                  {isDone ? <Check className="h-6 w-6" /> : i + 1}
+                  complete ? 'bg-green-600 text-white' : unlocked ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-400'}`}>
+                  {complete ? <Check className="h-6 w-6" /> : unlocked ? catIdx + 1 : <Lock className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-lg font-bold text-gray-900">{cat.label}</h2>
                   <p className="truncate text-sm text-gray-500">{cat.hook}</p>
+                  {!unlocked && <p className="mt-1 text-xs font-semibold text-gray-400">Finish the previous category to unlock</p>}
                 </div>
-                {open ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />}
+                {unlocked && (open ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />)}
               </button>
 
               {open && (
                 <div className="border-t border-gray-100 p-5">
                   <p className="mb-3 text-sm text-gray-600">{cat.hook}</p>
 
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">A few good places to start</p>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">Score Proficient to unlock the next one</p>
                   <ul className="mb-4 space-y-1.5">
-                    {cat.suggestions.map(s => (
-                      <li key={s}>
-                        <Link
-                          to={`/learning/ai?activity=${encodeURIComponent(s)}&subCategory=${encodeURIComponent(cat.label)}`}
-                          onClick={() => markExplored(cat.id)}
-                          className="flex items-center gap-2 text-sm text-gray-700 hover:text-amber-700 hover:underline"
-                        >
-                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                          {s}
-                        </Link>
-                      </li>
-                    ))}
+                    {cat.suggestions.map((s, i) => {
+                      const status = activityStatus(cat, i);
+
+                      if (status === 'proficient' || status === 'available') {
+                        return (
+                          <li key={s}>
+                            <Link
+                              to={`/learning/ai?activity=${encodeURIComponent(s)}&subCategory=${encodeURIComponent(cat.label)}`}
+                              className="flex items-center gap-2 text-sm text-gray-700 hover:text-amber-700 hover:underline"
+                            >
+                              {status === 'proficient'
+                                ? <Check className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                                : <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500" />}
+                              {s}
+                            </Link>
+                          </li>
+                        );
+                      }
+
+                      if (status === 'unavailable') {
+                        return (
+                          <li key={s} className="flex items-center gap-2 text-sm text-gray-400">
+                            <Sparkles className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+                            {s} <span className="text-xs">(not offered in your region)</span>
+                          </li>
+                        );
+                      }
+
+                      return (
+                        <li key={s} className="flex items-center gap-2 text-sm text-gray-400">
+                          <Lock className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+                          {s} <span className="text-xs">— score Proficient on "{cat.suggestions[firstIncompleteIndex(cat)]}" first</span>
+                        </li>
+                      );
+                    })}
                     <li>
-                      <Link
-                        to={`/learning/ai?create=1&category=${cat.id}`}
-                        onClick={() => markExplored(cat.id)}
-                        className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-cyan-700 hover:underline"
-                      >
-                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
-                        Or design your own activity in this category
-                      </Link>
+                      {complete ? (
+                        <Link
+                          to={`/learning/ai?create=1&category=${cat.id}`}
+                          className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-cyan-700 hover:underline"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
+                          Or design your own activity in this category
+                        </Link>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+                          <Lock className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+                          Design your own — unlocks once the five above are Proficient
+                        </div>
+                      )}
                     </li>
                   </ul>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      onClick={() => toggleDone(cat.id)}
-                      className="text-sm font-semibold text-gray-500 hover:text-gray-800"
-                    >
-                      {isDone ? 'Mark as not yet explored' : 'Mark this category explored'}
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
@@ -282,7 +371,7 @@ const AILearningStartPage: React.FC = () => {
 
         {doneCount === TOTAL_STEPS && (
           <div className="mt-2 rounded-2xl border border-green-200 bg-green-50 p-5 text-center">
-            <p className="font-bold text-green-800">You've explored all five categories.</p>
+            <p className="font-bold text-green-800">You've completed all five categories.</p>
             <p className="mt-1 text-sm text-green-700">
               Ready to build something real? Try the Fish Market Build next.
             </p>
