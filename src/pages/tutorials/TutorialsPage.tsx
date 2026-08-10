@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
-import { Fish, ArrowRight, Clock, Lock } from 'lucide-react';
+import { Fish, ArrowRight, Clock, Lock, Compass } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -28,6 +28,18 @@ interface Track {
 }
 
 const TRACKS: Track[] = [
+  {
+    id: 'ai-learning-start',
+    path: '/tutorials/ai-learning-start',
+    title: 'Start Here: AI Learning',
+    blurb:
+      'New to nextVillage? Start with a guided tour of AI Learning\'s five categories — Understanding AI, Prompt Engineering, AI Ethics, Evaluating AI Outputs, and Real-World Applications. Each one comes with a few well-chosen activities to try, or you can design your own. No AI Playground needed — everything happens right on the AI Learning page.',
+    duration: 'about an hour',
+    totalSteps: 5,
+    tags: ['AI Learning', 'Orientation'],
+    available: true,
+    Icon: Compass,
+  },
   {
     id: 'fish-market',
     path: '/tutorials/fish-market',
