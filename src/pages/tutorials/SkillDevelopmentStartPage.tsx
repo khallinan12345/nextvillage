@@ -33,8 +33,10 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
-  Check, ChevronDown, ChevronRight, Compass, Lock, Loader2, Sparkles,
+  Check, ChevronDown, ChevronRight, Compass, Lock, Loader2, PlayCircle, Sparkles,
 } from 'lucide-react';
+
+const TUTORIAL_VIDEO_URL = 'https://www.youtube.com/watch?v=4arYya6dZWM&t=84s';
 
 const TRACK = 'skill-development-start';
 const ACTIVITIES_PER_SKILL = 5;
@@ -243,6 +245,15 @@ const SkillDevelopmentStartPage: React.FC = () => {
             Five skills, five activities each. Score Proficient or better on an activity to unlock
             the next one — finish all five in a skill to unlock the next skill.
           </p>
+
+          <a
+            href={TUTORIAL_VIDEO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-700"
+          >
+            <PlayCircle className="h-4 w-4" /> How to Do a Session
+          </a>
 
           <div className="mt-5">
             <div className="mb-1.5 flex items-center justify-between text-xs text-slate-400">
