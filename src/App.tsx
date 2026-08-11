@@ -108,6 +108,7 @@ const CoworkPage = lazy(() => import('./pages/CoworkPage'));
 const TutorialsPage = lazy(() => import('./pages/tutorials/TutorialsPage'));
 const FishMarketTutorialPage = lazy(() => import('./pages/tutorials/FishMarketTutorialPage'));
 const AILearningStartPage = lazy(() => import('./pages/tutorials/AILearningStartPage'));
+const SkillDevelopmentStartPage = lazy(() => import('./pages/tutorials/SkillDevelopmentStartPage'));
 
 // Shown briefly while a lazy-loaded route's chunk downloads. Matches the
 // full-page auth-loading spinner's style above for visual consistency.
@@ -296,6 +297,7 @@ export const AppContent: React.FC = () => {
         {/* Tutorials */}
         <Route path="/tutorials" element={<TutorialsPage />} />
         <Route path="/tutorials/ai-learning-start" element={<AILearningStartPage />} />
+        <Route path="/tutorials/skill-development-start" element={<SkillDevelopmentStartPage />} />
         <Route path="/tutorials/fish-market" element={<FishMarketTutorialPage />} />
 
         {/* Legacy Route Redirects */}

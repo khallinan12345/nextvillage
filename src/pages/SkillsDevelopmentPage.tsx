@@ -48,6 +48,7 @@
  *    - Activity no longer clickable in overview
  */
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
 import AppLayout from '../components/layout/AppLayout';
@@ -1443,6 +1444,8 @@ Next question: <one question only — focused on the weakest rubric dimension; c
 
 const SkillsPage: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const deepLinkHandledRef = useRef(false);
   const [voiceInputEnabled, setVoiceInputEnabled] = useState(false);
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
   const [isListening, setIsListening] = useState(false);
@@ -1917,6 +1920,42 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
       fetchPersonalityBaseline(user.id);
     }
   }, [user]);
+
+  // Deep-link support for ?activity=<title>&subCategory=<...> (open a specific
+  // module) — used by the Skill Development guide. Matches against
+  // allSkillsActivities (already filtered/loaded for the signed-in user's
+  // city_town) rather than a raw learning_module_id, since the same activity
+  // title can exist as a different row per city.
+  useEffect(() => {
+    if (deepLinkHandledRef.current) return;
+    if (allSkillsActivities.length === 0) return;
+    deepLinkHandledRef.current = true;
+
+    const activityTitle = searchParams.get('activity');
+    const subCategoryParam = searchParams.get('subCategory');
+    const createFlag = searchParams.get('create');
+    const categoryParam = searchParams.get('category');
+
+    if (activityTitle) {
+      const match = allSkillsActivities.find(a => {
+        const subCategory = a.learning_modules?.sub_category || a.sub_category;
+        return a.title === activityTitle && (!subCategoryParam || subCategory === subCategoryParam);
+      });
+      if (match) {
+        const cat = skillCategories.find(c => c.subCategory === (match.learning_modules?.sub_category || match.sub_category));
+        if (cat) setActiveCategory(cat.id);
+        handleActivitySelect(match);
+        return;
+      }
+    }
+
+    if (createFlag === '1') {
+      const catId = categoryParam && skillCategories.some(c => c.id === categoryParam) ? categoryParam : 'digital-fluency';
+      setCreateForm(f => ({ ...f, category: catId }));
+      setActiveCategory(catId);
+      setShowCreateActivity(true);
+    }
+  }, [allSkillsActivities, searchParams]);
 
   const fetchPersonalityBaseline = async (userId: string) => {
     try {
