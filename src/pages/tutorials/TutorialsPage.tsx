@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
-import { Fish, ArrowRight, Clock, Lock, Compass, Puzzle } from 'lucide-react';
+import { Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -63,6 +63,18 @@ const TRACKS: Track[] = [
     tags: ['Website Builder', 'Vite + React', 'Supabase', 'AI Playground'],
     available: true,
     Icon: Fish,
+  },
+  {
+    id: 'add-new-guide',
+    path: '/tutorials/add-new-guide',
+    title: 'Adding a New Guide',
+    blurb:
+      'For team members: how to build a brand new Guide page for this site, from a blank branch to an open Pull Request. No prior coding experience needed — the only real prerequisite is a GitHub account and an invite to the team. Everything else, from installing the right apps to writing the actual code with Claude, happens right here, one step at a time.',
+    duration: 'about an hour',
+    totalSteps: 6,
+    tags: ['GitHub', 'Claude', 'Contributing'],
+    available: true,
+    Icon: GitBranch,
   },
 ];
 

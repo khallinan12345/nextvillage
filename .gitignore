@@ -28,5 +28,6 @@ dist-ssr
 .env.*
 .env.production
 .env*
+!.env*.example
 public/OurYouthsFuture.mp4
 supabase/.temp/
