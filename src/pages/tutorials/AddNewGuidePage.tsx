@@ -1,10 +1,16 @@
 // src/pages/tutorials/AddNewGuidePage.tsx
 //
-// A Guide about adding Guides — walks a team member with no prior coding
-// experience through building a new page for /tutorials themselves: clone,
-// branch, hand the work to Claude (claude.ai, not this platform's own AI
-// features), test locally, open a PR. Kevin (or whoever reviews) merges by
-// hand from there — this track stops at "PR opened."
+// A Guide about contributing to nextVillage itself — walks a team member
+// with no prior coding experience through building a new page OR fixing/
+// improving an existing one: clone, branch, hand the work to Claude
+// (claude.ai, not this platform's own AI features), test locally, open a
+// PR. Kevin (or whoever reviews) merges by hand from there — this track
+// stops at "PR opened."
+//
+// The load-bearing idea, repeated throughout: always give Claude a similar
+// existing file as a mirror before asking it to build or fix anything —
+// never a blank page. For something new, that's whichever existing page
+// most resembles it. For a fix, it's the actual file that needs work.
 //
 // The only real gate before starting is a GitHub account plus an invite to
 // the team as a collaborator — everything else (GitHub Desktop, VS Code,
@@ -60,69 +66,74 @@ const STEPS: GuideStep[] = [
     blurb: 'Called a "branch" — nothing you do here can break the live site.',
     body: [
       "A branch is your own copy of the project to work in. Nothing you do on it touches the real site, or anyone else's work, until someone with review rights specifically decides to bring your changes in — so there's no way to break anything from here on.",
-      'In GitHub Desktop: Current Branch → New Branch. Name it after what you\'re building, e.g. yourname/camp-name-guide.',
+      'In GitHub Desktop: Current Branch → New Branch. Name it after what you\'re building or fixing, e.g. yourname/fix-login-page or yourname/oloibiri-camp-guide.',
       'Click Create Branch, and confirm the "Current Branch" button at the top now shows your new branch name instead of main.',
     ],
     checkpoint: 'GitHub Desktop\'s "Current Branch" button shows your branch name, not main.',
   },
   {
     id: 'ask-claude',
-    title: 'Ask Claude to write the page',
+    title: 'Ask Claude to build or fix it',
     blurb: 'The one place you\'ll actually "write code" — except Claude writes it, you paste it.',
     body: [
-      'Existing Guides come in two shapes. If yours is a facilitator run-sheet or a build-it-once reference (like this one), point Claude at src/pages/tutorials/FishMarketTutorialPage.tsx as the pattern. If yours is a locked, scored practice track a learner works through activity by activity, point it at src/pages/tutorials/SkillDevelopmentStartPage.tsx instead. Open whichever fits in VS Code, select all, copy.',
-      'Go to claude.ai and start a new chat — this is a separate site from nextVillage itself, sign up free if you don\'t have an account. Attach any source material (a PDF, a doc, whatever your Guide is based on) with the paperclip icon.',
-      'Paste the prompt below, swapping in your own example file where it says [PASTE THE FILE HERE], and describing your own Guide where marked.',
-      'Read what comes back. It should hand you three things: the full code for one new file, and small find-this-line/add-this-line edits for two other files. If anything is confusing, just ask — "explain this like I\'ve never edited code before" works.',
+      "The one rule that matters most in this whole track: always give Claude a similar file from the project as a mirror before asking it to build or fix anything — never a blank page. Building something new? Find whichever existing page most resembles it. Fixing or improving something that already exists? Attach that exact file — and, if you can, a second file that already works the way yours should, so Claude can see the difference. Claude is far better at matching an existing pattern than inventing one from a description alone.",
+      'New page: open the closest existing example in VS Code, select all, copy. For a Guide specifically, that\'s src/pages/tutorials/FishMarketTutorialPage.tsx for a step-based reference like this one, or src/pages/tutorials/SkillDevelopmentStartPage.tsx for a locked, scored practice track. For anything else, look in src/pages/ for whichever page is closest in purpose and audience to what you\'re building.',
+      "Fix or improvement: open the actual file that needs work, select all, copy — that's your mirror this time, since Claude needs to see exactly what's there before changing anything.",
+      "If you're building something new, also decide which section of the site it belongs in — this tells Claude where to put the file and how to link it in: Pages (a standalone page, no menu section), Tech Skills, Community Impact, Guides, Learning, or Foundations. Look at the site's own top navigation if you're not sure which one fits.",
+      'Go to claude.ai and start a new chat — this is a separate site from nextVillage itself, sign up free if you don\'t have an account. Attach any source material (a PDF, a doc, a screenshot of the bug) with the paperclip icon.',
+      'Paste the prompt below, swapping in the file you copied where it says [PASTE THE FILE HERE], and describing what you need where marked — including the section you picked.',
+      'Read what comes back and ask follow-ups freely — "explain this like I\'ve never edited code before" works.',
     ],
     copyBlocks: [{
       label: 'Prompt to send Claude',
-      text: `I'm working on a React + TypeScript website called nextVillage (also known as "Girls AIing & Vibing"). It's built with Vite, React Router, Tailwind CSS, and Supabase. I need you to write a new page for it, called a "Guide."
+      text: `I'm working on a React + TypeScript website called nextVillage (also known as "Girls AIing & Vibing"). It's built with Vite, React Router, Tailwind CSS, and Supabase.
 
-Here is the full code of an existing Guide page on the site, so you can see exactly how Guides are normally built — styling, layout, imports, structure:
+Here is a similar file from the project, as a mirror for how things are normally built here — styling, layout, imports, structure:
 
 [PASTE THE FILE HERE]
 
-Here's what my new Guide needs to teach or walk through:
-[DESCRIBE YOUR GUIDE HERE — who it's for, what it covers, and attach any source material]
+Here's what I need:
+[DESCRIBE WHAT YOU'RE BUILDING OR FIXING — for something new, who it's for and what it should do; for a fix, what's wrong today and what it should do instead. Attach any source material.]
 
-Please keep the visual style consistent with the example page above — same header treatment, same Tailwind classes and color approach, same AppLayout wrapper, same general structure — so it looks like it belongs on the same site.
+If this is a new page, it belongs in this section of the site: [PICK ONE — Pages / Tech Skills / Community Impact / Guides / Learning / Foundations]
 
-Please also tell me:
-- The exact filename and folder to save this new file as, following the same convention as the example file
-- The exact small changes needed in two OTHER existing files to make this new page show up in the site's Guides list and be reachable by URL — show me exactly what line to find and what line to add in each, explained the way you'd explain it to someone who has never edited code before
+Please keep the visual style consistent with the file above — same header treatment, same Tailwind classes and color approach, same general structure — so it looks like it belongs on the same site.
+
+If this is a new page, please also tell me:
+- The exact filename and folder to save it as, following the same convention as the example file
+- The exact small changes needed in other existing files to make it reachable — show me exactly what line to find and what line to add in each, explained the way you'd explain it to someone who has never edited code before
 
 Write everything out in full — I'll be copying your code directly into files, so please don't skip anything or say "add your styling here."`,
     }],
-    checkpoint: 'Claude has given you one complete new file, plus two "find this line, add this line" edits for two other files.',
+    checkpoint: 'Claude has given you either a complete new file (with a filename, folder, and any small edits needed elsewhere) or a clear fix to the file you attached — either way, written out in full, not just described.',
   },
   {
     id: 'apply',
     title: "Put Claude's code into the project",
-    blurb: 'Three files change: one brand new, two with a couple of lines added.',
+    blurb: 'Save what Claude wrote into the real files.',
     body: [
       "Install VS Code (free, at code.visualstudio.com) if you haven't already, and open the nextvillage folder in it.",
-      'Right-click the folder Claude told you to use (likely src/pages/tutorials) → New File → the exact filename Claude gave you. Paste in its code. Save.',
-      'Open the first of the two other files Claude mentioned. Find the exact line it told you to find, add the line it told you to add. Save. Do the same for the second file.',
+      'New page: right-click the folder Claude told you to use (likely src/pages/tutorials) → New File → the exact filename Claude gave you. Paste in its code, save. Then make any other small edits Claude described in other files, and save those too.',
+      'Fix or improvement: open the file you attached, replace the part Claude changed (or paste in the whole corrected version, if that\'s what Claude gave you), save.',
     ],
-    checkpoint: "All three files are saved, and GitHub Desktop's Changes tab lists all three as changed.",
+    checkpoint: 'Every file Claude touched is saved, and GitHub Desktop\'s Changes tab lists all of them.',
   },
   {
     id: 'test',
     title: 'Test it for real, on your own computer',
-    blurb: 'Run the actual site on your machine and click through your new page.',
+    blurb: 'Run the actual site on your machine and check your work.',
     body: [
       "Install Node.js (the LTS version, free at nodejs.org) if you haven't already — it's what lets your computer run the site.",
       'Open Terminal. Type "cd " (with a trailing space, don\'t press Enter yet), drag the nextvillage folder in from Finder to fill in the path, then press Enter.',
       'First time only, run npm install and wait — it can take five to ten minutes, that\'s normal. Then run npm run dev:frontend.',
-      'A web address will appear, something like http://localhost:5173 — open it in your browser. Sign in, click Guides in the navigation, find your new page, click through it.',
+      'A web address will appear, something like http://localhost:5173 — open it in your browser. Sign in, and go find whatever you built or fixed. Click through it, and check the rest of the site still looks the way it did before.',
       'When you\'re done, click back in Terminal and press Ctrl+C to stop the site.',
     ],
     copyBlocks: [
       { label: 'First time only', text: 'npm install' },
       { label: 'Every time', text: 'npm run dev:frontend' },
     ],
-    checkpoint: 'Your new Guide appears in the Guides list, opens without a blank or broken page, and every link on it goes somewhere real.',
+    checkpoint: 'Whatever you built or fixed behaves the way you wanted, with no blank or broken pages, and nothing else on the site looks different than before.',
   },
   {
     id: 'pr',
@@ -246,10 +257,12 @@ const AddNewGuidePage: React.FC = () => {
         {/* header */}
         <div className="mb-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">For Team Members</p>
-          <h1 className="mt-1 text-3xl font-extrabold">Adding a New Guide</h1>
+          <h1 className="mt-1 text-3xl font-extrabold">Add or Improve a Page</h1>
           <p className="mt-1 max-w-xl text-sm text-slate-300">
             You don't need to know how to code already. Six steps, in order — at each one you'll either
-            click buttons in an app or copy-paste text Claude wrote for you.
+            click buttons in an app or copy-paste text Claude wrote for you, always working from a
+            similar existing file as your mirror. Works the same way whether you're building something
+            brand new or fixing something that's already here.
           </p>
 
           <div className="mt-5">

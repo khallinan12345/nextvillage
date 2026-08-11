@@ -67,9 +67,9 @@ const TRACKS: Track[] = [
   {
     id: 'add-new-guide',
     path: '/tutorials/add-new-guide',
-    title: 'Adding a New Guide',
+    title: 'Add or Improve a Page',
     blurb:
-      'For team members: how to build a brand new Guide page for this site, from a blank branch to an open Pull Request. No prior coding experience needed — the only real prerequisite is a GitHub account and an invite to the team. Everything else, from installing the right apps to writing the actual code with Claude, happens right here, one step at a time.',
+      'For team members: how to build a brand new page for this site, or fix and improve one that already exists — from a blank branch to an open Pull Request. No prior coding experience needed — the only real prerequisite is a GitHub account and an invite to the team. The one habit that makes it work: always give Claude a similar existing file as a mirror before asking it to build or fix anything.',
     duration: 'about an hour',
     totalSteps: 6,
     tags: ['GitHub', 'Claude', 'Contributing'],
