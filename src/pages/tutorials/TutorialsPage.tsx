@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
-import { Fish, ArrowRight, Clock, Lock, Compass } from 'lucide-react';
+import { Fish, ArrowRight, Clock, Lock, Compass, Puzzle } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -39,6 +39,18 @@ const TRACKS: Track[] = [
     tags: ['AI Learning', 'Orientation'],
     available: true,
     Icon: Compass,
+  },
+  {
+    id: 'skill-development-start',
+    path: '/tutorials/skill-development-start',
+    title: 'Start Here: Skill Development',
+    blurb:
+      'A guided tour of Skill Development\'s five skills — Digital Fluency, Critical Thinking, Problem-Solving, Creativity, and Communication. Each one comes with five activities to work through in order, or you can design your own once you\'ve finished the five. Everything happens right on the Skill Development page.',
+    duration: 'about an hour',
+    totalSteps: 5,
+    tags: ['Skill Development', 'Orientation'],
+    available: true,
+    Icon: Puzzle,
   },
   {
     id: 'fish-market',
