@@ -1349,9 +1349,10 @@ ${prior.impact_arc}
     if (!joinCode || pastCohortLeaderboards.length > 0) return;
     setPastCohortLoading(true);
     try {
-      const { data: cohortProfiles } = await supabase
-        .from('profiles').select('id, name')
-        .eq('join_code_used', joinCode).eq('role', 'student');
+      // Cohort-mates aren't visible to a plain 'student' under profiles' RLS
+      // policy (only own row, or org-scoped for teacher/leader roles) — this
+      // RPC is a narrow, purpose-built exception for the leaderboard.
+      const { data: cohortProfiles } = await supabase.rpc('get_cohort_member_names', { p_join_code: joinCode });
       if (!cohortProfiles || cohortProfiles.length === 0) return;
 
       const cohortIds = cohortProfiles.map(p => p.id);
@@ -1402,9 +1403,7 @@ ${prior.impact_arc}
     if (!joinCode) return;
     setLeaderboardLoading(true);
     try {
-      const { data: cohortProfiles, error: cpErr } = await supabase
-        .from('profiles').select('id, name')
-        .eq('join_code_used', joinCode).eq('role', 'student');
+      const { data: cohortProfiles, error: cpErr } = await supabase.rpc('get_cohort_member_names', { p_join_code: joinCode });
 
       if (cpErr || !cohortProfiles || cohortProfiles.length === 0) { setLeaderboard([]); return; }
 

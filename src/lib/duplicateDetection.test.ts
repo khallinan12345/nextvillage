@@ -25,18 +25,13 @@ describe('maskEmail', () => {
   });
 });
 
-// findSimilarProfile queries Supabase — mock the chainable query builder rather
-// than hitting a real (or fake) network, so this stays fast and deterministic.
+// findSimilarProfile calls the find_similar_profile_candidates RPC — mock
+// supabase.rpc rather than hitting a real (or fake) network, so this stays
+// fast and deterministic.
 vi.mock('./supabaseClient', () => {
   const state = { data: [] as any[], error: null as any };
-  const builder: any = {
-    select: vi.fn(() => builder),
-    eq: vi.fn(() => builder),
-    neq: vi.fn(() => builder),
-    then: (resolve: any) => Promise.resolve({ data: state.data, error: state.error }).then(resolve),
-  };
   return {
-    supabase: { from: vi.fn(() => builder) },
+    supabase: { rpc: vi.fn(() => Promise.resolve({ data: state.data, error: state.error })) },
     __mockState: state,
   };
 });

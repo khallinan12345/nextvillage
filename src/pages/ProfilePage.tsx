@@ -380,14 +380,15 @@ const ProfilePage: React.FC = () => {
               ? orgData.join_codes
               : orgData.join_code ? [orgData.join_code] : [];
 
-          // Learner count
-          const { count } = await supabase
-            .from('profiles')
-            .select('id', { count: 'exact', head: true })
-            .eq('organization_id', profileData.organization_id)
-            .not('role', 'in', '("site_leader","platform_administrator","research_lead")');
+          // Learner count — shown to every org member, not just leaders, so
+          // this goes through a SECURITY DEFINER RPC rather than a direct
+          // count query: profiles' RLS policy only grants a plain 'student'
+          // visibility into their own row, which would undercount.
+          const { data: learnerCount } = await supabase.rpc('get_organization_learner_count', {
+            p_organization_id: profileData.organization_id,
+          });
 
-          setOrgInfo({ ...orgData, join_codes: codes, learner_count: count ?? 0 });
+          setOrgInfo({ ...orgData, join_codes: codes, learner_count: learnerCount ?? 0 });
 
           // For leaders — fetch the student list scoped by their role
           if (['site_leader', 'platform_administrator', 'research_lead'].includes(profileData.role)) {
