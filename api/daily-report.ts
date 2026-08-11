@@ -5,7 +5,10 @@
  * Vercel cron: "0 11 * * *"
  *
  * Reports on Africa-cohort users who were active today:
- *   • Total users with any dashboard activity today (created or updated)
+ *   • Total users who logged in today (auth.users.last_sign_in_at) — not
+ *     dashboard activity, since a user who only used the AI Playground or
+ *     just logged in without starting a learning activity was previously
+ *     invisible to this count
  *   • Breakdown by category_activity
  *   • AI Playground users and chat counts
  *   • Certification attempt counts (all-time + today)
@@ -142,6 +145,40 @@ function splitCohorts(profiles: UserProfile[]): {
   return { oloibiriProfiles, ibiadeProfiles };
 }
 
+// ─── Auth Login Fetching ───────────────────────────────────────────────────────
+// profiles.updated_at is NOT a login signal in this app — it only changes when
+// a user edits their name/settings, which is rare. auth.users.last_sign_in_at
+// is maintained by Supabase Auth itself on every sign-in, independent of app
+// code, so it's the accurate source for "who showed up today." Paginated in
+// case the user base grows past what a single page returns.
+
+async function fetchAllAuthUsers(): Promise<Map<string, string | null>> {
+  const loginMap = new Map<string, string | null>();
+  const perPage = 1000;
+  let page = 1;
+
+  while (true) {
+    const url = `${process.env.SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=${perPage}`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    });
+    if (!res.ok) {
+      console.warn("   auth admin users fetch failed:", res.status, await res.text());
+      break;
+    }
+    const data = await res.json();
+    const users: { id: string; last_sign_in_at: string | null }[] = data.users || [];
+    users.forEach((u) => loginMap.set(u.id, u.last_sign_in_at));
+    if (users.length < perPage) break;
+    page++;
+  }
+
+  return loginMap;
+}
+
 // ─── Data Fetching ────────────────────────────────────────────────────────────
 
 function todayWAT(): string {
@@ -150,7 +187,7 @@ function todayWAT(): string {
   return wat.toISOString().split("T")[0];
 }
 
-async function fetchMetrics(logDate: string, cohortIds: string[], city: string): Promise<DailyMetrics> {
+async function fetchMetrics(logDate: string, cohortIds: string[], city: string, loginMap: Map<string, string | null>): Promise<DailyMetrics> {
   const dayStartUTC = new Date(`${logDate}T00:00:00+01:00`).toISOString();
   const dayEndUTC   = new Date(`${logDate}T23:59:59+01:00`).toISOString();
 
@@ -185,7 +222,17 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string):
   }
   const sessionRows = [...sessionMap.values()];
   const totalActivities = sessionRows.length;
-  const activeUserSet = new Set(sessionRows.map((r) => r.user_id));
+
+  // "Active" = logged in today, not "touched the dashboard table today" —
+  // see fetchAllAuthUsers for why. totalActivities/category breakdown below
+  // stay dashboard-based; that's legitimately about which activities ran,
+  // not about who counts as active.
+  const activeUserSet = new Set(
+    cohortIds.filter((id) => {
+      const lastSignIn = loginMap.get(id);
+      return !!lastSignIn && lastSignIn >= dayStartUTC && lastSignIn <= dayEndUTC;
+    })
+  );
   const activeUsers = activeUserSet.size;
 
   // ── Category breakdown ────────────────────────────────────────────────
@@ -606,10 +653,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const costEndUTC   = new Date(`${logDate}T23:59:59Z`).toISOString();
     console.log(`  Cost window: ${costStartUTC} → ${costEndUTC}`);
 
-    const [oloibiriMetrics, ibiadeMetrics, costSummary] = await Promise.all([
-      fetchMetrics(logDate, oloibiriIds, "Oloibiri"),
-      fetchMetrics(logDate, ibiadeIds,   "Ibiade"),
+    const [loginMap, costSummary] = await Promise.all([
+      fetchAllAuthUsers(),
       fetchDailyCosts(costStartUTC, costEndUTC),
+    ]);
+    console.log(`  Auth users with login history: ${loginMap.size}`);
+
+    const [oloibiriMetrics, ibiadeMetrics] = await Promise.all([
+      fetchMetrics(logDate, oloibiriIds, "Oloibiri", loginMap),
+      fetchMetrics(logDate, ibiadeIds,   "Ibiade",   loginMap),
     ]);
 
     const logMetrics = (label: string, m: DailyMetrics) => {
