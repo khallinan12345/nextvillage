@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
-import { Fish, ArrowRight, Clock, Lock, Compass, Puzzle } from 'lucide-react';
+import { Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -63,6 +63,18 @@ const TRACKS: Track[] = [
     tags: ['Website Builder', 'Vite + React', 'Supabase', 'AI Playground'],
     available: true,
     Icon: Fish,
+  },
+  {
+    id: 'add-new-guide',
+    path: '/tutorials/add-new-guide',
+    title: 'Add or Improve a Page',
+    blurb:
+      'For team members: how to build a brand new page for this site, or fix and improve one that already exists — from a blank branch to an open Pull Request. No prior coding experience needed — the only real prerequisite is a GitHub account and an invite to the team. The one habit that makes it work: always give Claude a similar existing file as a mirror before asking it to build or fix anything.',
+    duration: 'about an hour',
+    totalSteps: 6,
+    tags: ['GitHub', 'Claude', 'Contributing'],
+    available: true,
+    Icon: GitBranch,
   },
 ];
 
