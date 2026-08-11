@@ -22,12 +22,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [similarMatch, setSimilarMatch] = useState<SimilarProfileMatch | null>(null);
 
   // ─── Duplicate email check ────────────────────────────────────────────────
+  // Runs pre-auth (anon), so it goes through a SECURITY DEFINER RPC rather
+  // than a direct table query — profiles has RLS enabled and the anon role
+  // has no policy granting it visibility into other users' rows.
   const emailAlreadyExists = async (email: string): Promise<boolean> => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc('check_email_exists', { p_email: email });
 
     if (error) {
       console.error('Email existence check failed:', error);

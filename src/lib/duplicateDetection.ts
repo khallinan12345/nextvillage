@@ -53,15 +53,15 @@ export const findSimilarProfile = async ({
   const emailLocal = email ? email.split('@')[0].toLowerCase() : '';
   const nameLower = organizationId ? (name ?? '').trim().toLowerCase() : '';
 
-  let query = supabase
-    .from('profiles')
-    .select('id, email, name')
-    .eq('is_active', true);
-
-  if (organizationId) query = query.eq('organization_id', organizationId);
-  if (excludeUserId) query = query.neq('id', excludeUserId);
-
-  const { data, error } = await query;
+  // Runs pre-auth (anon) at signup, so this goes through a SECURITY DEFINER
+  // RPC rather than a direct table query — profiles has RLS enabled and the
+  // anon role has no policy granting it visibility into other users' rows.
+  // The RPC returns the same (id, email, name) candidate rows the direct
+  // query used to; the fuzzy matching below stays client-side.
+  const { data, error } = await supabase.rpc('find_similar_profile_candidates', {
+    p_organization_id: organizationId ?? null,
+    p_exclude_user_id: excludeUserId ?? null,
+  });
   if (error || !data) return null;
 
   for (const profile of data) {
