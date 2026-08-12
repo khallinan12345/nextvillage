@@ -337,7 +337,7 @@ const TRIAGE_ALERT_EMAIL  = process.env.TRIAGE_ALERT_EMAIL || '';
 // Writes to system_events and emails on error/critical severity.
 // Fire-and-forget — never blocks the response.
 
-async function logEvent({ function_name, event_type, severity, payload }) {
+async function logEvent({ function_name, event_type, severity, payload, user_id }) {
   if (TRIAGE_SUPABASE_URL && TRIAGE_SUPABASE_KEY) {
     fetch(`${TRIAGE_SUPABASE_URL}/rest/v1/system_events`, {
       method: 'POST',
@@ -352,6 +352,7 @@ async function logEvent({ function_name, event_type, severity, payload }) {
         event_type,
         severity,
         payload,
+        user_id:    user_id ?? null,
         created_at: new Date().toISOString(),
       }),
     }).catch(() => {});
@@ -368,7 +369,7 @@ async function logEvent({ function_name, event_type, severity, payload }) {
         from:    'triage@nextvillage.community',
         to:      TRIAGE_ALERT_EMAIL,
         subject: `[vAI ERROR] ${event_type} in ${function_name}`,
-        html:    `<h2>${event_type}</h2><p><strong>Function:</strong> ${function_name}</p><pre>${JSON.stringify(payload, null, 2)}</pre>`,
+        html:    `<h2>${event_type}</h2><p><strong>Function:</strong> ${function_name}</p><p><strong>User:</strong> ${user_id ?? 'unknown'}</p><pre>${JSON.stringify(payload, null, 2)}</pre>`,
       }),
     }).catch(() => {});
   }
@@ -523,6 +524,27 @@ async function callAnthropic(model, messages, system, max_tokens, temperature) {
     },
     _route: { provider: 'anthropic', model: data.model },
   };
+}
+
+// Statuses Anthropic expects callers to retry with backoff rather than fail
+// outright — 529 (Overloaded) is transient capacity pressure on their side.
+const TRANSIENT_ANTHROPIC_STATUSES = new Set([500, 502, 503, 504, 529]);
+
+// The Anthropic-routed path (Sonnet coding tasks, Haiku default/playground)
+// has no fallback chain like the groq-routed free tier does, so a single
+// transient 529 fails the request for every user hitting that page. Retry
+// a couple of times with backoff before giving up.
+async function callAnthropicWithRetry(model, messages, system, max_tokens, temperature, attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await callAnthropic(model, messages, system, max_tokens, temperature);
+    } catch (error) {
+      if (attempt === attempts || !TRANSIENT_ANTHROPIC_STATUSES.has(error?.status)) throw error;
+      const delayMs = 500 * 3 ** (attempt - 1); // 500ms, 1500ms
+      console.warn(`[chat.js] Anthropic transient error (status ${error.status}), retrying in ${delayMs}ms (attempt ${attempt + 1}/${attempts})...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
 }
 
 // ── Groq call ──────────────────────────────────────────────────────────────────
@@ -1064,19 +1086,28 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Hoisted out of the try block so the catch handler below can still
+  // attribute a failed request to a user/page when it logs the triage event.
+  let userId = null;
+  let page = '';
+  let taskType = null;
+
   try {
     const {
       messages: rawMessages,
       system:   rawSystem,
       max_tokens      = 1000,
       temperature     = 0.7,
-      page            = '',
+      page:            pageArg      = '',
       playgroundModel = null,
-      taskType        = null,
-      userId          = null,
+      taskType:        taskTypeArg  = null,
+      userId:          userIdArg    = null,
       city            = null,
       stream          = false,
     } = req.body || {};
+    page = pageArg;
+    taskType = taskTypeArg;
+    userId = userIdArg;
 
     if (!rawMessages || !Array.isArray(rawMessages)) {
       res.setHeader('Content-Type', 'application/json');
@@ -1157,7 +1188,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Anthropic API key not configured' });
     }
 
-    const result = await callAnthropic(model, messages, system, max_tokens, temperature);
+    const result = await callAnthropicWithRetry(model, messages, system, max_tokens, temperature);
     logCost({
       page, provider: 'anthropic', model,
       inputTokens:       result.usage?.prompt_tokens     ?? 0,
@@ -1186,7 +1217,10 @@ export default async function handler(req, res) {
         status:          error.status || 500,
         type:            error.constructor?.name,
         provider_errors: error.provider_errors || undefined,
+        page:            page || undefined,
+        taskType:        taskType || undefined,
       },
+      user_id: userId || undefined,
     });
 
     const status = error.status || 500;
