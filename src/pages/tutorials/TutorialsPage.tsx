@@ -18,7 +18,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
-  Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X,
+  Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2,
 } from 'lucide-react';
 
 type CategoryId =
@@ -128,6 +128,19 @@ const TRACKS: Track[] = [
     available: true,
     category: 'tech-skills',
     Icon: Fish,
+  },
+  {
+    id: 'vibe-coding-guide',
+    path: '/tutorials/vibe-coding',
+    title: 'Vibe Code Something Real',
+    blurb:
+      'Describe an app in plain language and let AI write it — but with a twist: before any code exists, an AI critique tells you exactly what you left vague. One real pass through all four phases of the Vibe Coding page: write instructions, get critiqued, generate and run the code, then debug it together.',
+    duration: 'about 90 minutes',
+    totalSteps: 14,
+    tags: ['Vibe Coding', 'AI Playground'],
+    available: true,
+    category: 'tech-skills',
+    Icon: Wand2,
   },
   {
     id: 'add-new-guide',

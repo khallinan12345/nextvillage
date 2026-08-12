@@ -1,29 +1,29 @@
-// src/pages/tutorials/FishMarketTutorialPage.tsx
+// src/pages/tutorials/VibeCodingGuidePage.tsx
 //
-// "The Fish Market Build" — a step-by-step, narrated tutorial track that walks a
-// student from the no-code Website Builder through Vite/React and on to a
-// full-stack app with Supabase, all against one real problem: a family selling
-// fish in the Oloibiri market.
+// "Vibe Code Something Real" — a step-by-step Guide for the Vibe Coding build
+// page (/tech-skills/vibe-coding), which already walks a student through 4
+// phases: write instructions, get an AI critique of those instructions
+// *before* any code exists, generate + run the code, then debug/iterate.
+// This Guide doesn't reinvent that page — it wraps it in the same
+// read/do/swivel/gate pattern as FishMarketTutorialPage.tsx, so the habit of
+// swiveling to the AI Playground to think something through carries over
+// from that track rather than being taught twice, differently.
 //
-// This replaces what would otherwise have been a video series. Steps carry
-// copy-to-clipboard prompts (students must run these EXACTLY, so transcribing
-// them by ear from a video was the wrong format), and "swivel" steps open the
-// AI Playground in a second tab with the prompt already copied — the two-tab
-// habit is the pedagogical core of the track, so the interface performs it
-// rather than merely recommending it.
+// Episode 1 reframes the AI Camp Day 1 reading ("The machine that notices
+// everything" — patterns, training data, bias, algorithm) as the reason
+// vibe coding is a real skill and not just typing English instead of code:
+// the AI has no judgment of its own, so precision in what you ask for is
+// the whole job. Episode 2 is the hands-on build, one step per phase.
 //
-// Narration uses the platform's existing useVoice hook, so every step is
-// speakable in English or Nigerian Pidgin with no audio files to maintain.
-// Steps may optionally set `audioUrl` to play a real recording instead — used
-// for the two places where a peer's own voice matters more than TTS.
+// No slide images or recorded audio for this Guide (Fish Market has its own
+// asset set) — narration falls back to on-device text-to-speech via
+// useVoice, which needs no files to maintain.
 //
-// Progress is written to localStorage immediately (works offline, works logged
-// out) and mirrored to `tutorial_progress` in Supabase when a user is signed in.
-// Gate steps require a real artifact — a published site URL, a GitHub Pages
-// address — before the episode will close. A checkbox can be clicked without
-// doing the work; a URL that loads cannot.
+// Progress: localStorage first (instant, offline), mirrored to
+// `tutorial_progress` in Supabase when signed in — same as every other
+// Guide on this site.
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
@@ -32,12 +32,12 @@ import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import {
   Check, Lock, Copy, CheckCheck, ExternalLink, Volume2, VolumeX,
-  RotateCw, ChevronDown, ChevronRight, Link2, PlayCircle, Loader2,
+  RotateCw, ChevronDown, ChevronRight, Link2, Loader2,
 } from 'lucide-react';
 
 /* ────────────────────────────── types ────────────────────────────── */
 
-type StepKind = 'read' | 'do' | 'swivel' | 'gate' | 'watch';
+type StepKind = 'read' | 'do' | 'swivel' | 'gate';
 
 interface Gate {
   label: string;
@@ -54,13 +54,9 @@ interface Step {
   /** Prompt text with a copy button. For swivels this is what gets copied. */
   prompt?: string;
   promptNote?: string;
-  /** Slide image shown above the step, from public/tutorials/slides/. */
-  slide?: string;
   /** Short aside rendered in a tinted box. */
   aside?: string;
   gate?: Gate;
-  /** Optional recorded narration; falls back to TTS when absent. */
-  audioUrl?: string;
   /** Overrides the spoken text (defaults to title + body). */
   narration?: string;
 }
@@ -71,13 +67,11 @@ interface Episode {
   title: string;
   subtitle: string;
   duration: string;
-  slide?: string;
   available: boolean;
   steps: Step[];
 }
 
-const TRACK = 'fish-market';
-const SLIDES = '/tutorials/slides/';
+const TRACK = 'vibe-coding-guide';
 
 /* ───────────────────────────── content ───────────────────────────── */
 
@@ -85,154 +79,63 @@ const EPISODES: Episode[] = [
   {
     id: 'ep0',
     number: '0',
-    title: 'Start Here',
-    subtitle: 'The whole journey, and the one habit that matters',
-    duration: 'about 30 minutes',
-    slide: '00-title-ep0.png',
+    title: 'Before You Touch the Keyboard',
+    subtitle: 'What you\'re actually pairing with, and the habit that makes it work',
+    duration: 'about 20 minutes',
     available: true,
     steps: [
       {
-        id: 'ep0-welcome',
-        kind: 'watch',
-        title: 'The family and the fish',
-        audioUrl: '/tutorials/audio/divinegift-intro.mp3',
+        id: 'ep0-machine',
+        kind: 'read',
+        title: 'The machine that notices everything',
         body: [
-          'Somewhere in Oloibiri there is a family. They go out, they come back with fish, they sell it in the market. They have done this for years and they are good at it.',
-          'Here is what they do not have. A record. When a buyer asks the price of catfish today, they answer from memory. When they wonder whether Saturday is really better than Tuesday, they answer from memory. When last month was worse than the month before, they feel it — but they cannot see it.',
-          'Over the next four episodes you are going to build them something. Not a school exercise. A tool a real family could use tomorrow.',
+          'Remember your Day 1 reading? AI is software that has studied an enormous pile of human-written code, and found the patterns in it — which words tend to follow other words, which lines of code tend to follow other lines. It builds an algorithm from those patterns and uses it to predict what comes next.',
+          'Here is what that means for you today: the AI you are about to work with has never felt frustrated by a bug, never cared whether your app looks good, and has no idea who it is for unless you tell it. It is not being lazy or careless when it guesses wrong — it is doing exactly what it was built to do, which is complete the pattern you started. If you leave something out, it fills the gap with whatever is most common in everything it has read. That might not be what you pictured.',
+          'That is the whole game of vibe coding. Not "typing English instead of code" — specifying the pattern precisely enough that what comes back matches what is in your head.',
         ],
       },
       {
-        id: 'ep0-journey',
+        id: 'ep0-what-it-is',
         kind: 'read',
-        slide: '05-journey-4.png',
-        title: 'The same problem, four times',
+        title: 'What "vibe coding" means on this page',
         body: [
-          'You are going to build the same thing three times. Same family, same market, same problem — each time deeper than the last. That repetition is not laziness. It is the design. Each time round you will understand more of what is underneath.',
-          'Then a fourth episode that is not about code at all.',
+          'The Vibe Coding page has four phases, in order, and you cannot skip ahead.',
+          'Phase 1 — you write instructions describing what you want built, in plain language.',
+          'Phase 2 — before a single line of code exists, the AI critiques your instructions and tells you what is missing or ambiguous.',
+          'Phase 3 — it generates the code and runs it right there in your browser.',
+          'Phase 4 — if something breaks, you debug it together instead of starting over.',
+          'That order is deliberate. Most beginners want to jump straight to code. The critique step exists because catching a vague instruction is far cheaper than catching a vague app after it is built.',
         ],
-      },
-      {
-        id: 'ep0-outcome1',
-        kind: 'read',
-        slide: '06-outcome-ep1.png',
-        title: 'Episode 1 — what you get',
-        body: [
-          'You describe a website and Claude writes every line of it. You never see the code.',
-          'By the end of one evening you will have a four-page website with your own photographs from the market, published at a real address you can send to somebody on WhatsApp.',
-          'What you will not have: anything that works. It is a poster. It cannot calculate a price and it cannot remember a sale.',
-        ],
-      },
-      {
-        id: 'ep0-outcome2',
-        kind: 'read',
-        slide: '07-outcome-ep2.png',
-        title: 'Episode 2 — what you get',
-        body: [
-          'You own the code. Every file is in front of you. Claude still writes it, but you direct it, you read it, and the platform scores how well you asked.',
-          'You will finish with an app that actually calculates — pick a fish, type the weight and the price, watch the total appear, record the sale.',
-          'What you will not have: memory. Press refresh and every sale disappears. We are telling you now so you are not confused when it happens. It is supposed to.',
-        ],
-      },
-      {
-        id: 'ep0-outcome3',
-        kind: 'read',
-        slide: '08-outcome-ep3.png',
-        title: 'Episode 3 — what you get',
-        body: [
-          'The app remembers. You will make your own free Supabase account, design database tables from the family\u2019s real problem, and connect them to the app you already built.',
-          'Then the payoff — a screen that reads months of sales back and tells the family something they could not see before. Which species really pays. Which day is best. How much of each catch went unsold.',
-          'By the end it will be live at your own address, running from your own GitHub repository.',
-        ],
-      },
-      {
-        id: 'ep0-outcome4',
-        kind: 'read',
-        slide: '09-outcome-ep4.png',
-        title: 'Episode 4 — what you get',
-        body: [
-          'You give it to a family and you watch. No code. You sit with people who sell fish, you show them, and you watch their hands.',
-          'That last one is the one that turns you into a developer. The three before it are practice.',
-        ],
-      },
-      {
-        id: 'ep0-three-things',
-        kind: 'read',
-        slide: '10-three-things.png',
-        title: 'You finish with three things',
-        body: [
-          'A live application at a public address. A GitHub repository with your name on it, which is the closest thing our field has to a certificate. And one habit, which is next, and which honestly matters more than the other two.',
-        ],
-        aside: 'Episode 1 is an evening. Episode 2 is about a week. Episode 3 is two weeks and you should not rush it. Nobody is racing you.',
       },
       {
         id: 'ep0-two-tabs',
         kind: 'read',
-        slide: '12-two-tabs.png',
-        title: 'Your workshop: the AI Playground',
+        title: 'The habit: two tabs',
         body: [
-          'The most important tool in this track is not any of the three build pages. It is the AI Playground. No tasks, no phases, nothing graded — just you and Claude. A prompt you are unsure about, an error you do not understand, a concept that did not land, code you want explained back in plain words.',
-          'The build pages will teach you web development. The Playground is where you become someone who does not need the build pages.',
-          'So here is the rule for everything that follows. Two tabs. The build page asks you questions. The Playground is where you work out what to answer, and where you go when something breaks.',
-        ],
-        aside: 'Every purple step in this track is a swivel — it copies a prompt and opens the Playground in a second tab. Do them. They are not optional extras; they are where the learning happens.',
-      },
-      {
-        id: 'ep0-ladder',
-        kind: 'read',
-        slide: '13-thinning-ladder.png',
-        title: 'The help thins on purpose',
-        body: [
-          'In Episode 1 you get the exact words to type. Copy them.',
-          'In Episode 2 you get the goal only, and you write the prompt yourself.',
-          'In Episode 3 you get a marker that says swivel here, and nothing else.',
-          'In Episode 4 you get nothing. That is not us getting lazy. It is the whole point of the track.',
+          'The Vibe Coding page is where you build. The AI Playground is where you step back — a second tab, no phases, nothing graded, just you and Claude working out what to answer or what went wrong.',
+          'Every purple step below is a swivel: it copies a prompt and opens the Playground in a second tab. Do them, even when you feel like you already know the answer. That pause is where the actual learning happens, not the phase you were just in.',
         ],
       },
       {
-        id: 'ep0-playground-tour',
+        id: 'ep0-open',
         kind: 'do',
-        title: 'Open the Playground and set it up',
+        title: 'Open Vibe Coding and start a session',
         body: [
-          'Open the AI Playground now and do three things.',
-          'Pick your model at the top. Sonnet 5 for anything needing real thinking — design decisions, hard bugs, code you want reasoned about. Haiku for quick lookups; it is faster and cheaper.',
-          'Find the paperclip and the pin. The paperclip attaches a file to one message only — good for an error screenshot. The pin keeps a file available for the whole conversation without pasting it again. When you work on one file for an hour, pin it once and then just talk.',
-          'Notice your token budget. Roughly 25,000 tokens every three hours, in and out. Paste a 500-line file five times and you have spent your afternoon. That is not the platform being mean — every message costs real money, and asking for exactly what you need is a professional skill.',
+          'Open the Vibe Coding page. You will see two halves: on the left, an AI design coach you can talk to if you want help figuring out what to build — it is optional, use it if you are stuck for an idea. On the right, the 4-phase workflow you just read about.',
+          'Give your session a short name — a real one, like "Weather App" or "Quiz Game," not "test." You will want to find it again later.',
         ],
-        aside: 'When the Playground gives you code it ends by asking what you think the change does. Answer it, in your own words. Nobody is marking it — but a person who can explain the code they were given is a developer, and a person who cannot is somebody holding a file they do not own.',
+        aside: 'You do not have to use the design coach on the left. Some students go straight to Phase 1 with an idea already in mind — both are fine.',
       },
       {
         id: 'ep0-swivel-1',
         kind: 'swivel',
-        title: 'Swivel 1 — what pages does this need?',
+        title: 'Swivel — pick something you can explain in one sentence',
         body: [
-          'Your first swivel. Copy this exactly, open the Playground, and paste it. Answer whatever it asks you back.',
+          'Before you write real instructions, use this swivel to land on an idea you can actually describe clearly. A project you cannot explain in one sentence is a project you have not thought through yet — and that shows up later as a bad Phase 1.',
         ],
         prompt:
-          "I'm building a website for a fish-selling family in Oloibiri. I think it needs a home page and a page showing today's catch and prices.\n\nWhat pages am I missing that a buyer walking past — looking at a phone, in the market, with thirty seconds — would actually want? Keep it short.",
-        promptNote: 'Come back with your page list written down on paper.',
-      },
-      {
-        id: 'ep0-checklist',
-        kind: 'gate',
-        slide: '14-checklist.png',
-        title: 'Before Episode 1',
-        body: [
-          'Four things. Two take five minutes and one takes a walk.',
-          'One — your nextvillage login. You have it or you would not be reading this.',
-          'Two — photographs. Go to the market this week and take pictures. Your stall. Fish on ice. A boat. Real Oloibiri photographs, not pictures off the internet: a website about this market showing somebody else\u2019s fish is a website nobody here will trust. Three good pictures is enough.',
-          'Three — a free GitHub account. You will not need it until Episode 2, but make it now while you are thinking about it. Use a username you would be happy showing an employer, because one day you will.',
-          'Four — the swivel above, actually done.',
-        ],
-        gate: {
-          label: 'Your GitHub username',
-          placeholder: 'e.g. divinegift-m',
-          validate: v =>
-            /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/.test(v.trim())
-              ? null
-              : 'That does not look like a GitHub username yet. Letters, numbers and hyphens only.',
-        },
-        aside: 'You will make a free Supabase account in Episode 3 — and when you do, sign in with GitHub. One login for everything.',
+          "I'm about to try vibe coding for the first time — describing an app in plain language and having AI write the code from my instructions. Give me 3 small project ideas a beginner could realistically finish in one sitting (a small game, a tool, or a simple site). For each one, give me the one-sentence version, and tell me the single trickiest thing I'd need to describe clearly for the AI to get it right.",
+        promptNote: 'Pick one. If none of them fit, ask for three more — better to swap ideas now than halfway through Phase 1.',
       },
     ],
   },
@@ -240,158 +143,104 @@ const EPISODES: Episode[] = [
   {
     id: 'ep1',
     number: '1',
-    title: 'Make It Real by Tonight',
-    subtitle: 'Website Builder — multiple pages, real photographs, published',
-    duration: 'about one evening',
-    slide: '01-title-ep1.png',
+    title: 'Say It, Check It, Build It, Fix It',
+    subtitle: 'One pass through all four phases, start to finish',
+    duration: 'about an hour',
     available: true,
     steps: [
       {
-        id: 'ep1-rule',
-        kind: 'read',
-        title: 'The rule for this episode',
-        body: [
-          'On the Website Builder you describe a website and Claude builds every page. You never see the code. Today that is on purpose.',
-          'Two requirements. Multiple pages — one page does not count. And real photographs. A page with no picture of a fish is a page nobody in the market will trust.',
-        ],
-      },
-      {
-        id: 'ep1-images',
+        id: 'ep1-phase1',
         kind: 'do',
-        title: 'Upload your photographs first',
+        title: 'Phase 1 — write your instructions',
         body: [
-          'Open the Website Builder. Before you type anything, click the image button at the bottom left and upload your three market photographs.',
-          'Upload them first, before you describe the site. Claude can only use images it already has. Upload them afterwards and you spend a turn asking again.',
+          'In the instructions box, describe what you want built. Two or three sentences is plenty for a first draft — say what it does, who it is for, and any one detail that matters to you (a color, a name, a rule the game follows).',
+          "Do not aim for perfect. Vague spots are exactly what the next phase is for.",
         ],
-        aside: 'Name them something you will recognise in a prompt — market.jpg, catfish.jpg, boat.jpg.',
       },
       {
-        id: 'ep1-first-prompt',
-        kind: 'do',
-        title: 'Describe the whole site',
-        body: [
-          'Paste this into the Website Builder chat. Change the family name and the details to match your own market if you like — but keep the shape.',
-        ],
-        prompt:
-          "A website for the Okoro family, who catch and sell fish at the Oloibiri market. Four pages: Home, Today's Catch, About Our Family, and Contact.\n\nHome: use market.jpg as the header background, a short welcome, and the three fish we sell most.\n\nToday's Catch: a table of fish species with price per kilo, and catfish.jpg beside it.\n\nAbout Our Family: boat.jpg, a few sentences about fishing in Oloibiri.\n\nContact: phone number, where our stall is in the market, and our hours.\n\nColors: deep blue and white, like water. Large text — most people will open this on a phone.",
-        aside: 'Notice what that prompt does. It does not say "make a nice fish website." It names every page, says what goes on each, says which photo goes where, and says who is looking and on what device. That specificity is the skill.',
-      },
-      {
-        id: 'ep1-truncation',
+        id: 'ep1-why-critique',
         kind: 'read',
-        title: 'It probably just failed. Good.',
+        title: 'Why Phase 2 exists',
         body: [
-          'Most people get an error here: the site was too complex to finish in one go. Four detailed pages is a lot to write in one response and it ran out of room.',
-          'Nothing is broken. But before you fix it — swivel. Get the habit on an easy one.',
+          'This is the training-data problem from Episode 0, showing up for real. Anywhere your instructions were vague, the AI is about to fill the gap with whatever is most common in everything it has read — not necessarily what you meant.',
+          'The critique step catches that before it costs you a rewrite. Read it as a list of exactly where you were vague, not as a judgment on your idea.',
+        ],
+      },
+      {
+        id: 'ep1-phase2',
+        kind: 'do',
+        title: 'Phase 2 — get your critique',
+        body: [
+          'Click through to get the critique of your Phase 1 instructions. Read every point — most students skim this and pay for it in Phase 4.',
+          'Improve your instructions based on whatever actually matters to what you are building, then continue.',
         ],
       },
       {
         id: 'ep1-swivel-2',
         kind: 'swivel',
-        title: 'Swivel 2 — what actually happened?',
-        body: ['Copy, open the Playground, paste. Two sentences back, and now you understand a limit that applies to every AI tool you will ever use.'],
-        prompt:
-          'A no-code website builder gave me this error: "That site was too complex to finish in one go — try describing fewer pages, or ask for one page at a time." I asked for four pages with detailed content for each.\n\nIn one or two sentences — what actually happened, and what is the general rule for next time?',
-      },
-      {
-        id: 'ep1-two-pages',
-        kind: 'do',
-        title: 'Build two pages first',
-        body: ['Back on the Website Builder. Smaller ask.'],
-        prompt:
-          "Build just two pages first: Home and Today's Catch.\n\nHome: market.jpg as the header background, a short welcome for the Okoro family who sell fish at the Oloibiri market, and the three fish we sell most.\n\nToday's Catch: a table of fish species and price per kilo, with catfish.jpg beside it.\n\nDeep blue and white. Large text for phone screens.",
-      },
-      {
-        id: 'ep1-add-pages',
-        kind: 'do',
-        title: 'Add the other two, one at a time',
+        title: 'Swivel — weigh the critique yourself',
         body: [
-          'Same chat — it keeps everything you already have. Send these one after the other, checking the preview between them.',
+          'Do not accept every critique point automatically. Some are genuinely important; some are the AI defaulting to "the usual version of an app like this" instead of the specific thing you asked for. Use this swivel to decide which is which.',
         ],
         prompt:
-          'Add an "About Our Family" page using boat.jpg, with a few sentences about fishing in Oloibiri. Keep the other two pages exactly as they are.',
-        aside: '"Keep the other two pages exactly as they are." One clause, and it prevents most of the damage students do to their own working sites. Then send the Contact page request the same way, and ask for the same navigation bar on all four pages.',
+          "I wrote instructions for an app I want vibe-coded, and got a critique back before any code was written.\n\nMy instructions: [PASTE YOUR INSTRUCTIONS]\n\nThe critique: [PASTE THE CRITIQUE]\n\nWhich points in this critique actually matter for what I'm building, and which ones look like the AI defaulting to a generic version instead of what I specifically asked for?",
+        promptNote: 'Come back and only fold in the critique points you actually agree with.',
+      },
+      {
+        id: 'ep1-phase3',
+        kind: 'do',
+        title: 'Phase 3 — generate and run the code',
+        body: [
+          'Generate the code and run it right there on the page. Try it the way an actual user would — click the buttons, play the game, break it a little on purpose.',
+        ],
+      },
+      {
+        id: 'ep1-breaks',
+        kind: 'read',
+        title: 'When it breaks, that is on schedule',
+        body: [
+          'Something will probably not work exactly right the first time. That is not a sign you did something wrong — it is a normal part of the pattern-matching this AI does. Bugs are just one more gap you have not described yet.',
+        ],
+      },
+      {
+        id: 'ep1-phase4',
+        kind: 'do',
+        title: 'Phase 4 — debug it with the AI',
+        body: [
+          'Describe exactly what happened versus what you expected — "I clicked Start and nothing happened" is more useful than "it is broken." Let the debugging phase take another pass, and test again.',
+          'Repeat Phases 3 and 4 as many times as you need. This loop, not a single perfect generation, is what vibe coding actually looks like day to day.',
+        ],
       },
       {
         id: 'ep1-swivel-3',
         kind: 'swivel',
-        title: 'Swivel 3 — improve it properly',
+        title: 'Swivel — explain it back',
         body: [
-          'Do not ask Claude to "make it better." That is not a prompt, it is a shrug. Work out a real question first — and notice that this one brings your own answer and asks to be checked.',
+          'Once it works, this is the step that turns "I have some code" into "I understand what I built." A person who can explain the code they were given owns it. A person who cannot is just holding a file.',
         ],
         prompt:
-          "I built a four-page site for a fish-selling family in Oloibiri: Home, Today's Catch, About Our Family, Contact. A buyer opens it on a phone, standing in the market, weak connection, maybe thirty seconds of attention.\n\nI think the prices need to be higher up the page. Tell me if I'm right, and give me two other specific changes — not general advice.",
-        promptNote: 'Then go back to the Website Builder and ask for the specific changes that came out of it.',
+          "Here is code that was generated for me from my instructions in a vibe-coding tool:\n\n[PASTE THE CODE]\n\nExplain what it does in plain language, section by section, like I have never read code before. Then ask me one question to check I actually understand it.",
+        promptNote: 'Answer the question it asks you, in your own words, before moving on.',
       },
       {
-        id: 'ep1-publish',
+        id: 'ep1-gate',
         kind: 'gate',
-        title: 'Name it and publish',
+        title: 'Save it and prove it',
         body: [
-          'Type a name in the box at the top of the Website Builder and press Publish.',
-          'That gives you a real public address. Copy it, send it to somebody on WhatsApp, and watch it open on their phone. Under an hour, and you have never written a line of code.',
-          'Paste the address below to finish Episode 1.',
+          'Save your session if you have not already. To finish this Guide, tell us what you built.',
         ],
         gate: {
-          label: 'Your published site address',
-          placeholder: 'https://…/tech-skills/sites/…',
+          label: 'What did you build? (project name + one sentence of what it does)',
+          placeholder: 'e.g. Weather App — shows a 3-day forecast for any city you type in',
           validate: v => {
             const s = v.trim();
-            if (!/^https?:\/\//i.test(s)) return 'Paste the full address, starting with https://';
-            if (!/\/sites\//.test(s)) return 'That does not look like your published site address. Publish first, then copy the address from your browser.';
+            if (s.length < 10) return 'Give a little more detail — a name and what it actually does.';
+            if (!/\s/.test(s)) return 'That looks like one word — add what it does.';
             return null;
           },
         },
       },
-      {
-        id: 'ep1-honest',
-        kind: 'read',
-        title: 'Now the honest part',
-        body: [
-          'This site is a poster. It is beautiful and it does nothing. It cannot calculate a price. It cannot remember a sale. Tomorrow the prices change and somebody has to come back here and ask Claude to edit them by hand.',
-          'To fix that you need to own the code.',
-        ],
-      },
-      {
-        id: 'ep1-swivel-4',
-        kind: 'swivel',
-        title: 'Swivel 4 — homework for Episode 2',
-        body: ['Do this one before you start the next episode.'],
-        prompt:
-          'My fish website looks good but it only displays information — the family still prices from memory. What would the tool need to actually DO, not show, for them to stop guessing? Give me a short list, then ask me which one matters most.',
-      },
     ],
-  },
-
-  {
-    id: 'ep2',
-    number: '2',
-    title: 'When You Own the Code',
-    subtitle: 'Vite + React — an app that calculates',
-    duration: 'about one week',
-    slide: '02-title-ep2.png',
-    available: false,
-    steps: [],
-  },
-  {
-    id: 'ep3',
-    number: '3',
-    title: 'Make It Remember',
-    subtitle: 'React + Supabase, published from GitHub Pages',
-    duration: 'about two weeks',
-    slide: '03-title-ep3.png',
-    available: false,
-    steps: [],
-  },
-  {
-    id: 'ep4',
-    number: '4',
-    title: 'Hand It Over',
-    subtitle: 'One hour with a real family. No screen.',
-    duration: 'one hour',
-    slide: '04-title-ep4.png',
-    available: false,
-    steps: [],
   },
 ];
 
@@ -436,7 +285,7 @@ const CopyBlock: React.FC<{ text: string; tone?: 'amber' | 'purple' }> = ({ text
 
 /* ──────────────────────────── main page ──────────────────────────── */
 
-const FishMarketTutorialPage: React.FC = () => {
+const VibeCodingGuidePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id ?? null;
@@ -453,7 +302,6 @@ const FishMarketTutorialPage: React.FC = () => {
   const [voiceOn, setVoiceOn] = useState(false);
   const [voiceMode, setVoiceMode] = useState<'english' | 'pidgin'>('english');
   const [speakingStep, setSpeakingStep] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const {
     speak: hookSpeak,
@@ -555,23 +403,13 @@ const FishMarketTutorialPage: React.FC = () => {
   const narrationFor = (s: Step) => s.narration ?? [s.title, ...s.body, s.aside ?? ''].filter(Boolean).join('. ');
 
   const speakStep = (s: Step) => {
-    if (speakingStep === s.id) {
-      cancelSpeech(); audioRef.current?.pause(); setSpeakingStep(null); return;
-    }
-    cancelSpeech(); audioRef.current?.pause();
+    if (speakingStep === s.id) { cancelSpeech(); setSpeakingStep(null); return; }
+    cancelSpeech();
     setSpeakingStep(s.id);
-    if (s.audioUrl) {
-      const a = new Audio(s.audioUrl);
-      audioRef.current = a;
-      a.onended = () => setSpeakingStep(null);
-      a.onerror = () => { hookSpeak(narrationFor(s)); };   // recording missing → TTS
-      void a.play().catch(() => hookSpeak(narrationFor(s)));
-      return;
-    }
     hookSpeak(narrationFor(s));
   };
 
-  useEffect(() => () => { cancelSpeech(); audioRef.current?.pause(); }, [cancelSpeech]);
+  useEffect(() => () => { cancelSpeech(); }, [cancelSpeech]);
 
   /* ── swivel ── */
 
@@ -591,7 +429,6 @@ const FishMarketTutorialPage: React.FC = () => {
     do:     { badge: 'bg-amber-100 text-amber-800',   label: 'Do',     ring: 'border-amber-200' },
     swivel: { badge: 'bg-purple-100 text-purple-800', label: 'Swivel', ring: 'border-purple-300' },
     gate:   { badge: 'bg-cyan-100 text-cyan-800',     label: 'Prove it', ring: 'border-cyan-300' },
-    watch:  { badge: 'bg-cyan-100 text-cyan-800',     label: 'Watch',  ring: 'border-cyan-200' },
   };
 
   if (!loaded) {
@@ -613,9 +450,9 @@ const FishMarketTutorialPage: React.FC = () => {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">Guide</p>
-              <h1 className="mt-1 text-3xl font-extrabold">The Fish Market Build</h1>
+              <h1 className="mt-1 text-3xl font-extrabold">Vibe Code Something Real</h1>
               <p className="mt-1 max-w-xl text-sm text-slate-300">
-                Build one real tool three times — a poster, then a calculator, then a system that remembers.
+                Describe an app in plain language, get an AI critique before any code exists, then build and debug it — one real pass through all four phases.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -631,7 +468,7 @@ const FishMarketTutorialPage: React.FC = () => {
                 >🇳🇬 <span className="hidden sm:inline">Pidgin</span></button>
               </div>
               <button
-                onClick={() => { setVoiceOn(v => { if (v) { cancelSpeech(); audioRef.current?.pause(); setSpeakingStep(null); } return !v; }); }}
+                onClick={() => { setVoiceOn(v => { if (v) { cancelSpeech(); setSpeakingStep(null); } return !v; }); }}
                 title={voiceOn ? 'Turn narration off' : 'Turn narration on'}
                 className={`rounded-lg p-2 ${voiceOn ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
               >
@@ -687,17 +524,12 @@ const FishMarketTutorialPage: React.FC = () => {
                       <div className="h-full rounded-full bg-amber-400" style={{ width: `${(epDone / ep.steps.length) * 100}%` }} />
                     </div>
                   )}
-                  {!ep.available && <p className="mt-1 text-xs font-semibold text-gray-400">Coming next</p>}
                 </div>
                 {ep.available && (open ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />)}
               </button>
 
               {open && (
                 <div className="border-t border-gray-100 bg-gray-50 p-4 sm:p-6">
-                  {ep.slide && (
-                    <img src={SLIDES + ep.slide} alt="" className="mb-6 w-full rounded-xl shadow-sm" loading="lazy" />
-                  )}
-
                   {stepsOf(ep).map((step, i) => {
                     const unlocked = isUnlocked(ep, i);
                     const isDone = done.has(step.id);
@@ -714,7 +546,7 @@ const FishMarketTutorialPage: React.FC = () => {
                             if (!unlocked) return;
                             setExpanded(prev => {
                               const n = new Set(prev);
-                              n.has(step.id) ? n.delete(step.id) : n.add(step.id);
+                              if (n.has(step.id)) n.delete(step.id); else n.add(step.id);
                               return n;
                             });
                           }}
@@ -734,17 +566,13 @@ const FishMarketTutorialPage: React.FC = () => {
                               onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); speakStep(step); } }}
                               className={`rounded p-1.5 ${speakingStep === step.id ? 'bg-cyan-100 text-cyan-700' : 'text-gray-400 hover:bg-gray-100'}`}
                             >
-                              {step.audioUrl ? <PlayCircle className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                              <Volume2 className="h-4 w-4" />
                             </span>
                           )}
                         </button>
 
                         {isOpen && (
                           <div className="border-t border-gray-100 px-4 pb-4 pt-4 sm:px-6">
-                            {step.slide && (
-                              <img src={SLIDES + step.slide} alt="" className="mb-4 w-full rounded-lg" loading="lazy" />
-                            )}
-
                             {step.body.map((p, k) => (
                               <p key={k} className="mb-3 text-[15px] leading-relaxed text-gray-700">{p}</p>
                             ))}
@@ -775,11 +603,11 @@ const FishMarketTutorialPage: React.FC = () => {
 
                             {step.kind === 'do' && (
                               <button
-                                onClick={() => window.open('/website-builder', '_blank', 'noopener')}
+                                onClick={() => window.open('/tech-skills/vibe-coding', '_blank', 'noopener')}
                                 className="mb-3 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-800 hover:bg-amber-100"
                               >
                                 <ExternalLink className="h-4 w-4" />
-                                Open the Website Builder
+                                Open Vibe Coding
                               </button>
                             )}
 
@@ -837,16 +665,10 @@ const FishMarketTutorialPage: React.FC = () => {
                       <p className="font-bold text-green-900">Episode {ep.number} complete.</p>
                       <p className="mt-1 text-sm text-green-800">
                         {ep.id === 'ep1'
-                          ? 'You have a published site with your own photographs. Next you take the code off Claude and put it in your own hands.'
+                          ? "You built something from a sentence and can explain how it works. When you're ready, the Vibe Coding certification is the next step."
                           : 'Move on when you are ready.'}
                       </p>
                     </div>
-                  )}
-
-                  {ep.steps.length === 0 && (
-                    <p className="py-6 text-center text-sm text-gray-500">
-                      This episode is being written. Finish the one before it — there is plenty in there.
-                    </p>
                   )}
                 </div>
               )}
@@ -866,4 +688,4 @@ const FishMarketTutorialPage: React.FC = () => {
   );
 };
 
-export default FishMarketTutorialPage;
+export default VibeCodingGuidePage;
