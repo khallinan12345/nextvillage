@@ -6,14 +6,75 @@
 // Playground. Progress comes from `tutorial_progress` so a returning student
 // lands on "continue" rather than "start".
 //
-// Add a track by appending to TRACKS and creating its page component.
+// Guides are grouped into CATEGORIES (below) and shown as a collapsible
+// accordion, since the number of guides keeps growing. Add a track by
+// appending to TRACKS with a `category` and creating its page component;
+// add a whole new category by appending to CATEGORIES.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
-import { Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch } from 'lucide-react';
+import {
+  Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
+  Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X,
+} from 'lucide-react';
+
+type CategoryId =
+  | 'onboarding'
+  | 'learning'
+  | 'skills'
+  | 'tech-skills'
+  | 'community-impact'
+  | 'managing-platform';
+
+interface Category {
+  id: CategoryId;
+  label: string;
+  blurb: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}
+
+// Order here is the display order.
+const CATEGORIES: Category[] = [
+  {
+    id: 'onboarding',
+    label: 'Onboarding',
+    blurb: 'Camp activities — start here on day one.',
+    Icon: Compass,
+  },
+  {
+    id: 'learning',
+    label: 'Learning',
+    blurb: 'Deeper guides for the AI Learning track.',
+    Icon: BookOpen,
+  },
+  {
+    id: 'skills',
+    label: 'Skills',
+    blurb: 'Deeper guides for Skill Development.',
+    Icon: Puzzle,
+  },
+  {
+    id: 'tech-skills',
+    label: 'Tech-Skills',
+    blurb: 'Guides for building real projects — Website Builder, Vite + React, and beyond.',
+    Icon: Code2,
+  },
+  {
+    id: 'community-impact',
+    label: 'Community-Impact',
+    blurb: 'Guides for the AI Ambassador and consultant tools.',
+    Icon: Users,
+  },
+  {
+    id: 'managing-platform',
+    label: 'Managing the Platform',
+    blurb: 'For team members maintaining nextVillage itself.',
+    Icon: Settings,
+  },
+];
 
 interface Track {
   id: string;
@@ -24,6 +85,7 @@ interface Track {
   totalSteps: number;
   tags: string[];
   available: boolean;
+  category: CategoryId;
   Icon: React.ComponentType<{ className?: string }>;
 }
 
@@ -38,6 +100,7 @@ const TRACKS: Track[] = [
     totalSteps: 5,
     tags: ['AI Learning', 'Orientation'],
     available: true,
+    category: 'onboarding',
     Icon: Compass,
   },
   {
@@ -50,6 +113,7 @@ const TRACKS: Track[] = [
     totalSteps: 5,
     tags: ['Skill Development', 'Orientation'],
     available: true,
+    category: 'onboarding',
     Icon: Puzzle,
   },
   {
@@ -62,6 +126,7 @@ const TRACKS: Track[] = [
     totalSteps: 24,
     tags: ['Website Builder', 'Vite + React', 'Supabase', 'AI Playground'],
     available: true,
+    category: 'tech-skills',
     Icon: Fish,
   },
   {
@@ -74,14 +139,60 @@ const TRACKS: Track[] = [
     totalSteps: 6,
     tags: ['GitHub', 'Claude', 'Contributing'],
     available: true,
+    category: 'managing-platform',
     Icon: GitBranch,
   },
 ];
+
+// ── Search: rough-description matching ──────────────────────────────────────
+// No AI call needed — the guide count is small enough that scored word
+// overlap across title/tags/blurb finds the closest guide instantly and for
+// free. Title and tag words count more than blurb words since they're the
+// more deliberate, descriptive words for what a guide is about.
+
+const STOPWORDS = new Set([
+  'the', 'and', 'for', 'with', 'that', 'this', 'you', 'your', 'how', 'what',
+  'are', 'can', 'from', 'into', 'about', 'using', 'use', 'want', 'need',
+  'like', 'just', 'some', 'have', 'has', 'need', 'help', 'guide', 'find',
+]);
+
+function normalizeWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !STOPWORDS.has(w));
+}
+
+function scoreTrack(queryWords: string[], t: Track): number {
+  const titleWords = normalizeWords(t.title);
+  const tagWords = normalizeWords(t.tags.join(' '));
+  const blurbWords = normalizeWords(t.blurb);
+
+  let score = 0;
+  for (const qw of queryWords) {
+    if (titleWords.includes(qw)) score += 3;
+    if (tagWords.includes(qw)) score += 2;
+    if (blurbWords.includes(qw)) score += 1;
+    // Loose credit for close variants — "fishing" should still hit "fish".
+    if (titleWords.some(w => w.includes(qw) || qw.includes(w))) score += 1;
+    if (blurbWords.some(w => w.includes(qw) || qw.includes(w))) score += 0.5;
+  }
+  return score;
+}
 
 const TutorialsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [progress, setProgress] = useState<Record<string, number>>({});
+  const [query, setQuery] = useState('');
+  const [openCategories, setOpenCategories] = useState<Record<CategoryId, boolean>>(() => {
+    const state = {} as Record<CategoryId, boolean>;
+    CATEGORIES.forEach(c => {
+      state[c.id] = TRACKS.some(t => t.category === c.id); // open by default only if it has guides
+    });
+    return state;
+  });
 
   useEffect(() => {
     // Local progress first so the page is useful offline and when signed out.
@@ -113,6 +224,75 @@ const TutorialsPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [user?.id]);
 
+  const bestMatch = useMemo(() => {
+    const queryWords = normalizeWords(query);
+    if (queryWords.length === 0) return null;
+
+    let best: Track | null = null;
+    let bestScore = 0;
+    for (const t of TRACKS) {
+      const score = scoreTrack(queryWords, t);
+      if (score > bestScore) {
+        best = t;
+        bestScore = score;
+      }
+    }
+    return best;
+  }, [query]);
+
+  const toggleCategory = (id: CategoryId) =>
+    setOpenCategories(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const renderTrackCard = (t: Track, highlighted = false) => {
+    const doneSteps = progress[t.id] ?? 0;
+    const pct = Math.min(100, Math.round((doneSteps / t.totalSteps) * 100));
+    const started = doneSteps > 0;
+
+    return (
+      <button
+        key={t.id}
+        onClick={() => t.available && navigate(t.path)}
+        disabled={!t.available}
+        className={`w-full rounded-2xl border bg-white p-6 text-left transition-all ${
+          t.available ? 'hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md' : 'cursor-not-allowed opacity-60'
+        } ${highlighted ? 'border-amber-400 shadow-md ring-2 ring-amber-200' : 'border-gray-200'}`}
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white">
+            {t.available ? <t.Icon className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold text-gray-900">{t.title}</h2>
+              <ArrowRight className="h-5 w-5 shrink-0 text-gray-300" />
+            </div>
+            <p className="mt-1.5 text-sm leading-relaxed text-gray-600">{t.blurb}</p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {t.tags.map(tag => (
+                <span key={tag} className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-600">{tag}</span>
+              ))}
+              <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
+                <Clock className="h-3.5 w-3.5" />{t.duration}
+              </span>
+            </div>
+
+            {started && (
+              <div className="mt-4">
+                <div className="mb-1 flex justify-between text-xs font-semibold text-gray-500">
+                  <span>Continue — {doneSteps} of {t.totalSteps} steps</span><span>{pct}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-cyan-400" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </button>
+    );
+  };
+
   return (
     <AppLayout>
       <div className="mx-auto max-w-4xl px-4 pb-20 pt-6">
@@ -122,54 +302,79 @@ const TutorialsPage: React.FC = () => {
           a build page and the AI Playground — because that back-and-forth is where the skill comes from.
         </p>
 
-        <div className="mt-8 space-y-4">
-          {TRACKS.map(t => {
-            const doneSteps = progress[t.id] ?? 0;
-            const pct = Math.min(100, Math.round((doneSteps / t.totalSteps) * 100));
-            const started = doneSteps > 0;
+        {/* Search */}
+        <div className="mt-6">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Not sure which Guide you need? Describe what you're trying to do…"
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm text-gray-900 shadow-sm outline-none placeholder:text-gray-400 focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {query.trim().length > 0 && (
+            <div className="mt-3">
+              {bestMatch ? (
+                <>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-600">Closest match</div>
+                  {renderTrackCard(bestMatch, true)}
+                </>
+              ) : (
+                <p className="text-sm text-gray-500">No close match yet — try different words, or browse the categories below.</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Categories */}
+        <div className="mt-8 space-y-3">
+          {CATEGORIES.map(c => {
+            const tracksInCategory = TRACKS.filter(t => t.category === c.id);
+            const isOpen = openCategories[c.id] ?? false;
 
             return (
-              <button
-                key={t.id}
-                onClick={() => t.available && navigate(t.path)}
-                disabled={!t.available}
-                className={`w-full rounded-2xl border border-gray-200 bg-white p-6 text-left transition-all ${
-                  t.available ? 'hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md' : 'cursor-not-allowed opacity-60'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white">
-                    {t.available ? <t.Icon className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
+              <div key={c.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <button
+                  onClick={() => toggleCategory(c.id)}
+                  className="flex w-full items-center gap-3 p-5 text-left transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                    <c.Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <h2 className="text-xl font-bold text-gray-900">{t.title}</h2>
-                      <ArrowRight className="h-5 w-5 shrink-0 text-gray-300" />
-                    </div>
-                    <p className="mt-1.5 text-sm leading-relaxed text-gray-600">{t.blurb}</p>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {t.tags.map(tag => (
-                        <span key={tag} className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-600">{tag}</span>
-                      ))}
-                      <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
-                        <Clock className="h-3.5 w-3.5" />{t.duration}
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold text-gray-900">{c.label}</h2>
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">
+                        {tracksInCategory.length}
                       </span>
                     </div>
-
-                    {started && (
-                      <div className="mt-4">
-                        <div className="mb-1 flex justify-between text-xs font-semibold text-gray-500">
-                          <span>Continue — {doneSteps} of {t.totalSteps} steps</span><span>{pct}%</span>
-                        </div>
-                        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                          <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-cyan-400" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    )}
+                    <p className="mt-0.5 text-sm text-gray-500">{c.blurb}</p>
                   </div>
-                </div>
-              </button>
+                  {isOpen
+                    ? <ChevronUp className="h-4 w-4 shrink-0 text-gray-400" />
+                    : <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />}
+                </button>
+
+                {isOpen && (
+                  <div className="space-y-3 border-t border-gray-100 bg-gray-50/60 p-4">
+                    {tracksInCategory.length > 0
+                      ? tracksInCategory.map(t => renderTrackCard(t))
+                      : <p className="px-2 py-3 text-sm text-gray-400">No Guides here yet — more are on the way.</p>}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
