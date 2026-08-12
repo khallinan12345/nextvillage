@@ -720,7 +720,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           method: "POST",
           headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Girls AIing & Vibing <onboarding@resend.dev>",
+            from: "Girls AIing & Vibing <reports@nextvillage.community>",
             to: ["khallinan1@udayton.edu"],
             subject: `📅 Daily Report — ${dateLabel} · ${activeLabel}`,
             html,
