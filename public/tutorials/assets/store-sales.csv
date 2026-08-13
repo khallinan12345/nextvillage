@@ -1,0 +1,43 @@
+sale_date,item,category,quantity,unit_price
+2026-07-01,Bottled Water,Drinks,24,0.50
+2026-07-01,White Bread,Bakery,10,1.20
+2026-07-01,Bar Soap,Household,6,0.90
+2026-07-02,Rice 5kg,Staples,4,6.50
+2026-07-02,Cooking Oil 1L,Staples,5,3.20
+2026-07-02,Biscuits,Snacks,15,0.60
+2026-07-03,Soft Drink,Drinks,18,0.75
+2026-07-03,Milk 1L,Dairy,12,1.10
+2026-07-03,Eggs Dozen,Dairy,8,2.40
+2026-07-04,Bottled Water,Drinks,30,0.50
+2026-07-04,Sugar 1kg,Staples,7,1.80
+2026-07-04,Tea Bags 100ct,Drinks,3,2.90
+2026-07-05,White Bread,Bakery,14,1.20
+2026-07-05,Bar Soap,Household,4,0.90
+2026-07-05,Candles,Household,9,1.50
+2026-07-06,Rice 5kg,Staples,6,6.50
+2026-07-06,Biscuits,Snacks,20,0.60
+2026-07-06,Soft Drink,Drinks,22,0.75
+2026-07-07,Milk 1L,Dairy,10,1.10
+2026-07-07,Eggs Dozen,Dairy,6,2.40
+2026-07-07,Cooking Oil 1L,Staples,3,3.20
+2026-07-08,Bottled Water,Drinks,28,0.50
+2026-07-08,White Bread,Bakery,11,1.20
+2026-07-08,Sugar 1kg,Staples,5,1.80
+2026-07-09,Bar Soap,Household,7,0.90
+2026-07-09,Tea Bags 100ct,Drinks,4,2.90
+2026-07-09,Biscuits,Snacks,17,0.60
+2026-07-10,Rice 5kg,Staples,5,6.50
+2026-07-10,Soft Drink,Drinks,25,0.75
+2026-07-10,Eggs Dozen,Dairy,9,2.40
+2026-07-11,Milk 1L,Dairy,13,1.10
+2026-07-11,Candles,Household,6,1.50
+2026-07-11,Cooking Oil 1L,Staples,4,3.20
+2026-07-12,Bottled Water,Drinks,32,0.50
+2026-07-12,White Bread,Bakery,12,1.20
+2026-07-12,Biscuits,Snacks,19,0.60
+2026-07-13,Bar Soap,Household,5,0.90
+2026-07-13,Rice 5kg,Staples,7,6.50
+2026-07-13,Sugar 1kg,Staples,6,1.80
+2026-07-14,Soft Drink,Drinks,20,0.75
+2026-07-14,Eggs Dozen,Dairy,7,2.40
+2026-07-14,Milk 1L,Dairy,11,1.10
