@@ -116,6 +116,7 @@ const SupabaseDatabaseGuidePage = lazy(() => import('./pages/tutorials/SupabaseD
 const AILearningCategoryGuidePage = lazy(() => import('./pages/tutorials/AILearningCategoryGuidePage'));
 const SkillDevelopmentCategoryGuidePage = lazy(() => import('./pages/tutorials/SkillDevelopmentCategoryGuidePage'));
 const FoundationsCategoryGuidePage = lazy(() => import('./pages/tutorials/FoundationsCategoryGuidePage'));
+const CreativeAICategoryGuidePage = lazy(() => import('./pages/tutorials/CreativeAICategoryGuidePage'));
 
 // Shown briefly while a lazy-loaded route's chunk downloads. Matches the
 // full-page auth-loading spinner's style above for visual consistency.
@@ -317,6 +318,7 @@ export const AppContent: React.FC = () => {
         <Route path="/tutorials/ai-learning/:categoryId" element={<AILearningCategoryGuidePage />} />
         <Route path="/tutorials/skill-development/:categoryId" element={<SkillDevelopmentCategoryGuidePage />} />
         <Route path="/tutorials/foundations/:categoryId" element={<FoundationsCategoryGuidePage />} />
+        <Route path="/tutorials/creative-ai/:categoryId" element={<CreativeAICategoryGuidePage />} />
         <Route path="/tutorials/fish-market" element={<FishMarketTutorialPage />} />
 
         {/* Legacy Route Redirects */}
