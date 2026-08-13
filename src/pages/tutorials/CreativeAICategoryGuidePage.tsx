@@ -1,39 +1,65 @@
 // src/pages/tutorials/CreativeAICategoryGuidePage.tsx
 //
-// One Guide per Creative AI tool — starting with AI Image Creation. Built as
-// a dynamic route (like AILearningCategoryGuidePage.tsx and its siblings)
-// rather than a single-purpose file, because AI Voice Creation and AI Video
-// Creation (src/pages/tech-skills/VoiceCreationPage.tsx,
-// VideoGenerationPage.tsx) are structurally identical clones of
-// ImageGenerationPage.tsx per their own header comments — same inline
-// "Improve my English" / "Critique my Prompt" / "Build step-by-step" tools,
-// same lack of an on-page "Use Claude" button. Adding Guides for those later
-// is just two more CATEGORY_GUIDES entries.
+// One Guide per Creative AI tool: AI Image Creation, AI Voice Creation,
+// AI Video Creation, and Video Studio. Built as a dynamic route (like
+// AILearningCategoryGuidePage.tsx and its siblings) rather than four
+// single-purpose files, since three of these four tools are structurally
+// identical clones of each other.
 //
-// Two things worth being precise about, both confirmed by reading the real
-// page rather than assumed:
+// Two different kinds of tool live in this one config, and the step
+// sequence branches on which:
 //
-// 1. There is no "Use Claude" button anywhere on ImageGenerationPage.tsx.
-//    "Use Claude" is only the Sidebar/Navbar's own label for the
-//    `/playground` nav link. What actually bridges a build page to Claude
-//    is the "swivel" mechanic already established in VibeCodingGuidePage.tsx
-//    and SupabaseDatabaseGuidePage.tsx: copy a prompt to the clipboard, open
-//    `/playground` in a new tab, paste it in yourself. This Guide reuses
-//    that exact mechanic rather than inventing a new one.
+// — 'generator' (Image, Voice, Video): a prompt/script box, an inline
+//   "Improve my English" + critique tool, a step-by-step coach, and a
+//   Generate button. No on-page "Use Claude" button exists anywhere — "Use
+//   Claude" is only the Sidebar/Navbar's own label for the `/playground`
+//   nav link. What actually bridges a build page to Claude is the "swivel"
+//   mechanic already established in VibeCodingGuidePage.tsx and
+//   SupabaseDatabaseGuidePage.tsx: copy a prompt to the clipboard, open
+//   `/playground` in a new tab, paste it in yourself.
 //
-// 2. The page already has its own inline prompt critique ("💡 Critique my
-//    Prompt", scores Subject/Setting/Lighting/Colour/Composition/Style
-//    informally out of 10) and a step-by-step prompt-builder coach — both
-//    running in place, no navigation. So "use both" means: the page's own
-//    tool for the mechanical checklist, then Claude in the Playground for
-//    judgment calls the checklist can't make (creative direction, cultural
-//    accuracy, a second opinion) — not two competing ways to do the same
-//    thing.
+//   Confirmed real differences between the three generators, each handled
+//   explicitly rather than assumed identical:
+//     - Image & Voice: critique is advisory only, never blocks Generate.
+//     - Video: critique is a hard gate — Generate stays disabled below a
+//       6/10 score (PROMPT_SCORE_THRESHOLD in VideoGenerationPage.tsx).
+//     - Video's critique button is "📊 Evaluate Prompt" — NOT "Critique my
+//       Prompt" (that label exists in the page's own code but is dead,
+//       never actually rendered — confirmed by reading the JSX directly).
+//     - Video supports optional Start/End image anchoring: images can come
+//       from a real in-app picker (your last 12 AI Image Creation outputs,
+//       one click sets it as a frame) or from uploading any image file
+//       from outside the platform — made in Gemini, a photo, anything.
+//     - Image & Voice are region-gated (Africa + North America only);
+//       Video is not.
 //
-// The case-study weak/strong prompt pair is the platform's own real example
-// from AIImageCertificationPage.tsx's "What makes a great image prompt?"
-// guidance, not invented — reused here so the Guide stays consistent with
-// what the certification actually rewards.
+//   Each generator's case-study weak/strong pair is the platform's own real
+//   example from its certification page's "what makes a great X" guidance
+//   (AIImageCertificationPage.tsx, AIVoiceCertificationPage.tsx,
+//   AIVideoProductionCertificationPage.tsx) — not invented.
+//
+// — 'editor' (Video Studio): a timeline editor, not a generator — no
+//   prompt, no critique, no AI tooling of any kind (confirmed by grep: zero
+//   references to chatText, critique, or scoring in VideoStudioPage.tsx).
+//   Explicitly does NOT get a swivel-to-Claude step; the skill here is
+//   assembly and pacing, not prompt-writing. It combines video clips (your
+//   own saved AI Video Creation outputs, or uploaded from outside),
+//   recorded voice narration, background music/audio (upload, or reuse a
+//   saved AI Voice Creation clip), and text overlays — but does NOT support
+//   standalone images as timeline items (its upload input is hard-coded to
+//   accept="video/*", confirmed directly; no image-handling code exists
+//   anywhere in the file). The honest workaround, stated plainly in the
+//   Guide: turn a still image into a short clip on AI Video Creation first
+//   (a Text + Start Image generation), then bring that video in here.
+//   Export is browser-based (WebCodecs VideoEncoder + a hand-built WebM
+//   muxer, not ffmpeg.wasm despite stale comments in the file), needs
+//   Chrome 94+, and — based on static reading of the export code, since the
+//   audio destination stream is never referenced by the muxer — background
+//   music and recorded voiceover likely do not survive the exported file
+//   even though they play correctly during in-app preview. The page's own
+//   UI text already hedges on this ("open in Firefox or VLC if Chrome
+//   doesn't play the file"), so the Guide states it as a real caveat to
+//   plan around, not a hidden gotcha.
 //
 // Progress: localStorage first, mirrored to `tutorial_progress` when signed
 // in — same as every other Guide. Track id is per-tool
@@ -46,12 +72,13 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
   Check, Lock, ChevronDown, ChevronRight, Link2, Loader2, ExternalLink,
-  Image as ImageIcon, RotateCw, Copy, CheckCheck,
+  Image as ImageIcon, Mic, Video as VideoIcon, Clapperboard, RotateCw, Copy, CheckCheck,
 } from 'lucide-react';
 
 /* ────────────────────────────── types ────────────────────────────── */
 
 type StepKind = 'read' | 'do' | 'swivel' | 'gate';
+type ToolKind = 'generator' | 'editor';
 
 interface Gate {
   label: string;
@@ -95,11 +122,27 @@ interface CategoryGuideContent {
   id: string;
   title: string;
   hook: string;
+  guideBlurb: string;
+  completionBlurb: string;
   Icon: React.ComponentType<{ className?: string }>;
   pageHref: string;
-  criteria: CriterionDef[];
-  caseStudy: CaseStudy;
-  swivelPrompt: string;
+  kind: ToolKind;
+
+  // generator-only
+  criteria?: CriterionDef[];
+  caseStudy?: CaseStudy;
+  swivelPrompt?: string;
+  critiqueButtonLabel?: string;
+  stepByStepButtonLabel?: string;
+  isGated?: boolean;
+  regionGated?: boolean;
+  extraNote?: { title: string; body: string[] };
+
+  // editor-only
+  assetSources?: string[];
+  typicalSession?: string[];
+  lengthControl?: string[];
+  exportCaveat?: string[];
 }
 
 /* ───────────────────────────── content ───────────────────────────── */
@@ -108,9 +151,15 @@ const CATEGORY_GUIDES: Record<string, CategoryGuideContent> = {
   'ai-image-creation': {
     id: 'ai-image-creation',
     title: 'AI Image Creation',
+    kind: 'generator',
     hook: 'Turning a text prompt into a real image — and the habit that separates a vague prompt from one that actually gets you what you pictured.',
+    guideBlurb: 'A weak prompt becoming a strong one, why each change matters, and how to use the page’s own tools together with Claude — not instead of each other.',
+    completionBlurb: 'You’ve seen a weak prompt become a strong one, know the exact dimensions being checked, and practiced using the page’s own tools together with Claude. That workflow works for every image you make here.',
     Icon: ImageIcon,
     pageHref: '/tech-skills/ai-image-creation',
+    regionGated: true,
+    critiqueButtonLabel: '💡 Critique my Prompt',
+    stepByStepButtonLabel: 'Build prompt step-by-step',
     criteria: [
       { name: 'Subject', detail: 'Who or what is actually in the image — specific, not generic.' },
       { name: 'Setting', detail: 'Where this is happening, specific enough that it couldn’t be anywhere.' },
@@ -144,28 +193,179 @@ const CATEGORY_GUIDES: Record<string, CategoryGuideContent> = {
     swivelPrompt:
       "I'm about to generate an AI image using a text-to-image tool. Here's my current prompt:\n\n[PASTE YOUR PROMPT]\n\nHelp me strengthen it — check whether I've covered subject, setting, camera angle, lighting, colour, and mood, and suggest the one change that would make the biggest difference. Also flag anything that might read as a stereotype or feel inauthentic to the real place or culture I'm depicting.",
   },
+
+  'ai-voice-creation': {
+    id: 'ai-voice-creation',
+    title: 'AI Voice Creation',
+    kind: 'generator',
+    hook: 'Turning a written script into real spoken audio — and the difference between a script that reads fine on paper and one that actually sounds natural out loud.',
+    guideBlurb: 'A weak script becoming a strong one, why each change matters, and how to use the page’s own tools together with Claude — not instead of each other.',
+    completionBlurb: 'You’ve seen a weak script become a strong one, know the exact dimensions being checked, and practiced using the page’s own tools together with Claude. That workflow works for every script you write here.',
+    Icon: Mic,
+    pageHref: '/tech-skills/ai-voice-creation',
+    regionGated: true,
+    critiqueButtonLabel: '💡 Critique my Script',
+    stepByStepButtonLabel: 'Build script step-by-step',
+    criteria: [
+      { name: 'Clarity', detail: 'Short, easy-to-follow sentences when heard, not read.' },
+      { name: 'Flow', detail: 'Does it sound like natural spoken language, or like a written paragraph read aloud?' },
+      { name: 'Grammar', detail: 'Real errors that would trip up a text-to-speech voice.' },
+      { name: 'Engagement', detail: 'Is there anything for a listener to hold onto, or does it just recite facts?' },
+      { name: 'Pacing', detail: 'Natural pause points — not one long run-on sentence, not choppy fragments.' },
+      { name: 'Purpose', detail: 'Does it actually say what it’s trying to say, to a specific listener?' },
+    ],
+    caseStudy: {
+      scenario: 'This is the platform’s own real example of what separates a weak script from a strong one — the same pair used on the AI Voice Creation certification.',
+      attempts: [
+        {
+          label: 'First attempt',
+          answer: 'Hello. I like school.',
+          critique: 'Script critique\nClarity: weak — two disconnected fragments, no real statement\nFlow: weak — doesn’t sound like natural spoken language\nEngagement: weak — no hook, nothing for a listener to hold onto\nPurpose: missing — unclear what this speech is trying to accomplish\nScore: 2/10\nSuggested improvement: Decide who’s listening and what you want them to feel or do, then open with something that earns their attention.',
+        },
+        {
+          label: 'Second attempt',
+          answer: 'Hi everyone, my name is Amara and I go to school here. I want to talk about technology today.',
+          whyBetter: 'Now there’s a real speaker introducing themselves and a stated topic, instead of two unconnected sentences — a listener knows who’s talking and roughly what’s coming.',
+          critique: 'Script critique\nClarity: improved — clear self-introduction and topic — Improve: name the specific point, not just "technology"\nFlow: improved — reads like a natural spoken opening — Improve: nothing major\nPurpose: weak — "talk about technology" isn’t a purpose — Improve: say what you want the listener to feel or do\nPacing: missing — no sense of where pauses would land\nScore: 5/10\nSuggested improvement: Purpose is the biggest gap — decide what you want the audience to walk away believing or doing, then build toward it.',
+        },
+        {
+          label: 'Third attempt',
+          answer: 'Good morning, everyone. My name is Amara, and I am here today to tell you something important. Every girl in our community deserves access to technology. At the Davidson AI Center, that is exactly what we are building — together, one skill at a time.',
+          whyBetter: 'Every dimension the critique checks is present now: a warm natural opening, a named audience, a clear purpose (access to technology for girls), and a closing line tied to something concrete. It sounds like a real speech, not a written paragraph read aloud.',
+          critique: 'Script critique\nClarity: strong — one clear idea, plainly stated\nFlow: strong — reads naturally aloud, real spoken rhythm\nEngagement: strong — opens with a greeting, closes with a call to unity\nPacing: strong — natural pause points at each sentence\nPurpose: strong — a clear point tied to a real place, the Davidson AI Center\nScore: 9/10\nSuggested improvement: Nothing major.',
+        },
+      ],
+    },
+    swivelPrompt:
+      "I'm about to turn this script into spoken audio using a text-to-speech tool. Here's my current script:\n\n[PASTE YOUR SCRIPT]\n\nHelp me strengthen it — check whether it has a clear speaker, audience, purpose, and natural pacing, and suggest the one change that would make it sound most natural read aloud. Also flag anything that would sound awkward or unclear heard rather than read.",
+    extraNote: {
+      title: 'Choosing a voice, emotion, and speed',
+      body: [
+        'Once your script is ready, you pick from 8 preset voices (4 female, 4 male), one of 6 emotions, and a speed from 0.5× to 2.0× — these shape how the script gets performed, not just what it says. A script written for a calm, slow narrator won’t land the same way at 1.5× speed with an "excited" emotion — if the read sounds off, it’s worth trying a different voice or emotion before rewriting the script itself.',
+      ],
+    },
+  },
+
+  'ai-video-creation': {
+    id: 'ai-video-creation',
+    title: 'AI Video Creation',
+    kind: 'generator',
+    hook: 'Turning a prompt into a real 5-second video clip — with an optional image to anchor where it starts, ends, or both.',
+    guideBlurb: 'A weak prompt becoming a strong one, the real 6/10 bar you have to clear to generate, and how to anchor a video to real images instead of starting from text alone.',
+    completionBlurb: 'You’ve seen a weak prompt become a strong one, know the exact dimensions being checked, know how image anchoring works, and practiced using the page’s own tools together with Claude. That workflow works for every clip you make here.',
+    Icon: VideoIcon,
+    pageHref: '/tech-skills/ai-video-creation',
+    regionGated: false,
+    isGated: true,
+    critiqueButtonLabel: '📊 Evaluate Prompt',
+    stepByStepButtonLabel: 'Build prompt step-by-step',
+    criteria: [
+      { name: 'Subject', detail: 'Who or what is actually in the shot — specific, not generic.' },
+      { name: 'Setting', detail: 'Where this is happening, specific enough that it couldn’t be anywhere.' },
+      { name: 'Lighting', detail: 'What kind of light, and where it’s coming from.' },
+      { name: 'Camera', detail: 'The shot type or movement — close-up, slow pan, aerial, tracking shot.' },
+      { name: 'Mood & Atmosphere', detail: 'The feeling the clip should give off.' },
+      { name: 'Movement', detail: 'What’s actually moving in the frame, beyond just the camera.' },
+    ],
+    extraNote: {
+      title: 'Two ways to start: text alone, or an image to anchor it',
+      body: [
+        'By default you’re describing a scene in words and the model imagines the whole thing. You can also anchor the video to a real image instead: add a Start image and the clip begins exactly there, or add an End image too and the clip transitions from one to the other. There’s also a "Simple Transition" mode that skips prompt-writing entirely — pick a start and end image and the tool builds the transition prompt for you.',
+        'Where those images come from is up to you. Click any of your last 12 AI Image Creation outputs right there in the built-in picker — one click sets it as your start or end frame, no downloading or re-uploading needed. Or drag in any other image file from outside the platform — something you made in Gemini, a photo, anything — the tool doesn’t care where it came from as long as it’s a real image file.',
+        'Even with an anchoring image set, you still write a prompt — it still needs to describe camera movement, lighting, and mood, the same rubric either way.',
+      ],
+    },
+    caseStudy: {
+      scenario: 'This is the platform’s own real example of what separates a weak prompt from a strong one — the same pair used on the AI Video Production certification. This applies whether or not you’re anchoring to a start/end image.',
+      attempts: [
+        {
+          label: 'First attempt',
+          answer: 'A girl walking.',
+          critique: 'Prompt evaluation\nSubject: vague — "a girl" has no distinguishing detail\nSetting: missing — "walking" doesn’t say where\nLighting: missing\nCamera: missing — no shot type or movement\nMood & Atmosphere: missing\nMovement: vague — "walking" is the only motion cue\nScore: 2/10 — below the 6/10 needed to generate\nSuggested improvement: Add who she is, where this is happening, and how the camera is moving — this prompt can’t generate yet.',
+        },
+        {
+          label: 'Second attempt',
+          answer: 'A young girl in a school uniform walking through a busy market.',
+          whyBetter: 'Now there’s a subject with a real detail (school uniform) and a setting (a busy market) — but it still won’t clear the bar, since there’s no camera movement, lighting, or mood yet.',
+          critique: 'Prompt evaluation\nSubject: improved — "girl in a school uniform" — Improve: add colour or age for more specificity\nSetting: improved — "busy market" — Improve: name a place or time of day\nLighting: missing — Improve: name a light quality\nCamera: missing — Improve: add a shot type, like tracking, aerial, or close-up\nMovement: weak — "walking" only\nScore: 4/10 — still below the 6/10 needed to generate\nSuggested improvement: Camera and lighting are the two changes that would move this over the line fastest.',
+        },
+        {
+          label: 'Third attempt',
+          answer: 'A young girl in a blue school uniform walking through a sunlit Nigerian market at golden hour, slow tracking shot, colourful fabric stalls in the background, warm cinematic light, joyful expression.',
+          whyBetter: 'Every dimension is now covered, including camera movement ("slow tracking shot") and mood ("joyful expression," "warm cinematic light") — this is what actually clears the 6/10 bar and unlocks Generate.',
+          critique: 'Prompt evaluation\nSubject: strong — "young girl in a blue school uniform," "joyful expression"\nSetting: strong — "sunlit Nigerian market," "colourful fabric stalls"\nLighting: strong — "golden hour," "warm cinematic light"\nCamera: strong — "slow tracking shot"\nMood & Atmosphere: strong — "joyful," "warm cinematic light"\nMovement: strong — a tracking shot implies continuous camera motion\nScore: 9/10 — clears the 6/10 bar, ready to generate\nSuggested improvement: Nothing major.',
+        },
+      ],
+    },
+    swivelPrompt:
+      "I'm about to generate a short AI video clip. Here's my current prompt:\n\n[PASTE YOUR PROMPT]\n\nThis tool won't let me generate until it scores at least 6/10 across subject, setting, lighting, camera movement, and mood — help me get there. Check what's missing and suggest the one change most likely to push the score over that line. If I'm anchoring this to a start or end image, help me think through whether that's actually the right call here, or whether starting from text alone would capture what I'm going for better.",
+  },
+
+  'video-studio': {
+    id: 'video-studio',
+    title: 'Video Studio',
+    kind: 'editor',
+    hook: 'Not a generator — a timeline editor for assembling video clips, voice, music, and text into one finished piece.',
+    guideBlurb: 'What you can actually bring in and from where, a typical assembly session, how to control the length of everything on the timeline, and what to know before you export.',
+    completionBlurb: 'You know what Video Studio actually is, where each type of asset comes from, how to control pacing on the timeline, and what to expect — and watch for — when you export.',
+    Icon: Clapperboard,
+    pageHref: '/tech-skills/ai-video-studio',
+    assetSources: [
+      'Video clips — your own saved AI Video Creation outputs, or any video file uploaded from outside the platform. Multiple clips can be arranged in order, trimmed, split, and reordered on the timeline.',
+      'Voice — recorded live, right in your browser, using your microphone. This is separate from anything you’ve made on AI Voice Creation.',
+      'Music — an uploaded audio file from outside the platform, or one of your own saved AI Voice Creation clips reused as the background track instead of music. There’s no music-generation tool built into the platform — music always comes from outside it.',
+      'Text — titles, captions, or labels placed at a specific point on the timeline, with your own choice of position, size, colour, and duration.',
+    ],
+    typicalSession: [
+      'A student building a 30-second video about their community garden might: add three AI-generated clips of the garden at different times of day in order, record a short voiceover explaining the project, drag in a background music track and turn its volume down low so the voice stays clear, and add a text title with the garden’s name over the first few seconds.',
+      'None of this requires writing a prompt or getting anything critiqued — the whole session happens on the timeline itself, arranging and trimming pieces you already have.',
+    ],
+    lengthControl: [
+      'Every clip on the timeline can be trimmed — drag its edges to shorten where it starts or ends — or split at the playhead into two separate pieces you can rearrange or delete independently.',
+      'The music track and any voice recordings have their own independent volume and position, so you control how they overlap with the video underneath them.',
+      'Text overlays each get their own duration — how long that title or caption stays on screen — set separately from the clip it’s sitting on top of.',
+      'There’s no single "video length" you set upfront — the final length is just whatever your arrangement of trimmed clips, voice, music, and text adds up to.',
+    ],
+    exportCaveat: [
+      'Video Studio doesn’t support standalone images as timeline items today — only video files. If you want a still image in your video, the real workaround is to turn it into a short clip on AI Video Creation first (a "Text + Start Image" generation works well even with a mostly-static description), then bring that resulting video in here like any other clip.',
+      'Exporting requires Chrome 94 or newer, since it renders your project entirely in the browser rather than on a server. Based on how the export is built, your background music and recorded voiceover may not make it into the downloaded file, even though they play correctly while you’re editing — so don’t treat the exported file as your only copy of anything. The page itself notes that if Chrome won’t play your download, try opening it in Firefox or VLC instead.',
+    ],
+  },
 };
 
-/* ─────────────────────────── step builder ────────────────────────── */
+/* ─────────────────────────── step builders ───────────────────────── */
 
-function buildSteps(c: CategoryGuideContent): Step[] {
-  return [
+function buildGeneratorSteps(c: CategoryGuideContent): Step[] {
+  const steps: Step[] = [
     {
       id: 'intro',
       kind: 'read',
       title: `What "${c.title}" actually does`,
-      body: [
-        c.hook,
-        'You type a prompt (up to 750 characters), pick an aspect ratio, and click Generate — the image itself comes from FLUX Schnell, a real text-to-image model, not a mockup. There’s no formal score on this page the way some other Guides have — it’s generate-and-view. The skill this Guide actually teaches is writing a prompt specific enough to get what you pictured on the first or second try, instead of regenerating ten times and hoping.',
-      ],
-      aside: 'This tool is currently available to students in Africa and North America. If you don’t see it in your Tech Skills menu, that’s why — not a bug.',
+      body: [c.hook],
+      aside: c.regionGated
+        ? 'This tool is currently available to students in Africa and North America. If you don’t see it in your Tech Skills menu, that’s why — not a bug.'
+        : undefined,
     },
+  ];
+
+  if (c.extraNote) {
+    steps.push({
+      id: 'extra',
+      kind: 'read',
+      title: c.extraNote.title,
+      body: c.extraNote.body,
+    });
+  }
+
+  steps.push(
     {
       id: 'rubric',
       kind: 'read',
-      title: 'What makes a strong prompt',
+      title: `What makes a strong ${c.id === 'ai-voice-creation' ? 'script' : 'prompt'}`,
       body: [
-        'The page’s own "Critique my Prompt" tool checks your prompt against these dimensions and gives it an informal score out of 10. The platform’s certification page is blunt about the biggest failure mode: a prompt under 10 words reads as having no real creative intent behind it, no matter how good the resulting image happens to look.',
+        c.isGated
+          ? `The page’s own "${c.critiqueButtonLabel}" tool checks your prompt against these dimensions — and unlike Image or Voice Creation, this one is a real gate: the Generate button stays disabled until your prompt scores at least 6/10. This isn’t a suggestion here, it’s a requirement.`
+          : `The page’s own "${c.critiqueButtonLabel}" tool checks your ${c.id === 'ai-voice-creation' ? 'script' : 'prompt'} against these dimensions and gives it an informal score out of 10. The platform’s certification page is blunt about the biggest failure mode: something too short reads as having no real creative intent behind it, no matter how good the result happens to look.`,
       ],
       criteriaList: c.criteria,
     },
@@ -173,7 +373,7 @@ function buildSteps(c: CategoryGuideContent): Step[] {
       id: 'case',
       kind: 'read',
       title: 'A case in action',
-      body: [c.caseStudy.scenario, 'Watch the same idea written three times, each one better than the last — and read why each change actually matters, not just why it’s longer.'],
+      body: [c.caseStudy!.scenario, `Watch the same idea written three times, each one better than the last — and read why each change actually matters, not just why it's longer.`],
       caseStudy: c.caseStudy,
     },
     {
@@ -181,9 +381,9 @@ function buildSteps(c: CategoryGuideContent): Step[] {
       kind: 'do',
       title: 'Try the page’s own tools first',
       body: [
-        'Open the real page below and write a first-draft prompt for something you actually want to see. Before generating, click "💡 Critique my Prompt" and read what it flags — or click "Build prompt step-by-step" if you’d rather be walked through subject, setting, lighting, colour, and mood one question at a time. Either one works; they’re two doors into the same rubric.',
+        `Open the real page below and write a first-draft ${c.id === 'ai-voice-creation' ? 'script' : 'prompt'} for something you actually want to make. Before generating, click "${c.critiqueButtonLabel}" and read what it flags — or click "${c.stepByStepButtonLabel}" if you’d rather be walked through the same rubric one question at a time. Either one works; they’re two doors into the same checklist.`,
       ],
-      doLabel: 'Open AI Image Creation',
+      doLabel: `Open ${c.title}`,
       doHref: c.pageHref,
     },
     {
@@ -191,10 +391,12 @@ function buildSteps(c: CategoryGuideContent): Step[] {
       kind: 'swivel',
       title: 'Then get a second opinion from Claude',
       body: [
-        'The on-page tool is fast and tuned exactly to this checklist — but it can’t brainstorm a genuinely different creative direction with you, and it won’t always catch something that reads as a stereotype or feels inauthentic to the real place you’re depicting. That’s where Claude in the AI Playground earns its place in the workflow.',
+        c.isGated
+          ? 'The on-page tool is fast and tuned exactly to this checklist, and clearing 6/10 is mandatory here — but it can’t brainstorm a genuinely different creative direction with you, and it won’t always catch something that reads as a stereotype or feels inauthentic to the real place you’re depicting. That’s where Claude in the AI Playground earns its place in the workflow.'
+          : 'The on-page tool is fast and tuned exactly to this checklist — but it can’t brainstorm a genuinely different creative direction with you, and it won’t always catch something that reads as a stereotype or feels inauthentic to the real place you’re depicting. That’s where Claude in the AI Playground earns its place in the workflow.',
       ],
       prompt: c.swivelPrompt,
-      promptNote: 'Paste your own prompt in where it says [PASTE YOUR PROMPT] before sending it.',
+      promptNote: `Paste your own ${c.id === 'ai-voice-creation' ? 'script' : 'prompt'} in where it says [PASTE YOUR ${c.id === 'ai-voice-creation' ? 'SCRIPT' : 'PROMPT'}] before sending it.`,
     },
     {
       id: 'why-both',
@@ -207,22 +409,22 @@ function buildSteps(c: CategoryGuideContent): Step[] {
     {
       id: 'do-generate',
       kind: 'do',
-      title: 'Generate your image',
+      title: `Generate your ${c.id === 'ai-video-creation' ? 'clip' : c.id === 'ai-voice-creation' ? 'audio' : 'image'}`,
       body: [
-        'Take whatever came out of either tool — the on-page critique, the step-by-step coach, or Claude’s suggestions — and fold the best of it into one final prompt. Generate the image, and if you want to keep it, use "Save Image to Account" and "Save Session to Dashboard" so it’s not lost when you navigate away.',
+        `Take whatever came out of either tool — the on-page critique, the step-by-step coach, or Claude’s suggestions — and fold the best of it into one final ${c.id === 'ai-voice-creation' ? 'script' : 'prompt'}. Generate it, and save your work so it’s not lost when you navigate away.`,
       ],
-      doLabel: 'Back to AI Image Creation',
-      doHref: '/tech-skills/ai-image-creation',
+      doLabel: `Back to ${c.title}`,
+      doHref: c.pageHref,
     },
     {
       id: 'gate',
       kind: 'gate',
       title: 'Prove it',
       body: [
-        'You’ve seen a weak prompt turn into a strong one, know the exact dimensions being checked, and used both the on-page tool and Claude to get there. Tell us what you made.',
+        `You’ve seen a weak ${c.id === 'ai-voice-creation' ? 'script' : 'prompt'} turn into a strong one, know the exact dimensions being checked, and used both the on-page tool and Claude to get there. Tell us what you made.`,
       ],
       gate: {
-        label: 'What did you generate, and what was your final prompt about?',
+        label: `What did you generate, and what was your final ${c.id === 'ai-voice-creation' ? 'script' : 'prompt'} about?`,
         placeholder: 'e.g. A sunset over a fishing village — after adding lighting and a camera angle',
         validate: v => {
           const s = v.trim();
@@ -232,7 +434,99 @@ function buildSteps(c: CategoryGuideContent): Step[] {
         },
       },
     },
+  );
+
+  return steps;
+}
+
+function buildEditorSteps(c: CategoryGuideContent): Step[] {
+  return [
+    {
+      id: 'intro',
+      kind: 'read',
+      title: `What "${c.title}" actually is`,
+      body: [
+        c.hook,
+        'There’s no AI tooling here at all — no prompt to write, no critique, nothing to swivel to Claude for. The skill this Guide teaches is assembly and pacing: arranging pieces you already have into something that actually holds together.',
+      ],
+    },
+    {
+      id: 'sources',
+      kind: 'read',
+      title: 'What you can bring in, and from where',
+      body: c.assetSources!,
+    },
+    {
+      id: 'case',
+      kind: 'read',
+      title: 'A typical session',
+      body: c.typicalSession!,
+    },
+    {
+      id: 'do-clips',
+      kind: 'do',
+      title: 'Add your clips',
+      body: [
+        'Open the real page below. In the Clips tab, add two or more video clips in the order you want them — either your own saved AI Video Creation outputs, or something uploaded from outside the platform. Trim or split them to get the timing right.',
+      ],
+      doLabel: 'Open Video Studio',
+      doHref: c.pageHref,
+    },
+    {
+      id: 'do-layer',
+      kind: 'do',
+      title: 'Layer in voice, music, and text',
+      body: [
+        'Record a short voiceover in the Voice tab using your microphone, add a background track in the Music tab (uploaded, or one of your saved AI Voice Creation clips), and drop in a text overlay for a title or caption in the Text tab.',
+      ],
+      doLabel: 'Back to Video Studio',
+      doHref: c.pageHref,
+    },
+    {
+      id: 'length',
+      kind: 'read',
+      title: 'Controlling length on the timeline',
+      body: c.lengthControl!,
+    },
+    {
+      id: 'export-caveat',
+      kind: 'read',
+      title: 'Before you export',
+      body: c.exportCaveat!,
+    },
+    {
+      id: 'do-export',
+      kind: 'do',
+      title: 'Save and export',
+      body: [
+        'Click Save first so your project is preserved even if you need to come back to it later, then Process Video and Download to get your finished file.',
+      ],
+      doLabel: 'Back to Video Studio',
+      doHref: c.pageHref,
+    },
+    {
+      id: 'gate',
+      kind: 'gate',
+      title: 'Prove it',
+      body: [
+        'You know what Video Studio actually is, where each type of asset comes from, and how to control pacing on the timeline. Tell us what you put together.',
+      ],
+      gate: {
+        label: 'What did you assemble, and what did it include?',
+        placeholder: 'e.g. A 30-second garden tour — 3 clips, a recorded voiceover, and a title card',
+        validate: v => {
+          const s = v.trim();
+          if (s.length < 10) return 'Give a little more detail about what you assembled.';
+          if (!/\s/.test(s)) return 'That looks like one word — add a bit more detail.';
+          return null;
+        },
+      },
+    },
   ];
+}
+
+function buildSteps(c: CategoryGuideContent): Step[] {
+  return c.kind === 'editor' ? buildEditorSteps(c) : buildGeneratorSteps(c);
 }
 
 /* ──────────────────────────── small parts ─────────────────────────── */
@@ -423,7 +717,7 @@ const CreativeAICategoryGuidePage: React.FC = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-pink-300">Guide</p>
               <h1 className="mt-1 text-3xl font-extrabold">{content.title}</h1>
               <p className="mt-1 max-w-xl text-sm text-slate-300">
-                A weak prompt becoming a strong one, why each change matters, and how to use the page’s own tools together with Claude — not instead of each other.
+                {content.guideBlurb}
               </p>
             </div>
           </div>
@@ -609,7 +903,7 @@ const CreativeAICategoryGuidePage: React.FC = () => {
           <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
             <p className="font-bold text-green-900">Guide complete.</p>
             <p className="mt-1 text-sm text-green-800">
-              You’ve seen a weak prompt become a strong one, know the exact dimensions being checked, and practiced using the page’s own tools together with Claude. That workflow works for every image you make here.
+              {content.completionBlurb}
             </p>
           </div>
         )}

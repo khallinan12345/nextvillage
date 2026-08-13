@@ -20,7 +20,7 @@ import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
   Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
-  Palette, Image,
+  Palette, Image, Mic, Video as VideoIcon, Clapperboard,
 } from 'lucide-react';
 
 type CategoryId =
@@ -75,7 +75,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'creative-ai',
     label: 'Creative AI',
-    blurb: 'Guides for AI image, voice, and video creation.',
+    blurb: 'Guides for AI image, voice, and video creation, and putting it all together in Video Studio.',
     Icon: Palette,
   },
   {
@@ -352,6 +352,45 @@ const TRACKS: Track[] = [
     available: true,
     category: 'creative-ai',
     Icon: Image,
+  },
+  {
+    id: 'creative-ai-guide-ai-voice-creation',
+    path: '/tutorials/creative-ai/ai-voice-creation',
+    title: 'AI Voice Creation',
+    blurb:
+      'A weak script becoming a strong one, why each change matters, and how to use the page\'s own critique tools together with Claude in the AI Playground — not instead of each other.',
+    duration: 'about 30 minutes',
+    totalSteps: 9,
+    tags: ['Creative AI', 'AI Voice Creation', 'AI Playground'],
+    available: true,
+    category: 'creative-ai',
+    Icon: Mic,
+  },
+  {
+    id: 'creative-ai-guide-ai-video-creation',
+    path: '/tutorials/creative-ai/ai-video-creation',
+    title: 'AI Video Creation',
+    blurb:
+      'The real 6/10 bar you have to clear to generate, how to anchor a clip to a real start or end image, and how to use the page\'s own tools together with Claude.',
+    duration: 'about 35 minutes',
+    totalSteps: 9,
+    tags: ['Creative AI', 'AI Video Creation', 'AI Playground'],
+    available: true,
+    category: 'creative-ai',
+    Icon: VideoIcon,
+  },
+  {
+    id: 'creative-ai-guide-video-studio',
+    path: '/tutorials/creative-ai/video-studio',
+    title: 'Video Studio',
+    blurb:
+      'What you can actually bring in and from where, a typical assembly session, how to control the length of everything on the timeline, and what to know before you export.',
+    duration: 'about 30 minutes',
+    totalSteps: 9,
+    tags: ['Creative AI', 'Video Studio'],
+    available: true,
+    category: 'creative-ai',
+    Icon: Clapperboard,
   },
   {
     id: 'add-new-guide',
