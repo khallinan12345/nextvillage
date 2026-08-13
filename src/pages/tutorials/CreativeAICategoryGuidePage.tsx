@@ -1,10 +1,11 @@
 // src/pages/tutorials/CreativeAICategoryGuidePage.tsx
 //
 // One Guide per Creative AI tool: AI Image Creation, AI Voice Creation,
-// AI Video Creation, and Video Studio. Built as a dynamic route (like
-// AILearningCategoryGuidePage.tsx and its siblings) rather than four
-// single-purpose files, since three of these four tools are structurally
-// identical clones of each other.
+// AI Video Creation, Video Studio, and Document Studio. Built as a dynamic
+// route (like AILearningCategoryGuidePage.tsx and its siblings) rather than
+// five single-purpose files, since three of these five tools are
+// structurally identical clones of each other, and a fourth (Document
+// Studio) reuses Video Studio's "editor" template exactly.
 //
 // Two different kinds of tool live in this one config, and the step
 // sequence branches on which:
@@ -61,6 +62,13 @@
 //   doesn't play the file"), so the Guide states it as a real caveat to
 //   plan around, not a hidden gotcha.
 //
+//   Document Studio is also 'editor' kind — confirmed zero AI anywhere in
+//   DocumentStudioPage.tsx (no chatText/chatJSON/critique/region-gating at
+//   all). It's an InDesign-style page layout tool (1/2/3-column frames,
+//   rich text, images, real Amazon KDP book trim sizes, PDF export, live
+//   multi-user collaboration) — genuinely different content from Video
+//   Studio, but the same "no swivel, teach assembly not prompting" shape.
+//
 // Progress: localStorage first, mirrored to `tutorial_progress` when signed
 // in — same as every other Guide. Track id is per-tool
 // (`creative-ai-guide-<categoryId>`).
@@ -72,7 +80,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
   Check, Lock, ChevronDown, ChevronRight, Link2, Loader2, ExternalLink,
-  Image as ImageIcon, Mic, Video as VideoIcon, Clapperboard, RotateCw, Copy, CheckCheck,
+  Image as ImageIcon, Mic, Video as VideoIcon, Clapperboard, FileText, RotateCw, Copy, CheckCheck,
 } from 'lucide-react';
 
 /* ────────────────────────────── types ────────────────────────────── */
@@ -141,8 +149,14 @@ interface CategoryGuideContent {
   // editor-only
   assetSources?: string[];
   typicalSession?: string[];
+  buildSteps?: { id: string; title: string; body: string[]; doLabel: string }[];
   lengthControl?: string[];
+  lengthControlTitle?: string;
   exportCaveat?: string[];
+  exportStep?: { title: string; body: string[]; doLabel: string };
+  gateBody?: string[];
+  gateLabel?: string;
+  gatePlaceholder?: string;
 }
 
 /* ───────────────────────────── content ───────────────────────────── */
@@ -326,10 +340,94 @@ const CATEGORY_GUIDES: Record<string, CategoryGuideContent> = {
       'Text overlays each get their own duration — how long that title or caption stays on screen — set separately from the clip it’s sitting on top of.',
       'There’s no single "video length" you set upfront — the final length is just whatever your arrangement of trimmed clips, voice, music, and text adds up to.',
     ],
+    buildSteps: [
+      {
+        id: 'do-clips',
+        title: 'Add your clips',
+        doLabel: 'Open Video Studio',
+        body: [
+          'Open the real page below. In the Clips tab, add two or more video clips in the order you want them — either your own saved AI Video Creation outputs, or something uploaded from outside the platform. Trim or split them to get the timing right.',
+        ],
+      },
+      {
+        id: 'do-layer',
+        title: 'Layer in voice, music, and text',
+        doLabel: 'Back to Video Studio',
+        body: [
+          'Record a short voiceover in the Voice tab using your microphone, add a background track in the Music tab (uploaded, or one of your saved AI Voice Creation clips), and drop in a text overlay for a title or caption in the Text tab.',
+        ],
+      },
+    ],
+    lengthControlTitle: 'Controlling length on the timeline',
     exportCaveat: [
       'Video Studio doesn’t support standalone images as timeline items today — only video files. If you want a still image in your video, the real workaround is to turn it into a short clip on AI Video Creation first (a "Text + Start Image" generation works well even with a mostly-static description), then bring that resulting video in here like any other clip.',
       'Exporting requires Chrome 94 or newer, since it renders your project entirely in the browser rather than on a server. Based on how the export is built, your background music and recorded voiceover may not make it into the downloaded file, even though they play correctly while you’re editing — so don’t treat the exported file as your only copy of anything. The page itself notes that if Chrome won’t play your download, try opening it in Firefox or VLC instead.',
     ],
+    exportStep: {
+      title: 'Save and export',
+      doLabel: 'Back to Video Studio',
+      body: ['Click Save first so your project is preserved even if you need to come back to it later, then Process Video and Download to get your finished file.'],
+    },
+    gateBody: ['You know what Video Studio actually is, where each type of asset comes from, and how to control pacing on the timeline. Tell us what you put together.'],
+    gateLabel: 'What did you assemble, and what did it include?',
+    gatePlaceholder: 'e.g. A 30-second garden tour — 3 clips, a recorded voiceover, and a title card',
+  },
+
+  'document-studio': {
+    id: 'document-studio',
+    title: 'Document Studio',
+    kind: 'editor',
+    hook: 'Not a generator either — an InDesign-style page layout editor for building real, print-ready documents: articles, newsletters, or a whole book.',
+    guideBlurb: 'What you’re actually building, a typical layout session, real book trim sizes and formatting controls, and what to know before you export.',
+    completionBlurb: 'You know what Document Studio actually is, how pages and frames fit together, how to format and size a real document, and how saving differs from exporting.',
+    Icon: FileText,
+    pageHref: '/tech-skills/document-studio',
+    assetSources: [
+      'Pages — each one starts as a 1, 2, or 3-column layout you choose, the same basic decision a real page-layout tool asks first.',
+      'Text — typed directly into a column frame, with full rich-text formatting: font, size, weight, alignment, colour, and line height, all from an on-page toolbar.',
+      'Images — uploaded from your device (PNG, JPEG, GIF, or WEBP, up to 10MB) and dropped into a frame.',
+      'There’s no AI on this page at all — no prompt, no critique, no generation. Everything here is text you write and images you bring, laid out by hand.',
+    ],
+    typicalSession: [
+      'A student putting together a short community newsletter might: create page one with a 2-column layout, type and format the lead story in the left column, drop a photo into the right, add a second page for a shorter piece, and pick a real trim size before exporting — the same sizes Amazon KDP uses for print books, from 5"×8" up to 8.5"×11", with margins that automatically account for binding.',
+      'Document Studio also supports real-time collaboration — turn it on and a teammate can edit the same document with you live, seeing each other\'s cursors and changes as they happen.',
+    ],
+    lengthControl: [
+      'Pages, not clips, are the unit here — add, duplicate, or reorder whole pages rather than trimming a timeline.',
+      'Each column frame holds as much or as little text as you give it; the layout (1, 2, or 3 columns) is set per page, so a dense page and a sparse one can sit right next to each other in the same document.',
+      'Typography controls — font, size, weight, alignment, colour, line height — are set per text selection, so a headline and its body text can look nothing alike within the same frame.',
+    ],
+    buildSteps: [
+      {
+        id: 'do-layout',
+        title: 'Build your first page',
+        doLabel: 'Open Document Studio',
+        body: [
+          'Open the real page below. Choose a 1, 2, or 3-column layout for your first page, then click into a column and start typing. Use the toolbar to format as you go — font, size, weight, alignment, colour, line height.',
+        ],
+      },
+      {
+        id: 'do-media',
+        title: 'Add images and more pages',
+        doLabel: 'Back to Document Studio',
+        body: [
+          'Drop an image into a frame — upload from your device, PNG/JPEG/GIF/WEBP up to 10MB — and add, duplicate, or reorder pages until your document has the shape you want. Try turning on Collaborate if you want to work with someone else live.',
+        ],
+      },
+    ],
+    lengthControlTitle: 'Pages, frames, and formatting',
+    exportCaveat: [
+      'Export PDF and Save are two different things: Export gives you a print-ready PDF sized to whichever trim size you picked, right away. Save persists the whole project — pages, text, images, layout — to your account separately, so you can reopen and keep editing it later. Exporting doesn’t automatically save, and saving doesn’t automatically export — do both if you want both.',
+      'Pick your trim size deliberately before your final export: it changes the actual page dimensions and margins, not just a label, so switching it after you’ve laid everything out can shift your columns and images around.',
+    ],
+    exportStep: {
+      title: 'Export and save',
+      doLabel: 'Back to Document Studio',
+      body: ['Pick a trim size that matches what you\'re actually making, click Export PDF to download a print-ready file, and click Save separately if you want to keep editing this project later.'],
+    },
+    gateBody: ['You know what Document Studio actually is, how pages and frames fit together, and how saving differs from exporting. Tell us what you put together.'],
+    gateLabel: 'What did you build, and what did it include?',
+    gatePlaceholder: 'e.g. A 2-page newsletter — one photo, a 2-column lead story, and a 5"x8" trim size',
   },
 };
 
@@ -440,7 +538,7 @@ function buildGeneratorSteps(c: CategoryGuideContent): Step[] {
 }
 
 function buildEditorSteps(c: CategoryGuideContent): Step[] {
-  return [
+  const steps: Step[] = [
     {
       id: 'intro',
       kind: 'read',
@@ -462,30 +560,24 @@ function buildEditorSteps(c: CategoryGuideContent): Step[] {
       title: 'A typical session',
       body: c.typicalSession!,
     },
-    {
-      id: 'do-clips',
+  ];
+
+  for (const bs of c.buildSteps!) {
+    steps.push({
+      id: bs.id,
       kind: 'do',
-      title: 'Add your clips',
-      body: [
-        'Open the real page below. In the Clips tab, add two or more video clips in the order you want them — either your own saved AI Video Creation outputs, or something uploaded from outside the platform. Trim or split them to get the timing right.',
-      ],
-      doLabel: 'Open Video Studio',
+      title: bs.title,
+      body: bs.body,
+      doLabel: bs.doLabel,
       doHref: c.pageHref,
-    },
-    {
-      id: 'do-layer',
-      kind: 'do',
-      title: 'Layer in voice, music, and text',
-      body: [
-        'Record a short voiceover in the Voice tab using your microphone, add a background track in the Music tab (uploaded, or one of your saved AI Voice Creation clips), and drop in a text overlay for a title or caption in the Text tab.',
-      ],
-      doLabel: 'Back to Video Studio',
-      doHref: c.pageHref,
-    },
+    });
+  }
+
+  steps.push(
     {
       id: 'length',
       kind: 'read',
-      title: 'Controlling length on the timeline',
+      title: c.lengthControlTitle ?? 'Controlling length',
       body: c.lengthControl!,
     },
     {
@@ -497,23 +589,19 @@ function buildEditorSteps(c: CategoryGuideContent): Step[] {
     {
       id: 'do-export',
       kind: 'do',
-      title: 'Save and export',
-      body: [
-        'Click Save first so your project is preserved even if you need to come back to it later, then Process Video and Download to get your finished file.',
-      ],
-      doLabel: 'Back to Video Studio',
+      title: c.exportStep!.title,
+      body: c.exportStep!.body,
+      doLabel: c.exportStep!.doLabel,
       doHref: c.pageHref,
     },
     {
       id: 'gate',
       kind: 'gate',
       title: 'Prove it',
-      body: [
-        'You know what Video Studio actually is, where each type of asset comes from, and how to control pacing on the timeline. Tell us what you put together.',
-      ],
+      body: c.gateBody!,
       gate: {
-        label: 'What did you assemble, and what did it include?',
-        placeholder: 'e.g. A 30-second garden tour — 3 clips, a recorded voiceover, and a title card',
+        label: c.gateLabel!,
+        placeholder: c.gatePlaceholder!,
         validate: v => {
           const s = v.trim();
           if (s.length < 10) return 'Give a little more detail about what you assembled.';
@@ -522,7 +610,9 @@ function buildEditorSteps(c: CategoryGuideContent): Step[] {
         },
       },
     },
-  ];
+  );
+
+  return steps;
 }
 
 function buildSteps(c: CategoryGuideContent): Step[] {
