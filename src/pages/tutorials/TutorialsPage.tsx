@@ -19,7 +19,7 @@ import { supabase } from '../../lib/supabaseClient';
 import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
-  Brain, Edit, Eye, Shield,
+  Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare,
 } from 'lucide-react';
 
 type CategoryId =
@@ -220,6 +220,71 @@ const TRACKS: Track[] = [
     available: true,
     category: 'learning',
     Icon: BookOpen,
+  },
+  {
+    id: 'skill-development-guide-digital-fluency',
+    path: '/tutorials/skill-development/digital-fluency',
+    title: 'Digital Fluency',
+    blurb:
+      'Three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how your score gets calculated — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['Skill Development', 'Digital Fluency'],
+    available: true,
+    category: 'skills',
+    Icon: Monitor,
+  },
+  {
+    id: 'skill-development-guide-critical-thinking',
+    path: '/tutorials/skill-development/critical-thinking',
+    title: 'Critical Thinking',
+    blurb:
+      'Three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how your score gets calculated — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['Skill Development', 'Critical Thinking'],
+    available: true,
+    category: 'skills',
+    Icon: Brain,
+  },
+  {
+    id: 'skill-development-guide-problem-solving',
+    path: '/tutorials/skill-development/problem-solving',
+    title: 'Problem-Solving',
+    blurb:
+      'Three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how your score gets calculated — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['Skill Development', 'Problem-Solving'],
+    available: true,
+    category: 'skills',
+    Icon: Puzzle,
+  },
+  {
+    id: 'skill-development-guide-creativity',
+    path: '/tutorials/skill-development/creativity',
+    title: 'Creativity',
+    blurb:
+      'Three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how your score gets calculated — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['Skill Development', 'Creativity'],
+    available: true,
+    category: 'skills',
+    Icon: Lightbulb,
+  },
+  {
+    id: 'skill-development-guide-communication',
+    path: '/tutorials/skill-development/communication',
+    title: 'Communication',
+    blurb:
+      'Three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how your score gets calculated — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['Skill Development', 'Communication'],
+    available: true,
+    category: 'skills',
+    Icon: MessageSquare,
   },
   {
     id: 'add-new-guide',
