@@ -191,7 +191,7 @@ const config: DomainConfig = {
     resultAccent: 'cyan',
   },
 
-  offlineToolUrl: '/offline-fishing-advisor.html',
+  offlineToolUrl: '/offline-fishing-consultant.html',
   offlineToolDescription: 'The offline version works without internet. It runs the full fishing/aquaculture advisory — catch problems, pond/aquaculture, processing & market, oil contamination, and climate & safety — and saves consultations to your device for later sync.',
   offlineTips: [
     'Complete required fields (marked *) — especially species, gear, and how catches have changed',
