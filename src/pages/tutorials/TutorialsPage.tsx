@@ -20,6 +20,7 @@ import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
   Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
+  Palette, Image,
 } from 'lucide-react';
 
 type CategoryId =
@@ -28,6 +29,7 @@ type CategoryId =
   | 'skills'
   | 'foundations'
   | 'tech-skills'
+  | 'creative-ai'
   | 'community-impact'
   | 'managing-platform';
 
@@ -69,6 +71,12 @@ const CATEGORIES: Category[] = [
     label: 'Tech-Skills',
     blurb: 'Guides for building real projects — Website Builder, Vite + React, and beyond.',
     Icon: Code2,
+  },
+  {
+    id: 'creative-ai',
+    label: 'Creative AI',
+    blurb: 'Guides for AI image, voice, and video creation.',
+    Icon: Palette,
   },
   {
     id: 'community-impact',
@@ -331,6 +339,19 @@ const TRACKS: Track[] = [
     available: true,
     category: 'foundations',
     Icon: Atom,
+  },
+  {
+    id: 'creative-ai-guide-ai-image-creation',
+    path: '/tutorials/creative-ai/ai-image-creation',
+    title: 'AI Image Creation',
+    blurb:
+      'A weak prompt becoming a strong one, why each change matters, and how to use the page\'s own critique tools together with Claude in the AI Playground — not instead of each other.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['Creative AI', 'AI Image Creation', 'AI Playground'],
+    available: true,
+    category: 'creative-ai',
+    Icon: Image,
   },
   {
     id: 'add-new-guide',
