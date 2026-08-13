@@ -21,6 +21,7 @@ import {
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
   Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
   Palette, Image, Mic, Video as VideoIcon, Clapperboard, FileText, Gamepad2, PenLine,
+  Wheat, PawPrint, Megaphone, Stethoscope, Briefcase,
 } from 'lucide-react';
 
 type CategoryId =
@@ -430,6 +431,84 @@ const TRACKS: Track[] = [
     available: true,
     category: 'creative-ai',
     Icon: PenLine,
+  },
+  {
+    id: 'advisor-casebook-guide-agriculture',
+    path: '/tutorials/community-impact/agriculture',
+    title: 'Agriculture Consultant',
+    blurb:
+      'Why there\'s no practice mode here, a real cassava-disease case worked start to finish, and how to interview, advise, and follow up well.',
+    duration: 'about 30 minutes',
+    totalSteps: 9,
+    tags: ['Community Impact', 'Agriculture Consultant'],
+    available: true,
+    category: 'community-impact',
+    Icon: Wheat,
+  },
+  {
+    id: 'advisor-casebook-guide-fishing',
+    path: '/tutorials/community-impact/fishing',
+    title: 'Fishing Consultant',
+    blurb:
+      'Why there\'s no practice mode here, a real oil-contamination case worked start to finish, and how to interview, advise, and follow up well.',
+    duration: 'about 30 minutes',
+    totalSteps: 9,
+    tags: ['Community Impact', 'Fishing Consultant'],
+    available: true,
+    category: 'community-impact',
+    Icon: Fish,
+  },
+  {
+    id: 'advisor-casebook-guide-animal-husbandry',
+    path: '/tutorials/community-impact/animal-husbandry',
+    title: 'Animal Husbandry Consultant',
+    blurb:
+      'Why there\'s no practice mode here, a real livestock-emergency case worked start to finish, and how to interview, advise, and follow up well.',
+    duration: 'about 30 minutes',
+    totalSteps: 9,
+    tags: ['Community Impact', 'Animal Husbandry'],
+    available: true,
+    category: 'community-impact',
+    Icon: PawPrint,
+  },
+  {
+    id: 'healthcare-navigator-guide',
+    path: '/tutorials/healthcare-navigator',
+    title: 'Healthcare Navigator',
+    blurb:
+      'A real RED/YELLOW/GREEN triage case worked start to finish, and knowing which of the two follow-up tools to reach for.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['Community Impact', 'Healthcare Navigator'],
+    available: true,
+    category: 'community-impact',
+    Icon: Stethoscope,
+  },
+  {
+    id: 'ai-ambassadors-guide',
+    path: '/tutorials/ai-ambassadors',
+    title: 'AI Ambassadors',
+    blurb:
+      'Rehearse a hard conversation with a fixed, in-character persona, get scored on a real 5-part rubric, then take it to an actual person.',
+    duration: 'about 30 minutes',
+    totalSteps: 9,
+    tags: ['Community Impact', 'AI Ambassadors'],
+    available: true,
+    category: 'community-impact',
+    Icon: Megaphone,
+  },
+  {
+    id: 'entrepreneurship-consultant-guide',
+    path: '/tutorials/entrepreneurship-consultant',
+    title: 'Entrepreneurship Consultant',
+    blurb:
+      'Practice with a graded persona in Practice Mode, then run the same advice for a real entrepreneur in Casebook — a real garri-processing case worked both ways.',
+    duration: 'about 40 minutes',
+    totalSteps: 8,
+    tags: ['Community Impact', 'Entrepreneurship Consultant'],
+    available: true,
+    category: 'community-impact',
+    Icon: Briefcase,
   },
   {
     id: 'add-new-guide',
