@@ -20,7 +20,7 @@ import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
   Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
-  Palette, Image, Mic, Video as VideoIcon, Clapperboard, FileText, Gamepad2,
+  Palette, Image, Mic, Video as VideoIcon, Clapperboard, FileText, Gamepad2, PenLine,
 } from 'lucide-react';
 
 type CategoryId =
@@ -75,7 +75,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'creative-ai',
     label: 'Creative AI',
-    blurb: 'Guides for AI image, voice, and video creation, and putting it all together in Video Studio or Document Studio.',
+    blurb: 'Guides for AI image, voice, video, and written content creation, and putting it all together in Video Studio or Document Studio.',
     Icon: Palette,
   },
   {
@@ -417,6 +417,19 @@ const TRACKS: Track[] = [
     available: true,
     category: 'creative-ai',
     Icon: FileText,
+  },
+  {
+    id: 'ai-content-creation-guide',
+    path: '/tutorials/ai-content-creation',
+    title: 'AI Content Creation',
+    blurb:
+      'The 3-phase workshop, the two kinds of feedback it gives you, and a real weak-vs-strong answer to the first question you\'ll actually be asked.',
+    duration: 'about an hour',
+    totalSteps: 9,
+    tags: ['Creative AI', 'AI Content Creation', 'AI Playground'],
+    available: true,
+    category: 'creative-ai',
+    Icon: PenLine,
   },
   {
     id: 'add-new-guide',
