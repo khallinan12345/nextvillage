@@ -20,7 +20,7 @@ import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
   Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
-  Palette, Image, Mic, Video as VideoIcon, Clapperboard,
+  Palette, Image, Mic, Video as VideoIcon, Clapperboard, FileText, Gamepad2,
 } from 'lucide-react';
 
 type CategoryId =
@@ -75,7 +75,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'creative-ai',
     label: 'Creative AI',
-    blurb: 'Guides for AI image, voice, and video creation, and putting it all together in Video Studio.',
+    blurb: 'Guides for AI image, voice, and video creation, and putting it all together in Video Studio or Document Studio.',
     Icon: Palette,
   },
   {
@@ -170,6 +170,19 @@ const TRACKS: Track[] = [
     available: true,
     category: 'tech-skills',
     Icon: Database,
+  },
+  {
+    id: 'create-game-guide',
+    path: '/tutorials/create-game',
+    title: 'Create Game',
+    blurb:
+      'Describe a game idea in chat, read the AI\'s verdict, ask for one specific change, and publish — the same iterative loop that makes vibe coding actually work, applied to a game only you play with clicks.',
+    duration: 'about an hour',
+    totalSteps: 8,
+    tags: ['Create Game', 'AI Playground'],
+    available: true,
+    category: 'tech-skills',
+    Icon: Gamepad2,
   },
   {
     id: 'ai-learning-guide-understanding-ai',
@@ -391,6 +404,19 @@ const TRACKS: Track[] = [
     available: true,
     category: 'creative-ai',
     Icon: Clapperboard,
+  },
+  {
+    id: 'creative-ai-guide-document-studio',
+    path: '/tutorials/creative-ai/document-studio',
+    title: 'Document Studio',
+    blurb:
+      'What you\'re actually building, a typical layout session, real book trim sizes and formatting controls, and what to know before you export.',
+    duration: 'about 30 minutes',
+    totalSteps: 9,
+    tags: ['Creative AI', 'Document Studio'],
+    available: true,
+    category: 'creative-ai',
+    Icon: FileText,
   },
   {
     id: 'add-new-guide',
