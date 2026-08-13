@@ -18,7 +18,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
-  Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2,
+  Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
+  Brain, Edit, Eye, Shield,
 } from 'lucide-react';
 
 type CategoryId =
@@ -141,6 +142,84 @@ const TRACKS: Track[] = [
     available: true,
     category: 'tech-skills',
     Icon: Wand2,
+  },
+  {
+    id: 'supabase-database-guide',
+    path: '/tutorials/supabase-database',
+    title: 'Building a Real Database in Supabase',
+    blurb:
+      'Create a free Supabase account, then build a real Postgres database entirely by hand — create a table, explore and change it with SQL, load real sales data from a downloadable CSV file, and lock it down with Row Level Security, learning what RLS actually does along the way.',
+    duration: 'about 2 hours',
+    totalSteps: 21,
+    tags: ['Supabase', 'SQL', 'AI Playground'],
+    available: true,
+    category: 'tech-skills',
+    Icon: Database,
+  },
+  {
+    id: 'ai-learning-guide-understanding-ai',
+    path: '/tutorials/ai-learning/understanding-ai',
+    title: 'Understanding AI',
+    blurb:
+      'A worked example showing a weak answer and a strong one graded side by side, the exact rubric this category checks, and how the two scoring layers actually work — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['AI Learning', 'Understanding AI'],
+    available: true,
+    category: 'learning',
+    Icon: Brain,
+  },
+  {
+    id: 'ai-learning-guide-prompt-engineering',
+    path: '/tutorials/ai-learning/prompt-engineering',
+    title: 'Prompt Engineering',
+    blurb:
+      'A worked example showing a weak prompt and a strong one graded side by side, the exact rubric this category checks, and how the two scoring layers actually work — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['AI Learning', 'Prompt Engineering'],
+    available: true,
+    category: 'learning',
+    Icon: Edit,
+  },
+  {
+    id: 'ai-learning-guide-evaluating-outputs',
+    path: '/tutorials/ai-learning/evaluating-outputs',
+    title: 'Evaluating AI Outputs',
+    blurb:
+      'A worked example showing a weak answer and a strong one graded side by side, the exact rubric this category checks, and how the two scoring layers actually work — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['AI Learning', 'Evaluating Outputs'],
+    available: true,
+    category: 'learning',
+    Icon: Eye,
+  },
+  {
+    id: 'ai-learning-guide-ai-ethics',
+    path: '/tutorials/ai-learning/ai-ethics',
+    title: 'AI Ethics & Responsible Use',
+    blurb:
+      'A worked example showing a weak answer and a strong one graded side by side, the exact rubric this category checks, and how the two scoring layers actually work — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['AI Learning', 'AI Ethics'],
+    available: true,
+    category: 'learning',
+    Icon: Shield,
+  },
+  {
+    id: 'ai-learning-guide-applications',
+    path: '/tutorials/ai-learning/applications',
+    title: 'AI Applications',
+    blurb:
+      'A worked example showing a weak answer and a strong one graded side by side, the exact rubric this category checks, and how the two scoring layers actually work — before your first real session.',
+    duration: 'about 30 minutes',
+    totalSteps: 8,
+    tags: ['AI Learning', 'Applications'],
+    available: true,
+    category: 'learning',
+    Icon: BookOpen,
   },
   {
     id: 'add-new-guide',

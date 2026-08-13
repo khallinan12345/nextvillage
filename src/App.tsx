@@ -18,6 +18,7 @@ import { setChatIdentity } from './lib/chatClient';
 import { supabase } from './lib/supabaseClient';
 import { ImpersonationProvider, ImpersonationBanner } from './contexts/ImpersonationContext';
 import ProfileCompletionPopup from './components/profile/ProfileCompletionPopup';
+import RequireAuth from './components/auth/RequireAuth';
 import { AuthProvider } from './hooks/useAuth';
 
 // Auth Pages
@@ -111,6 +112,8 @@ const AILearningStartPage = lazy(() => import('./pages/tutorials/AILearningStart
 const SkillDevelopmentStartPage = lazy(() => import('./pages/tutorials/SkillDevelopmentStartPage'));
 const AddNewGuidePage = lazy(() => import('./pages/tutorials/AddNewGuidePage'));
 const VibeCodingGuidePage = lazy(() => import('./pages/tutorials/VibeCodingGuidePage'));
+const SupabaseDatabaseGuidePage = lazy(() => import('./pages/tutorials/SupabaseDatabaseGuidePage'));
+const AILearningCategoryGuidePage = lazy(() => import('./pages/tutorials/AILearningCategoryGuidePage'));
 
 // Shown briefly while a lazy-loaded route's chunk downloads. Matches the
 // full-page auth-loading spinner's style above for visual consistency.
@@ -223,6 +226,12 @@ export const AppContent: React.FC = () => {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/confirmation-success" element={<EmailConfirmationSuccess />} />
 
+        {/* Everything below requires sign-in. Anonymous visitors only ever
+            see the Auth Routes above and the Public Landing Page / catch-all
+            below — this single gate keeps that true even for pages that
+            don't render AppLayout themselves. */}
+        <Route element={<RequireAuth />}>
+
         {/* Main App Routes */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -302,6 +311,8 @@ export const AppContent: React.FC = () => {
         <Route path="/tutorials/skill-development-start" element={<SkillDevelopmentStartPage />} />
         <Route path="/tutorials/add-new-guide" element={<AddNewGuidePage />} />
         <Route path="/tutorials/vibe-coding" element={<VibeCodingGuidePage />} />
+        <Route path="/tutorials/supabase-database" element={<SupabaseDatabaseGuidePage />} />
+        <Route path="/tutorials/ai-learning/:categoryId" element={<AILearningCategoryGuidePage />} />
         <Route path="/tutorials/fish-market" element={<FishMarketTutorialPage />} />
 
         {/* Legacy Route Redirects */}
@@ -325,6 +336,8 @@ export const AppContent: React.FC = () => {
         <Route path="/admin/education" element={<DashboardPage />} />
         <Route path="/admin/student-dashboard" element={<AdminStudentDashboard />} />
         <Route path="/teacher-dashboard" element={<Navigate to="/admin/student-dashboard" replace />} />
+
+        </Route>
 
         {/* Fallback */}
         <Route path="/" element={<PublicLandingPage />} />
