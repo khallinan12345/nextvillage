@@ -19,13 +19,14 @@ import { supabase } from '../../lib/supabaseClient';
 import {
   Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
-  Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare,
+  Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
 } from 'lucide-react';
 
 type CategoryId =
   | 'onboarding'
   | 'learning'
   | 'skills'
+  | 'foundations'
   | 'tech-skills'
   | 'community-impact'
   | 'managing-platform';
@@ -56,6 +57,12 @@ const CATEGORIES: Category[] = [
     label: 'Skills',
     blurb: 'Deeper guides for Skill Development.',
     Icon: Puzzle,
+  },
+  {
+    id: 'foundations',
+    label: 'Foundations',
+    blurb: 'Deeper guides for English, Math, and Science Skills.',
+    Icon: GraduationCap,
   },
   {
     id: 'tech-skills',
@@ -285,6 +292,45 @@ const TRACKS: Track[] = [
     available: true,
     category: 'skills',
     Icon: MessageSquare,
+  },
+  {
+    id: 'foundations-guide-english-skills',
+    path: '/tutorials/foundations/english-skills',
+    title: 'English Skills',
+    blurb:
+      'Stage 1: Oral Expression, three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how you advance to the next stage.',
+    duration: 'about 25 minutes',
+    totalSteps: 8,
+    tags: ['Foundations', 'English Skills'],
+    available: true,
+    category: 'foundations',
+    Icon: BookOpen,
+  },
+  {
+    id: 'foundations-guide-math-skills',
+    path: '/tutorials/foundations/math-skills',
+    title: 'Math Skills',
+    blurb:
+      'Stage 1: Counting & Number Sense, three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how you advance to the next stage.',
+    duration: 'about 25 minutes',
+    totalSteps: 8,
+    tags: ['Foundations', 'Math Skills'],
+    available: true,
+    category: 'foundations',
+    Icon: Calculator,
+  },
+  {
+    id: 'foundations-guide-science-skills',
+    path: '/tutorials/foundations/science-skills',
+    title: 'Science Skills',
+    blurb:
+      'Stage 1: Observation & Questioning, three attempts at the same scenario, each better than the last, why each improvement actually counts, and exactly how you advance to the next stage.',
+    duration: 'about 25 minutes',
+    totalSteps: 8,
+    tags: ['Foundations', 'Science Skills'],
+    available: true,
+    category: 'foundations',
+    Icon: Atom,
   },
   {
     id: 'add-new-guide',
