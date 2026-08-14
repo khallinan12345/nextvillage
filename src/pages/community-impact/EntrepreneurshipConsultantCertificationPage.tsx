@@ -244,11 +244,11 @@ const RUBRIC_DIMENSIONS = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const scoreLabel = (s: number | null) => {
-  if (s === null) return { text: 'Not assessed', color: 'text-gray-400',    bg: 'bg-gray-500/10',    border: 'border-gray-500/20'    };
-  if (s === 3)    return { text: 'Advanced',     color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' };
-  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/30'    };
-  if (s === 1)    return { text: 'Emerging',     color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30'   };
-  return               { text: 'No Evidence',  color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/30'     };
+  if (s === null) return { text: 'Not assessed', color: 'text-muted',       bg: 'bg-gray-100',    border: 'border-gray-300'    };
+  if (s === 3)    return { text: 'Advanced',     color: 'text-green-800',   bg: 'bg-green-100',   border: 'border-green-300'   };
+  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-800',    bg: 'bg-blue-100',    border: 'border-blue-300'    };
+  if (s === 1)    return { text: 'Emerging',     color: 'text-yellow-800',  bg: 'bg-yellow-100',  border: 'border-yellow-300'  };
+  return               { text: 'No Evidence',  color: 'text-red-800',     bg: 'bg-red-100',     border: 'border-red-300'     };
 };
 
 const writtenFilled = (p: EntrepreneurshipPortfolio) =>
@@ -275,54 +275,6 @@ const ScoreRing: React.FC<{ score: number | null }> = ({ score }) => {
         {score === null ? '?' : `${score}/3`}
       </span>
     </div>
-  );
-};
-
-// ─── Background ───────────────────────────────────────────────────────────────
-
-const EntrepreneurCertBackground: React.FC = () => {
-  const [mouse, setMouse]   = useState({ x: 0, y: 0 });
-  const [moving, setMoving] = useState(false);
-  const timerRef            = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      setMouse({ x: Math.max(0, e.clientX), y: Math.max(0, e.clientY - 64) });
-      setMoving(true);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setMoving(false), 120);
-    };
-    window.addEventListener('mousemove', h);
-    return () => { window.removeEventListener('mousemove', h); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
-  const img = "url('/background_entrepreneurship_consulting.png')";
-
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="entrep-cert-distortion">
-            <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="3" seed="31" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="55" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-      <div className="fixed top-16 left-0 right-0 bottom-0"
-        style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/80 via-orange-900/70 to-yellow-900/75" />
-        <div className="absolute inset-0 bg-black/15" />
-      </div>
-      {moving && (
-        <div className="fixed top-16 left-0 right-0 bottom-0 pointer-events-none"
-          style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 1, filter: 'url(#entrep-cert-distortion)',
-            WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)`,
-            maskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)` }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-900/80 via-orange-900/70 to-yellow-900/75" />
-        </div>
-      )}
-    </>
   );
 };
 
@@ -608,12 +560,12 @@ Return valid JSON only (no markdown, no code fences):
   };
 
   const VoiceBar = ({ text }: { text: string }) => (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/60 border border-gray-700/50">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-hair">
       <button onClick={() => isSpeaking ? stopSpeaking() : speak(text)}
-        className={`p-2 rounded-lg flex-shrink-0 transition-colors ${isSpeaking ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>
+        className={`p-2 rounded-lg flex-shrink-0 transition-colors ${isSpeaking ? 'bg-accent text-white' : 'bg-paper text-muted hover:bg-surface'}`}>
         {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
       </button>
-      <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      <p className="text-xs text-body leading-relaxed">{text}</p>
     </div>
   );
 
@@ -621,72 +573,71 @@ Return valid JSON only (no markdown, no code fences):
 
   if (activePersona) {
     return (
-      <div className="min-h-screen flex flex-col relative">
+      <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
-        <EntrepreneurCertBackground />
         <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4 py-4 relative z-10">
-          <div className="flex items-center gap-3 p-4 bg-gray-800/80 border border-gray-700/50 rounded-2xl mb-3">
+          <div className="flex items-center gap-3 p-4 bg-card border border-hair border border-hair rounded-2xl mb-3">
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${activePersona.colour} flex items-center justify-center text-2xl flex-shrink-0`}>{activePersona.emoji}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white">{activePersona.name}, {activePersona.age}</p>
-              <p className="text-xs text-gray-400">{activePersona.occupation}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{userTurnCount} turn{userTurnCount !== 1 ? 's' : ''} · {userTurnCount >= 3 ? '✅ Ready to save' : `${3 - userTurnCount} more turns to save`}</p>
+              <p className="text-sm font-bold text-ink">{activePersona.name}, {activePersona.age}</p>
+              <p className="text-xs text-muted">{activePersona.occupation}</p>
+              <p className="text-xs text-muted mt-0.5">{userTurnCount} turn{userTurnCount !== 1 ? 's' : ''} · {userTurnCount >= 3 ? '✅ Ready to save' : `${3 - userTurnCount} more turns to save`}</p>
             </div>
             <div className="flex gap-2">
-              <div className="flex rounded-xl overflow-hidden border border-gray-600">
+              <div className="flex rounded-xl overflow-hidden border border-hair">
                 {(['pidgin', 'english'] as const).map(m => (
                   <button key={m} onClick={() => setVoiceMode(m)}
-                    className={`px-2 py-2 text-xs font-bold border-r border-gray-600 last:border-0 transition-all ${voiceMode===m?(m==='english'?'bg-blue-600 text-white':'bg-green-600 text-white'):'bg-gray-700 text-gray-400'}`}>
+                    className={`px-2 py-2 text-xs font-bold border-r border-hair last:border-0 transition-all ${voiceMode===m?'bg-accent text-white':'bg-paper text-muted'}`}>
                     {m==='english'?'🇬🇧':'🇳🇬'}
                   </button>
                 ))}
               </div>
               <button onClick={saveSession} disabled={userTurnCount < 3}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${userTurnCount >= 3 ? `bg-gradient-to-r ${activePersona.colour} text-white` : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${userTurnCount >= 3 ? `bg-accent text-white` : 'bg-hair text-muted cursor-not-allowed'}`}>
                 <CheckCircle size={13} /> Save Session
               </button>
               <button onClick={() => { stopSpeaking(); setActivePersona(null); setSessionMessages([]); }}
-                className="p-2 text-gray-400 hover:text-gray-200 bg-gray-700 rounded-xl transition-colors"><X size={14} /></button>
+                className="p-2 text-muted hover:text-ink bg-paper border border-hair rounded-xl transition-colors"><X size={14} /></button>
             </div>
           </div>
 
           <div className="px-4 py-2.5 bg-amber-900/40 border border-amber-500/20 rounded-xl mb-3 flex items-center gap-2">
-            <Lightbulb size={14} className="text-amber-400 flex-shrink-0" />
-            <p className="text-xs text-gray-300">Ask about their capital and situation before advising. Give one specific, affordable first step. Acknowledge their ambition while being honest about risks.</p>
+            <Lightbulb size={14} className="text-accent flex-shrink-0" />
+            <p className="text-xs text-body">Ask about their capital and situation before advising. Give one specific, affordable first step. Acknowledge their ambition while being honest about risks.</p>
           </div>
 
-          <div className="flex-1 bg-gray-800/80 border border-gray-700/50 rounded-2xl flex flex-col overflow-hidden" style={{ height: '420px' }}>
+          <div className="flex-1 bg-card border border-hair border border-hair rounded-2xl flex flex-col overflow-hidden" style={{ height: '420px' }}>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {sessionMessages.map(msg => (
                 <div key={msg.id} className={`flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${activePersona.colour} flex items-center justify-center text-base flex-shrink-0`}>{activePersona.emoji}</div>}
-                  <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-amber-600 text-white rounded-tr-sm' : 'bg-gray-700 text-gray-100 rounded-tl-sm'}`}>
+                  <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-accent text-white rounded-tr-sm' : 'bg-paper text-body rounded-tl-sm'}`}>
                     <p className="text-[10px] font-bold mb-1 opacity-60">{msg.role === 'user' ? 'You (Advisor)' : activePersona.name}</p>
                     {msg.content}
                     {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
                   </div>
-                  {msg.role === 'user' && <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center flex-shrink-0"><Briefcase size={14} className="text-white" /></div>}
+                  {msg.role === 'user' && <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center flex-shrink-0"><Briefcase size={14} className="text-white" /></div>}
                 </div>
               ))}
               {isSending && (
                 <div className="flex items-start gap-2">
                   <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${activePersona.colour} flex items-center justify-center text-base flex-shrink-0`}>{activePersona.emoji}</div>
-                  <div className="bg-gray-700 rounded-2xl rounded-tl-sm px-4 py-3"><div className="flex gap-1.5">{[0,150,300].map(d=><div key={d} className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</div></div>
+                  <div className="bg-paper rounded-2xl rounded-tl-sm px-4 py-3"><div className="flex gap-1.5">{[0,150,300].map(d=><div key={d} className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</div></div>
                 </div>
               )}
               <div ref={chatEndRef} />
             </div>
-            <div className="border-t border-gray-700/50 p-3">
+            <div className="border-t border-hair p-3">
               <div className="flex items-end gap-2">
                 <textarea ref={inputRef} value={inputText} onChange={e => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown} rows={2} placeholder={`Advise ${activePersona.name}…`}
                   disabled={isSending}
-                  className="flex-1 bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-amber-500 resize-none leading-relaxed disabled:opacity-50"
+                  className="flex-1 bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted outline-none focus:border-accent resize-none leading-relaxed disabled:opacity-50"
                 />
                 <div className="flex flex-col gap-1.5">
-                  <button onClick={toggleListening} className={`p-2.5 rounded-xl transition-colors ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>{isListening ? <MicOff size={15} /> : <Mic size={15} />}</button>
+                  <button onClick={toggleListening} className={`p-2.5 rounded-xl transition-colors ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-paper text-muted hover:bg-surface'}`}>{isListening ? <MicOff size={15} /> : <Mic size={15} />}</button>
                   <button onClick={sendMessage} disabled={!inputText.trim() || isSending}
-                    className={`p-2.5 rounded-xl transition-colors ${inputText.trim() && !isSending ? `bg-gradient-to-br ${activePersona.colour} text-white` : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}><Send size={15} /></button>
+                    className={`p-2.5 rounded-xl transition-colors ${inputText.trim() && !isSending ? `bg-accent text-white` : 'bg-hair text-muted cursor-not-allowed'}`}><Send size={15} /></button>
                 </div>
               </div>
             </div>
@@ -702,9 +653,8 @@ Return valid JSON only (no markdown, no code fences):
     const wFilled = writtenFilled(portfolio);
     const sCount  = portfolio.sessions.length;
     return (
-      <div className="min-h-screen flex flex-col relative">
+      <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
-        <EntrepreneurCertBackground />
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="max-w-2xl mx-auto px-6 py-8 space-y-5">
             <VoiceBar text="Welcome to the Entrepreneurship Consultant Certification. Complete three written sections and at least two live consultations, then submit for evaluation." />
@@ -713,7 +663,7 @@ Return valid JSON only (no markdown, no code fences):
               <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center">
                 <Briefcase size={32} className="text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white">Entrepreneurship Consultant Certification</h1>
+              <h1 className="text-2xl font-bold text-ink">Entrepreneurship Consultant Certification</h1>
               <p className="text-sm text-amber-300">Community Impact Track · {branding.institutionName}</p>
               <div className="flex justify-center">
                 <PidginTooltip
@@ -721,64 +671,64 @@ Return valid JSON only (no markdown, no code fences):
                   hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
                 />
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed max-w-md mx-auto">
+              <p className="text-sm text-body leading-relaxed max-w-md mx-auto">
                 Prove you can advise young Nigerians starting businesses — with accurate knowledge of CAC registration, pricing, WhatsApp marketing, Ajo savings, and lean business planning.
               </p>
             </div>
 
-            <div className="p-5 bg-gray-800/70 border border-gray-700/50 rounded-2xl space-y-4">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider">What you need to complete</h2>
+            <div className="p-5 bg-card border border-hair border border-hair rounded-2xl space-y-4">
+              <h2 className="text-sm font-bold text-ink uppercase tracking-wider">What you need to complete</h2>
               <div className="space-y-3">
                 {[
-                  { icon: <PenLine size={16} />, colour: 'text-amber-400', title: 'Written Portfolio (3 sections)',
+                  { icon: <PenLine size={16} />, colour: 'text-accent', title: 'Written Portfolio (3 sections)',
                     desc: 'Your consulting approach, a 4-question business knowledge test (including a pricing calculation), and a lean business plan for a given entrepreneur scenario.',
                     done: wFilled === 3, progress: `${wFilled}/3 completed` },
                   { icon: <MessageSquare size={16} />, colour: 'text-orange-400', title: `Consultation Sessions (minimum ${MIN_SESSIONS})`,
                     desc: 'Live role-plays — the AI plays a young Nigerian with a business challenge, you are the advisor. At least 3 turns each, with different entrepreneurs.',
                     done: sCount >= MIN_SESSIONS, progress: `${sCount}/${MIN_SESSIONS} completed` },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-gray-700/40">
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-paper">
                     <div className={`flex-shrink-0 mt-0.5 ${item.colour}`}>{item.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-white">{item.title}</p>
-                        {item.done && <CheckCircle size={14} className="text-amber-400 flex-shrink-0" />}
+                        <p className="text-sm font-semibold text-ink">{item.title}</p>
+                        {item.done && <CheckCircle size={14} className="text-accent flex-shrink-0" />}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{item.desc}</p>
-                      <p className={`text-xs font-semibold mt-1 ${item.done ? 'text-amber-400' : 'text-gray-500'}`}>{item.progress}</p>
+                      <p className="text-xs text-muted mt-0.5 leading-relaxed">{item.desc}</p>
+                      <p className={`text-xs font-semibold mt-1 ${item.done ? 'text-accent' : 'text-muted'}`}>{item.progress}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="p-5 bg-gray-800/70 border border-gray-700/50 rounded-2xl space-y-3">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider">You'll be assessed on</h2>
+            <div className="p-5 bg-card border border-hair border border-hair rounded-2xl space-y-3">
+              <h2 className="text-sm font-bold text-ink uppercase tracking-wider">You'll be assessed on</h2>
               <div className="space-y-2">
                 {RUBRIC_DIMENSIONS.map(d => (
                   <div key={d.id} className="flex items-start gap-2 text-sm">
-                    <Briefcase size={12} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                    <div><span className="font-semibold text-gray-200">{d.label}</span><span className="text-gray-400"> — {d.desc}</span></div>
+                    <Briefcase size={12} className="text-accent flex-shrink-0 mt-0.5" />
+                    <div><span className="font-semibold text-body">{d.label}</span><span className="text-muted"> — {d.desc}</span></div>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 pt-1">Proficient (2/3) or above on all five dimensions required for certification.</p>
+              <p className="text-xs text-muted pt-1">Proficient (2/3) or above on all five dimensions required for certification.</p>
             </div>
 
             <div className="flex gap-3">
               <button onClick={() => setView('build')}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold rounded-xl transition-all">
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-all">
                 {portfolioReady(portfolio) ? 'Continue Portfolio' : 'Build Portfolio'} <ArrowRight size={16} />
               </button>
               {portfolioReady(portfolio) && (
                 <button onClick={handleEvaluate} disabled={isEvaluating}
-                  className="flex items-center gap-2 px-5 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-colors">
+                  className="flex items-center gap-2 px-5 py-3.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-bold rounded-xl transition-colors">
                   {isEvaluating ? <Loader2 size={16} className="animate-spin" /> : <Star size={16} />} Evaluate
                 </button>
               )}
             </div>
             {assessmentScores.length > 0 && (
-              <button onClick={() => setView('results')} className="w-full py-2 text-xs text-amber-400 hover:text-amber-300 transition-colors underline">View previous evaluation results →</button>
+              <button onClick={() => setView('results')} className="w-full py-2 text-xs text-accent hover:text-accent transition-colors underline">View previous evaluation results →</button>
             )}
           </div>
         </main>
@@ -793,25 +743,24 @@ Return valid JSON only (no markdown, no code fences):
     const sCount  = portfolio.sessions.length;
     const ready   = portfolioReady(portfolio);
     return (
-      <div className="min-h-screen flex flex-col relative">
+      <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
-        <EntrepreneurCertBackground />
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="max-w-2xl mx-auto px-6 py-6 space-y-4">
             <div className="flex items-center justify-between">
-              <button onClick={() => setView('overview')} className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-white transition-colors">← Overview</button>
-              <div className="flex items-center gap-3 text-xs text-gray-500">
-                <span className={wFilled === 3 ? 'text-amber-400 font-semibold' : ''}>Written {wFilled}/3</span>
+              <button onClick={() => setView('overview')} className="flex items-center gap-1.5 text-sm text-body hover:text-ink transition-colors">← Overview</button>
+              <div className="flex items-center gap-3 text-xs text-muted">
+                <span className={wFilled === 3 ? 'text-accent font-semibold' : ''}>Written {wFilled}/3</span>
                 <span>·</span>
-                <span className={sCount >= MIN_SESSIONS ? 'text-amber-400 font-semibold' : ''}>Sessions {sCount}/{MIN_SESSIONS}</span>
-                {ready && <CheckCircle size={13} className="text-amber-400" />}
+                <span className={sCount >= MIN_SESSIONS ? 'text-accent font-semibold' : ''}>Sessions {sCount}/{MIN_SESSIONS}</span>
+                {ready && <CheckCircle size={13} className="text-accent" />}
               </div>
             </div>
 
-            <div className="flex gap-1 p-1 bg-gray-800/70 rounded-xl">
+            <div className="flex gap-1 p-1 bg-card border border-hair rounded-xl">
               {(['written', 'sessions'] as BuildTab[]).map(tab => (
                 <button key={tab} onClick={() => setBuildTab(tab)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${buildTab === tab ? 'bg-amber-700 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${buildTab === tab ? 'bg-accent text-white' : 'text-muted hover:text-body'}`}>
                   {tab === 'written' ? `Written Portfolio (${wFilled}/3)` : `Consultations (${sCount}/${MIN_SESSIONS})`}
                 </button>
               ))}
@@ -824,24 +773,24 @@ Return valid JSON only (no markdown, no code fences):
                   return (
                     <div key={sec.key} className={`rounded-2xl border ${sec.colour} p-5 space-y-3`}>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">{sec.icon}</span>
-                        <h3 className="text-sm font-bold text-white flex-1">{sec.label}</h3>
-                        {done && <CheckCircle size={14} className="text-amber-400 flex-shrink-0" />}
+                        <span className="text-muted">{sec.icon}</span>
+                        <h3 className="text-sm font-bold text-ink flex-1">{sec.label}</h3>
+                        {done && <CheckCircle size={14} className="text-accent flex-shrink-0" />}
                       </div>
                       <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                        <Lightbulb size={12} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                        <Lightbulb size={12} className="text-accent flex-shrink-0 mt-0.5" />
                         <p className="text-xs text-amber-300">{sec.tip}</p>
                       </div>
                       <textarea value={val} onChange={e => setWritten(sec.key, e.target.value)}
                         rows={sec.rows} placeholder={sec.placeholder}
-                        className="w-full bg-gray-800/80 border border-gray-600/50 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 outline-none focus:border-amber-500 resize-none leading-relaxed"
+                        className="w-full bg-card border border-hair border border-hair/50 rounded-xl px-4 py-3 text-sm text-body placeholder-muted outline-none focus:border-accent resize-none leading-relaxed"
                       />
-                      <p className="text-right text-xs text-gray-600">{val.length} characters</p>
+                      <p className="text-right text-xs text-muted">{val.length} characters</p>
                     </div>
                   );
                 })}
                 <button onClick={() => setBuildTab('sessions')}
-                  className="w-full py-3 flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-700 text-white text-sm font-bold rounded-xl transition-colors">
+                  className="w-full py-3 flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-white text-sm font-bold rounded-xl transition-colors">
                   Next: Consultation Sessions <ArrowRight size={14} />
                 </button>
               </div>
@@ -851,37 +800,37 @@ Return valid JSON only (no markdown, no code fences):
               <div className="space-y-4">
                 {portfolio.sessions.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Completed Consultations</p>
+                    <p className="text-xs font-semibold text-muted uppercase tracking-wider">Completed Consultations</p>
                     {portfolio.sessions.map(s => (
                       <div key={s.personaId} className="flex items-center gap-3 p-3 bg-amber-900/40 border border-amber-500/25 rounded-xl">
                         <span className="text-2xl">{s.personaEmoji}</span>
-                        <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-white">{s.personaName}</p><p className="text-xs text-gray-400">{s.turnCount} turns · saved</p></div>
-                        <CheckCircle size={16} className="text-amber-400" />
-                        <button onClick={() => removeSession(s.personaId)} className="p-1 text-gray-600 hover:text-red-400"><X size={13} /></button>
+                        <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-ink">{s.personaName}</p><p className="text-xs text-muted">{s.turnCount} turns · saved</p></div>
+                        <CheckCircle size={16} className="text-accent" />
+                        <button onClick={() => removeSession(s.personaId)} className="p-1 text-muted hover:text-red-400"><X size={13} /></button>
                       </div>
                     ))}
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wider">
                     {portfolio.sessions.length < MIN_SESSIONS ? `Choose an entrepreneur to advise (need ${MIN_SESSIONS - portfolio.sessions.length} more)` : 'Add more consultations (optional)'}
                   </p>
                   {ENTREPRENEUR_PERSONAS.map(persona => {
                     const done = portfolio.sessions.some(s => s.personaId === persona.id);
                     return (
                       <button key={persona.id} onClick={() => startSession(persona)}
-                        className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border transition-all ${done ? 'border-amber-500/30 bg-amber-900/30 opacity-75' : 'border-gray-700/50 bg-gray-800/50 hover:border-amber-500/50 hover:bg-gray-700/50'}`}>
+                        className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border transition-all ${done ? 'border-hair bg-surface opacity-75' : 'border-hair bg-paper hover:border-accent/40'}`}>
                         <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${persona.colour} flex items-center justify-center text-2xl flex-shrink-0`}>{persona.emoji}</div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-bold text-white">{persona.name}, {persona.age}</p>
-                            {done && <CheckCircle size={13} className="text-amber-400" />}
+                            <p className="text-sm font-bold text-ink">{persona.name}, {persona.age}</p>
+                            {done && <CheckCircle size={13} className="text-accent" />}
                           </div>
-                          <p className="text-xs text-gray-400">{persona.mainChallenge}</p>
-                          <p className="text-xs text-gray-500 mt-1 italic">"{persona.openingLine.slice(0, 85)}…"</p>
+                          <p className="text-xs text-muted">{persona.mainChallenge}</p>
+                          <p className="text-xs text-muted mt-1 italic">"{persona.openingLine.slice(0, 85)}…"</p>
                         </div>
-                        <ChevronRight size={16} className="text-gray-500 flex-shrink-0 mt-2" />
+                        <ChevronRight size={16} className="text-muted flex-shrink-0 mt-2" />
                       </button>
                     );
                   })}
@@ -890,11 +839,11 @@ Return valid JSON only (no markdown, no code fences):
                 {ready && (
                   <div className="space-y-3 pt-2">
                     <div className="p-3 bg-amber-900/40 border border-amber-500/25 rounded-xl flex items-center gap-2">
-                      <CheckCircle size={15} className="text-amber-400" />
+                      <CheckCircle size={15} className="text-accent" />
                       <p className="text-sm text-amber-300 font-semibold">Portfolio complete! Ready to evaluate.</p>
                     </div>
                     <button onClick={handleEvaluate} disabled={isEvaluating}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all">
+                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-bold rounded-xl transition-all">
                       {isEvaluating ? <><Loader2 size={16} className="animate-spin" /> Evaluating portfolio…</> : <><Star size={16} /> Submit for Evaluation</>}
                     </button>
                   </div>
@@ -916,25 +865,24 @@ Return valid JSON only (no markdown, no code fences):
 
   if (view === 'results') {
     return (
-      <div className="min-h-screen flex flex-col relative">
+      <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
-        <EntrepreneurCertBackground />
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="max-w-2xl mx-auto px-6 py-6 space-y-5">
             <VoiceBar text={`Your Entrepreneurship Consultant Certification results are ready. ${allProficient ? 'Congratulations — you have achieved certification level on all criteria!' : 'Continue building your portfolio and try again.'}`} />
 
             {overallScore !== null && (
-              <div className={`p-5 rounded-2xl border ${allProficient ? 'bg-amber-900/40 border-amber-500/30' : 'bg-gray-800/70 border-gray-700/50'} flex items-center gap-5`}>
+              <div className={`p-5 rounded-2xl border ${allProficient ? 'bg-amber-900/40 border-amber-500/30' : 'bg-card border border-hair border-hair'} flex items-center gap-5`}>
                 <ScoreRing score={Math.round(overallScore)} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-lg font-bold text-white">{overallScore.toFixed(1)} / 3.0 overall</p>
-                  <p className={`text-sm font-semibold ${allProficient ? 'text-amber-400' : 'text-orange-400'}`}>
+                  <p className="text-lg font-bold text-ink">{overallScore.toFixed(1)} / 3.0 overall</p>
+                  <p className={`text-sm font-semibold ${allProficient ? 'text-accent' : 'text-orange-400'}`}>
                     {allProficient ? '🎓 Certification level achieved on all criteria!' : 'Proficient (2/3) required on all criteria.'}
                   </p>
                 </div>
                 {allProficient && (
                   <button onClick={() => setView('certificate')}
-                    className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl transition-colors flex-shrink-0">
+                    className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-white text-sm font-bold rounded-xl transition-colors flex-shrink-0">
                     <Trophy size={15} /> Get Certificate
                   </button>
                 )}
@@ -950,11 +898,11 @@ Return valid JSON only (no markdown, no code fences):
                     <div key={sc.assessment_name} className={`rounded-xl border ${border} ${bg} p-4`}>
                       <div className="flex items-center gap-3 mb-2">
                         <ScoreRing score={sc.score} />
-                        <div className="flex-1 min-w-0"><p className="text-sm font-bold text-white">{sc.assessment_name}</p><p className={`text-xs font-semibold ${color}`}>{text}</p></div>
+                        <div className="flex-1 min-w-0"><p className="text-sm font-bold text-ink">{sc.assessment_name}</p><p className={`text-xs font-semibold ${color}`}>{text}</p></div>
                       </div>
-                      {sc.evidence && <p className="text-xs text-gray-300 leading-relaxed pl-14">{sc.evidence}</p>}
+                      {sc.evidence && <p className="text-xs text-body leading-relaxed pl-14">{sc.evidence}</p>}
                       {dim && sc.score !== null && sc.score < 2 && (
-                        <div className="mt-2 pl-14 text-[10px] text-blue-300 leading-relaxed"><span className="text-gray-500">To reach Proficient: </span>{dim.desc}</div>
+                        <div className="mt-2 pl-14 text-[10px] text-blue-300 leading-relaxed"><span className="text-muted">To reach Proficient: </span>{dim.desc}</div>
                       )}
                     </div>
                   );
@@ -965,13 +913,13 @@ Return valid JSON only (no markdown, no code fences):
             {evalError && <div className="p-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 flex gap-2 text-sm"><AlertCircle size={16} className="flex-shrink-0 mt-0.5" />{evalError}</div>}
 
             <div className="flex flex-wrap gap-3">
-              <button onClick={() => setView('build')} className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold rounded-xl transition-colors"><PenLine size={14} /> Continue Building</button>
+              <button onClick={() => setView('build')} className="flex items-center gap-2 px-5 py-2.5 bg-card border border-hair text-ink hover:border-accent/40 text-sm font-bold rounded-xl transition-colors"><PenLine size={14} /> Continue Building</button>
               <button onClick={handleEvaluate} disabled={isEvaluating}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors">
+                className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors">
                 {isEvaluating ? <><Loader2 size={14} className="animate-spin" /> Evaluating…</> : <><RefreshCw size={14} /> Re-evaluate</>}
               </button>
               {allProficient && (
-                <button onClick={() => setView('certificate')} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-90 text-white text-sm font-bold rounded-xl transition-colors">
+                <button onClick={() => setView('certificate')} className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent/90 text-white text-sm font-bold rounded-xl transition-colors">
                   <Trophy size={14} /> Get Certificate
                 </button>
               )}
@@ -986,9 +934,8 @@ Return valid JSON only (no markdown, no code fences):
 
   if (view === 'certificate') {
     return (
-      <div className="min-h-screen flex flex-col relative">
+      <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
-        <EntrepreneurCertBackground />
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="max-w-2xl mx-auto px-6 py-6 space-y-5">
             <VoiceBar text="Enter your name to generate your Entrepreneurship Consultant Certificate." />
@@ -1000,17 +947,17 @@ Return valid JSON only (no markdown, no code fences):
             {allProficient && (
               <>
                 <div className="p-6 bg-gradient-to-br from-amber-900/50 to-orange-900/30 border border-amber-500/25 rounded-2xl text-center space-y-4">
-                  <Trophy size={48} className="text-amber-400 mx-auto" />
+                  <Trophy size={48} className="text-accent mx-auto" />
                   <div>
-                    <h2 className="text-xl font-bold text-white">🎓 Certification Achieved!</h2>
-                    <p className="text-sm text-gray-300 mt-1 max-w-sm mx-auto">You have demonstrated the ability to advise young Nigerian entrepreneurs with accurate business knowledge, practical guidance, and clear action plans. Enter your name to download your certificate.</p>
+                    <h2 className="text-xl font-bold text-ink">🎓 Certification Achieved!</h2>
+                    <p className="text-sm text-body mt-1 max-w-sm mx-auto">You have demonstrated the ability to advise young Nigerian entrepreneurs with accurate business knowledge, practical guidance, and clear action plans. Enter your name to download your certificate.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {assessmentScores.map(sc => {
                       const { text, color } = scoreLabel(sc.score);
                       return (
-                        <div key={sc.assessment_name} className="flex items-center justify-between px-3 py-1.5 bg-gray-800/60 rounded-lg">
-                          <span className="text-gray-300 truncate text-left">{sc.assessment_name}</span>
+                        <div key={sc.assessment_name} className="flex items-center justify-between px-3 py-1.5 bg-card border border-hair rounded-lg">
+                          <span className="text-body truncate text-left">{sc.assessment_name}</span>
                           <span className={`font-bold flex-shrink-0 ml-2 ${color}`}>{text}</span>
                         </div>
                       );
@@ -1018,18 +965,18 @@ Return valid JSON only (no markdown, no code fences):
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-gray-300">Full name as it should appear on the certificate:</label>
+                  <label className="block text-sm font-semibold text-body">Full name as it should appear on the certificate:</label>
                   <input type="text" value={certName} onChange={e => setCertName(e.target.value)} placeholder="e.g. Amara Johnson"
-                    className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-amber-500 text-base" />
+                    className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-none focus:border-accent text-base" />
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
-                    className="w-full flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all">
+                    className="w-full flex items-center justify-center gap-3 py-3.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-bold rounded-xl transition-all">
                     {isGenCert ? <><Loader2 size={18} className="animate-spin" /> Generating PDF…</> : <><Download size={18} /> Download Certificate</>}
                   </button>
-                  <p className="text-center text-xs text-gray-500">{`Amber-themed PDF · ${branding.institutionName}`}</p>
+                  <p className="text-center text-xs text-muted">{`Amber-themed PDF · ${branding.institutionName}`}</p>
                 </div>
               </>
             )}
-            <button onClick={() => setView('overview')} className="w-full py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">← Back to Overview</button>
+            <button onClick={() => setView('overview')} className="w-full py-2 text-xs text-muted hover:text-body transition-colors">← Back to Overview</button>
           </div>
         </main>
       </div>
