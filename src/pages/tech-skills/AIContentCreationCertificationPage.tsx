@@ -78,13 +78,13 @@ const EMPTY_PORTFOLIO: ContentPortfolio = {
 
 const CONTENT_TYPES: { id: ContentType; label: string; icon: React.ReactNode; colour: string }[] = [
   { id: 'blog_post',           label: 'Blog Post',           icon: <Globe size={14} />,         colour: 'text-blue-400'    },
-  { id: 'social_media',        label: 'Social Media',        icon: <MessageSquare size={14} />, colour: 'text-pink-400'    },
+  { id: 'social_media',        label: 'Social Media',        icon: <MessageSquare size={14} />, colour: 'text-accent'    },
   { id: 'email',               label: 'Email / Newsletter',  icon: <Mail size={14} />,          colour: 'text-amber-400'   },
   { id: 'video_script',        label: 'Video Script',        icon: <Video size={14} />,         colour: 'text-red-400'     },
-  { id: 'grant_proposal',      label: 'Grant / Proposal',    icon: <Gift size={14} />,          colour: 'text-emerald-400' },
-  { id: 'product_description', label: 'Product Description', icon: <Star size={14} />,          colour: 'text-violet-400'  },
-  { id: 'press_release',       label: 'Press Release',       icon: <Megaphone size={14} />,     colour: 'text-cyan-400'    },
-  { id: 'story',               label: 'Short Story',         icon: <PenLine size={14} />,       colour: 'text-orange-400'  },
+  { id: 'grant_proposal',      label: 'Grant / Proposal',    icon: <Gift size={14} />,          colour: 'text-accent' },
+  { id: 'product_description', label: 'Product Description', icon: <Star size={14} />,          colour: 'text-accent'  },
+  { id: 'press_release',       label: 'Press Release',       icon: <Megaphone size={14} />,     colour: 'text-accent'    },
+  { id: 'story',               label: 'Short Story',         icon: <PenLine size={14} />,       colour: 'text-accent'  },
 ];
 
 const PORTFOLIO_SECTIONS: {
@@ -100,14 +100,14 @@ const PORTFOLIO_SECTIONS: {
   },
   {
     key: 'purpose', label: '2. Your Purpose & Hook', icon: <Target size={13} />,
-    colour: 'border-violet-500/40 bg-violet-500/5',
+    colour: 'border-accent/40 bg-accent/5',
     placeholder: 'Complete this sentence: "After reading this, I want my audience to ___." Then write your opening hook — the first 1–2 lines that earn their attention.',
     tip: 'A single clear goal and a strong hook are the two most important elements of effective content.',
     rows: 3,
   },
   {
     key: 'keyIdeas', label: '3. Key Ideas & Research', icon: <FileText size={13} />,
-    colour: 'border-cyan-500/40 bg-cyan-500/5',
+    colour: 'border-accent/40 bg-accent/5',
     placeholder: 'List 4–6 key points, facts, stories, or examples you will include. One real story or specific example is worth ten general statements.',
     tip: 'Raw material first — ideas, facts, stories. Structure comes after.',
     rows: 4,
@@ -121,14 +121,14 @@ const PORTFOLIO_SECTIONS: {
   },
   {
     key: 'refinedDraft', label: '5. Refined Draft', icon: <Eye size={13} />,
-    colour: 'border-emerald-500/40 bg-emerald-500/5',
+    colour: 'border-accent/40 bg-accent/5',
     placeholder: 'Paste your improved version here. Cut unnecessary words, activate passive voice, sharpen your voice and personality, strengthen your call to action.',
     tip: 'Read it aloud. If you stumble, the sentence needs editing. Short, active sentences always win.',
     rows: 8,
   },
   {
     key: 'platformPlan', label: '6. Platform & Distribution Plan', icon: <Globe size={13} />,
-    colour: 'border-pink-500/40 bg-pink-500/5',
+    colour: 'border-accent/40 bg-accent/5',
     placeholder: 'Where will you publish this? Adapt it: what changes for a different platform? Write your subject line / caption / headline. Describe your distribution plan.',
     tip: 'The same content needs different packaging for each platform. Headlines, captions, and hashtags are skills.',
     rows: 4,
@@ -138,11 +138,11 @@ const PORTFOLIO_SECTIONS: {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const scoreLabel = (s: number | null) => {
-  if (s === null) return { text: 'Not assessed', color: 'text-gray-400',    bg: 'bg-gray-500/10',    border: 'border-gray-500/20'    };
-  if (s === 3)    return { text: 'Advanced',     color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' };
-  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/30'    };
-  if (s === 1)    return { text: 'Emerging',     color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30'   };
-  return               { text: 'No Evidence',  color: 'text-red-400',    bg: 'bg-red-500/10',     border: 'border-red-500/30'     };
+  if (s === null) return { text: 'Not assessed', color: 'text-muted',      bg: 'bg-gray-100',   border: 'border-gray-300'   };
+  if (s === 3)    return { text: 'Advanced',     color: 'text-green-800',  bg: 'bg-green-100',  border: 'border-green-300'  };
+  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-800',   bg: 'bg-blue-100',   border: 'border-blue-300'   };
+  if (s === 1)    return { text: 'Emerging',     color: 'text-yellow-800', bg: 'bg-yellow-100', border: 'border-yellow-300' };
+  return               { text: 'No Evidence',  color: 'text-red-800',    bg: 'bg-red-100',    border: 'border-red-300'    };
 };
 
 const portfolioFilled = (p: ContentPortfolio) =>
@@ -153,10 +153,10 @@ const portfolioFilled = (p: ContentPortfolio) =>
 const ScoreRing: React.FC<{ score: number | null }> = ({ score }) => {
   const pct = score !== null ? (score / 3) * 100 : 0;
   const r = 18; const circ = 2 * Math.PI * r; const dash = (pct / 100) * circ;
-  const color = score === null ? '#4b5563' : score >= 2 ? '#10b981' : score === 1 ? '#f59e0b' : '#ef4444';
+  const color = score === null ? '#A8A29E' : score === 3 ? '#16A34A' : score === 2 ? '#2563EB' : score === 1 ? '#D97706' : '#DC2626';
   return (
     <svg width={44} height={44} viewBox="0 0 44 44">
-      <circle cx={22} cy={22} r={r} fill="none" stroke="#1f2937" strokeWidth={4} />
+      <circle cx={22} cy={22} r={r} fill="none" stroke="#E7E5E0" strokeWidth={4} />
       <circle cx={22} cy={22} r={r} fill="none" stroke={color} strokeWidth={4}
         strokeLinecap="round" strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={circ / 4}
         style={{ transition: 'all 0.6s ease' }} />
@@ -176,16 +176,16 @@ const ContentPortfolioPanel: React.FC<{
   showTips: boolean;
 }> = ({ portfolio, onChange, activeSection, showTips }) => (
   <div className="h-full overflow-y-auto p-3 space-y-2.5">
-    <div className="flex items-center justify-between mb-1 sticky top-0 bg-gray-900/90 backdrop-blur-sm py-1 z-10">
-      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Content Portfolio</p>
-      <p className="text-[10px] text-gray-600">
+    <div className="flex items-center justify-between mb-1 sticky top-0 bg-paper backdrop-blur-sm py-1 z-10">
+      <p className="text-[10px] font-bold text-muted uppercase tracking-wide">Content Portfolio</p>
+      <p className="text-[10px] text-muted">
         {portfolioFilled(portfolio)}/{PORTFOLIO_SECTIONS.length} sections filled
       </p>
     </div>
 
     {/* Content type selector */}
-    <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
-      <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+    <div className="rounded-xl border border-accent/30 bg-accent/5 p-3">
+      <p className="text-[10px] font-bold text-accent uppercase tracking-wide mb-2 flex items-center gap-1">
         <PenLine size={11} /> Content Type
       </p>
       <div className="grid grid-cols-2 gap-1.5">
@@ -193,16 +193,16 @@ const ContentPortfolioPanel: React.FC<{
           <button key={t.id} onClick={() => onChange('contentType', t.id)}
             className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs transition-all border
               ${portfolio.contentType === t.id
-                ? 'bg-violet-500/30 border-violet-400/60 text-violet-200 font-bold'
-                : 'bg-gray-800/60 border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-500'}`}>
-            <span className={portfolio.contentType === t.id ? 'text-violet-300' : t.colour}>{t.icon}</span>
+                ? 'bg-accent/30 border-accent/60 text-accent font-bold'
+                : 'bg-card border-hair text-muted hover:text-body hover:border-accent/40'}`}>
+            <span className={portfolio.contentType === t.id ? 'text-accent' : t.colour}>{t.icon}</span>
             <span className="truncate">{t.label}</span>
           </button>
         ))}
       </div>
       {portfolio.contentType && (
-        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-violet-300">
-          <CheckCircle size={10} className="text-emerald-400" />
+        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-accent">
+          <CheckCircle size={10} className="text-accent" />
           {CONTENT_TYPES.find(t => t.id === portfolio.contentType)?.label} selected ✓
         </div>
       )}
@@ -213,24 +213,24 @@ const ContentPortfolioPanel: React.FC<{
       const isFilled = (portfolio[section.key] as string).trim().length > 20;
       return (
         <div key={section.key}
-          className={`rounded-xl border p-3 transition-all ${section.colour} ${isActive ? 'ring-2 ring-violet-400/60 shadow-lg shadow-violet-500/10' : ''}`}>
+          className={`rounded-xl border p-3 transition-all ${section.colour} ${isActive ? 'ring-2 ring-accent/60 shadow-lg shadow-violet-500/10' : ''}`}>
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className={isFilled ? 'text-emerald-400' : 'text-gray-500'}>{section.icon}</span>
-            <p className={`text-[10px] font-bold uppercase tracking-wide ${isFilled ? 'text-gray-300' : 'text-gray-500'}`}>
+            <span className={isFilled ? 'text-accent' : 'text-muted'}>{section.icon}</span>
+            <p className={`text-[10px] font-bold uppercase tracking-wide ${isFilled ? 'text-body' : 'text-muted'}`}>
               {section.label}
             </p>
-            {isActive && <span className="ml-auto text-[9px] text-violet-400 font-bold animate-pulse">● Active</span>}
-            {isFilled && !isActive && <span className="ml-auto text-[9px] text-emerald-400">✓</span>}
+            {isActive && <span className="ml-auto text-[9px] text-accent font-bold animate-pulse">● Active</span>}
+            {isFilled && !isActive && <span className="ml-auto text-[9px] text-accent">✓</span>}
           </div>
           {showTips && !isFilled && (
-            <p className="text-[9px] text-gray-600 italic mb-1.5">💡 {section.tip}</p>
+            <p className="text-[9px] text-muted italic mb-1.5">💡 {section.tip}</p>
           )}
           <textarea
             value={portfolio[section.key] as string}
             onChange={e => onChange(section.key, e.target.value)}
             rows={section.rows}
             placeholder={section.placeholder}
-            className="w-full bg-transparent text-xs text-gray-200 placeholder-gray-600 resize-none outline-none leading-relaxed" />
+            className="w-full bg-transparent text-xs text-body placeholder-muted resize-none outline-none leading-relaxed" />
         </div>
       );
     })}
@@ -318,18 +318,18 @@ const AIContentCreationCertificationPage: React.FC = () => {
   const stopSpeaking = () => cancelSpeech();
 
   const renderVoiceBar = (textToRead: string) => (
-    <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-800/40 border border-gray-700 rounded-xl mb-4">
-      <span className="text-xs font-semibold text-gray-400 flex items-center gap-1"><Volume2 size={13} className="text-violet-400" /> Voice:</span>
-      <div className="flex rounded-lg overflow-hidden border border-gray-600">
+    <div className="flex flex-wrap items-center gap-2 p-3 bg-card border border-hair rounded-xl mb-4">
+      <span className="text-xs font-semibold text-muted flex items-center gap-1"><Volume2 size={13} className="text-accent" /> Voice:</span>
+      <div className="flex rounded-lg overflow-hidden border border-hair">
         {(['english', 'pidgin'] as const).map(m => (
           <button key={m} onClick={() => { stopSpeaking(); setVoiceMode(m); }}
-            className={`flex items-center gap-1 px-3 py-1 text-xs font-bold transition-all border-r border-gray-600 last:border-0 ${voiceMode === m ? (m === 'english' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') : 'bg-gray-800 text-gray-500 hover:bg-gray-700 hover:text-white'}`}>
+            className={`flex items-center gap-1 px-3 py-1 text-xs font-bold transition-all border-r border-hair last:border-0 ${voiceMode === m ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-hair hover:text-ink'}`}>
             {m === 'english' ? '🇬🇧 English' : '🇳🇬 Pidgin'}
           </button>
         ))}
       </div>
       <button onClick={() => isSpeaking ? stopSpeaking() : speak(textToRead)}
-        className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${isSpeaking ? 'bg-red-500/10 text-red-400 border border-red-500/30' : 'bg-violet-500/10 text-violet-400 border border-violet-500/30 hover:bg-violet-500/20'}`}>
+        className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${isSpeaking ? 'bg-red-500/10 text-red-400 border border-red-500/30' : 'bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20'}`}>
         {isSpeaking ? <><VolumeX size={12} /> Stop</> : <><Volume2 size={12} /> Read aloud</>}
       </button>
     </div>
@@ -635,17 +635,17 @@ Respond ONLY in this JSON format:
 
   if (loadingData) {
     return (
-      <div className="flex flex-col h-screen bg-gray-900">
+      <div className="flex flex-col h-screen bg-paper">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 size={36} className="animate-spin text-violet-400" />
+          <Loader2 size={36} className="animate-spin text-accent" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-paper text-ink overflow-hidden">
       <Navbar />
 
       {/* Voice fallback */}
@@ -658,24 +658,24 @@ Respond ONLY in this JSON format:
       <main className="flex-1 flex flex-col overflow-hidden" style={{ marginTop: '64px' }}>
 
         {/* ── Toolbar ─────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-hair flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex items-center gap-2 flex-shrink-0">
-              <PenLine size={18} className="text-violet-400" />
-              <span className="text-sm font-bold text-white">AI Content Creation</span>
-              <span className="text-xs text-violet-400 font-semibold border border-violet-500/30 px-2 py-0.5 rounded-full">Certification</span>
+              <PenLine size={18} className="text-accent" />
+              <span className="text-sm font-bold text-ink">AI Content Creation</span>
+              <span className="text-xs text-accent font-semibold border border-accent/30 px-2 py-0.5 rounded-full">Certification</span>
             </div>
-            <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
+            <div className="w-px h-5 bg-hair flex-shrink-0" />
             {portfolio.contentType && (
-              <div className="hidden md:flex items-center gap-1 px-2 py-0.5 bg-violet-500/10 border border-violet-500/25 rounded-full flex-shrink-0">
-                <span className={`text-[10px] font-bold ${CONTENT_TYPES.find(t => t.id === portfolio.contentType)?.colour ?? 'text-violet-400'}`}>
+              <div className="hidden md:flex items-center gap-1 px-2 py-0.5 bg-accent/10 border border-accent/25 rounded-full flex-shrink-0">
+                <span className={`text-[10px] font-bold ${CONTENT_TYPES.find(t => t.id === portfolio.contentType)?.colour ?? 'text-accent'}`}>
                   {CONTENT_TYPES.find(t => t.id === portfolio.contentType)?.label}
                 </span>
               </div>
             )}
             {anyScored && overallAvg !== null && (
               <div className={`hidden sm:flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border
-                ${allProficient ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/10'}`}>
+                ${allProficient ? 'text-accent border-accent/30 bg-accent/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/10'}`}>
                 {allProficient ? '🎓 Certified' : `Avg ${overallAvg.toFixed(1)}/3`}
               </div>
             )}
@@ -683,11 +683,11 @@ Respond ONLY in this JSON format:
 
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Voice toggle */}
-            <div className="flex rounded-lg overflow-hidden border border-gray-600">
+            <div className="flex rounded-lg overflow-hidden border border-hair">
               {(['english', 'pidgin'] as const).map(m => (
                 <button key={m} onClick={() => setVoiceMode(m)}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-gray-600 last:border-0
-                    ${voiceMode === m ? (m === 'english' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') : 'bg-gray-800 text-gray-500 hover:bg-gray-700 hover:text-white'}`}>
+                  className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-hair last:border-0
+                    ${voiceMode === m ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-hair hover:text-ink'}`}>
                   {m === 'english' ? '🇬🇧' : '🇳🇬'} <span className="hidden lg:inline">{m === 'english' ? 'English' : 'Pidgin'}</span>
                 </button>
               ))}
@@ -697,7 +697,7 @@ Respond ONLY in this JSON format:
             {(['overview', 'build', 'results'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors capitalize
-                  ${view === v ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}>
+                  ${view === v ? 'bg-accent text-ink' : 'text-muted hover:text-ink hover:bg-hair'}`}>
                 {v === 'build' ? '📝 Build' : v === 'results' ? '📊 Results' : '🏠 Overview'}
               </button>
             ))}
@@ -720,14 +720,14 @@ Respond ONLY in this JSON format:
               )}
 
               {/* Hero */}
-              <div className="p-6 bg-gradient-to-br from-violet-900/40 to-pink-900/20 border border-violet-500/25 rounded-2xl">
+              <div className="p-6 bg-surface border border-accent/25 rounded-2xl">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-violet-600/30 rounded-xl flex-shrink-0">
-                    <PenLine size={28} className="text-violet-300" />
+                  <div className="p-3 bg-accent/30 rounded-xl flex-shrink-0">
+                    <PenLine size={28} className="text-accent" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-white mb-1">AI Content Creation Certification</h1>
-                    <p className="text-sm text-gray-300 leading-relaxed">
+                    <h1 className="text-xl font-bold text-ink mb-1">AI Content Creation Certification</h1>
+                    <p className="text-sm text-body leading-relaxed">
                       {lvl <= 1
                         ? 'Show that you can create real content that people want to read. You will choose a type of content, write it step by step, improve it with AI, and plan how to share it.'
                         : 'Demonstrate mastery of the full content creation workflow: audience research, purposeful writing, AI-assisted drafting, editorial refinement, and platform-aware distribution.'}
@@ -742,7 +742,7 @@ Respond ONLY in this JSON format:
                     </div>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {['Audience-Centred Writing', 'AI-Assisted Drafting', 'Editorial Refinement', 'Platform Adaptation'].map(s => (
-                        <span key={s} className="text-[10px] px-2 py-0.5 bg-violet-500/15 border border-violet-500/25 text-violet-300 rounded-full font-medium">{s}</span>
+                        <span key={s} className="text-[10px] px-2 py-0.5 bg-accent/15 border border-accent/25 text-accent rounded-full font-medium">{s}</span>
                       ))}
                     </div>
                   </div>
@@ -752,13 +752,13 @@ Respond ONLY in this JSON format:
               {/* Progress summary */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Content Type',     value: portfolio.contentType ? CONTENT_TYPES.find(t => t.id === portfolio.contentType)?.label ?? '—' : 'Not chosen', color: 'text-violet-400' },
-                  { label: 'Sections Filled',  value: `${filledCount} / ${PORTFOLIO_SECTIONS.length}`,  color: filledCount >= 4 ? 'text-emerald-400' : 'text-amber-400' },
-                  { label: 'Overall Score',    value: overallAvg !== null ? `${overallAvg.toFixed(1)} / 3.0` : '—', color: overallAvg !== null && overallAvg >= 2 ? 'text-emerald-400' : 'text-amber-400' },
-                  { label: 'Status',           value: allProficient ? '🎓 Certified' : anyScored ? 'In Progress' : 'Not Started', color: allProficient ? 'text-emerald-400' : 'text-gray-400' },
+                  { label: 'Content Type',     value: portfolio.contentType ? CONTENT_TYPES.find(t => t.id === portfolio.contentType)?.label ?? '—' : 'Not chosen', color: 'text-accent' },
+                  { label: 'Sections Filled',  value: `${filledCount} / ${PORTFOLIO_SECTIONS.length}`,  color: filledCount >= 4 ? 'text-accent' : 'text-amber-400' },
+                  { label: 'Overall Score',    value: overallAvg !== null ? `${overallAvg.toFixed(1)} / 3.0` : '—', color: overallAvg !== null && overallAvg >= 2 ? 'text-accent' : 'text-amber-400' },
+                  { label: 'Status',           value: allProficient ? '🎓 Certified' : anyScored ? 'In Progress' : 'Not Started', color: allProficient ? 'text-accent' : 'text-muted' },
                 ].map(({ label, value, color }) => (
-                  <div key={label} className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl text-center">
-                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">{label}</p>
+                  <div key={label} className="p-4 bg-card border border-hair rounded-xl text-center">
+                    <p className="text-[10px] text-muted uppercase font-bold mb-1">{label}</p>
                     <p className={`text-sm font-bold ${color} truncate`}>{value}</p>
                   </div>
                 ))}
@@ -767,7 +767,7 @@ Respond ONLY in this JSON format:
               {/* Assessments list */}
               {assessments.length > 0 && (
                 <div className="space-y-2">
-                  <h2 className="text-sm font-bold text-gray-300">Certification Criteria</h2>
+                  <h2 className="text-sm font-bold text-body">Certification Criteria</h2>
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const { text, color, bg, border } = scoreLabel(sc?.score ?? null);
@@ -778,32 +778,32 @@ Respond ONLY in this JSON format:
                           onClick={() => setExpandedCrit(isExpanded ? null : a.assessment_name)}>
                           <ScoreRing score={sc?.score ?? null} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">{a.assessment_name}</p>
-                            <p className="text-xs text-gray-400 truncate">{a.description}</p>
+                            <p className="text-sm font-semibold text-ink truncate">{a.assessment_name}</p>
+                            <p className="text-xs text-muted truncate">{a.description}</p>
                           </div>
                           <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${color} ${bg} ${border} flex-shrink-0`}>{text}</span>
-                          {isExpanded ? <ChevronUp size={14} className="text-gray-500 flex-shrink-0" /> : <ChevronDown size={14} className="text-gray-500 flex-shrink-0" />}
+                          {isExpanded ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isExpanded && (
-                          <div className="px-4 pb-4 space-y-2 border-t border-white/10 pt-3">
-                            <p className="text-xs text-gray-300 leading-relaxed">{a.certification_prompt}</p>
+                          <div className="px-4 pb-4 space-y-2 border-t border-hair pt-3">
+                            <p className="text-xs text-body leading-relaxed">{a.certification_prompt}</p>
                             <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                               {[
                                 { label: 'No Evidence (0)', text: a.certification_level0_metric, color: 'text-red-400' },
                                 { label: 'Emerging (1)',    text: a.certification_level1_metric, color: 'text-amber-400' },
                                 { label: 'Proficient (2)', text: a.certification_level2_metric, color: 'text-blue-400' },
-                                { label: 'Advanced (3)',   text: a.certification_level3_metric, color: 'text-emerald-400' },
+                                { label: 'Advanced (3)',   text: a.certification_level3_metric, color: 'text-green-400' },
                               ].map(({ label, text, color }) => (
-                                <div key={label} className="p-2 bg-gray-900/40 rounded-lg">
+                                <div key={label} className="p-2 bg-paper rounded-lg">
                                   <p className={`font-bold mb-0.5 ${color}`}>{label}</p>
-                                  <p className="text-gray-400 leading-relaxed">{text}</p>
+                                  <p className="text-muted leading-relaxed">{text}</p>
                                 </div>
                               ))}
                             </div>
                             {sc?.evidence && (
-                              <div className="p-2 bg-gray-900/50 rounded-lg border border-gray-700">
-                                <p className="text-[10px] font-bold text-gray-400 mb-1">Your Evidence:</p>
-                                <p className="text-xs text-gray-300 leading-relaxed">{sc.evidence}</p>
+                              <div className="p-2 bg-paper rounded-lg border border-hair">
+                                <p className="text-[10px] font-bold text-muted mb-1">Your Evidence:</p>
+                                <p className="text-xs text-body leading-relaxed">{sc.evidence}</p>
                               </div>
                             )}
                           </div>
@@ -817,12 +817,12 @@ Respond ONLY in this JSON format:
               {/* CTA */}
               <div className="flex flex-wrap gap-3">
                 <button onClick={() => setView('build')}
-                  className="flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl transition-colors">
+                  className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors">
                   <PenLine size={16} /> {filledCount > 0 ? 'Continue Building' : 'Start Building'} <ArrowRight size={16} />
                 </button>
                 {portfolioReady && (
                   <button onClick={handleEvaluate} disabled={isEvaluating}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50">
+                    className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors disabled:opacity-50">
                     {isEvaluating ? <Loader2 size={16} className="animate-spin" /> : <BarChart3 size={16} />}
                     {isEvaluating ? (evalProgress || 'Evaluating…') : 'Evaluate My Portfolio'}
                   </button>
@@ -837,23 +837,23 @@ Respond ONLY in this JSON format:
           <div className="flex-1 flex overflow-hidden">
 
             {/* Left: AI coaching panel */}
-            <div className="w-80 flex-shrink-0 flex flex-col bg-[#1a1d23] border-r border-gray-700 overflow-hidden">
-              <div className="flex-shrink-0 px-4 py-3 border-b border-gray-700 bg-violet-500/10">
-                <p className="text-xs font-bold text-violet-300 flex items-center gap-2">
+            <div className="w-80 flex-shrink-0 flex flex-col bg-surface border-r border-hair overflow-hidden">
+              <div className="flex-shrink-0 px-4 py-3 border-b border-hair bg-accent/10">
+                <p className="text-xs font-bold text-accent flex items-center gap-2">
                   <Wand2 size={14} /> AI Content Coach
                 </p>
-                <p className="text-[10px] text-gray-400 mt-0.5">
+                <p className="text-[10px] text-muted mt-0.5">
                   {lvl <= 1 ? 'Tell me what you need help with and I will help you write it.' : 'Select a section, describe your needs, and get AI-powered writing guidance.'}
                 </p>
               </div>
 
               {/* Section selector */}
-              <div className="flex-shrink-0 px-3 py-2 border-b border-gray-700">
-                <p className="text-[9px] font-bold text-gray-500 uppercase mb-1.5">Active section</p>
+              <div className="flex-shrink-0 px-3 py-2 border-b border-hair">
+                <p className="text-[9px] font-bold text-muted uppercase mb-1.5">Active section</p>
                 <select
                   value={activeKey}
                   onChange={e => setActiveKey(e.target.value as keyof ContentPortfolio)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-2 py-1.5 text-xs text-gray-200 outline-none focus:border-violet-500">
+                  className="w-full bg-card border border-hair rounded-lg px-2 py-1.5 text-xs text-body outline-none focus:border-accent">
                   {PORTFOLIO_SECTIONS.map(s => (
                     <option key={s.key} value={s.key}>{s.label}</option>
                   ))}
@@ -863,7 +863,7 @@ Respond ONLY in this JSON format:
               {/* Prompt input */}
               <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase">Your prompt</p>
+                  <p className="text-[10px] font-bold text-muted uppercase">Your prompt</p>
                   <textarea
                     value={prompt}
                     onChange={e => setPrompt(e.target.value)}
@@ -872,10 +872,10 @@ Respond ONLY in this JSON format:
                     placeholder={lvl <= 1
                       ? 'Tell me what you want to write or what help you need…'
                       : 'Describe what you need for this section, or paste content to improve…'}
-                    className="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 placeholder-gray-600 resize-none outline-none focus:border-violet-500 leading-relaxed"
+                    className="w-full bg-card border border-hair rounded-lg px-3 py-2 text-xs text-body placeholder-muted resize-none outline-none focus:border-accent leading-relaxed"
                   />
                   <button onClick={handleAIAssist} disabled={!prompt.trim() || isGenerating}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-colors">
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-accent hover:bg-accent disabled:opacity-40 text-ink text-xs font-bold rounded-lg transition-colors">
                     {isGenerating
                       ? <><Loader2 size={13} className="animate-spin" /> {lvl <= 1 ? 'Writing…' : 'Generating…'}</>
                       : <><Wand2 size={13} /> {lvl <= 1 ? 'Help me write this' : 'Get AI assistance'}</>}
@@ -885,12 +885,12 @@ Respond ONLY in this JSON format:
 
                 {/* AI suggestion */}
                 {aiSuggestion && (
-                  <div className="p-3 bg-violet-500/10 border border-violet-500/30 rounded-xl space-y-2">
-                    <p className="text-[9px] font-bold text-violet-400 uppercase">AI Suggestion</p>
-                    <p className="text-xs text-gray-200 leading-relaxed whitespace-pre-wrap">{aiSuggestion}</p>
+                  <div className="p-3 bg-accent/10 border border-accent/30 rounded-xl space-y-2">
+                    <p className="text-[9px] font-bold text-accent uppercase">AI Suggestion</p>
+                    <p className="text-xs text-body leading-relaxed whitespace-pre-wrap">{aiSuggestion}</p>
                     <button
                       onClick={() => { setPortfolio(prev => ({ ...prev, [activeKey]: aiSuggestion })); setActiveSection(activeKey); setAiSuggestion(null); }}
-                      className="text-[10px] text-violet-300 hover:text-violet-200 font-semibold flex items-center gap-1">
+                      className="text-[10px] text-accent hover:text-accent font-semibold flex items-center gap-1">
                       <CheckCircle size={11} /> Apply to section
                     </button>
                   </div>
@@ -899,12 +899,12 @@ Respond ONLY in this JSON format:
                 {/* Section tips */}
                 {showTips && (
                   <div className="space-y-1.5">
-                    <p className="text-[9px] font-bold text-gray-600 uppercase">Section guidance</p>
+                    <p className="text-[9px] font-bold text-muted uppercase">Section guidance</p>
                     {(() => {
                       const s = PORTFOLIO_SECTIONS.find(s => s.key === activeKey);
                       return s ? (
-                        <div className="p-2.5 bg-gray-800/40 rounded-lg border border-gray-700">
-                          <p className="text-[10px] text-gray-400 leading-relaxed italic">💡 {s.tip}</p>
+                        <div className="p-2.5 bg-card rounded-lg border border-hair">
+                          <p className="text-[10px] text-muted leading-relaxed italic">💡 {s.tip}</p>
                         </div>
                       ) : null;
                     })()}
@@ -913,7 +913,7 @@ Respond ONLY in this JSON format:
 
                 {/* Quick tips */}
                 <div className="space-y-1.5">
-                  <p className="text-[9px] font-bold text-gray-600 uppercase">Content creation tips</p>
+                  <p className="text-[9px] font-bold text-muted uppercase">Content creation tips</p>
                   {[
                     'Know your audience before writing a single word.',
                     'One clear purpose beats ten vague ones.',
@@ -921,7 +921,7 @@ Respond ONLY in this JSON format:
                     'Your hook is the most important sentence you write.',
                     'Read it aloud — if you stumble, edit it.',
                   ].map((tip, i) => (
-                    <div key={i} className="text-[10px] text-gray-500 leading-relaxed pl-2 border-l border-gray-700">
+                    <div key={i} className="text-[10px] text-muted leading-relaxed pl-2 border-l border-hair">
                       {tip}
                     </div>
                   ))}
@@ -929,21 +929,21 @@ Respond ONLY in this JSON format:
               </div>
 
               {/* Bottom actions */}
-              <div className="flex-shrink-0 px-3 py-3 border-t border-gray-700 space-y-2">
+              <div className="flex-shrink-0 px-3 py-3 border-t border-hair space-y-2">
                 <button onClick={handleSavePortfolio}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 rounded-lg transition-colors">
+                  className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-accent bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-lg transition-colors">
                   💾 Save Portfolio
                 </button>
                 {portfolioReady && (
                   <button onClick={handleEvaluate} disabled={isEvaluating}
-                    className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white rounded-lg transition-colors disabled:opacity-50">
+                    className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg transition-colors disabled:opacity-50">
                     {isEvaluating
                       ? <><Loader2 size={12} className="animate-spin" /> {evalProgress || 'Evaluating…'}</>
                       : <><BarChart3 size={12} /> Evaluate Portfolio</>}
                   </button>
                 )}
                 {!portfolioReady && (
-                  <p className="text-[10px] text-center text-gray-600">
+                  <p className="text-[10px] text-center text-muted">
                     {!portfolio.contentType ? 'Select a content type to start' : `Fill ${Math.max(0, 4 - filledCount)} more section${4 - filledCount !== 1 ? 's' : ''} to evaluate`}
                   </p>
                 )}
@@ -974,20 +974,20 @@ Respond ONLY in this JSON format:
               {/* Score summary */}
               {anyScored && overallAvg !== null && (
                 <div className={`p-5 rounded-2xl border flex items-center gap-4
-                  ${allProficient ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
-                  <Award size={40} className={allProficient ? 'text-emerald-400' : 'text-amber-400'} />
+                  ${allProficient ? 'bg-accent/10 border-accent/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
+                  <Award size={40} className={allProficient ? 'text-accent' : 'text-amber-400'} />
                   <div className="flex-1">
-                    <p className="text-xs text-gray-400 uppercase font-bold mb-0.5">Overall Score</p>
-                    <p className={`text-3xl font-black ${allProficient ? 'text-emerald-400' : 'text-amber-400'}`}>
-                      {overallAvg.toFixed(1)}<span className="text-base font-normal text-gray-500"> / 3.0</span>
+                    <p className="text-xs text-muted uppercase font-bold mb-0.5">Overall Score</p>
+                    <p className={`text-3xl font-black ${allProficient ? 'text-accent' : 'text-amber-400'}`}>
+                      {overallAvg.toFixed(1)}<span className="text-base font-normal text-muted"> / 3.0</span>
                     </p>
-                    <p className="text-sm text-gray-300 mt-0.5">
+                    <p className="text-sm text-body mt-0.5">
                       {allProficient ? '🎓 Certification level achieved on all criteria!' : 'Keep building your portfolio — Proficient (2/3) required on all criteria.'}
                     </p>
                   </div>
                   {allProficient && (
                     <button onClick={() => setView('certificate')}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors flex-shrink-0">
+                      className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-white text-sm font-bold rounded-xl transition-colors flex-shrink-0">
                       <Trophy size={16} /> Get Certificate
                     </button>
                   )}
@@ -1005,16 +1005,16 @@ Respond ONLY in this JSON format:
                         <div className="flex items-center gap-3 mb-2">
                           <ScoreRing score={sc.score} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white">{sc.assessment_name}</p>
+                            <p className="text-sm font-bold text-ink">{sc.assessment_name}</p>
                             <p className={`text-xs font-semibold ${color}`}>{text}</p>
                           </div>
                         </div>
                         {sc.evidence && (
-                          <p className="text-xs text-gray-300 leading-relaxed pl-14">{sc.evidence}</p>
+                          <p className="text-xs text-body leading-relaxed pl-14">{sc.evidence}</p>
                         )}
                         {assessment && sc.score !== null && sc.score < 2 && (
                           <div className="mt-2 pl-14">
-                            <p className="text-[10px] text-gray-500">To reach Proficient:</p>
+                            <p className="text-[10px] text-muted">To reach Proficient:</p>
                             <p className="text-[10px] text-blue-300 leading-relaxed">{assessment.certification_level2_metric}</p>
                           </div>
                         )}
@@ -1032,16 +1032,16 @@ Respond ONLY in this JSON format:
 
               <div className="flex flex-wrap gap-3">
                 <button onClick={() => setView('build')}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold rounded-xl transition-colors">
+                  className="flex items-center gap-2 px-5 py-2.5 bg-hair hover:bg-hair text-ink text-sm font-bold rounded-xl transition-colors">
                   <PenLine size={15} /> Continue Building
                 </button>
                 <button onClick={handleEvaluate} disabled={isEvaluating}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors">
+                  className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent disabled:opacity-50 text-ink text-sm font-bold rounded-xl transition-colors">
                   {isEvaluating ? <><Loader2 size={15} className="animate-spin" /> {evalProgress || 'Evaluating…'}</> : <><RefreshCw size={15} /> Re-evaluate</>}
                 </button>
                 {allProficient && (
                   <button onClick={() => setView('certificate')}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white text-sm font-bold rounded-xl transition-colors">
+                    className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent/90 text-white text-sm font-bold rounded-xl transition-colors">
                     <Trophy size={15} /> Get Certificate
                   </button>
                 )}
@@ -1068,11 +1068,11 @@ Respond ONLY in this JSON format:
 
               {allProficient && (
                 <>
-                  <div className="p-6 bg-gradient-to-br from-violet-900/40 to-pink-900/20 border border-violet-500/25 rounded-2xl text-center space-y-4">
-                    <Trophy size={48} className="text-violet-400 mx-auto" />
+                  <div className="p-6 bg-surface border border-accent/25 rounded-2xl text-center space-y-4">
+                    <Trophy size={48} className="text-accent mx-auto" />
                     <div>
-                      <h2 className="text-xl font-bold text-white">🎓 Certification Achieved!</h2>
-                      <p className="text-sm text-gray-300 mt-1">
+                      <h2 className="text-xl font-bold text-ink">🎓 Certification Achieved!</h2>
+                      <p className="text-sm text-body mt-1">
                         {lvl <= 1
                           ? 'Well done! You showed you can create real content that connects with an audience. Enter your name to download your certificate.'
                           : 'You have demonstrated Proficient or Advanced performance across all AI Content Creation criteria. Enter your name to generate your certificate.'}
@@ -1082,8 +1082,8 @@ Respond ONLY in this JSON format:
                       {assessmentScores.map(sc => {
                         const { text, color } = scoreLabel(sc.score);
                         return (
-                          <div key={sc.assessment_name} className="flex items-center justify-between px-3 py-1.5 bg-gray-800/60 rounded-lg">
-                            <span className="text-gray-300 truncate">{sc.assessment_name}</span>
+                          <div key={sc.assessment_name} className="flex items-center justify-between px-3 py-1.5 bg-card rounded-lg">
+                            <span className="text-body truncate">{sc.assessment_name}</span>
                             <span className={`font-bold flex-shrink-0 ml-2 ${color}`}>{text}</span>
                           </div>
                         );
@@ -1093,7 +1093,7 @@ Respond ONLY in this JSON format:
 
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-1.5">
+                      <label className="block text-sm font-semibold text-body mb-1.5">
                         {lvl <= 1 ? 'Your full name (for the certificate):' : 'Full name as it should appear on the certificate:'}
                       </label>
                       <input
@@ -1101,16 +1101,16 @@ Respond ONLY in this JSON format:
                         value={certName}
                         onChange={e => setCertName(e.target.value)}
                         placeholder="e.g. Amara Johnson"
-                        className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-violet-500 text-base"
+                        className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-none focus:border-accent text-base"
                       />
                     </div>
                     <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
-                      className="w-full flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all">
+                      className="w-full flex items-center justify-center gap-3 py-3.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-ink font-bold rounded-xl transition-all">
                       {isGenCert
                         ? <><Loader2 size={18} className="animate-spin" /> Generating PDF…</>
                         : <><Download size={18} /> Download Certificate</>}
                     </button>
-                    <p className="text-center text-xs text-gray-500">
+                    <p className="text-center text-xs text-muted">
                       {`Violet-themed PDF · ${branding.institutionName}`}
                     </p>
                   </div>
@@ -1118,7 +1118,7 @@ Respond ONLY in this JSON format:
               )}
 
               <button onClick={() => setView('overview')}
-                className="w-full py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+                className="w-full py-2 text-xs text-muted hover:text-body transition-colors">
                 ← Back to Overview
               </button>
             </div>
