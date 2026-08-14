@@ -6,26 +6,22 @@
 //     → Groq (primary) → Gemini → Cloudflare → OpenRouter → Mistral → DeepSeek → Anthropic Haiku (final)
 //
 //   page = 'VibeCodingPage' | 'WebDevelopmentPage' |
-//          'FullStackDevelopmentPage' | 'AIWorkflowDevPage'
-//     → taskType === 'coding'  (code generation, debugging, refactoring)
-//         → Anthropic claude-haiku-4-5-20251001 (cost-efficient for code tasks)
+//          'FullStackDevelopmentPage' | 'AIWorkflowDevPage' |
+//          'CreateGamePage' | 'WebsiteBuilderPage'
+//     → taskType === 'coding' (or omitted, the default for these pages
+//       except WebDevelopmentPage)
+//         → Anthropic claude-sonnet-5 (more capable generation for coding —
+//           all six hybrid pages route coding tasks here; Haiku was hitting
+//           quality/error ceilings as projects grew more elaborate)
 //     → taskType !== 'coding'  (evaluation, planning, help popup, critique, task instructions, Q&A)
 //         → Groq (primary) → Gemini → Cloudflare → OpenRouter → Mistral → DeepSeek → Anthropic Haiku (final)
 //         NOTE: This now applies to WebDevelopmentPage too — evaluation, help, and
 //         task-instruction calls from WebDevelopmentPage all go through the free-tier
 //         chain with Haiku as the final fallback, not Haiku as the primary.
 //
-//   page = 'CreateGamePage' | 'WebsiteBuilderPage'
-//     → taskType === 'coding' (or omitted, the default for these pages)
-//         → Anthropic claude-sonnet-5 (more capable generation for complex
-//           games/sites — these two students report hitting quality/error
-//           ceilings on Haiku as their projects grow more elaborate)
-//     → taskType === 'non-coding'
-//         → Groq (primary) → ... → Anthropic Haiku (final)
-//
 //   page = 'AIPlaygroundPage'
-//     → Anthropic claude-haiku-4-5-20251001 (default)
-//        OR claude-sonnet-4-6 if playgroundModel === 'claude-sonnet-4-6'
+//     → Anthropic claude-sonnet-5 if a Sonnet playgroundModel is selected
+//     → Groq (primary) → ... → Anthropic Haiku (final) otherwise
 //
 //   page = 'SystemsThinkPage'
 //     → Anthropic claude-sonnet-5 always (no free-tier fallback)
@@ -72,21 +68,14 @@ const FREE_TIER_PAGES = new Set([
   'PidginTranslationModule',
 ]);
 
-// Pages that use Sonnet for coding tasks, free-tier for non-coding tasks
+// Pages that use claude-sonnet-5 for coding tasks, free-tier for non-coding
+// tasks. All six route coding calls to Sonnet 5 — Haiku was hitting
+// quality/error ceilings as student projects grew more elaborate.
 const HYBRID_CODING_PAGES = new Set([
   'VibeCodingPage',
   'WebDevelopmentPage',
   'FullStackDevelopmentPage',
   'AIWorkflowDevPage',
-  'CreateGamePage',
-  'WebsiteBuilderPage',
-]);
-
-// Of the hybrid coding pages, these two route their 'coding' calls to
-// claude-sonnet-5 instead of Haiku — students building games/sites here
-// were hitting errors as their projects grew more complex, and Sonnet 5
-// handles that complexity more reliably than Haiku.
-const SONNET5_CODING_PAGES = new Set([
   'CreateGamePage',
   'WebsiteBuilderPage',
 ]);
@@ -132,12 +121,12 @@ const DEFAULT_MODELS = {
   anthropic_haiku:   'claude-haiku-4-5-20251001',
   anthropic_sonnet:  'claude-sonnet-4-6',
   anthropic_sonnet5: 'claude-sonnet-5',
-  groq:             'llama-3.3-70b-versatile',
-  cerebras:         'gpt-oss-120b',             // llama3.1-8b was deprecated/removed (confirmed via /v1/models, Jul 2026); chose 120B for quality over gemma-4-31b's speed/quota headroom
+  groq:             'openai/gpt-oss-120b',      // was llama-3.3-70b-versatile (deprecated Jun 17 2026)
+  cerebras:         'gpt-oss-120b',             // same weights — dual-homed, no output drift on failover
   deepseek:         'deepseek-chat',            // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
   gemini:           'gemini-2.0-flash',
-  cloudflare:       '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
-  openrouter:       'meta-llama/llama-3.3-70b-instruct:free',
+  cloudflare:       '@cf/meta/llama-3.3-70b-instruct-fp8-fast', // still live, now the odd one out
+  openrouter:       'nvidia/nemotron-3-ultra-550b-a55b:free',   // was llama-3.3-70b:free (delisted)
   mistral:          'mistral-small-latest',
 };
 
@@ -384,7 +373,7 @@ function resolveRoute(page, playgroundModel, taskType) {
   }
 
   // Hybrid coding pages:
-  //   taskType === 'coding'     → Haiku (code generation needs reliability)
+  //   taskType === 'coding'     → Sonnet 5 (code generation needs reliability)
   //   taskType === 'non-coding' → free-tier chain, Haiku as final fallback
   //   taskType omitted          → 'non-coding' for WebDevelopmentPage
   //                               (evaluation, help popup, task instructions omit taskType)
@@ -393,10 +382,7 @@ function resolveRoute(page, playgroundModel, taskType) {
     const isCoding = taskType === 'coding'
       || (taskType == null && page !== 'WebDevelopmentPage');
     if (isCoding) {
-      if (SONNET5_CODING_PAGES.has(page)) {
-        return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
-      }
-      return { provider: 'anthropic', model: MODELS.anthropic_haiku };
+      return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
     }
     // non-coding (or WebDevelopmentPage with no taskType) → free-tier chain
     return { provider: 'groq', model: MODELS.groq };
@@ -406,9 +392,9 @@ function resolveRoute(page, playgroundModel, taskType) {
     return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
   }
 
-  // AIPlaygroundPage → Sonnet if profile set, otherwise free-tier chain
+  // AIPlaygroundPage → Sonnet 5 if a Sonnet playgroundModel is selected, otherwise free-tier chain
   if (page === 'AIPlaygroundPage') {
-    if (playgroundModel === MODELS.anthropic_sonnet || playgroundModel === 'claude-sonnet-4-6' || playgroundModel === 'claude-sonnet-5') return { provider: 'anthropic', model: MODELS.anthropic_sonnet };
+    if (playgroundModel === MODELS.anthropic_sonnet5 || playgroundModel === MODELS.anthropic_sonnet || playgroundModel === 'claude-sonnet-4-6' || playgroundModel === 'claude-sonnet-5') return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
     return { provider: 'groq', model: MODELS.groq };
   }
 
