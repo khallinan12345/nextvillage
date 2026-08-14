@@ -4,8 +4,8 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
 import AppLayout from '../components/layout/AppLayout';
-import Button from '../components/ui/Button';
-import SpellCheckTextarea from '../components/ui/SpellCheckTextarea';
+import QuietButton from '../components/ui/QuietButton';
+import ChatSurface from '../components/chat/ChatSurface';
 import {
   Brain,
   Wand2,
@@ -20,9 +20,6 @@ import {
   RefreshCw,
   ArrowLeft,
   Mic,
-  Send,
-  Bot,
-  User,
   Star,
   Save,
   Plus,
@@ -200,24 +197,24 @@ const MarkdownText: React.FC<{
         return (
           <div key={pIndex} className="mt-3 space-y-2">
             {suggestion && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
-                <span className="font-bold text-amber-700">💡 Suggestion:</span>{' '}
-                <span className="text-amber-900">{suggestion}</span>
+              <div className="rounded-xl border border-hair bg-paper px-3 py-2 text-sm text-body">
+                <span className="font-semibold text-ink">💡 Suggestion:</span>{' '}
+                {suggestion}
               </div>
             )}
             {nextQuestion && (
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm">
-                <span className="font-bold text-indigo-700">❓ Next question:</span>{' '}
-                <span className="text-indigo-900 font-medium">{nextQuestion}</span>
+              <div className="rounded-xl border border-hair border-l-2 border-l-accent bg-paper px-3 py-2 text-sm text-body">
+                <span className="font-semibold text-ink">❓ Next question:</span>{' '}
+                {nextQuestion}
               </div>
             )}
             {onViewEvaluation && (
               <button
                 type="button"
                 onClick={() => onViewEvaluation(paragraph)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-800 hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
               >
-                📊 View Evaluation
+                📊 View evaluation
               </button>
             )}
           </div>
@@ -236,11 +233,11 @@ const MarkdownText: React.FC<{
       const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
 
       return (
-        <div key={pIndex} className="mt-3 rounded-xl overflow-hidden border border-indigo-200 bg-indigo-50 text-xs">
+        <div key={pIndex} className="mt-3 rounded-xl overflow-hidden border border-hair bg-paper text-xs">
           {/* Header row */}
-          <div className="px-3 py-2 bg-indigo-100 border-b border-indigo-200 flex items-center justify-between flex-wrap gap-1">
-            <span className="font-bold text-indigo-700 uppercase tracking-wide">📊 {headerTitle}</span>
-            <span className="text-indigo-500">
+          <div className="px-3 py-2 bg-surface border-b border-hair flex items-center justify-between flex-wrap gap-1">
+            <span className="font-semibold text-ink uppercase tracking-wide">📊 {headerTitle}</span>
+            <span className="text-muted">
               0 No Evidence · 1 Emerging · <strong>2 Proficient ✓</strong> · <strong>3 Advanced ✓</strong>
             </span>
           </div>
@@ -251,30 +248,30 @@ const MarkdownText: React.FC<{
                   const score = parseInt(sm[3]);
                   const label = sm[2]?.trim() || `Criterion ${sm[1]}`;
                   return (
-                    <div key={li} className="border-l-2 border-indigo-300 pl-2 space-y-0.5">
+                    <div key={li} className="border-l-2 border-hair pl-2 space-y-0.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-semibold text-gray-800 capitalize">{label}</span>
+                        <span className="font-semibold text-ink capitalize">{label}</span>
                         <span className={`px-1.5 py-0.5 rounded-full border font-bold ${rubricScoreColor(score)}`}>
                           {score}/3 · {rubricScoreLabel(score)}
                         </span>
                       </div>
-                      <p className="text-gray-600"><span className="font-medium text-gray-700">Evidence:</span> {sm[4].replace(/\s+/g, ' ').trim()}</p>
-                      <p className="text-amber-700"><span className="font-medium">Improve:</span> {sm[5].replace(/\s+/g, ' ').trim()}</p>
+                      <p className="text-body"><span className="font-medium text-ink">Evidence:</span> {sm[4].replace(/\s+/g, ' ').trim()}</p>
+                      <p className="text-body"><span className="font-medium text-ink">Improve:</span> {sm[5].replace(/\s+/g, ' ').trim()}</p>
                     </div>
                   );
                 })}
                 {weakestMatch && (
-                  <div className="pt-2 mt-1 border-t border-indigo-100 text-gray-700">
-                    <span className="font-bold">Weakest area:</span> {weakestMatch[1].replace(/\s+/g, ' ').trim()}
+                  <div className="pt-2 mt-1 border-t border-hair text-body">
+                    <span className="font-bold text-ink">Weakest area:</span> {weakestMatch[1].replace(/\s+/g, ' ').trim()}
                   </div>
                 )}
                 {suggestion && (
-                  <div className="pt-2 mt-1 border-t border-indigo-100 text-gray-700">
-                    <span className="font-bold">Biggest improvement lever:</span> {suggestion}
+                  <div className="pt-2 mt-1 border-t border-hair text-body">
+                    <span className="font-bold text-ink">Biggest improvement lever:</span> {suggestion}
                   </div>
                 )}
                 {nextQuestion && (
-                  <div className="pt-2 mt-1 border-t border-indigo-100 text-indigo-800 font-semibold">
+                  <div className="pt-2 mt-1 border-t border-hair text-ink font-semibold">
                     <span className="font-bold">Next question:</span> {nextQuestion}
                   </div>
                 )}
@@ -283,7 +280,7 @@ const MarkdownText: React.FC<{
               // Fallback — the model's formatting didn't match the expected
               // pattern at all; still show the full raw text rather than
               // nothing, so no evaluation content is ever lost.
-              <p className="text-gray-600 whitespace-pre-wrap">{cleanParagraph}</p>
+              <p className="text-body whitespace-pre-wrap">{cleanParagraph}</p>
             )}
           </div>
         </div>
@@ -293,9 +290,9 @@ const MarkdownText: React.FC<{
     // ── Heading ───────────────────────────────────────────────────────────
     const hm = lines[0].match(/^(#{1,3})\s+(.+)$/);
     if (lines.length === 1 && hm) {
-      const cls = hm[1].length === 1 ? 'text-base font-bold text-gray-900 mt-3'
-                : hm[1].length === 2 ? 'text-sm font-bold text-gray-800 mt-2'
-                : 'text-sm font-semibold text-gray-700 mt-2';
+      const cls = hm[1].length === 1 ? 'text-base font-bold text-ink mt-3'
+                : hm[1].length === 2 ? 'text-sm font-bold text-ink mt-2'
+                : 'text-sm font-semibold text-body mt-2';
       return <div key={pIndex} className={cls}>{parseInline(hm[2], `h-${pIndex}`)}</div>;
     }
 
@@ -305,7 +302,7 @@ const MarkdownText: React.FC<{
         <ul key={pIndex} className="mt-1.5 space-y-1">
           {lines.map((line, li) => (
             <li key={li} className="flex items-start gap-1.5 text-sm">
-              <span className="text-indigo-400 mt-0.5 flex-shrink-0 font-bold">•</span>
+              <span className="text-accent mt-0.5 flex-shrink-0 font-bold">•</span>
               <span>{parseInline(line.replace(/^[-*]\s+/, ''), `${pIndex}-${li}`)}</span>
             </li>
           ))}
@@ -321,7 +318,7 @@ const MarkdownText: React.FC<{
             const nm = line.match(/^(\d+)[.)]\s+(.+)$/);
             return (
               <li key={li} className="flex items-start gap-1.5 text-sm">
-                <span className="text-indigo-600 font-semibold flex-shrink-0 min-w-[1.1rem]">{nm?.[1]}.</span>
+                <span className="text-accent font-semibold flex-shrink-0 min-w-[1.1rem]">{nm?.[1]}.</span>
                 <span>{parseInline(nm?.[2] || line, `${pIndex}-${li}`)}</span>
               </li>
             );
@@ -334,14 +331,14 @@ const MarkdownText: React.FC<{
     return (
       <div key={pIndex} className={pIndex > 0 ? 'mt-2' : ''}>
         {lines.map((line, li) => (
-          <div key={li} className="text-sm">{parseInline(line, `${pIndex}-${li}`)}</div>
+          <div key={li} className="text-[15px] leading-[1.7]">{parseInline(line, `${pIndex}-${li}`)}</div>
         ))}
       </div>
     );
   };
 
   return (
-    <div className="leading-relaxed">
+    <div className="leading-[1.7]">
       {text.split('\n\n').map((p, i) => renderParagraph(p, i)).filter(Boolean)}
     </div>
   );
@@ -383,106 +380,6 @@ const ConfettiAnimation: React.FC = () => {
           />
         ))}
       </div>
-    </>
-  );
-};
-
-
-// Background with the same color filtering + transparency style as HomePage,
-// plus cursor-driven ripple distortion "spotlight".
-const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
-  const [mousePixels, setMousePixels] = useState({ x: 0, y: 0 });
-  const [isMouseMoving, setIsMouseMoving] = useState(false);
-  const mouseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // AppLayout offsets (top nav + left sidebar)
-      const sidebarOffset = 256; // left-64
-      const topOffset = 64; // top-16
-
-      const x = Math.max(0, e.clientX - sidebarOffset);
-      const y = Math.max(0, e.clientY - topOffset);
-
-      setMousePixels({ x, y });
-
-      setIsMouseMoving(true);
-      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      mouseTimeoutRef.current = setTimeout(() => setIsMouseMoving(false), 120);
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('mousemove', handleMouseMove);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      };
-    }
-  }, []);
-
-  return (
-    <>
-      {/* SVG filter definition (kept tiny + hidden) */}
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="ai-learning-ripple-distortion" x="0%" y="0%" width="100%" height="100%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.01"
-              numOctaves="3"
-              seed="2"
-              result="noise"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="noise"
-              scale="60"
-              xChannelSelector="R"
-              yChannelSelector="G"
-              result="displaced"
-            />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Normal background */}
-      <div
-        className="fixed top-14 left-0 right-0 bottom-0"
-        style={{
-          backgroundImage: `url('${imageUrl}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          zIndex: 0,
-        }}
-      >
-        {/* Soft, hopeful overlay — matches AIProficiencyPage's aesthetic */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
-        <div className="absolute inset-0 bg-white/10" />
-      </div>
-
-      {/* Distorted layer - only visible during mouse movement */}
-      {isMouseMoving && (
-        <div
-          className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none transition-opacity duration-100"
-          style={{
-            backgroundImage: `url('${imageUrl}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            zIndex: 1,
-            filter: 'url(#ai-learning-ripple-distortion)',
-            WebkitMaskImage: `radial-gradient(circle 150px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`,
-            maskImage: `radial-gradient(circle 150px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`,
-            maskSize: '100% 100%',
-            WebkitMaskSize: '100% 100%',
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
-          <div className="absolute inset-0 bg-white/10" />
-        </div>
-      )}
     </>
   );
 };
@@ -3332,115 +3229,116 @@ Respond ONLY with valid JSON:
     return (
       <AppLayout>
         <div className="min-h-screen">
-          <DistortedBackground imageUrl="/AI_learning.png" />
-          <div className="relative z-10 px-6 py-8">
+          <div className="px-6 py-8">
             {/* Constrain to 2/3 of available width */}
             <div className="max-w-[50%]">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="inline-flex flex-col items-start gap-1 rounded-lg bg-pink-100/80 p-4 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <PlusCircle className="h-10 w-10 text-purple-600" />
-                  <h1 className="text-3xl font-extrabold text-gray-900">{uiText.createPageTitle}</h1>
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="flex flex-col items-start gap-1">
+                <div className="flex items-center gap-2.5">
+                  <PlusCircle className="h-8 w-8 text-accent" />
+                  <h1 className="text-3xl font-bold text-ink">{uiText.createPageTitle}</h1>
                 </div>
-                <p className="text-gray-700 text-base">{uiText.createPageSub}</p>
+                <p className="text-body text-base">{uiText.createPageSub}</p>
               </div>
-              <button onClick={() => setShowCreateActivity(false)}
-                className="bg-pink-400 hover:bg-purple-900 text-purple-900 hover:text-pink-200 rounded-full px-5 py-2 text-base font-medium flex items-center gap-2 transition-colors">
-                <ArrowLeft size={16} /> {uiText.backBtn}
-              </button>
+              <QuietButton onClick={() => setShowCreateActivity(false)} icon={<ArrowLeft size={16} />}>
+                {uiText.backBtn}
+              </QuietButton>
             </div>
 
             {/* PUE / context framing banner */}
-            <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl px-6 py-4 mb-6 flex items-start gap-4">
+            <div className="bg-surface border border-hair border-l-4 border-l-accent rounded-2xl px-6 py-4 mb-6 flex items-start gap-4">
               <span className="text-3xl flex-shrink-0">💡</span>
               <div>
-                <p className="font-bold text-amber-900 text-base mb-1">{uiText.createBannerTitle}</p>
-                <p className="text-amber-800 text-base leading-relaxed">{uiText.createBannerBody}</p>
-                <p className="text-amber-700 text-sm mt-2 font-medium">{uiText.createBannerExamples}</p>
+                <p className="font-semibold text-ink text-base mb-1">{uiText.createBannerTitle}</p>
+                <p className="text-body text-base leading-relaxed">{uiText.createBannerBody}</p>
+                <p className="text-muted text-sm mt-2">{uiText.createBannerExamples}</p>
               </div>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 space-y-6">
+            <div className="bg-card border border-hair rounded-2xl shadow-sm p-8 space-y-6">
 
               {/* Title */}
               <div>
-                <label className="block text-base font-semibold text-gray-800 mb-1">{uiText.titleLabel} <span className="text-red-500">*</span></label>
+                <label className="block text-base font-semibold text-ink mb-1">{uiText.titleLabel} <span className="text-red-500">*</span></label>
                 <input type="text" value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
                   placeholder={uiText.titlePlaceholder}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base focus:ring-2 focus:ring-purple-400 focus:border-purple-400" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-base font-semibold text-gray-800 mb-1">{uiText.categoryLabel} <span className="text-red-500">*</span></label>
+                <label className="block text-base font-semibold text-ink mb-1">{uiText.categoryLabel} <span className="text-red-500">*</span></label>
                 <select value={createForm.category} onChange={e => setCreateForm(f => ({ ...f, category: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-white">
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   {SESSION_CATEGORIES.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.id}) {cat.label}</option>
                   ))}
                 </select>
-                <p className="text-sm text-gray-500 mt-1">{uiText.categoryHelp}</p>
+                <p className="text-sm text-muted mt-1">{uiText.categoryHelp}</p>
               </div>
 
               {/* Problem / Topic */}
               <div>
-                <label className="block text-base font-semibold text-gray-800 mb-1">{uiText.problemLabel} <span className="text-red-500">*</span></label>
+                <label className="block text-base font-semibold text-ink mb-1">{uiText.problemLabel} <span className="text-red-500">*</span></label>
                 <textarea value={createForm.description} onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))}
                   rows={3} placeholder={uiText.problemPlaceholder}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base focus:ring-2 focus:ring-purple-400 focus:border-purple-400 resize-none" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Entrepreneurial / Business Angle */}
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                <label className="block text-base font-semibold text-green-900 mb-1">{uiText.pueLabel}</label>
-                <p className="text-sm text-green-700 mb-2">{uiText.pueHelp}</p>
+              <div className="bg-surface border border-hair rounded-xl p-4">
+                <label className="block text-base font-semibold text-ink mb-1">{uiText.pueLabel}</label>
+                <p className="text-sm text-muted mb-2">{uiText.pueHelp}</p>
                 <textarea value={createForm.entrepreneurialContext} onChange={e => setCreateForm(f => ({ ...f, entrepreneurialContext: e.target.value }))}
                   rows={3} placeholder={uiText.puePlaceholder}
-                  className="w-full border border-green-300 rounded-lg px-4 py-2.5 text-base focus:ring-2 focus:ring-green-400 focus:border-green-400 resize-none bg-white" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base resize-none bg-card focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Location */}
               <div>
-                <label className="block text-base font-semibold text-gray-800 mb-1">{uiText.locationLabel}</label>
+                <label className="block text-base font-semibold text-ink mb-1">{uiText.locationLabel}</label>
                 <input type="text" value={createForm.location} onChange={e => setCreateForm(f => ({ ...f, location: e.target.value }))}
                   placeholder={uiText.locationPlaceholder}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base focus:ring-2 focus:ring-purple-400 focus:border-purple-400" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Constraints */}
               <div>
-                <label className="block text-base font-semibold text-gray-800 mb-1">{uiText.constraintsLabel}</label>
+                <label className="block text-base font-semibold text-ink mb-1">{uiText.constraintsLabel}</label>
                 <textarea value={createForm.constraints} onChange={e => setCreateForm(f => ({ ...f, constraints: e.target.value }))}
                   rows={2} placeholder={uiText.constraintsPlaceholder}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base focus:ring-2 focus:ring-purple-400 focus:border-purple-400 resize-none" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Stakeholders */}
               <div>
-                <label className="block text-base font-semibold text-gray-800 mb-1">{uiText.stakeholdersLabel}</label>
+                <label className="block text-base font-semibold text-ink mb-1">{uiText.stakeholdersLabel}</label>
                 <textarea value={createForm.stakeholders} onChange={e => setCreateForm(f => ({ ...f, stakeholders: e.target.value }))}
                   rows={2} placeholder={uiText.stakeholdersPlaceholder}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base focus:ring-2 focus:ring-purple-400 focus:border-purple-400 resize-none" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Info box */}
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-base text-purple-800">
-                <p className="font-semibold mb-2">{uiText.infoBoxTitle}</p>
-                <ul className="space-y-1 text-sm text-purple-700">
+              <div className="bg-surface border border-hair rounded-xl p-4 text-base text-body">
+                <p className="font-semibold text-ink mb-2">{uiText.infoBoxTitle}</p>
+                <ul className="space-y-1 text-sm text-body">
                   {uiText.infoBoxItems.map((item, i) => (
-                    <li key={i}>{item.icon} <strong>{item.bold}</strong>{item.text}</li>
+                    <li key={i}>{item.icon} <strong className="text-ink">{item.bold}</strong>{item.text}</li>
                   ))}
                 </ul>
               </div>
 
               <div className="flex justify-end pt-2">
-                <button onClick={handleCreateCustomActivity}
+                <QuietButton
+                  onClick={handleCreateCustomActivity}
                   disabled={isCreatingModule || !createForm.title.trim() || !createForm.description.trim()}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full px-8 py-3 font-semibold text-base transition-colors">
-                  {isCreatingModule
-                    ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Creating…</>
-                    : <><Plus size={16} />{uiText.submitBtn}</>}
-                </button>
+                  loading={isCreatingModule}
+                  icon={<Plus size={16} />}
+                  variant="solid"
+                  className="px-8 py-3 text-base"
+                >
+                  {isCreatingModule ? 'Creating…' : uiText.submitBtn}
+                </QuietButton>
               </div>
             </div>
             </div>{/* end max-w-[66%] */}
@@ -3455,8 +3353,8 @@ Respond ONLY with valid JSON:
       <AppLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your AI learning activities...</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-accent mx-auto mb-4"></div>
+            <p className="text-muted">Loading your AI learning activities...</p>
           </div>
         </div>
       </AppLayout>
@@ -3468,42 +3366,36 @@ Respond ONLY with valid JSON:
     return (
       <AppLayout>
         {showConfetti && <ConfettiAnimation />}
-        
+
         <div className="min-h-screen">
-          <DistortedBackground imageUrl="/AI_learning.png" />
-          <div className="relative z-10 pl-6 pr-6 py-8">
+          <div className="pl-6 pr-6 py-8">
             {/* Constrain chat and input to 2/3 width, centered */}
             <div className="max-w-[67%] mx-auto">
             {/* Header with Back Button */}
-            <div className="mb-6 flex items-center justify-between">
-              <div className="inline-flex flex-col items-start gap-1 rounded-lg bg-pink-100/75 p-4 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <Brain className="h-10 w-10 text-purple-600" />
-                  <h1 className="text-4xl font-extrabold text-gray-900">
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="flex flex-col items-start gap-1">
+                <div className="flex items-center gap-2.5">
+                  <Brain className="h-8 w-8 text-accent" />
+                  <h1 className="text-3xl font-bold text-ink">
                     {moduleTitle || selectedActivity.title}
                   </h1>
                 </div>
-                <p className="text-gray-800 text-lg">
+                <p className="text-body text-base">
                   Interactive AI Learning Activity
                 </p>
               </div>
 
-              <Button
-                onClick={handleBackToOverview}
-                size="sm"
-                icon={<ArrowLeft size={16} />}
-                className="bg-pink-400 hover:bg-purple-900 text-purple-900 hover:text-pink-200 rounded-full px-6 py-2 border-0"
-              >
+              <QuietButton onClick={handleBackToOverview} icon={<ArrowLeft size={16} />}>
                 Back to AI Learning Menu
-              </Button>
+              </QuietButton>
             </div>
 
             {/* Activity Info Panel */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-3">Activity Overview</h2>
-              <div className="space-y-2 text-base">
-                <div><strong>Category:</strong> {selectedActivity.sub_category}</div>
-                <div><strong>Status:</strong> 
+            <div className="bg-card border border-hair rounded-2xl shadow-sm p-6 mb-6">
+              <h2 className="text-lg font-semibold text-ink mb-3">Activity overview</h2>
+              <div className="space-y-2 text-base text-body">
+                <div><strong className="text-ink">Category:</strong> {selectedActivity.sub_category}</div>
+                <div><strong className="text-ink">Status:</strong>
                   <span className={classNames(
                     'ml-2 px-2 py-1 rounded text-base',
                     getProgressColor(selectedActivity.progress)
@@ -3512,22 +3404,22 @@ Respond ONLY with valid JSON:
                   </span>
                 </div>
                 {selectedActivity.certification_evaluation_score && (
-                  <div><strong>Current Score:</strong> 
-                    <span className="ml-2 text-xl font-semibold text-green-600">
+                  <div><strong className="text-ink">Current Score:</strong>
+                    <span className="ml-2 text-xl font-semibold text-ink">
                       {selectedActivity.certification_evaluation_score}
                     </span>
                   </div>
                 )}
                 {selectedActivity.certification_evaluation_evidence && (
-                  <div><strong>Last Evaluation:</strong> 
-                    <p className="mt-1 text-gray-700 bg-gray-50 rounded p-2 text-base">
+                  <div><strong className="text-ink">Last Evaluation:</strong>
+                    <p className="mt-1 text-body bg-paper rounded p-2 text-base">
                       {selectedActivity.certification_evaluation_evidence}
                     </p>
                   </div>
                 )}
                 <div className="pt-2">
-                  <strong>Description:</strong>
-                  <p className="mt-1 text-gray-700 text-base">
+                  <strong className="text-ink">Description:</strong>
+                  <p className="mt-1 text-body text-base">
                     {activityDescription || selectedActivity.description || 'Description could not be loaded.'}
                   </p>
                 </div>
@@ -3536,24 +3428,21 @@ Respond ONLY with valid JSON:
 
             {/* Per-turn Rubric Evaluation Popup */}
             {turnEvaluationText && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-card rounded-2xl border border-hair shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
                       📊 Evaluation
                     </h3>
-                    <button onClick={closeTurnEvaluation} className="text-gray-400 hover:text-gray-600">
-                      <X className="w-6 h-6" />
+                    <button onClick={closeTurnEvaluation} className="text-muted hover:text-ink">
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
                   <MarkdownText text={turnEvaluationText} rubricMode="full" />
                   <div className="mt-4 flex justify-end">
-                    <button
-                      onClick={closeTurnEvaluation}
-                      className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                    >
+                    <QuietButton onClick={closeTurnEvaluation}>
                       Close
-                    </button>
+                    </QuietButton>
                   </div>
                 </div>
               </div>
@@ -3561,39 +3450,33 @@ Respond ONLY with valid JSON:
 
             {/* Evaluation Results Modal */}
             {showEvaluationModal && evaluationResult && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-xl p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-card rounded-2xl border border-hair shadow-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className={classNames(
-                      "text-xl font-bold flex items-center",
-                      evaluationResult.score === 3 ? "text-green-600" : "text-gray-900"
-                    )}>
-                      <Star className={classNames(
-                        "h-6 w-6 mr-2",
-                        evaluationResult.score === 3 ? "text-yellow-500 fill-yellow-500" : "text-yellow-500"
-                      )} />
+                    <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
+                      <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                       {evaluationResult.score === 3 ? "🎉 Activity Completed!" : "Evaluation Complete"}
                     </h3>
                     <button
                       onClick={() => setShowEvaluationModal(false)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-muted hover:text-ink"
                     >
-                      <X className="w-6 h-6" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
-                  
+
                   {/* Content */}
                   <div className="space-y-4">
                     {/* Overall Certification Score Display */}
-                    <div className="mb-6 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-200">
+                    <div className="mb-6 p-6 bg-surface rounded-xl border border-hair">
                       <div className="text-center">
-                        <div className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-3">
+                        <div className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
                           Overall Certification Score
                         </div>
                         <div className="flex items-center justify-center gap-4 mb-2">
-                          <div className="text-6xl font-extrabold text-purple-700">
-                            {evaluationResult.score}<span className="text-3xl text-purple-500">/3</span>
+                          <div className="text-6xl font-extrabold text-ink">
+                            {evaluationResult.score}<span className="text-3xl text-muted">/3</span>
                           </div>
                         </div>
                         <div className={classNames(
@@ -3608,14 +3491,14 @@ Respond ONLY with valid JSON:
                            evaluationResult.score === 1 ? 'Emerging' :
                            'No Evidence'}
                         </div>
-                        <div className="text-xs text-gray-600 mt-3">
+                        <div className="text-xs text-muted mt-3">
                           {evaluationResult.score === 0 && 'No evidence of competency demonstrated'}
                           {evaluationResult.score === 1 && 'Emerging understanding of competency'}
                           {evaluationResult.score === 2 && 'Proficient - Meets certification standard ✓'}
                           {evaluationResult.score === 3 && 'Advanced - Exceeds certification standard ✓'}
                         </div>
                         {evaluationResult.score === 3 && (
-                          <div className="mt-3 text-sm text-green-600 font-semibold">
+                          <div className="mt-3 text-sm text-green-700 font-semibold">
                             Activity marked as completed!
                           </div>
                         )}
@@ -3625,95 +3508,44 @@ Respond ONLY with valid JSON:
                     {/* UNESCO Competency Sub-Scores */}
                     {evaluationResult.unescoScores && (
                       <div className="mb-6">
-                        <h4 className="font-semibold text-lg mb-3">UNESCO AI Competency Scores:</h4>
-                        <div className="space-y-4">
-                          {/* Competency 1 */}
-                          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-semibold text-gray-800">Understanding of AI Principles</h5>
-                              <span className={classNames(
-                                "px-3 py-1 rounded-full text-sm font-bold",
-                                evaluationResult.unescoScores.competency_1_score === 3 ? "bg-green-100 text-green-800" :
-                                evaluationResult.unescoScores.competency_1_score === 2 ? "bg-blue-100 text-blue-800" :
-                                evaluationResult.unescoScores.competency_1_score === 1 ? "bg-yellow-100 text-yellow-800" :
-                                "bg-gray-100 text-gray-800"
-                              )}>
-                                {evaluationResult.unescoScores.competency_1_score}/3
-                              </span>
+                        <h4 className="font-semibold text-base text-ink mb-3">UNESCO AI Competency Scores</h4>
+                        <div className="space-y-3">
+                          {([
+                            { label: 'Understanding of AI Principles', score: evaluationResult.unescoScores.competency_1_score, evidence: evaluationResult.unescoScores.competency_1_evidence },
+                            { label: 'Human-Centred Mindset', score: evaluationResult.unescoScores.competency_2_score, evidence: evaluationResult.unescoScores.competency_2_evidence },
+                            { label: 'Application of AI Tools', score: evaluationResult.unescoScores.competency_3_score, evidence: evaluationResult.unescoScores.competency_3_evidence },
+                            { label: 'Critical Evaluation', score: evaluationResult.unescoScores.competency_4_score, evidence: evaluationResult.unescoScores.competency_4_evidence },
+                          ]).map(c => (
+                            <div key={c.label} className="bg-paper rounded-lg p-4 border border-hair">
+                              <div className="flex items-center justify-between mb-2">
+                                <h5 className="font-semibold text-ink text-sm">{c.label}</h5>
+                                <span className={classNames(
+                                  "px-3 py-1 rounded-full text-sm font-bold border",
+                                  c.score === 3 ? "bg-green-100 text-green-800 border-green-300" :
+                                  c.score === 2 ? "bg-blue-100 text-blue-800 border-blue-300" :
+                                  c.score === 1 ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
+                                  "bg-red-100 text-red-800 border-red-300"
+                                )}>
+                                  {c.score}/3
+                                </span>
+                              </div>
+                              <p className="text-sm text-body">
+                                <span className="font-medium text-ink">Evidence:</span> {c.evidence}
+                              </p>
                             </div>
-                            <p className="text-sm text-gray-700">
-                              <span className="font-medium">Evidence:</span> {evaluationResult.unescoScores.competency_1_evidence}
-                            </p>
-                          </div>
-
-                          {/* Competency 2 */}
-                          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-semibold text-gray-800">Human-Centred Mindset</h5>
-                              <span className={classNames(
-                                "px-3 py-1 rounded-full text-sm font-bold",
-                                evaluationResult.unescoScores.competency_2_score === 3 ? "bg-green-100 text-green-800" :
-                                evaluationResult.unescoScores.competency_2_score === 2 ? "bg-blue-100 text-blue-800" :
-                                evaluationResult.unescoScores.competency_2_score === 1 ? "bg-yellow-100 text-yellow-800" :
-                                "bg-gray-100 text-gray-800"
-                              )}>
-                                {evaluationResult.unescoScores.competency_2_score}/3
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-700">
-                              <span className="font-medium">Evidence:</span> {evaluationResult.unescoScores.competency_2_evidence}
-                            </p>
-                          </div>
-
-                          {/* Competency 3 */}
-                          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-semibold text-gray-800">Application of AI Tools</h5>
-                              <span className={classNames(
-                                "px-3 py-1 rounded-full text-sm font-bold",
-                                evaluationResult.unescoScores.competency_3_score === 3 ? "bg-green-100 text-green-800" :
-                                evaluationResult.unescoScores.competency_3_score === 2 ? "bg-blue-100 text-blue-800" :
-                                evaluationResult.unescoScores.competency_3_score === 1 ? "bg-yellow-100 text-yellow-800" :
-                                "bg-gray-100 text-gray-800"
-                              )}>
-                                {evaluationResult.unescoScores.competency_3_score}/3
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-700">
-                              <span className="font-medium">Evidence:</span> {evaluationResult.unescoScores.competency_3_evidence}
-                            </p>
-                          </div>
-
-                          {/* Competency 4 */}
-                          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-semibold text-gray-800">Critical Evaluation</h5>
-                              <span className={classNames(
-                                "px-3 py-1 rounded-full text-sm font-bold",
-                                evaluationResult.unescoScores.competency_4_score === 3 ? "bg-green-100 text-green-800" :
-                                evaluationResult.unescoScores.competency_4_score === 2 ? "bg-blue-100 text-blue-800" :
-                                evaluationResult.unescoScores.competency_4_score === 1 ? "bg-yellow-100 text-yellow-800" :
-                                "bg-gray-100 text-gray-800"
-                              )}>
-                                {evaluationResult.unescoScores.competency_4_score}/3
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-700">
-                              <span className="font-medium">Evidence:</span> {evaluationResult.unescoScores.competency_4_evidence}
-                            </p>
-                          </div>
+                          ))}
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Improvement Advice */}
                     {evaluationResult.improvementAdvice && (
-                      <div className="border-t pt-4 bg-blue-50 rounded-lg p-4">
-                        <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
-                          <Target className="h-5 w-5 mr-2" />
-                          Improvement Advice:
+                      <div className="border-t border-hair pt-4">
+                        <h4 className="font-semibold text-ink mb-2 flex items-center gap-2">
+                          <Target className="h-4 w-4 text-accent" />
+                          Improvement Advice
                         </h4>
-                        <div className="text-blue-900 space-y-4">
+                        <div className="text-body space-y-4">
                           {evaluationResult.improvementAdvice.split('\n\n').map((section, index) => {
                             const headingMatch = section.match(/^\*\*(.+?):\*\*/);
                             if (headingMatch) {
@@ -3721,13 +3553,13 @@ Respond ONLY with valid JSON:
                               const content = section.substring(headingMatch[0].length).trim();
                               return (
                                 <div key={index} className="space-y-2">
-                                  <h5 className="font-semibold text-blue-800">{heading}:</h5>
-                                  <p className="text-blue-800 text-sm leading-relaxed pl-4">{content}</p>
+                                  <h5 className="font-semibold text-ink">{heading}:</h5>
+                                  <p className="text-body text-sm leading-relaxed pl-4">{content}</p>
                                 </div>
                               );
                             } else {
                               return (
-                                <p key={index} className="text-blue-800 text-sm leading-relaxed">
+                                <p key={index} className="text-body text-sm leading-relaxed">
                                   {section}
                                 </p>
                               );
@@ -3736,137 +3568,31 @@ Respond ONLY with valid JSON:
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Footer Button */}
                     <div className="flex justify-end pt-4">
-                      <Button
+                      <QuietButton
                         onClick={() => setShowEvaluationModal(false)}
-                        className={classNames(
-                          "px-6 py-2 rounded-lg text-white",
-                          evaluationResult.score === 3 ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"
-                        )}
+                        variant="solid"
                       >
                         {evaluationResult.score === 3 ? "Celebrate!" : "Close"}
-                      </Button>
+                      </QuietButton>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Chat History Panel */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg mb-4">
-              <div className="p-4 border-b flex items-center justify-between flex-wrap gap-2">
-                <h3 className="text-xl font-semibold text-gray-900">Learning Conversation</h3>
-                <div className="flex items-center gap-1.5 text-sm bg-indigo-50 border border-indigo-200 rounded-full px-3 py-1 text-indigo-700">
-                  <span className="font-semibold">Scores out of 3:</span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-300 font-bold">0</span>
-                  <span>No Evidence</span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300 font-bold">1</span>
-                  <span>Emerging</span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-300 font-bold">2</span>
-                  <span className="font-semibold">Proficient ✓</span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-300 font-bold">3</span>
-                  <span className="font-semibold">Advanced ✓</span>
-                </div>
-              </div>
-              <div 
-                ref={chatContainerRef}
-                className="p-4 space-y-4 overflow-y-auto w-full h-72"
-              >
-                {chatHistory.map((message, index) => (
-                  <div
-                    key={index}
-                    className={classNames(
-                      'flex flex-col space-y-2',
-                      message.role === 'user' ? 'items-end' : 'items-start'
-                    )}
-                  >
-                    <div className={classNames(
-                      'flex items-start space-x-3 max-w-2xl',
-                      message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                    )}>
-                      <div className={classNames(
-                        'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-                        message.role === 'assistant' ? 'bg-blue-100' : 'bg-green-100'
-                      )}>
-                        {message.role === 'assistant' ? (
-                          <Bot className="w-4 h-4 text-blue-600" />
-                        ) : (
-                          <User className="w-4 h-4 text-green-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className={classNames(
-                          'text-base font-semibold mb-1',
-                          message.role === 'assistant' ? 'text-blue-600' : 'text-green-600'
-                        )}>
-                          {message.role === 'assistant' ? (
-                            <span><strong>AI Assistant:</strong></span>
-                          ) : (
-                            <span><strong>You:</strong></span>
-                          )}
-                        </div>
-                        <div className={classNames(
-                          'p-3 rounded-lg',
-                          message.role === 'assistant' 
-                            ? 'bg-gray-100 text-gray-900' 
-                            : 'bg-blue-500 text-white'
-                        )}>
-                          <div className="text-base leading-relaxed">
-                            {message.role === 'assistant' ? (
-                              <>
-                                <MarkdownText text={message.content} onViewEvaluation={openTurnEvaluation} />
-                                <AIPidginCoachWrapper englishText={message.content} />
-                              </>
-                            ) : (
-                              <p>{message.content}</p>
-                            )}
-                          </div>
-                          <p className={classNames(
-                            'text-sm mt-1',
-                            message.role === 'assistant' ? 'text-gray-500' : 'text-blue-100'
-                          )}>
-                            {message.timestamp.toLocaleTimeString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {submitting && (
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-base font-semibold mb-1 text-blue-600">
-                        <strong>AI Assistant:</strong>
-                      </div>
-                      <div className="bg-gray-100 text-gray-900 p-3 rounded-lg">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Text fallback when TTS unavailable (e.g. no network voice in Nigeria) */}
             {fallbackText && (
-              <div className="px-2 pb-2">
+              <div className="mb-4">
                 <VoiceFallback text={fallbackText} onDismiss={clearFallback} />
               </div>
             )}
 
-            {/* Voice Controls */}
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              {/* Voice Input toggle */}
-              <label className="flex items-center space-x-2 bg-purple-100 border border-black px-4 py-2 rounded-md cursor-pointer">
+            {/* Voice settings */}
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+              <label className="inline-flex items-center gap-2 rounded-full border border-hair bg-card px-3 py-1.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={voiceInputEnabled}
@@ -3878,202 +3604,195 @@ Respond ONLY with valid JSON:
                       setWasListeningBeforeSubmit(false);
                     }
                   }}
-                  className="accent-purple-600 w-5 h-5"
+                  className="accent-accent w-4 h-4"
                 />
-                <span className="text-black font-medium text-base">Enable Voice Input</span>
+                <span className="text-body font-medium">Voice input</span>
               </label>
-              {/* Voice Output toggle */}
-              <label className="flex items-center space-x-2 bg-purple-100 border border-black px-4 py-2 rounded-md cursor-pointer">
+              <label className="inline-flex items-center gap-2 rounded-full border border-hair bg-card px-3 py-1.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={voiceOutputEnabled}
                   onChange={() => setVoiceOutputEnabled(!voiceOutputEnabled)}
-                  className="accent-purple-600 w-5 h-5"
+                  className="accent-accent w-4 h-4"
                 />
-                <span className="text-black font-medium text-base">Enable Voice Output</span>
+                <span className="text-body font-medium">Voice output</span>
               </label>
 
-              {/* Coach Voice Language Toggle */}
               {voiceOutputEnabled && (
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-medium text-gray-700">Coach voice:</span>
-                  <div className="flex rounded-lg overflow-hidden border border-gray-400 shadow-sm">
+                  <span className="text-muted">Coach voice:</span>
+                  <div className="flex rounded-full overflow-hidden border border-hair">
                     <button
                       onClick={() => setVoiceMode('english')}
                       title="British English — Google UK English Female"
-                      className={`flex items-center gap-1.5 px-4 py-2 text-base font-bold transition-all border-r border-gray-400
-                        ${voiceMode === 'english'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
+                      className={classNames(
+                        'px-3 py-1.5 text-xs font-semibold transition-colors',
+                        voiceMode === 'english' ? 'bg-accent text-white' : 'bg-card text-body hover:bg-paper'
+                      )}
                     >
-                      🇬🇧 British English
+                      🇬🇧 English
                     </button>
                     <button
                       onClick={() => setVoiceMode('pidgin')}
                       title="Nigerian English / Pidgin voice"
-                      className={`flex items-center gap-1.5 px-4 py-2 text-base font-bold transition-all
-                        ${voiceMode === 'pidgin'
-                          ? 'bg-green-600 text-white'
-                          : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
+                      className={classNames(
+                        'px-3 py-1.5 text-xs font-semibold transition-colors border-l border-hair',
+                        voiceMode === 'pidgin' ? 'bg-accent text-white' : 'bg-card text-body hover:bg-paper'
+                      )}
                     >
-                      🇳🇬 Nigerian Pidgin
+                      🇳🇬 Pidgin
                     </button>
                   </div>
-                  <span className="text-xs text-gray-500 italic">
-                    {'Ezinne'}
-                  </span>
+                  <span className="text-xs text-muted italic">{'Ezinne'}</span>
                 </div>
               )}
             </div>
 
-            {/* User Input Panel with Voice Chat */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 w-full">
-              <p className="text-base text-indigo-600 mb-2 flex items-center gap-1">
-                <span>💡</span>
-                <span>Have a question? Just ask it — the AI will answer you directly before continuing.</span>
-              </p>
-
-              {/* ── Proficient/Advanced status banner ─────────────────────── */}
-              {(() => {
-                const scores = extractLatestRubricScores(chatHistory);
-                if (scores.length === 0) return null;
-                const allAdvanced = scores.every(s => s === 3);
-                const allProficient = scores.every(s => s >= 2);
-                if (allAdvanced) {
-                  return (
-                    <div className="mb-3 flex items-start gap-3 rounded-xl bg-green-50 border border-green-300 px-4 py-3">
-                      <span className="text-xl flex-shrink-0">🏆</span>
-                      <div>
-                        <p className="text-base font-bold text-green-800">Advanced on all criteria!</p>
-                        <p className="text-sm text-green-700 mt-0.5">
-                          You've reached the highest level across every criterion. There's one final step — select <strong>Complete Session</strong> below to save your results.
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-                if (allProficient) {
-                  return (
-                    <div className="mb-3 flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-                      <span className="text-xl flex-shrink-0">✅</span>
-                      <div>
-                        <p className="text-base font-bold text-blue-800">Proficient or higher on all criteria</p>
-                        <p className="text-sm text-blue-700 mt-0.5">
-                          Well done — you've met the standard on every criterion. You can keep going to push for Advanced, or select <strong>Complete Session</strong> below to save your results now.
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-
-              <div className="flex items-end space-x-3">
-                <div className="flex-1">
-                  <div className="flex-1">
-                    <SpellCheckTextarea
-                      value={userInput}
-                      onChange={setUserInput}
-                      onKeyDown={handleKeyPress}
-                      placeholder="Type your response here..."
-                      className="w-full p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24 text-base leading-relaxed"
-                      disabled={submitting}
-                    />
+            <ChatSurface
+              title="Learning Conversation"
+              legend={
+                <details className="text-xs text-muted">
+                  <summary className="cursor-pointer select-none font-medium hover:text-ink">Scores out of 3</summary>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                    <span className="px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-300 font-bold">0</span>
+                    <span>No Evidence</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300 font-bold ml-2">1</span>
+                    <span>Emerging</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-300 font-bold ml-2">2</span>
+                    <span>Proficient ✓</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-300 font-bold ml-2">3</span>
+                    <span>Advanced ✓</span>
                   </div>
+                </details>
+              }
+              messages={chatHistory}
+              renderAssistant={(content) => (
+                <>
+                  <MarkdownText text={content} onViewEvaluation={openTurnEvaluation} />
+                  <AIPidginCoachWrapper englishText={content} />
+                </>
+              )}
+              submitting={submitting}
+              transcriptRef={chatContainerRef}
+              value={userInput}
+              onChange={setUserInput}
+              onKeyDown={handleKeyPress}
+              onSubmit={handleSubmitMessage}
+              disabled={submitting}
+              notice={
+                <div className="mb-3 space-y-2">
+                  <p className="text-sm text-muted flex items-center gap-1.5">
+                    <span>💡</span>
+                    <span>Have a question? Just ask it — the AI will answer you directly before continuing.</span>
+                  </p>
+                  {(() => {
+                    const scores = extractLatestRubricScores(chatHistory);
+                    if (scores.length === 0) return null;
+                    const allAdvanced = scores.every(s => s === 3);
+                    const allProficient = scores.every(s => s >= 2);
+                    if (allAdvanced) {
+                      return (
+                        <div className="flex items-start gap-3 rounded-xl border border-hair border-l-4 border-l-green-500 bg-paper px-4 py-3">
+                          <span className="text-xl flex-shrink-0">🏆</span>
+                          <div>
+                            <p className="text-sm font-semibold text-ink">Advanced on all criteria!</p>
+                            <p className="text-sm text-body mt-0.5">
+                              You've reached the highest level across every criterion. There's one final step — select <strong>Complete session</strong> below to save your results.
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (allProficient) {
+                      return (
+                        <div className="flex items-start gap-3 rounded-xl border border-hair border-l-4 border-l-blue-500 bg-paper px-4 py-3">
+                          <span className="text-xl flex-shrink-0">✅</span>
+                          <div>
+                            <p className="text-sm font-semibold text-ink">Proficient or higher on all criteria</p>
+                            <p className="text-sm text-body mt-0.5">
+                              Well done — you've met the standard on every criterion. You can keep going to push for Advanced, or select <strong>Complete session</strong> below to save your results now.
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
-
-                {voiceInputEnabled && (
-                  <Button
-                    onClick={startVoiceInput}
-                    icon={<Mic size={18} />}
-                    className={classNames(
-                      "px-4 py-3 text-base",
-                      isListening 
-                        ? "bg-red-100 hover:bg-red-200 text-red-800" 
-                        : "bg-blue-100 hover:bg-blue-200 text-blue-800"
-                    )}
-                    disabled={!speechRecognition}
-                  >
-                    {isListening ? 'Stop' : 'Speak'}
-                  </Button>
-                )}
-
-                <Button
-                  onClick={handleSubmitMessage}
-                  disabled={!userInput.trim() || submitting}
-                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 text-base"
-                  icon={<Send size={18} />}
-                  isLoading={submitting}
-                >
-                  Submit
-                </Button>
-              </div>
-              
-              {/* Action buttons row */}
-              <div className="mt-3 flex flex-wrap justify-center gap-3">
-                <Button
-                  onClick={handleImproveEnglish}
-                  disabled={!userInput.trim() || isImproving}
-                  className="bg-violet-500 hover:bg-violet-600 text-white px-6 py-2 rounded-full text-base"
-                  icon={<Wand2 size={18} />}
-                  isLoading={isImproving}
-                >
-                  Improve my English
-                </Button>
-                <Button
-                  onClick={handleSaveSession}
-                  disabled={evaluating || chatHistory.length <= 1}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-full text-base flex items-center gap-2"
-                >
-                  {evaluating
-                    ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
-                    : <><Save size={18} /> Evaluate Me / Save Session</>}
-                </Button>
-                <button
-                  onClick={handleCompleteSession}
-                  disabled={completingSession || chatHistory.length <= 1}
-                  className={classNames(
-                    'flex items-center gap-2 px-6 py-2 rounded-full text-base font-semibold transition-colors',
-                    chatHistory.length > 1 && !completingSession
-                      ? 'bg-pink-500 hover:bg-pink-600 text-white'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }
+              composerActions={
+                <>
+                  {voiceInputEnabled && (
+                    <QuietButton
+                      onClick={startVoiceInput}
+                      icon={<Mic size={14} />}
+                      disabled={!speechRecognition}
+                      className={isListening ? 'border-red-300 text-red-600 hover:text-red-700 hover:border-red-400' : undefined}
+                    >
+                      {isListening ? 'Stop' : 'Speak'}
+                    </QuietButton>
                   )}
-                >
-                  {completingSession
-                    ? <><div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> Completing...</>
-                    : <><CheckCircle size={18} /> Complete Session</>}
-                </button>
-              </div>
-            </div>
+                  <QuietButton
+                    onClick={handleImproveEnglish}
+                    disabled={!userInput.trim() || isImproving}
+                    icon={<Wand2 size={14} />}
+                    loading={isImproving}
+                  >
+                    Improve my English
+                  </QuietButton>
+                </>
+              }
+              sessionActions={
+                <>
+                  <QuietButton
+                    onClick={handleSaveSession}
+                    disabled={evaluating || chatHistory.length <= 1}
+                    icon={<Save size={14} />}
+                    loading={evaluating}
+                  >
+                    Evaluate me / Save session
+                  </QuietButton>
+                  <QuietButton
+                    onClick={handleCompleteSession}
+                    disabled={completingSession || chatHistory.length <= 1}
+                    icon={<CheckCircle size={14} />}
+                    loading={completingSession}
+                    variant="solid"
+                  >
+                    Complete session
+                  </QuietButton>
+                </>
+              }
+            />
 
             {/* ── Complete Session Modal ──────────────────────────────────── */}
             {showCompleteSessionModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4">
+                <div className="bg-card rounded-2xl border border-hair shadow-lg w-full max-w-lg overflow-hidden">
                   {/* Header */}
-                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-purple-600" />
+                  <div className="px-6 py-4 border-b border-hair flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-ink flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-accent" />
                       Complete Your Session
                     </h3>
                     <button
                       onClick={() => setShowCompleteSessionModal(false)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-muted hover:text-ink transition-colors"
                     >
-                      <X size={20} />
+                      <X size={18} />
                     </button>
                   </div>
 
                   {/* Body */}
                   <div className="px-6 py-5 space-y-4">
-                    <p className="text-sm text-gray-700 leading-relaxed">
+                    <p className="text-sm text-body leading-relaxed">
                       Before we save your results, take a moment to reflect on what you've worked through in this session.
                     </p>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      <label className="block text-sm font-semibold text-ink mb-2">
                         What did you learn in this session? <span className="text-red-500">*</span>
                       </label>
-                      <p className="text-xs text-gray-500 mb-2">
+                      <p className="text-xs text-muted mb-2">
                         Be as specific and detailed as you can — what concepts clicked for you? What was hard? What would you do differently?
                       </p>
                       <textarea
@@ -4081,13 +3800,13 @@ Respond ONLY with valid JSON:
                         onChange={e => setSessionReflectionInput(e.target.value)}
                         rows={6}
                         placeholder="e.g. I learned that AI models learn patterns from data, not rules — so if the training data has gaps (like no examples from small farms), the AI will perform poorly in those situations. The hardest part was explaining failure modes. Next time I'd try to give more specific examples from my own context..."
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-purple-400 focus:border-purple-400 resize-none leading-relaxed"
+                        className="w-full border border-hair rounded-xl px-4 py-3 text-sm bg-paper resize-none leading-relaxed focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
                         autoFocus
                       />
-                      <p className="text-xs text-gray-400 mt-1 text-right">
+                      <p className="text-xs text-muted mt-1 text-right">
                         {sessionReflectionInput.length} characters
                         {sessionReflectionInput.length < 80 && sessionReflectionInput.length > 0 && (
-                          <span className="text-amber-600 ml-2">— a bit more detail will help your score</span>
+                          <span className="text-amber-700 ml-2">— a bit more detail will help your score</span>
                         )}
                       </p>
                     </div>
@@ -4095,24 +3814,17 @@ Respond ONLY with valid JSON:
 
                   {/* Footer */}
                   <div className="px-6 pb-5 flex gap-3 justify-end">
-                    <button
-                      onClick={() => setShowCompleteSessionModal(false)}
-                      className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 border border-gray-300 rounded-full transition-colors"
-                    >
+                    <QuietButton onClick={() => setShowCompleteSessionModal(false)}>
                       Cancel
-                    </button>
-                    <button
+                    </QuietButton>
+                    <QuietButton
                       onClick={() => handleCompleteSessionSubmit()}
                       disabled={sessionReflectionInput.trim().length < 20}
-                      className={classNames(
-                        'flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-colors',
-                        sessionReflectionInput.trim().length >= 20
-                          ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      )}
+                      icon={<Star size={15} />}
+                      variant="solid"
                     >
-                      <Star size={15} /> Save &amp; Complete
-                    </button>
+                      Save &amp; Complete
+                    </QuietButton>
                   </div>
                 </div>
               </div>
@@ -4128,33 +3840,31 @@ Respond ONLY with valid JSON:
   return (
     <AppLayout>
       {showConfetti && <ConfettiAnimation />}
-      
+
       <div className="min-h-screen">
-        <DistortedBackground imageUrl="/AI_learning.png" />
-        
-        <div className="relative z-10 pl-6 pr-6 py-12">
+        <div className="pl-6 pr-6 py-12">
           <div className="max-w-5xl mx-auto">
-          <div className="mb-8 flex items-center justify-between">
-            <div className="inline-flex flex-col items-start gap-1 rounded-lg bg-pink-100/75 p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <Brain className="h-12 w-12 text-purple-600" />
-                <h1 className="text-5xl font-extrabold text-gray-900">
+          <div className="mb-8 flex items-center justify-between gap-4">
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-3">
+                <Brain className="h-9 w-9 text-accent" />
+                <h1 className="text-4xl font-bold text-ink">
                   {uiText.pageTitle}
                 </h1>
               </div>
-              <p className="text-gray-800 text-xl">
+              <p className="text-body text-lg">
                 {uiText.pageSubtitle}
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Tutorial link */}
               <a
                 href="https://youtu.be/LwxDIOKXdjI"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Watch video tutorial"
-                className="flex items-center gap-1.5 bg-red-700 hover:bg-red-600 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
+                className="flex items-center gap-1.5 border border-hair bg-card text-body hover:text-accent hover:border-accent/40 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                 </svg>
@@ -4164,65 +3874,55 @@ Respond ONLY with valid JSON:
               <Link
                 to="/tutorials/ai-learning-start"
                 title="Read the written guide"
-                className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
+                className="flex items-center gap-1.5 border border-hair bg-card text-body hover:text-accent hover:border-accent/40 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
                 <BookOpen size={13} /> Guide
               </Link>
 
-              <Button
+              <QuietButton
                 onClick={refreshDashboard}
-                variant="outline"
-                size="sm"
-                icon={<RefreshCw size={16} />}
-                isLoading={refreshing}
-                className={classNames(
-                  'bg-pink-400 text-pink-200',
-                  'hover:bg-purple-900 hover:text-pink-200',
-                  'border border-pink-200',
-                  'disabled:opacity-60'
-                )}
+                icon={<RefreshCw size={14} />}
+                loading={refreshing}
+                className="text-xs px-3 py-1.5"
               >
                 Refresh
-              </Button>
+              </QuietButton>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
             {(aiLearningCategories || []).map(category => {
               const stats = getCategoryStats(category.id);
+              const active = activeCategory === category.id;
               return (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryChange(category.id)}
                   className={classNames(
-                    'flex flex-col items-start space-y-3 p-6 rounded-lg border transition-all duration-200 text-left',
-                    activeCategory === category.id
-                      ? 'bg-purple-100 border-purple-400 shadow-md'
-                      : 'bg-white hover:shadow-md border-gray-200 hover:border-purple-200'
+                    'flex flex-col items-start space-y-3 p-6 rounded-xl border transition-colors text-left',
+                    active
+                      ? 'bg-surface border-accent/40 shadow-sm'
+                      : 'bg-card border-hair hover:border-accent/30'
                   )}
                 >
                   <div
                     className={classNames(
                       'p-2 rounded-lg',
-                      activeCategory === category.id ? 'bg-purple-200' : 'bg-gray-100'
+                      active ? 'bg-accent/10' : 'bg-paper'
                     )}
                   >
-                    <div
-                      className={
-                        activeCategory === category.id ? 'text-purple-700' : 'text-purple-600'
-                      }
-                    >
+                    <div className="text-accent">
                       {category.icon}
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-gray-900 mb-1">
+                    <h3 className="text-base font-semibold text-ink mb-1">
                       {category.title}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-2">{category.description}</p>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="text-gray-500">{stats.total} activities</span>
+                    <p className="text-sm text-body mb-2">{category.description}</p>
+                    <div className="flex items-center space-x-2 text-sm text-muted">
+                      <span>{stats.total} activities</span>
                       {stats.completed > 0 && (
-                        <span className="text-green-600">• {stats.completed} completed</span>
+                        <span>• {stats.completed} completed</span>
                       )}
                     </div>
                   </div>
@@ -4232,18 +3932,18 @@ Respond ONLY with valid JSON:
           </div>
 
           {currentCategory && (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div className="bg-card border border-hair rounded-2xl shadow-sm p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-purple-100 rounded-lg text-purple-600">
+                  <div className="p-3 bg-surface rounded-lg text-accent">
                     {currentCategory.icon}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-xl font-semibold text-ink">
                       {currentCategory.title}
                     </h2>
-                    <p className="text-base text-gray-600">{currentCategory.description}</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-base text-body">{currentCategory.description}</p>
+                    <p className="text-sm text-muted mt-1">
                       Sub-category: {currentCategory.subCategory}
                     </p>
                   </div>
@@ -4251,41 +3951,41 @@ Respond ONLY with valid JSON:
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">{currentStats.total}</div>
-                  <div className="text-base text-blue-700">Total Activities</div>
+                <div className="text-center p-4 bg-paper rounded-lg border border-hair">
+                  <div className="text-3xl font-bold text-ink">{currentStats.total}</div>
+                  <div className="text-base text-muted">Total Activities</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">
+                <div className="text-center p-4 bg-paper rounded-lg border border-hair">
+                  <div className="text-3xl font-bold text-ink">
                     {currentStats.completed}
                   </div>
-                  <div className="text-base text-green-700">Completed</div>
+                  <div className="text-base text-muted">Completed</div>
                 </div>
-                <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                  <div className="text-3xl font-bold text-yellow-600">
+                <div className="text-center p-4 bg-paper rounded-lg border border-hair">
+                  <div className="text-3xl font-bold text-ink">
                     {currentStats.started}
                   </div>
-                  <div className="text-base text-yellow-700">In Progress</div>
+                  <div className="text-base text-muted">In Progress</div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold text-gray-600">
+                <div className="text-center p-4 bg-paper rounded-lg border border-hair">
+                  <div className="text-3xl font-bold text-ink">
                     {currentStats.notStarted}
                   </div>
-                  <div className="text-base text-gray-700">Not Started</div>
+                  <div className="text-base text-muted">Not Started</div>
                 </div>
               </div>
 
               {currentStats.total > 0 && (
                 <div className="mb-6">
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                  <div className="flex items-center justify-between text-sm text-muted mb-2">
                     <span>Progress in {currentCategory.title}</span>
                     <span>
                       {Math.round((currentStats.completed / currentStats.total) * 100)}% Complete
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="w-full bg-hair rounded-full h-2">
                     <div
-                      className="bg-purple-500 h-3 rounded-full transition-all duration-300"
+                      className="bg-accent h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${(currentStats.completed / currentStats.total) * 100}%`
                       }}
@@ -4296,21 +3996,21 @@ Respond ONLY with valid JSON:
             </div>
           )}
 
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-card border border-hair rounded-2xl shadow-sm overflow-hidden">
             {/* Panel header with Create Your Own button */}
-            <div className="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-hair bg-surface flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-ink">
                   {lvl <= 1
                     ? `${uiText.activitiesHeader} — ${currentCategory?.title}`
                     : `Learning Activities - ${currentCategory?.title}`}
                 </h3>
-                <p className="text-base text-gray-600 mt-1">
+                <p className="text-base text-body mt-1">
                   {uiText.activitiesSubtext}
                   {lvl > 1 && <> • Activities in "{currentCategory?.subCategory}" area</>}
                 </p>
               </div>
-              <button
+              <QuietButton
                 onClick={() => {
                   const catMap: Record<string, string> = {
                     'understanding-ai': 'A', 'prompt-engineering': 'B',
@@ -4320,11 +4020,12 @@ Respond ONLY with valid JSON:
                   setShowCreateActivity(true);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5 py-2.5 text-base font-semibold transition-colors shadow-sm whitespace-nowrap ml-4"
+                icon={<Plus size={16} />}
+                variant="solid"
+                className="whitespace-nowrap ml-4"
               >
-                <Plus size={16} />
                 {uiText.createBtnLabel}
-              </button>
+              </QuietButton>
             </div>
 
             {(() => {
@@ -4355,11 +4056,11 @@ Respond ONLY with valid JSON:
                   <div
                     key={activity.id}
                     className={classNames(
-                      'relative p-6 transition-colors rounded-3xl overflow-hidden',
+                      'relative p-6 transition-colors',
                       isAdvancedLocked
-                        ? 'bg-green-50/80 border border-green-200 shadow-sm text-green-900 opacity-90 backdrop-blur-sm pointer-events-none cursor-not-allowed'
+                        ? 'bg-green-50/60 border-l-4 border-l-green-400 text-green-900 opacity-90 pointer-events-none cursor-not-allowed'
                         : isActivitySelectable(activity)
-                        ? 'hover:bg-purple-50 cursor-pointer'
+                        ? 'hover:bg-surface cursor-pointer'
                         : 'cursor-default'
                     )}
                     onClick={() => isActivitySelectable(activity) && handleActivitySelect(activity)}
@@ -4370,26 +4071,27 @@ Respond ONLY with valid JSON:
                         <div className="flex-shrink-0">{getProgressIcon(activity.progress)}</div>
                         <div className="flex-1 min-w-0">
                           <h4 className={classNames('text-lg font-medium',
-                            isAdvancedLocked
-                              ? 'text-green-900'
-                              : isActivitySelectable(activity)
-                              ? 'text-purple-900'
-                              : 'text-gray-900')}>
+                            isAdvancedLocked ? 'text-green-900' : 'text-ink')}>
                             {activity.title}
                             {isAdvancedLocked ? (
                               <span className="ml-2 text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full border border-green-200">
                                 {activity.progress === 'completed' ? 'Completed. Go to the next activity.' : 'Advanced • Locked'}
                               </span>
                             ) : scoreBadge ? (
-                              <span className="ml-2 text-sm font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                              <span className={classNames(
+                                'ml-2 text-sm font-medium px-2 py-0.5 rounded-full border',
+                                overallLevel === 'Proficient'
+                                  ? 'text-blue-700 bg-blue-50 border-blue-200'
+                                  : 'text-yellow-700 bg-yellow-50 border-yellow-200'
+                              )}>
                                 {scoreBadge}
                               </span>
                             ) : null}
                             {isActivitySelectable(activity) && (
-                              <span className="ml-2 text-sm text-purple-600">(Click to start)</span>
+                              <span className="ml-2 text-sm text-accent">(Click to start)</span>
                             )}
                           </h4>
-                          <div className="flex items-center space-x-2 text-base text-gray-500 mt-1">
+                          <div className="flex items-center space-x-2 text-base text-muted mt-1">
                             <span>{activity.category_activity}</span>
                             {activity.sub_category && (<><span>•</span><span>{activity.sub_category}</span></>)}
                           </div>
@@ -4434,13 +4136,13 @@ Respond ONLY with valid JSON:
 
                     {/* ── Evidence (collapsed to one line) ── */}
                     {activity.certification_evaluation_evidence && (
-                      <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded px-3 py-1.5 line-clamp-2">
-                        <strong className="text-gray-600">Evidence:</strong>{' '}
+                      <div className="mt-2 text-xs text-muted bg-paper rounded px-3 py-1.5 line-clamp-2">
+                        <strong className="text-body">Evidence:</strong>{' '}
                         {activity.certification_evaluation_evidence}
                       </div>
                     )}
 
-                    <div className="mt-2 flex items-center text-xs text-gray-500">
+                    <div className="mt-2 flex items-center text-xs text-muted">
                       <Clock className="h-4 w-4 mr-1" />
                       <span>Updated {new Date(activity.updated_at).toLocaleDateString()}</span>
                     </div>
@@ -4451,14 +4153,14 @@ Respond ONLY with valid JSON:
               if (currentActivities.length === 0) {
                 return (
                   <div className="p-6 text-center">
-                    <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">No activities found for {currentCategory?.title}</p>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <Brain className="h-10 w-10 text-muted mx-auto mb-4" />
+                    <p className="text-body mb-2">No activities found for {currentCategory?.title}</p>
+                    <p className="text-sm text-muted mb-4">
                       AI Learning activities with sub-category "{currentCategory?.subCategory}" will appear here
                     </p>
-                    <Button onClick={refreshDashboard} icon={<RefreshCw size={16} />} isLoading={refreshing}>
+                    <QuietButton onClick={refreshDashboard} icon={<RefreshCw size={16} />} loading={refreshing}>
                       Refresh Activities
-                    </Button>
+                    </QuietButton>
                   </div>
                 );
               }
@@ -4468,12 +4170,12 @@ Respond ONLY with valid JSON:
                   {/* ── Your Created Learning Modules ───────────────── */}
                   {myActivities.length > 0 && (
                     <div>
-                      <div className="px-6 py-3 bg-purple-50 border-b border-purple-100">
-                        <h4 className="text-sm font-bold text-purple-800 uppercase tracking-wide">
+                      <div className="px-6 py-3 bg-surface border-b border-hair">
+                        <h4 className="text-sm font-bold text-ink uppercase tracking-wide">
                           Your Created Learning Modules
                         </h4>
                       </div>
-                      <div className="divide-y divide-gray-100">
+                      <div className="divide-y divide-hair">
                         {(myActivities ?? []).map(renderRow)}
                       </div>
                     </div>
@@ -4482,13 +4184,13 @@ Respond ONLY with valid JSON:
                   {/* ── Other Learning Modules ──────────────────────── */}
                   {otherActivities.length > 0 && (
                     <div>
-                      <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-baseline gap-2">
-                        <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                      <div className="px-6 py-3 bg-surface border-b border-hair flex items-baseline gap-2">
+                        <h4 className="text-sm font-bold text-ink uppercase tracking-wide">
                           Other Learning Modules
                         </h4>
-                        <span className="text-xs text-gray-500 italic">…good for practice</span>
+                        <span className="text-xs text-muted italic">…good for practice</span>
                       </div>
-                      <div className="divide-y divide-gray-200">
+                      <div className="divide-y divide-hair">
                         {(otherActivities ?? []).map(renderRow)}
                       </div>
                     </div>
