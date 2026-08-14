@@ -4162,7 +4162,7 @@ Respond ONLY with valid JSON:
               </a>
 
               <Link
-                to={`/tutorials/ai-learning/${activeCategory || aiLearningCategories[0].id}`}
+                to="/tutorials/ai-learning-start"
                 title="Read the written guide"
                 className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
                 <BookOpen size={13} /> Guide
