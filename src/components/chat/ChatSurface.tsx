@@ -101,7 +101,7 @@ const ChatSurface: React.FC<ChatSurfaceProps> = ({
 
       <div className="border-t border-hair bg-card px-5 py-4">
         {notice}
-        <div className="flex items-end gap-3">
+        <div className="relative">
           <SpellCheckTextarea
             value={value}
             onChange={onChange}
@@ -109,15 +109,15 @@ const ChatSurface: React.FC<ChatSurfaceProps> = ({
             placeholder={placeholder}
             disabled={disabled}
             showTips={false}
-            className="flex-1 w-full px-4 py-3 rounded-xl border border-hair bg-paper text-body text-[15px] leading-relaxed resize-none h-24 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+            className="w-full bg-transparent text-body text-[15px] leading-[1.7] resize-none h-24 pr-28 focus:outline-none placeholder:text-muted"
           />
           <button
             type="button"
             onClick={onSubmit}
             disabled={disabled || !value.trim()}
-            className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-full bg-accent text-white px-5 py-3 text-sm font-semibold hover:bg-accent/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40"
+            className="absolute bottom-2.5 right-1 inline-flex items-center gap-1.5 rounded-full bg-accent text-white px-4 py-2 text-sm font-semibold hover:bg-accent/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40"
           >
-            <Send size={16} />
+            <Send size={14} />
             Submit
           </button>
         </div>
