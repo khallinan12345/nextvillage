@@ -5,6 +5,7 @@
 import React, {
   useState, useEffect, useRef, useCallback, useMemo,
 } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
@@ -16,7 +17,7 @@ import {
   ChevronLeft, ChevronRight, Volume2, VolumeX,
   Square, Circle, AlignLeft, Scissors, Save,
   Layers, X, Check, AlertTriangle, FileText,
-  ChevronDown, ChevronUp, FolderOpen, Clock,
+  ChevronDown, ChevronUp, FolderOpen, Clock, BookOpen,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1158,6 +1159,11 @@ const VideoStudioPage: React.FC = () => {
               </svg>
               Tutorial
             </a>
+            {/* Guide link */}
+            <Link to="/tutorials/creative-ai/video-studio"
+              className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
+              <BookOpen size={13} /> Guide
+            </Link>
           </div>
         </div>
 

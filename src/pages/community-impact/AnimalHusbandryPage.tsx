@@ -88,6 +88,7 @@ const config: DomainConfig = {
   dashboardSubtitle: 'Your farmer casebook · Oloibiri & Ibiade',
   entityCardEmoji: '👨🏿‍🌾',
   registerNamePlaceholder: 'e.g. Mama Bello',
+  guideUrl: '/tutorials/community-impact/animal-husbandry',
 
   villages: VILLAGES,
   categoryConfig: SPECIES_CONFIG as unknown as DomainConfig['categoryConfig'],

@@ -22,7 +22,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { resolveChallengeOrgSlug } from '../../lib/communityChallengeScope';
 import { chatText, chatJSON } from '../../lib/chatClient';
@@ -1309,9 +1309,17 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
         <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-4xl mx-auto px-6 py-10">
           <div className="bg-black/35 backdrop-blur-sm rounded-2xl p-6 mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Briefcase className="h-10 w-10 text-amber-300" />
-              <h1 className="text-4xl font-bold text-white">Entrepreneurship Advisor</h1>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3">
+                <Briefcase className="h-10 w-10 text-amber-300" />
+                <h1 className="text-4xl font-bold text-white">Entrepreneurship Advisor</h1>
+              </div>
+              <Link
+                to="/tutorials/entrepreneurship-consultant"
+                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0 border border-white/30"
+              >
+                <BookOpen size={14} /> Guide
+              </Link>
             </div>
             <p className="text-xl text-amber-100 max-w-2xl">
               Help young Nigerian entrepreneurs start, grow, and fix their businesses — using AI to give them access to information and strategies they couldn't afford before.

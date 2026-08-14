@@ -16,7 +16,7 @@ import React, {
 } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import classNames from 'classnames';
@@ -1238,6 +1238,11 @@ const DocumentStudioPage: React.FC = () => {
                 ))}
               </div>
             )}
+            {/* Guide link */}
+            <Link to="/tutorials/creative-ai/document-studio"
+              className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
+              <BookOpen size={13} /> Guide
+            </Link>
           </div>
         </div>
 

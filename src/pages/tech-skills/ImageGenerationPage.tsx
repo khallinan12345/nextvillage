@@ -12,6 +12,7 @@
 //   • Save session to dashboard (image_prompt, image_url, image_critique, image_chat_history)
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
@@ -24,7 +25,7 @@ import {
   ImagePlus, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
   Volume2, VolumeX, Wand2, MessageSquare, Lightbulb,
-  Save, AlertTriangle, Trash2,
+  Save, AlertTriangle, Trash2, BookOpen,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -573,6 +574,10 @@ const ImageGenerationPage: React.FC = () => {
 
               {/* Voice controls */}
               <div className="flex items-center gap-2">
+                <Link to="/tutorials/creative-ai/ai-image-creation"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition-all">
+                  <BookOpen size={16} /> Guide
+                </Link>
                 <button onClick={() => { if (isSpeaking) stopSpeaking(); else setVoiceEnabled(e => !e); }}
                   className={classNames('p-2 rounded-lg border transition-all',
                     voiceEnabled ? 'bg-slate-700 border-slate-600 text-pink-300' : 'bg-slate-800 border-slate-700 text-slate-500')}>

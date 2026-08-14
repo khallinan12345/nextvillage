@@ -48,7 +48,7 @@
  *    - Activity no longer clickable in overview
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
 import AppLayout from '../components/layout/AppLayout';
@@ -4691,6 +4691,12 @@ Provide assessment now:`;
               </svg>
               Tutorial
             </a>
+            <Link
+              to={`/tutorials/skill-development/${activeCategory || skillCategories[0].id}`}
+              title="Read the written guide"
+              className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0">
+              <BookOpen size={13} /> Guide
+            </Link>
           </div>
 
           {/* Category Selector */}

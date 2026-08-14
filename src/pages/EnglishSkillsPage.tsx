@@ -1,6 +1,7 @@
 // src/pages/EnglishSkillsPage.tsx
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import {
   Mic, MicOff, MessageSquare, BookOpen, PenLine, Sparkles,
@@ -1230,6 +1231,14 @@ Respond ONLY with valid JSON:
                   Grow your English communication through real conversations with an AI coach.
                   All five stages are open — start wherever you like, at your own pace.
                 </p>
+                <div className="mt-4 flex justify-center">
+                  <Link
+                    to="/tutorials/foundations/english-skills"
+                    className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" /> Guide
+                  </Link>
+                </div>
               </div>
               <div className="mt-4">
                 <PidginTooltip

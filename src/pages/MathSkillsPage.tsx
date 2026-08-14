@@ -1,6 +1,7 @@
 // src/pages/MathSkillsPage.tsx
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import {
   Mic, MicOff, MessageSquare, BookOpen, Calculator,
@@ -1209,6 +1210,14 @@ LANGUAGE RULES:
               <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
                 Build mathematical mastery from counting to algebra — one stage at a time, with an AI coach who meets you where you are.
               </p>
+              <div className="mt-4 flex justify-center">
+                <Link
+                  to="/tutorials/foundations/math-skills"
+                  className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                >
+                  <BookOpen className="h-3.5 w-3.5" /> Guide
+                </Link>
+              </div>
             </div>
             <div className="mt-4">
               <PidginTooltip

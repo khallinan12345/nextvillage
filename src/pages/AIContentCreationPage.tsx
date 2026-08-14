@@ -8,6 +8,7 @@
 //   /api/evaluate-content-session
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { PidginTooltip } from '../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../lib/speechCoordination';
@@ -18,7 +19,7 @@ import {
   Lightbulb, BarChart3, Award, X, Copy, Check,
   Volume2, VolumeX, AlertCircle, Star, ChevronDown, ChevronUp,
   Trash2, Plus, RefreshCw, Eye, FileText, Mail, Globe,
-  Video, Gift, Megaphone, MessageSquare, Wand2,
+  Video, Gift, Megaphone, MessageSquare, Wand2, BookOpen,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1025,6 +1026,10 @@ const AIContentCreationPage: React.FC = () => {
               className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
               <FolderOpen size={15} />
             </button>
+            <Link to="/tutorials/ai-content-creation"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+              <BookOpen size={12} /> Guide
+            </Link>
             {lastSaved && !isSaving && <span className="text-[10px] text-gray-600 hidden sm:block">Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
             {saveError && <span className="text-[10px] text-red-500">Save failed</span>}
             <button onClick={handleSaveProject} disabled={isSaving || !taskHasGeneration}
