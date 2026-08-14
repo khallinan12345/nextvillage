@@ -668,45 +668,6 @@ function buildNewAssessmentContextBlock(priorAssessments: Assessment[]): string 
 
 // ─── Healthcare background (preserved from original) ─────────────────────────
 
-const HealthBackground: React.FC = () => {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-  const [moving, setMoving] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      setMouse({ x: Math.max(0, e.clientX - 256), y: Math.max(0, e.clientY - 64) });
-      setMoving(true);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setMoving(false), 120);
-    };
-    window.addEventListener('mousemove', h);
-    return () => { window.removeEventListener('mousemove', h); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-  const img = "url('/background_healthcare_navigator.png')";
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="health-distortion">
-            <feTurbulence type="fractalNoise" baseFrequency="0.007" numOctaves="3" seed="22" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="55" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-      {/* Desktop: offset for sidebar (left-64) + top bar (top-16). Mobile: full bleed from top bar (top-16, left-0) */}
-      <div className="fixed top-14 left-0 right-0 bottom-0" style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-indigo-900/60 to-teal-900/65" />
-        <div className="absolute inset-0 bg-black/10" />
-      </div>
-      {moving && (
-        <div className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none" style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 1, filter: 'url(#health-distortion)', WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)`, maskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)` }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-indigo-900/60 to-teal-900/65" />
-        </div>
-      )}
-    </>
-  );
-};
 
 // ─── Markdown renderer (preserved from original) ──────────────────────────────
 
@@ -789,7 +750,7 @@ interface ProbePanelProps {
 const ProbePanel: React.FC<ProbePanelProps> = ({
   symptom, messages, loading, done, input, onInputChange, onSend, onClose, chatEndRef
 }) => (
-  <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-2 pb-2">
+  <div className="fixed inset-0 z-50 flex items-end justify-center bg-card border border-hair px-2 pb-2">
     <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col" style={{ maxHeight: '90dvh' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-indigo-50 rounded-t-2xl">
@@ -1514,16 +1475,15 @@ const HealthcareNavigatorPage: React.FC = () => {
   if (mode === 'dashboard') {
     return (
       <AppLayout>
-        <HealthBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           {/* Header bar */}
-          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 mb-4">
+          <div className="bg-card border border-hair rounded-2xl p-4 mb-4">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xl sm:text-2xl">🏥</div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl bg-accent flex items-center justify-center text-xl sm:text-2xl">🏥</div>
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-white leading-tight">Health Navigator</h1>
-                  <p className="text-xs text-blue-200 truncate">Your patient casebook · Oloibiri & Ibiade</p>
+                  <h1 className="text-lg sm:text-xl font-bold text-ink leading-tight">Health Navigator</h1>
+                  <p className="text-xs text-muted truncate">Your patient casebook · Oloibiri & Ibiade</p>
                   <div className="mt-2">
                     <PidginTooltip
                       originalText="Your patient casebook · Oloibiri & Ibiade"
@@ -1535,20 +1495,20 @@ const HealthcareNavigatorPage: React.FC = () => {
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Link
                   to="/tutorials/healthcare-navigator"
-                  className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                  className="flex items-center gap-1.5 px-3 py-2.5 border border-hair bg-card text-body hover:text-accent hover:border-accent/40 rounded-xl font-semibold text-sm transition-colors"
                   title="Read the written guide"
                 >
                   <BookOpen size={16} /> <span className="hidden xs:inline">Guide</span>
                 </Link>
                 <button
                   onClick={() => setShowOfflineModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                  className="flex items-center gap-1.5 px-3 py-2.5 border border-hair bg-card text-body hover:text-accent hover:border-accent/40 rounded-xl font-semibold text-sm transition-colors"
                   title="Use offline version"
                 >
                   📴 Offline
                 </button>
                 <button onClick={() => { resetAddPatient(); setMode('add-patient'); }}
-                  className="flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold text-sm hover:opacity-90">
+                  className="flex items-center gap-1.5 px-3 py-2.5 bg-accent text-white rounded-xl font-semibold text-sm hover:bg-accent/90">
                   <Plus size={16}/> <span className="hidden xs:inline">Add</span> Patient
                 </button>
               </div>
@@ -1563,7 +1523,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                 { label: 'Open Cases', value: patients.reduce((s, p) => s + (p.open_cases ?? 0), 0), icon: '📋' },
                 { label: 'This Month', value: patients.filter(p => p.last_assessment_at && new Date(p.last_assessment_at) > new Date(Date.now() - 30*24*60*60*1000)).length, icon: '📅' },
               ].map(stat => (
-                <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 text-center">
+                <div key={stat.label} className="bg-card border border-hair rounded-xl p-3 sm:p-4 text-center">
                   <div className="text-xl sm:text-2xl mb-0.5">{stat.icon}</div>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</p>
                   <p className="text-xs text-gray-500 leading-tight">{stat.label}</p>
@@ -1632,7 +1592,7 @@ const HealthcareNavigatorPage: React.FC = () => {
 
           {/* ── Challenge Reflection Modal ── */}
           {showChallengeReflect && activeChallenge && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-card border border-hair p-4">
               <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
                 {challengeResult ? (
                   <div className="p-6">
@@ -1717,7 +1677,7 @@ const HealthcareNavigatorPage: React.FC = () => {
 
           {/* ── Offline Mode Modal ────────────────────────────────────────── */}
           {showOfflineModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-card border border-hair p-4">
               <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div className="flex items-center justify-between px-5 py-4 border-b bg-blue-50 rounded-t-2xl">
                   <div>
@@ -1810,7 +1770,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           {loadingPatients ? (
             <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-blue-300"/></div>
           ) : patients.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 sm:p-10 text-center">
+            <div className="bg-card border border-hair rounded-2xl p-8 sm:p-10 text-center">
               <div className="text-5xl mb-4">🏥</div>
               <h2 className="text-lg font-bold text-gray-800 mb-2">No patients registered yet</h2>
               <p className="text-sm text-gray-500 mb-5">Register your first community patient to start your casebook.</p>
@@ -1826,10 +1786,10 @@ const HealthcareNavigatorPage: React.FC = () => {
                 return (
                   <button key={patient.patient_id}
                     onClick={() => { setSelectedPatient(patient); loadAssessments(patient.patient_id); setMode('patient-detail'); }}
-                    className="w-full bg-white/90 backdrop-blur-sm rounded-2xl p-4 text-left hover:bg-white active:bg-white transition-colors border border-transparent hover:border-blue-300 active:border-blue-300">
+                    className="w-full bg-card border border-hair rounded-2xl p-4 text-left hover:bg-white active:bg-white transition-colors border border-transparent hover:border-blue-300 active:border-blue-300">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-lg">{pg.emoji}</div>
+                        <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-accent/10 flex items-center justify-center text-lg">{pg.emoji}</div>
                         <div className="min-w-0">
                           <p className="font-bold text-gray-900 truncate">{patient.patient_name}</p>
                           <p className="text-sm text-gray-500">{patient.village}</p>
@@ -1873,9 +1833,8 @@ const HealthcareNavigatorPage: React.FC = () => {
   if (mode === 'add-patient') {
     return (
       <AppLayout>
-        <HealthBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 sm:p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 sm:p-5">
             <div className="flex items-center gap-3 mb-5">
               <button onClick={() => setMode('dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div><h2 className="text-xl font-bold text-gray-900">Register Patient</h2><p className="text-sm text-gray-500">Add to your casebook</p></div>
@@ -1958,12 +1917,11 @@ const HealthcareNavigatorPage: React.FC = () => {
     const pg = PATIENT_GROUPS[patient.patient_group];
     return (
       <AppLayout>
-        <HealthBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 sm:p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 sm:p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('dashboard')} className="text-gray-400 hover:text-gray-700 p-1 flex-shrink-0"><ArrowLeft size={20}/></button>
-              <div className="w-11 h-11 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-2xl">{pg.emoji}</div>
+              <div className="w-11 h-11 flex-shrink-0 rounded-xl bg-accent/10 flex items-center justify-center text-2xl">{pg.emoji}</div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{patient.patient_name}</h2>
                 <p className="text-sm text-gray-500 truncate">{patient.village}{patient.phone ? ` · ${patient.phone}` : ''}</p>
@@ -1998,7 +1956,7 @@ const HealthcareNavigatorPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 sm:p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 sm:p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <ClipboardList size={16} className="text-blue-600"/> Assessment History
@@ -2063,7 +2021,6 @@ const HealthcareNavigatorPage: React.FC = () => {
 
     return (
       <AppLayout>
-        <HealthBackground />
 
         {/* Symptom Probe Panel Modal */}
         {probeSymptom && (
@@ -2083,7 +2040,7 @@ const HealthcareNavigatorPage: React.FC = () => {
         <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
 
           {/* Header */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4">
             <div className="flex items-center gap-3">
               <button onClick={() => { setMode('patient-detail'); }} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${pg.colour} flex items-center justify-center text-xl`}>{pg.emoji}</div>
@@ -2106,7 +2063,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           )}
 
           {/* Chief complaint */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 sm:p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 sm:p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><FileText size={15} className="text-blue-600"/> Chief Complaint</h3>
             <textarea value={assessment.chiefComplaint} onChange={e => setField('chiefComplaint', e.target.value)} rows={2}
               placeholder="Main reason for this visit — what the patient/caregiver says in their own words…"
@@ -2114,7 +2071,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           </div>
 
           {/* Vitals */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 sm:p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 sm:p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><Thermometer size={15} className="text-blue-600"/> Vital Signs</h3>
             <div className="space-y-3">
               {/* Temp */}
@@ -2188,7 +2145,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           </div>
 
           {/* Anthropometry */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 sm:p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 sm:p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><Activity size={15} className="text-blue-600"/> Measurements</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div>
@@ -2219,7 +2176,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           </div>
 
           {/* Danger signs */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <h3 className="text-sm font-bold text-red-700 mb-3 flex items-center gap-2"><AlertTriangle size={15}/> General Danger Signs (IMCI)</h3>
             <p className="text-xs text-gray-500 mb-3">ANY one = potential RED classification</p>
             <div className="space-y-2">
@@ -2231,7 +2188,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           </div>
 
           {/* Symptoms */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-2"><Stethoscope size={15} className="text-blue-600"/> Symptoms & Signs</h3>
             <p className="text-xs text-gray-400 mb-3 flex items-center gap-1"><span className="text-indigo-500 font-bold">🔍 Probe</span> — tap after checking a symptom to interview the patient in depth</p>
             <div className="space-y-2">
@@ -2277,7 +2234,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           </div>
 
           {/* Physical Observation */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-2">👁️ Physical Observation</h3>
             <p className="text-xs text-gray-400 mb-3 flex items-center gap-1">Look at the patient carefully. <span className="text-indigo-500 font-bold ml-1">🔍 Probe</span> — tap to interview in depth.</p>
             <div className="space-y-3">
@@ -2319,7 +2276,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           </div>
 
           {/* Malaria */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <h3 className="text-sm font-bold text-amber-700 mb-3 flex items-center gap-2">🦟 Malaria Assessment</h3>
             <div className="space-y-2">
               <CheckRow label="Malaria suspected" checked={assessment.malariaSuspected} onChange={v => setField('malariaSuspected', v)}/>
@@ -2343,7 +2300,7 @@ const HealthcareNavigatorPage: React.FC = () => {
           </div>
 
           {/* Additional notes */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-2">Additional Notes</h3>
             <textarea value={assessment.additionalNotes} onChange={e => setField('additionalNotes', e.target.value)} rows={3}
               placeholder="Any other observations, caregiver history, context…"
@@ -2358,7 +2315,7 @@ const HealthcareNavigatorPage: React.FC = () => {
               {isTriaging ? <><Loader2 size={18} className="animate-spin"/>Running AI Triage…</> : <><Stethoscope size={18}/>Run AI Triage Classification</>}
             </button>
           ) : (
-            <div className={classNames('bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5 border-2', TRIAGE_CONFIG[triageResult.level].border)}>
+            <div className={classNames('bg-card border border-hair rounded-2xl shadow-md p-5 border-2', TRIAGE_CONFIG[triageResult.level].border)}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">AI Triage Result</p>
@@ -2453,13 +2410,12 @@ const HealthcareNavigatorPage: React.FC = () => {
 
     return (
       <AppLayout>
-        <HealthBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 mb-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 mb-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3">
                 <button onClick={() => { window.speechSynthesis.cancel(); setMode('patient-detail'); }} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-lg">🏥</div>
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-lg">🏥</div>
                 <div>
                   <h2 className="text-base font-bold text-gray-900">Evaluate My Case History</h2>
                   <p className="text-xs text-gray-500">{patient.patient_name} · {triageBadge(assess.triage_level)}</p>
@@ -2482,7 +2438,7 @@ const HealthcareNavigatorPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
+          <div className="bg-card border border-hair rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
             <Lightbulb size={14} className="text-indigo-700 flex-shrink-0"/>
             <p className="text-xs text-gray-700">Reflect on this assessment with your AI supervisor. Consider what you did well, what you missed, and what you'd do differently next time.</p>
           </div>
@@ -2497,7 +2453,7 @@ const HealthcareNavigatorPage: React.FC = () => {
               {messages.map(msg => (
                 <div key={msg.id} className={classNames('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                   {msg.role === 'assistant' && (
-                    <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-base sm:text-lg">🏥</div>
+                    <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-accent flex items-center justify-center text-base sm:text-lg">🏥</div>
                   )}
                   <div className={classNames('max-w-[82%] rounded-2xl px-3 sm:px-4 py-3 text-sm leading-relaxed',
                     msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-tl-sm')}>
@@ -2515,7 +2471,7 @@ const HealthcareNavigatorPage: React.FC = () => {
               ))}
               {isSending && (
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-base">🏥</div>
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-accent flex items-center justify-center text-base">🏥</div>
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex gap-1.5 items-center h-4">{[0, 150, 300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: `${d}ms` }}/>)}</div>
                   </div>
@@ -2536,7 +2492,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                   </button>
                   <button onClick={sendMessage} disabled={!inputText.trim() || isSending}
                     className={classNames('p-2.5 rounded-xl transition-all',
-                      inputText.trim() && !isSending ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white hover:opacity-90' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
+                      inputText.trim() && !isSending ? 'bg-accent text-white hover:opacity-90' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
                     <Send size={16}/>
                   </button>
                 </div>
@@ -2559,12 +2515,11 @@ const HealthcareNavigatorPage: React.FC = () => {
 
     return (
       <AppLayout>
-        <HealthBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 mb-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 mb-4">
             <div className="flex items-center gap-3">
               <button onClick={() => setMode('patient-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-lg">🔄</div>
+              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-lg">🔄</div>
               <div>
                 <h2 className="text-base font-bold text-gray-900">Follow-up Prior Assessment</h2>
                 <p className="text-xs text-gray-500">{patient.patient_name} · Follow-up #{priorFollowupIndex + 1}</p>
@@ -2572,7 +2527,7 @@ const HealthcareNavigatorPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
+          <div className="bg-card border border-hair rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
             <Calendar size={14} className="text-teal-700 flex-shrink-0"/>
             <p className="text-xs text-gray-700">The AI will guide you through follow-up questions one at a time. Answer each question with what the patient tells you. Your responses are saved to the existing case record.</p>
           </div>
@@ -2614,7 +2569,7 @@ const HealthcareNavigatorPage: React.FC = () => {
               {priorFollowupMessages.map(msg => (
                 <div key={msg.id} className={classNames('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                   {msg.role === 'assistant' && (
-                    <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-base">🔄</div>
+                    <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-accent flex items-center justify-center text-base">🔄</div>
                   )}
                   <div className={classNames('max-w-[82%] rounded-2xl px-3 sm:px-4 py-3 text-sm leading-relaxed',
                     msg.role === 'user' ? 'bg-teal-600 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-tl-sm')}>
@@ -2632,7 +2587,7 @@ const HealthcareNavigatorPage: React.FC = () => {
               ))}
               {priorFollowupSending && (
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-base">🔄</div>
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-accent flex items-center justify-center text-base">🔄</div>
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex gap-1.5 items-center h-4">{[0, 150, 300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: `${d}ms` }}/>)}</div>
                   </div>
@@ -2654,7 +2609,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                   disabled={!priorFollowupInput.trim() || priorFollowupSending || priorFollowupComplete}
                   className={classNames('p-2.5 rounded-xl transition-all',
                     priorFollowupInput.trim() && !priorFollowupSending && !priorFollowupComplete
-                      ? 'bg-gradient-to-br from-teal-600 to-blue-600 text-white hover:opacity-90'
+                      ? 'bg-accent text-white hover:opacity-90'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
                   <Send size={16}/>
                 </button>
@@ -2675,12 +2630,11 @@ const HealthcareNavigatorPage: React.FC = () => {
     const tc = TRIAGE_CONFIG[a.triage_level];
     return (
       <AppLayout>
-        <HealthBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('patient-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl">🏥</div>
+              <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center text-2xl">🏥</div>
               <div className="flex-1">
                 <h2 className="text-base font-bold text-gray-900">Assessment — {selectedPatient.patient_name}</h2>
                 <p className="text-xs text-gray-500">{formatDate(a.created_at)}</p>

@@ -785,45 +785,6 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
   </div>
 );
 
-// ─── Community background ─────────────────────────────────────────────────────
-
-const CommunityBackground: React.FC = () => {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-  const [moving, setMoving] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      setMouse({ x: Math.max(0, e.clientX - 256), y: Math.max(0, e.clientY - 64) });
-      setMoving(true);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setMoving(false), 120);
-    };
-    window.addEventListener('mousemove', h);
-    return () => { window.removeEventListener('mousemove', h); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="community-distortion">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="8" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="55" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-      <div className="fixed top-14 left-0 right-0 bottom-0" style={{ backgroundImage: "url('/background_AI_ambassador.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/65 via-teal-900/55 to-green-900/65" />
-        <div className="absolute inset-0 bg-black/15" />
-      </div>
-      {moving && (
-        <div className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none" style={{ backgroundImage: "url('/background_AI_ambassador.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 1, filter: 'url(#community-distortion)', WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)`, maskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)` }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/65 via-teal-900/55 to-green-900/65" />
-        </div>
-      )}
-    </>
-  );
-};
 
 // ─── Prep Coach Panel ─────────────────────────────────────────────────────────
 // The "probe panel" equivalent for this page. Before the student faces the
@@ -879,7 +840,7 @@ const PrepPanel: React.FC<PrepPanelProps> = ({
         ))}
         {loading && (
           <div className="flex items-start gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-xs">🎓</div>
+            <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center text-xs">🎓</div>
             <div className="bg-emerald-50 rounded-2xl rounded-tl-sm px-3 py-2.5">
               <div className="flex gap-1 items-center h-4">{[0,150,300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: `${d}ms` }}/>)}</div>
             </div>
@@ -1442,22 +1403,21 @@ Respond ONLY as valid JSON:
   if (view === 'select') {
     return (
       <AppLayout>
-        <CommunityBackground />
         <div className="relative z-10 max-w-4xl mx-auto px-6 py-10">
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 mb-8">
+          <div className="bg-card border border-hair rounded-2xl p-6 mb-8">
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-3">
-                <Users className="h-10 w-10 text-emerald-300" />
-                <h1 className="text-4xl font-bold text-white">AI Ambassadors</h1>
+                <Users className="h-9 w-9 text-accent" />
+                <h1 className="text-3xl font-bold text-ink">AI Ambassadors</h1>
               </div>
               <Link
                 to="/tutorials/ai-ambassadors"
-                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0 border border-white/30"
+                className="flex items-center gap-1.5 border border-hair bg-card text-body hover:text-accent hover:border-accent/40 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors shrink-0"
               >
                 <BookOpen size={14} /> Guide
               </Link>
             </div>
-            <p className="text-xl text-emerald-100">
+            <p className="text-lg text-body">
               {communicationLevel <= 1
                 ? 'Learn how to teach others in your community about AI — by practising with a real community member.'
                 : `Develop the skills to explain AI accessibly, handle skepticism, and connect technology to real community needs in ${communityLabel}.`}
@@ -1476,22 +1436,22 @@ Respond ONLY as valid JSON:
 
           {/* ── Challenge Banner — available (not enrolled) ── */}
           {!challengeLoading && availableChallenge && !activeChallenge && (
-            <div className="bg-teal-900/80 backdrop-blur-sm border border-teal-400/50 rounded-2xl p-5 mb-6 shadow-lg">
+            <div className="bg-surface border border-hair border-l-4 border-l-accent rounded-2xl p-5 mb-6">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-400/20 flex items-center justify-center flex-shrink-0">
-                  <Award size={20} className="text-teal-300" />
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <Award size={20} className="text-accent" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-bold text-teal-300 uppercase tracking-wide">Community AI Challenge — This Week</span>
-                    <span className="text-xs bg-teal-400/20 text-teal-200 px-2 py-0.5 rounded-full">{availableChallenge.tier_target}</span>
+                    <span className="text-xs font-bold text-accent uppercase tracking-wide">Community AI Challenge — This Week</span>
+                    <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">{availableChallenge.tier_target}</span>
                   </div>
-                  <p className="text-white font-bold text-base mb-1">{availableChallenge.title}</p>
-                  <p className="text-teal-100 text-sm leading-relaxed mb-3">{availableChallenge.description}</p>
+                  <p className="text-ink font-semibold text-base mb-1">{availableChallenge.title}</p>
+                  <p className="text-body text-sm leading-relaxed mb-3">{availableChallenge.description}</p>
                   <button
                     onClick={() => handleEnrollChallenge(availableChallenge)}
                     disabled={enrolling}
-                    className="w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
                   >
                     {enrolling
                       ? <><Loader2 size={14} className="animate-spin" /> Checking out…</>
@@ -1505,25 +1465,25 @@ Respond ONLY as valid JSON:
 
           {/* ── Challenge Banner — enrolled ── */}
           {activeChallenge && (
-            <div className="bg-emerald-900/80 backdrop-blur-sm border border-emerald-400/50 rounded-2xl p-5 mb-6 shadow-lg">
+            <div className="bg-surface border border-hair border-l-4 border-l-accent rounded-2xl p-5 mb-6">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-400/20 flex items-center justify-center flex-shrink-0">
-                  <Award size={20} className="text-emerald-300" />
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <Award size={20} className="text-accent" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-bold text-emerald-300 uppercase tracking-wide">Community AI Challenge — Active</span>
-                    <span className="text-xs bg-emerald-400/20 text-emerald-200 px-2 py-0.5 rounded-full">{activeChallenge.tier_target}</span>
+                    <span className="text-xs font-bold text-accent uppercase tracking-wide">Community AI Challenge — Active</span>
+                    <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">{activeChallenge.tier_target}</span>
                   </div>
-                  <p className="text-white font-bold text-base mb-1">{activeChallenge.title}</p>
-                  <p className="text-emerald-100 text-sm leading-relaxed mb-2">{activeChallenge.challenge_mode_intro}</p>
-                  <div className="bg-emerald-800/60 rounded-xl p-3 mb-3">
-                    <p className="text-xs font-bold text-emerald-300 mb-1">Your mission:</p>
-                    <p className="text-emerald-100 text-sm">{activeChallenge.challenge_instruction}</p>
+                  <p className="text-ink font-semibold text-base mb-1">{activeChallenge.title}</p>
+                  <p className="text-body text-sm leading-relaxed mb-2">{activeChallenge.challenge_mode_intro}</p>
+                  <div className="bg-card border border-hair rounded-xl p-3 mb-3">
+                    <p className="text-xs font-bold text-accent mb-1">Your mission:</p>
+                    <p className="text-body text-sm">{activeChallenge.challenge_instruction}</p>
                   </div>
                   <button
                     onClick={() => setShowChallengeReflect(true)}
-                    className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
                   >
                     <CheckCircle size={16} /> I've done it — submit my reflection
                   </button>
@@ -1617,7 +1577,7 @@ Respond ONLY as valid JSON:
           )}
 
           {/* How it works */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg">
+          <div className="bg-card border border-hair rounded-2xl p-6 mb-8 shadow-lg">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Globe2 className="h-6 w-6 text-emerald-600" /> How This Works
             </h2>
@@ -1643,14 +1603,14 @@ Respond ONLY as valid JSON:
           </div>
 
           {/* Persona grid */}
-          <h2 className="text-2xl font-bold text-white mb-4">Choose who you want to teach today:</h2>
+          <h2 className="text-xl font-bold text-ink mb-4">Choose who you want to teach today:</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {activePersonas.map(p => {
               const sessions = pastSessions.filter(s => s.persona_id === p.id);
               const bestScore = sessions.reduce((max, s) => s.overall_score != null && s.overall_score > max ? s.overall_score : max, 0);
               return (
                 <button key={p.id} onClick={() => { setPersona(p); setPrepAnswers({}); setView('prepare'); }}
-                  className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-emerald-400">
+                  className="text-left bg-card border border-hair rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-emerald-400">
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${p.colour} flex items-center justify-center text-3xl mb-3`}>
                     {p.emoji}
                   </div>
@@ -1681,7 +1641,7 @@ Respond ONLY as valid JSON:
 
           {/* Past sessions */}
           {pastSessions.length > 0 && (
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg">
+            <div className="bg-card border border-hair rounded-2xl p-5 shadow-lg">
               <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                 <History size={16} className="text-emerald-600"/> Recent Sessions
               </h3>
@@ -1724,7 +1684,6 @@ Respond ONLY as valid JSON:
   if (view === 'prepare' && selectedPersona) {
     return (
       <AppLayout>
-        <CommunityBackground />
 
         {/* Prep Coach Panel Modal */}
         {prepQuestion && (
@@ -1743,11 +1702,11 @@ Respond ONLY as valid JSON:
         )}
 
         <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
-          <button onClick={() => setView('select')} className="flex items-center gap-2 text-emerald-200 hover:text-white mb-6 transition-colors">
+          <button onClick={() => setView('select')} className="flex items-center gap-2 text-muted hover:text-accent mb-6 transition-colors">
             <ArrowLeft size={18} /> Back to all personas
           </button>
 
-          <div className="bg-white/93 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-card border border-hair rounded-2xl overflow-hidden">
             {/* Header */}
             <div className={`bg-gradient-to-r ${selectedPersona.colour} p-6`}>
               <div className="flex items-center gap-4">
@@ -1857,7 +1816,6 @@ Respond ONLY as valid JSON:
   if (view === 'teach' && selectedPersona) {
     return (
       <AppLayout>
-        <CommunityBackground />
         <div className="relative z-10 max-w-[67%] mx-auto px-6 py-8">
 
           {/* Evaluation Modal */}
@@ -1945,35 +1903,35 @@ Respond ONLY as valid JSON:
           )}
 
           {/* Header */}
-          <div className="bg-black/50 backdrop-blur-sm rounded-2xl shadow-lg p-5 mb-4">
+          <div className="bg-card border border-hair rounded-2xl p-5 mb-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
-                <button onClick={() => { window.speechSynthesis.cancel(); setView('prepare'); }} className="text-white/70 hover:text-white p-1">
+                <button onClick={() => { window.speechSynthesis.cancel(); setView('prepare'); }} className="text-muted hover:text-accent p-1">
                   <ArrowLeft size={20} />
                 </button>
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${selectedPersona.colour} flex items-center justify-center text-2xl`}>
                   {selectedPersona.emoji}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white drop-shadow">Teaching {selectedPersona.name}</h2>
-                  <p className="text-sm text-white/80 font-medium">{selectedPersona.occupation}</p>
+                  <h2 className="text-xl font-bold text-ink">Teaching {selectedPersona.name}</h2>
+                  <p className="text-sm text-muted font-medium">{selectedPersona.occupation}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                <div className="flex rounded-lg overflow-hidden border border-hair">
                   {(['english', 'pidgin'] as const).map(m => (
                     <button key={m} onClick={() => { stopSpeaking(); setVoiceMode(m); }}
-                      className={`px-2.5 py-1.5 text-xs font-bold border-r border-gray-300 last:border-0 transition-all ${voiceMode === m ? (m === 'english' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+                      className={`px-2.5 py-1.5 text-xs font-bold border-r border-hair last:border-0 transition-all ${voiceMode === m ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-paper'}`}>
                       {m === 'english' ? '🇬🇧' : '🇳🇬'}
                     </button>
                   ))}
                 </div>
                 <button onClick={() => { setSpeechOn(s => !s); if (speechOn) stopSpeaking(); }}
-                  className={`p-2 rounded-lg transition-all ${speechOn ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
+                  className={`p-2 rounded-lg transition-all ${speechOn ? 'bg-accent/10 text-accent' : 'bg-paper text-muted'}`}>
                   {speechOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 </button>
                 <button onClick={handleSave} disabled={isSaving || messages.length < 2}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white/80 hover:text-white border border-white/40 hover:border-white/70 rounded-lg transition-colors disabled:opacity-40">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-body hover:text-accent border border-hair hover:border-accent/40 rounded-lg transition-colors disabled:opacity-40">
                   {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
                 </button>
                 <button onClick={handleEvaluate} disabled={isEvaluating || userTurnCount < 3}
@@ -1988,7 +1946,7 @@ Respond ONLY as valid JSON:
           </div>
 
           {/* Tip */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
+          <div className="bg-card border border-hair rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
             <ShieldCheck size={16} className="text-emerald-600 flex-shrink-0" />
             <p className="text-sm text-gray-700">
               <strong>Remember:</strong> You are the teacher. Ask about their life first. Connect AI to their specific work. Use simple language. Evaluate after at least 3 exchanges.
@@ -2058,7 +2016,7 @@ Respond ONLY as valid JSON:
           </div>
 
           {userTurnCount >= 3 && !showEvalModal && (
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between shadow">
+            <div className="bg-card border border-hair rounded-xl p-4 flex items-center justify-between shadow">
               <div className="flex items-center gap-2">
                 <Award size={20} className="text-emerald-600" />
                 <p className="text-base font-semibold text-gray-800">Good session! Get your evaluation when you're ready.</p>
@@ -2071,7 +2029,7 @@ Respond ONLY as valid JSON:
           )}
 
           <div className="mt-3 flex justify-center">
-            <button onClick={handleNewSession} className="text-sm text-white/60 hover:text-white/90 underline transition-colors">
+            <button onClick={handleNewSession} className="text-sm text-muted hover:text-accent underline transition-colors">
               Start over with a different persona
             </button>
           </div>
@@ -2087,13 +2045,12 @@ Respond ONLY as valid JSON:
   if (view === 'reflect' && selectedPersona && evaluation) {
     return (
       <AppLayout>
-        <CommunityBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-6 py-8">
           <div className="bg-white/93 backdrop-blur-sm rounded-2xl shadow-lg p-5 mb-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3">
                 <button onClick={() => setView('teach')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-lg">🎓</div>
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-lg">🎓</div>
                 <div>
                   <h2 className="text-base font-bold text-gray-900">Debrief — {selectedPersona.name}</h2>
                   <p className="text-xs text-gray-500">Session score: {evaluation.overall_score?.toFixed(1)}/3.0 · Ask how to improve</p>
@@ -2106,7 +2063,7 @@ Respond ONLY as valid JSON:
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
+          <div className="bg-card border border-hair rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
             <Lightbulb size={14} className="text-emerald-700 flex-shrink-0"/>
             <p className="text-xs text-gray-700">Ask "How could I have handled the fear about X better?", "Show me a better opening line", or "Why did I score low on local examples?" The coach will give specific, honest feedback tied to your actual session.</p>
           </div>
@@ -2120,7 +2077,7 @@ Respond ONLY as valid JSON:
               {debriefMessages.map(msg => (
                 <div key={msg.id} className={classNames('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                   {msg.role === 'assistant' && (
-                    <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-lg">🎓</div>
+                    <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-lg">🎓</div>
                   )}
                   <div className={classNames('max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
                     msg.role === 'user' ? 'bg-emerald-600 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-tl-sm')}>
@@ -2138,7 +2095,7 @@ Respond ONLY as valid JSON:
               ))}
               {isDebriefSending && (
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-lg">🎓</div>
+                  <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-lg">🎓</div>
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex gap-1.5 items-center h-4">{[0,150,300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: `${d}ms` }}/>)}</div>
                   </div>
@@ -2159,7 +2116,7 @@ Respond ONLY as valid JSON:
                 />
                 <button onClick={sendDebriefMessage} disabled={!debriefInput.trim() || isDebriefSending}
                   className={classNames('p-2.5 rounded-xl transition-all',
-                    debriefInput.trim() && !isDebriefSending ? 'bg-gradient-to-br from-emerald-600 to-teal-600 text-white hover:opacity-90' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
+                    debriefInput.trim() && !isDebriefSending ? 'bg-accent text-white hover:opacity-90' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
                   <Send size={16}/>
                 </button>
               </div>
