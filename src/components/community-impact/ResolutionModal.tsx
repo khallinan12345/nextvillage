@@ -13,7 +13,7 @@ export interface ResolutionSubmitData {
   valueLabel: string | null;
 }
 
-export type ResolutionAccent = 'green' | 'cyan' | 'blue' | 'amber' | 'teal';
+export type ResolutionAccent = 'green' | 'cyan' | 'blue' | 'amber' | 'teal' | 'violet';
 
 export const ACCENT_CLASSES: Record<ResolutionAccent, { ring: string; button: string; activeOption: string }> = {
   green: { ring: 'focus:ring-green-400', button: 'bg-green-600 hover:bg-green-700', activeOption: 'bg-green-50 border-green-400 text-green-800' },
@@ -21,6 +21,7 @@ export const ACCENT_CLASSES: Record<ResolutionAccent, { ring: string; button: st
   blue:  { ring: 'focus:ring-blue-400',  button: 'bg-blue-600 hover:bg-blue-700',   activeOption: 'bg-blue-50 border-blue-400 text-blue-800' },
   amber: { ring: 'focus:ring-amber-400', button: 'bg-amber-600 hover:bg-amber-700', activeOption: 'bg-amber-50 border-amber-400 text-amber-800' },
   teal:  { ring: 'focus:ring-teal-400',  button: 'bg-teal-600 hover:bg-teal-700',   activeOption: 'bg-teal-50 border-teal-400 text-teal-800' },
+  violet: { ring: 'focus:ring-accent/40', button: 'bg-accent hover:bg-accent/90', activeOption: 'bg-surface border-accent text-ink' },
 };
 
 const UNIT_LABELS: Record<ResolutionValueUnit, string> = {
