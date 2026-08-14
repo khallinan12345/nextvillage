@@ -3,7 +3,7 @@
 // AI Video Production Certification
 // Framework: mirrors WebDevCertificationPage (loads rubrics from certification_assessments,
 //            evaluates against each criterion, saves to dashboard, generates PDF cert)
-// Build environment: video generation interface (LTX-Video via Replicate edge function)
+// Build environment: video generation interface (Wan 2.1 I2V 720p via Replicate edge function)
 //                   — same generate-video + video-status functions as VideoGenerationPage
 // No guided task system — student generates freely; rubric criteria shown throughout.
 //
@@ -686,7 +686,7 @@ Respond ONLY in this JSON format:
 
             {renderVoiceBar(lvl <= 1
               ? 'Welcome to the AI Video Production Certification. You will create AI videos using prompts, then be evaluated on how well you did it.'
-              : 'Welcome to the AI Video Production Certification. You will generate a portfolio of AI videos using LTX-Video, demonstrating prompt engineering skill, creative direction, and iterative refinement.')}
+              : 'Welcome to the AI Video Production Certification. You will generate a portfolio of AI videos using Wan 2.1, demonstrating prompt engineering skill, creative direction, and iterative refinement.')}
 
             {/* Hero */}
             <div className="p-6 bg-gradient-to-br from-cyan-600/20 via-teal-600/15 to-blue-600/10 border border-cyan-500/30 rounded-2xl mb-6">
@@ -694,10 +694,10 @@ Respond ONLY in this JSON format:
                 <div className="p-2.5 bg-cyan-600/30 rounded-xl"><Film size={24} className="text-cyan-300" /></div>
                 <div>
                   <h1 className="text-xl font-bold text-white">AI Video Production Certification</h1>
-                  <p className="text-cyan-300 text-sm">LTX-Video · Text-to-Video · Prompt Engineering</p>
+                  <p className="text-cyan-300 text-sm">Wan 2.1 · Text-to-Video · Prompt Engineering</p>
                   <div className="mt-2">
                     <PidginTooltip
-                      originalText="LTX-Video · Text-to-Video · Prompt Engineering"
+                      originalText="Wan 2.1 · Text-to-Video · Prompt Engineering"
                       hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
                     />
                   </div>
@@ -706,7 +706,7 @@ Respond ONLY in this JSON format:
               <p className="text-gray-300 text-sm leading-relaxed">
                 {lvl <= 1
                   ? 'In this certification, you create AI videos by writing descriptions of what you want to see. You will be judged on how well you describe your videos, whether they have a clear purpose, and how much you improved them by trying again.'
-                  : 'Demonstrate your AI video production skills by building a portfolio of LTX-Video generated clips. Your work is evaluated on prompt quality, visual storytelling, iteration, technical understanding of cinematography concepts, and creative direction.'}
+                  : 'Demonstrate your AI video production skills by building a portfolio of Wan 2.1 generated clips. Your work is evaluated on prompt quality, visual storytelling, iteration, technical understanding of cinematography concepts, and creative direction.'}
               </p>
             </div>
 
@@ -1004,7 +1004,7 @@ Respond ONLY in this JSON format:
                     <div className="max-w-xs space-y-1 text-xs text-gray-600">
                       <p>💡 {lvl <= 1 ? 'Write a description and click Make My Video.' : 'Write a detailed prompt with purpose, then generate.'}</p>
                       <p>🔄 {lvl <= 1 ? 'Try the same idea again with more words to improve it.' : 'Iterate on prompts — multiple attempts on a theme demonstrate refinement.'}</p>
-                      <p>🎬 {lvl <= 1 ? 'Videos take about 30–90 seconds to make.' : 'Generation takes 30–90 seconds via LTX-Video.'}</p>
+                      <p>🎬 {lvl <= 1 ? 'Videos take about 2–5 minutes to make.' : 'Generation takes 2–5 minutes via Wan 2.1.'}</p>
                     </div>
                   </div>
                 ) : (
@@ -1175,7 +1175,7 @@ Respond ONLY in this JSON format:
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-amber-400" /></div>
                     <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Certificate of Achievement</p>
                     <p className="text-lg font-bold text-white mt-1">AI Video Production Certification</p>
-                    <p className="text-cyan-300 text-sm">LTX-Video · {scoreLabel(Math.min(...assessmentScores.map(s => s.score ?? 0))).text} Level · {succeededVideos.length} video{succeededVideos.length !== 1 ? 's' : ''} produced</p>
+                    <p className="text-cyan-300 text-sm">Wan 2.1 · {scoreLabel(Math.min(...assessmentScores.map(s => s.score ?? 0))).text} Level · {succeededVideos.length} video{succeededVideos.length !== 1 ? 's' : ''} produced</p>
                     <div className="my-4 h-px bg-cyan-500/30" />
                     <p className="text-gray-400 text-xs">Awarded to</p>
                     <p className="text-2xl font-bold text-white mt-1">{certName || '[ Your Name ]'}</p>

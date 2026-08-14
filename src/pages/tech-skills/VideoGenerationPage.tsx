@@ -1,6 +1,6 @@
 // src/pages/VideoGenerationPage.tsx
 //
-// AI Video Generation — LTX-Video via Replicate.
+// AI Video Generation — Wan 2.1 I2V 720p (WaveSpeed/Alibaba) via Replicate.
 // Features:
 //   • Voice output toggle (UK English 🇬🇧 / Nigerian Pidgin 🇳🇬)
 //   • communication_level adaptive UI text (fetched from user_personality_baseline)
@@ -332,7 +332,7 @@ const VideoGenerationPage: React.FC = () => {
   const uiText = {
     pageTitle:      lvl <= 1 ? 'Make a Video with AI'    : 'AI Video Generation',
     pageSubtitle:   lvl <= 1 ? 'Type what you want to see. AI will make the video.'
-                             : 'Create short videos from text descriptions using LTX-Video',
+                             : 'Create short videos from text descriptions using Wan 2.1',
     promptLabel:    lvl <= 1 ? 'What do you want the video to show? *'
                              : 'Describe your video *',
     promptHint:     lvl <= 1 ? 'Describe the people, place, and light. More detail = better video.'
@@ -344,7 +344,6 @@ const VideoGenerationPage: React.FC = () => {
     durationHint:   lvl <= 1 ? 'This can take 2–5 minutes. Please be patient!'
                              : 'Wan 2.1 720p typically takes 2–5 minutes to generate.',
     improveBtnLabel: lvl <= 1 ? '✏️ Improve my English' : '✏️ Improve my English',
-    critiqueBtnLabel: lvl <= 1 ? '💡 Help me write a better prompt' : '💡 Critique my Prompt',
     generateBtn:    lvl <= 1 ? 'Make My Video 🎬'  : 'Generate Video',
     footerText:     lvl <= 1
       ? 'Your video is made by Wan 2.1. It can take 2–5 minutes. Please wait — do not close the page!'
@@ -1430,8 +1429,8 @@ Return ONLY the improved text. No explanation, no preamble.`
                         ? 'The video will start with your first image and end with your second image.'
                         : 'The video will start with your image. The prompt controls what happens next.')
                     : (imageMode === 'start-end'
-                        ? 'LTX-Video will align the first and last frames to your uploaded images. The prompt guides the motion between them.'
-                        : 'LTX-Video will use your image as the first frame. The text prompt guides the visual development.')}
+                        ? 'Wan 2.1 will align the first and last frames to your uploaded images. The prompt guides the motion between them.'
+                        : 'Wan 2.1 will use your image as the first frame. The text prompt guides the visual development.')}
                 </p>
               )}
 
