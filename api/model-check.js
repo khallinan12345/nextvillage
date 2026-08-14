@@ -19,16 +19,18 @@
 // Uses the same env vars chat.js already has — nothing new to configure
 // beyond CRON_SECRET.
 
+// Kept in sync with DEFAULT_MODELS in api/chat.js — update both together.
 const DEFAULT_MODELS = {
-  anthropic_haiku:  'claude-haiku-4-5-20251001',
-  anthropic_sonnet: 'claude-sonnet-4-6',
-  groq:             'llama-3.3-70b-versatile',
-  cerebras:         'gpt-oss-120b',
-  deepseek:         'deepseek-chat',
-  gemini:           'gemini-2.0-flash',
-  cloudflare:       '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
-  openrouter:       'meta-llama/llama-3.3-70b-instruct:free',
-  mistral:          'mistral-small-latest',
+  anthropic_haiku:   'claude-haiku-4-5-20251001',
+  anthropic_sonnet:  'claude-sonnet-4-6',
+  anthropic_sonnet5: 'claude-sonnet-5',
+  groq:              'openai/gpt-oss-120b',
+  cerebras:          'gpt-oss-120b',
+  deepseek:          'deepseek-chat',
+  gemini:            'gemini-2.0-flash',
+  cloudflare:        '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  openrouter:        'nvidia/nemotron-3-ultra-550b-a55b:free',
+  mistral:           'mistral-small-latest',
 };
 
 // ── Load current models from model_config (falls back to defaults) ────────────
@@ -128,7 +130,7 @@ const CHECKS = [
   { providers: ['openrouter'],
     label: 'OpenRouter',
     list:  () => listOpenAICompatible('https://openrouter.ai/api/v1', process.env.OPENROUTER_API_KEY) },
-  { providers: ['anthropic_haiku', 'anthropic_sonnet'],
+  { providers: ['anthropic_haiku', 'anthropic_sonnet', 'anthropic_sonnet5'],
     label: 'Anthropic',
     list:  listAnthropic },
   { providers: ['cloudflare'],
