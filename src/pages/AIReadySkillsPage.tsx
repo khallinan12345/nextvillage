@@ -42,35 +42,35 @@ const markdownComponents = {
     <h1 className="text-xl font-bold text-gray-900 mb-3 mt-4">{children}</h1>
   ),
   h2: ({ children }: any) => (
-    <h2 className="text-lg font-bold text-gray-800 mb-2 mt-4">{children}</h2>
+    <h2 className="text-lg font-bold text-ink mb-2 mt-4">{children}</h2>
   ),
   h3: ({ children }: any) => (
-    <h3 className="text-base font-semibold text-gray-800 mb-2 mt-3">{children}</h3>
+    <h3 className="text-base font-semibold text-ink mb-2 mt-3">{children}</h3>
   ),
   p: ({ children }: any) => (
-    <p className="text-gray-800 mb-3 leading-relaxed">{children}</p>
+    <p className="text-ink mb-3 leading-relaxed">{children}</p>
   ),
   strong: ({ children }: any) => (
     <strong className="font-semibold text-gray-900">{children}</strong>
   ),
   em: ({ children }: any) => (
-    <em className="italic text-gray-700">{children}</em>
+    <em className="italic text-body">{children}</em>
   ),
   ul: ({ children }: any) => (
-    <ul className="list-disc list-inside space-y-1 mb-3 text-gray-800 ml-2">{children}</ul>
+    <ul className="list-disc list-inside space-y-1 mb-3 text-ink ml-2">{children}</ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="list-decimal list-inside space-y-2 mb-3 text-gray-800 ml-2">{children}</ol>
+    <ol className="list-decimal list-inside space-y-2 mb-3 text-ink ml-2">{children}</ol>
   ),
   li: ({ children }: any) => (
     <li className="leading-relaxed">{children}</li>
   ),
-  hr: () => <hr className="my-4 border-gray-300" />,
+  hr: () => <hr className="my-4 border-hair" />,
   blockquote: ({ children }: any) => (
-    <blockquote className="border-l-4 border-purple-400 pl-4 italic text-gray-700 my-3">{children}</blockquote>
+    <blockquote className="border-l-4 border-hair pl-4 italic text-body my-3">{children}</blockquote>
   ),
   a: ({ href, children }: any) => (
-    <Link to={href || '#'} className="text-blue-600 hover:text-blue-800 underline font-medium">
+    <Link to={href || '#'} className="text-accent hover:underline font-medium">
       {children}
     </Link>
   ),
@@ -116,59 +116,6 @@ const buildAnswerTemplate = (promptText: string): string => {
     .join('\n');
 };
 
-// Distorted Background Component
-const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
-  const [mousePixels, setMousePixels] = React.useState({ x: 0, y: 0 });
-  const [isMouseMoving, setIsMouseMoving] = React.useState(false);
-  const mouseTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const sidebarOffset = 256;
-      const topOffset = 64;
-      const x = Math.max(0, e.clientX - sidebarOffset);
-      const y = Math.max(0, e.clientY - topOffset);
-      setMousePixels({ x, y });
-      setIsMouseMoving(true);
-      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      mouseTimeoutRef.current = setTimeout(() => setIsMouseMoving(false), 120);
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('mousemove', handleMouseMove);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      };
-    }
-  }, []);
-
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="ai-ready-skills-distortion" x="-20%" y="-20%" width="140%" height="140%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="4" seed="5" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="100" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1.5" />
-          </filter>
-        </defs>
-      </svg>
-
-      <div className="fixed top-14 left-0 right-0 bottom-0" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 0 }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
-        <div className="absolute inset-0 bg-white/10" />
-      </div>
-
-      {isMouseMoving && (
-        <div className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none transition-opacity duration-100" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 1, filter: 'url(#ai-ready-skills-distortion)', WebkitMaskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
-          <div className="absolute inset-0 bg-white/10" />
-        </div>
-      )}
-    </>
-  );
-};
 
 // Types
 interface Certification {
@@ -352,29 +299,29 @@ Return ONLY valid JSON: { "improved_text": "..." }`
 
   // ── Reusable voice toggle + read-aloud bar ─────────────────────────────
   const renderVoiceBar = (textToRead: string, label = 'Read aloud') => (
-    <div className="flex flex-wrap items-center gap-3 mb-5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
-      <span className="text-sm font-semibold text-gray-600 flex items-center gap-1.5">
-        <Volume2 className="h-4 w-4 text-purple-500" /> Coach voice:
+    <div className="flex flex-wrap items-center gap-3 mb-5 p-3 bg-paper border border-hair rounded-xl">
+      <span className="text-sm font-semibold text-body flex items-center gap-1.5">
+        <Volume2 className="h-4 w-4 text-accent" /> Coach voice:
       </span>
-      <div className="flex rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+      <div className="flex rounded-lg overflow-hidden border border-hair shadow-sm">
         <button
           onClick={() => { stopSpeaking(); setVoiceMode('english'); }}
           title="British English — Google UK English Female"
-          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold transition-all border-r border-gray-300
-            ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
+          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold transition-colors border-r border-hair
+            ${voiceMode === 'english' ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-surface hover:text-ink'}`}
         >
           🇬🇧 British English
         </button>
         <button
           onClick={() => { stopSpeaking(); setVoiceMode('pidgin'); }}
           title="Nigerian English / Pidgin voice"
-          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold transition-all
-            ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
+          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold transition-colors
+            ${voiceMode === 'pidgin' ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-surface hover:text-ink'}`}
         >
           🇳🇬 Nigerian Pidgin
         </button>
       </div>
-      <span className="text-xs text-gray-400 italic hidden sm:inline">
+      <span className="text-xs text-muted italic hidden sm:inline">
         {'Ezinne'}
       </span>
       <button
@@ -382,7 +329,7 @@ Return ONLY valid JSON: { "improved_text": "..." }`
         className={`ml-auto flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all
           ${isSpeaking
             ? 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200'
-            : 'bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-200'}`}
+            : 'bg-surface text-accent border border-hair hover:bg-accent/10'}`}
       >
         {isSpeaking
           ? <><VolumeX className="h-4 w-4" /> Stop</>
@@ -1297,23 +1244,23 @@ Return ONLY the description, nothing else.`
     return (
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 mb-8 text-white shadow-xl">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">AI Ready Skills Certifications</h1>
-          <p className="text-xl text-blue-100 max-w-3xl mb-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-ink mb-3">AI Ready Skills Certifications</h1>
+          <p className="text-lg text-body max-w-3xl mb-4">
             Build essential skills and demonstrate your expertise across multiple certification areas.
             Each certification validates your proficiency in critical competencies. These are skills you need for AI proficiency and life.
           </p>
-          
+
           {certifications.length > 1 && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 max-w-2xl">
-              <label className="block text-sm font-semibold mb-2">Select Certification:</label>
+            <div className="bg-surface border border-hair rounded-xl p-4 max-w-2xl">
+              <label className="block text-sm font-semibold text-ink mb-2">Select Certification:</label>
               <select
                 value={selectedCertification.certification_name}
                 onChange={(e) => {
                   const cert = certifications.find(c => c.certification_name === e.target.value);
                   if (cert) handleCertificationSelect(cert);
                 }}
-                className="w-full px-4 py-2 bg-white text-gray-800 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className="w-full px-4 py-2 border border-hair bg-card text-ink rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
               >
                 {certifications.map(cert => (
                   <option key={cert.certification_name} value={cert.certification_name}>
@@ -1326,29 +1273,29 @@ Return ONLY the description, nothing else.`
         </div>
 
         {/* Why This Matters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Why {selectedCertification.certification_name} Matters</h2>
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+          <h2 className="text-3xl font-bold text-ink mb-6">Why {selectedCertification.certification_name} Matters</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-300">
-              <Trophy className="h-10 w-10 text-blue-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-800 mb-3">For Life</h3>
-              <p className="text-gray-700">
+            <div className="bg-paper rounded-xl p-6 border border-hair">
+              <Trophy className="h-10 w-10 text-accent mb-4" />
+              <h3 className="text-xl font-bold text-ink mb-3">For Life</h3>
+              <p className="text-body">
                 These skills are foundational for navigating modern challenges and making informed decisions.
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-300">
-              <Sparkles className="h-10 w-10 text-purple-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-800 mb-3">For Employment</h3>
-              <p className="text-gray-700">
+            <div className="bg-paper rounded-xl p-6 border border-hair">
+              <Sparkles className="h-10 w-10 text-accent mb-4" />
+              <h3 className="text-xl font-bold text-ink mb-3">For Employment</h3>
+              <p className="text-body">
                 Employers seek candidates with demonstrated competence in these critical professional skills.
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border-2 border-pink-300">
-              <Brain className="h-10 w-10 text-pink-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-800 mb-3">For AI Leverage</h3>
-              <p className="text-gray-700">
+            <div className="bg-paper rounded-xl p-6 border border-hair">
+              <Brain className="h-10 w-10 text-accent mb-4" />
+              <h3 className="text-xl font-bold text-ink mb-3">For AI Leverage</h3>
+              <p className="text-body">
                 Strong foundational skills enable you to use AI tools more effectively and critically evaluate outputs.
               </p>
             </div>
@@ -1357,8 +1304,8 @@ Return ONLY the description, nothing else.`
 
         {/* Progress Section */}
         {selectedCertification.assessments.length > 0 && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+          <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+            <h2 className="text-2xl font-bold text-ink mb-6 flex items-center gap-3">
               <Trophy className="h-8 w-8 text-yellow-500" />
               Your Progress in {selectedCertification.certification_name}
             </h2>
@@ -1381,13 +1328,13 @@ Return ONLY the description, nothing else.`
                     disabled={isCompleted}
                     className={`w-full flex items-center justify-between p-4 rounded-lg transition-all ${
                       isCompleted 
-                        ? 'bg-gray-100 cursor-not-allowed opacity-60' 
-                        : 'bg-gray-50 hover:bg-gray-100 hover:shadow-md cursor-pointer'
+                        ? 'bg-surface cursor-not-allowed opacity-60' 
+                        : 'bg-paper hover:bg-surface hover:shadow-md cursor-pointer'
                     }`}
                   >
                     <div className="flex-1 text-left">
-                      <h3 className="font-semibold text-gray-800">{assessment.assessment_name}</h3>
-                      <p className="text-sm text-gray-600">{assessment.description}</p>
+                      <h3 className="font-semibold text-ink">{assessment.assessment_name}</h3>
+                      <p className="text-sm text-body">{assessment.description}</p>
                     </div>
                     <div className="flex items-center gap-4">
                       {score && score.score !== null && score.score !== undefined ? (
@@ -1409,12 +1356,12 @@ Return ONLY the description, nothing else.`
                           )}
                         </div>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-surface text-body">
                           Not Started
                         </span>
                       )}
                       {!isCompleted && (
-                        <ArrowRight className="h-5 w-5 text-gray-400" />
+                        <ArrowRight className="h-5 w-5 text-muted" />
                       )}
                     </div>
                   </button>
@@ -1430,7 +1377,7 @@ Return ONLY the description, nothing else.`
                   setViewMode('select-assessment');
                 }
               }}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors"
+              className="w-full bg-accent text-white px-6 py-3 rounded-lg font-bold text-lg hover:bg-accent/90 transition-colors"
             >
               {allPassed ? 'Generate Certificate' : 'Begin Assessment'}
             </button>
@@ -1438,73 +1385,73 @@ Return ONLY the description, nothing else.`
         )}
 
         {/* How Certification Works */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">How Certification Works</h2>
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+          <h2 className="text-3xl font-bold text-ink mb-6">How Certification Works</h2>
           
           <div className="mb-8">
-            <p className="text-lg text-gray-700 mb-4">
+            <p className="text-lg text-body mb-4">
               To earn your {selectedCertification.certification_name} certification, you must demonstrate competence 
               (score of <strong>Proficient or higher</strong>) in <strong>all assessments</strong>. 
             </p>
-            <p className="text-lg text-gray-700">
+            <p className="text-lg text-body">
               You can retake evaluations as many times as needed — there's no limit. Each assessment is uniquely tailored to your chosen context.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="relative">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 h-full border-2 border-blue-300">
+              <div className="bg-paper rounded-xl p-6 h-full border border-hair">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">1</div>
-                  <ClipboardList className="h-8 w-8 text-blue-600" />
+                  <div className="bg-accent text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">1</div>
+                  <ClipboardList className="h-8 w-8 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Define Context</h3>
-                <p className="text-gray-700">Choose a real-world topic, setting, constraints, and audience for your assessment.</p>
+                <h3 className="text-xl font-bold text-ink mb-3">Define Context</h3>
+                <p className="text-body">Choose a real-world topic, setting, constraints, and audience for your assessment.</p>
               </div>
-              <ArrowRight className="hidden md:block absolute top-1/2 -right-8 transform -translate-y-1/2 h-8 w-8 text-gray-400" />
+              <ArrowRight className="hidden md:block absolute top-1/2 -right-8 transform -translate-y-1/2 h-8 w-8 text-muted" />
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 h-full border-2 border-purple-300">
+              <div className="bg-paper rounded-xl p-6 h-full border border-hair">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-purple-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">2</div>
-                  <Brain className="h-8 w-8 text-purple-600" />
+                  <div className="bg-accent text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">2</div>
+                  <Brain className="h-8 w-8 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Complete Assessment</h3>
-                <p className="text-gray-700">Respond to the personalized prompt demonstrating your mastery.</p>
+                <h3 className="text-xl font-bold text-ink mb-3">Complete Assessment</h3>
+                <p className="text-body">Respond to the personalized prompt demonstrating your mastery.</p>
               </div>
-              <ArrowRight className="hidden md:block absolute top-1/2 -right-8 transform -translate-y-1/2 h-8 w-8 text-gray-400" />
+              <ArrowRight className="hidden md:block absolute top-1/2 -right-8 transform -translate-y-1/2 h-8 w-8 text-muted" />
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 h-full border-2 border-green-300">
+              <div className="bg-paper rounded-xl p-6 h-full border border-green-300">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">3</div>
                   <GraduationCap className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Receive Evaluation</h3>
-                <p className="text-gray-700">Get your score, evidence, and personalized advice for improvement.</p>
+                <h3 className="text-xl font-bold text-ink mb-3">Receive Evaluation</h3>
+                <p className="text-body">Get your score, evidence, and personalized advice for improvement.</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Framework Section */}
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-8 shadow-lg">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Backed by Global Frameworks</h2>
-          <p className="text-lg text-gray-700 mb-4">Our certifications are aligned with internationally recognized standards:</p>
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+          <h2 className="text-2xl font-bold text-ink mb-4">Backed by Global Frameworks</h2>
+          <p className="text-lg text-body mb-4">Our certifications are aligned with internationally recognized standards:</p>
           <div className="flex flex-wrap gap-6 items-center justify-center">
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">ISTE</div>
-              <div className="text-sm text-gray-600">International Society for<br />Technology in Education</div>
+              <div className="text-3xl font-bold text-accent">ISTE</div>
+              <div className="text-sm text-body">International Society for<br />Technology in Education</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">UNESCO</div>
-              <div className="text-sm text-gray-600">United Nations Educational,<br />Scientific and Cultural Organization</div>
+              <div className="text-3xl font-bold text-accent">UNESCO</div>
+              <div className="text-sm text-body">United Nations Educational,<br />Scientific and Cultural Organization</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-pink-600">CSTA</div>
-              <div className="text-sm text-gray-600">Computer Science<br />Teachers Association</div>
+              <div className="text-3xl font-bold text-accent">CSTA</div>
+              <div className="text-sm text-body">Computer Science<br />Teachers Association</div>
             </div>
           </div>
         </div>
@@ -1519,15 +1466,15 @@ Return ONLY the description, nothing else.`
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => setViewMode('overview')}
-          className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+          className="flex items-center gap-2 text-accent hover:underline mb-6"
         >
           <ArrowLeft className="h-5 w-5" />
           Back to Overview
         </button>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">{selectedCertification.certification_name}</h2>
-          <p className="text-gray-600 mb-6">Select an assessment to begin</p>
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+          <h2 className="text-3xl font-bold text-ink mb-2">{selectedCertification.certification_name}</h2>
+          <p className="text-body mb-6">Select an assessment to begin</p>
 
           <div className="space-y-4">
             {selectedCertification.assessments.map((assessment) => {
@@ -1538,11 +1485,11 @@ Return ONLY the description, nothing else.`
                 <button
                   key={assessment.id}
                   onClick={() => handleSelectAssessment(assessment)}
-                  className="w-full flex items-center justify-between p-6 bg-gray-50 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all text-left"
+                  className="w-full flex items-center justify-between p-6 bg-paper rounded-xl hover:bg-surface hover:shadow-md transition-all text-left"
                 >
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">{assessment.assessment_name}</h3>
-                    <p className="text-gray-600">{assessment.description}</p>
+                    <h3 className="text-xl font-bold text-ink mb-2">{assessment.assessment_name}</h3>
+                    <p className="text-body">{assessment.description}</p>
                   </div>
                   <div className="flex items-center gap-4">
                     {score && score.score !== null && score.score !== undefined ? (
@@ -1557,11 +1504,11 @@ Return ONLY the description, nothing else.`
                         {isPassed && <CheckCircle className="h-6 w-6 text-green-600" />}
                       </div>
                     ) : (
-                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-surface text-body">
                         Not Started
                       </span>
                     )}
-                    <ArrowRight className="h-6 w-6 text-gray-400" />
+                    <ArrowRight className="h-6 w-6 text-muted" />
                   </div>
                 </button>
               );
@@ -1576,15 +1523,15 @@ Return ONLY the description, nothing else.`
     <div className="max-w-4xl mx-auto">
       <button
         onClick={() => setViewMode('select-assessment')}
-        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+        className="flex items-center gap-2 text-accent hover:underline mb-6"
       >
         <ArrowLeft className="h-5 w-5" />
         Back to Selection
       </button>
 
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">{selectedAssessment?.assessment_name}</h2>
-        <p className="text-gray-600 mb-6">{selectedAssessment?.description}</p>
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <h2 className="text-3xl font-bold text-ink mb-2">{selectedAssessment?.assessment_name}</h2>
+        <p className="text-body mb-6">{selectedAssessment?.description}</p>
 
         <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-5 mb-8 flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">🎓</span>
@@ -1601,7 +1548,7 @@ Return ONLY the description, nothing else.`
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-body mb-2">
               Topic <span className="text-red-500">*</span>
             </label>
             <input
@@ -1609,13 +1556,13 @@ Return ONLY the description, nothing else.`
               value={learnerContext.topic}
               onChange={(e) => setLearnerContext({...learnerContext, topic: e.target.value})}
               placeholder="e.g. Solar-powered cold storage for fish, AI crop disease detection, Mobile money for market traders"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none"
             />
-            <p className="text-sm text-gray-500 mt-1">What real-world subject, challenge, or project will your assessment focus on?</p>
+            <p className="text-sm text-muted mt-1">What real-world subject, challenge, or project will your assessment focus on?</p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-body mb-2">
               Setting <span className="text-red-500">*</span>
             </label>
             <input
@@ -1623,13 +1570,13 @@ Return ONLY the description, nothing else.`
               value={learnerContext.setting}
               onChange={(e) => setLearnerContext({...learnerContext, setting: e.target.value})}
               placeholder="e.g. Rural farming community in Bayelsa, Small market stall in Oloibiri, School in a town with unreliable electricity"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none"
             />
-            <p className="text-sm text-gray-500 mt-1">Where does this challenge occur? Be as specific as possible.</p>
+            <p className="text-sm text-muted mt-1">Where does this challenge occur? Be as specific as possible.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-body mb-2">
               Constraints <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -1637,13 +1584,13 @@ Return ONLY the description, nothing else.`
               value={learnerContext.constraints}
               onChange={(e) => setLearnerContext({...learnerContext, constraints: e.target.value})}
               placeholder="e.g. Limited budget, no reliable internet, low digital literacy in the community, seasonal income, language barriers"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none resize-none"
             />
-            <p className="text-sm text-gray-500 mt-1">What limits what you can do? Budget, infrastructure, time, skills, access to technology?</p>
+            <p className="text-sm text-muted mt-1">What limits what you can do? Budget, infrastructure, time, skills, access to technology?</p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-body mb-2">
               Audience <span className="text-red-500">*</span>
             </label>
             <input
@@ -1651,14 +1598,14 @@ Return ONLY the description, nothing else.`
               value={learnerContext.audience}
               onChange={(e) => setLearnerContext({...learnerContext, audience: e.target.value})}
               placeholder="e.g. Smallholder farmers aged 35–60, market traders with low digital skills, cooperative members, local school students"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none"
             />
-            <p className="text-sm text-gray-500 mt-1">Who is this for? Describe the people who will be affected or who need to understand your solution.</p>
+            <p className="text-sm text-muted mt-1">Who is this for? Describe the people who will be affected or who need to understand your solution.</p>
           </div>
 
           <div className="bg-green-50 border border-green-200 rounded-xl p-4">
             <label className="block text-sm font-semibold text-green-900 mb-1">
-              💼 Entrepreneurial or Productive-Use Angle <span className="text-gray-400 font-normal">(strongly recommended)</span>
+              💼 Entrepreneurial or Productive-Use Angle <span className="text-muted font-normal">(strongly recommended)</span>
             </label>
             <p className="text-xs text-green-700 mb-2">
               How does this challenge connect to creating real economic value — earning income, reducing costs, improving a business, or making a community service more productive?
@@ -1682,7 +1629,7 @@ Return ONLY the description, nothing else.`
           <button
             onClick={handleContextSubmit}
             disabled={loading || !learnerContext.topic || !learnerContext.setting || !learnerContext.constraints || !learnerContext.audience}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-accent text-white px-6 py-3 rounded-lg font-bold text-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> Preparing Your Challenge...</>
@@ -1699,14 +1646,14 @@ Return ONLY the description, nothing else.`
     <div className="max-w-4xl mx-auto">
       <button
         onClick={() => setViewMode('define-context')}
-        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+        className="flex items-center gap-2 text-accent hover:underline mb-6"
       >
         <ArrowLeft className="h-5 w-5" />
         Back to Context
       </button>
 
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">{selectedAssessment?.assessment_name}</h2>
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <h2 className="text-3xl font-bold text-ink mb-4">{selectedAssessment?.assessment_name}</h2>
 
         <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 mb-6 flex items-start gap-3">
           <span className="text-2xl flex-shrink-0">✍️</span>
@@ -1718,24 +1665,24 @@ Return ONLY the description, nothing else.`
           </div>
         </div>
 
-        <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Your Context</h3>
+        <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+          <h3 className="text-lg font-bold text-ink mb-3">Your Context</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div><span className="font-semibold text-gray-700">Topic:</span> {learnerContext.topic}</div>
-            <div><span className="font-semibold text-gray-700">Setting:</span> {learnerContext.setting}</div>
-            <div><span className="font-semibold text-gray-700">Constraints:</span> {learnerContext.constraints}</div>
-            <div><span className="font-semibold text-gray-700">Audience:</span> {learnerContext.audience}</div>
+            <div><span className="font-semibold text-body">Topic:</span> {learnerContext.topic}</div>
+            <div><span className="font-semibold text-body">Setting:</span> {learnerContext.setting}</div>
+            <div><span className="font-semibold text-body">Constraints:</span> {learnerContext.constraints}</div>
+            <div><span className="font-semibold text-body">Audience:</span> {learnerContext.audience}</div>
             {learnerContext.entrepreneurialContext && (
               <div className="col-span-2">
-                <span className="font-semibold text-gray-700">💼 Productive-Use Angle:</span> {learnerContext.entrepreneurialContext}
+                <span className="font-semibold text-body">💼 Productive-Use Angle:</span> {learnerContext.entrepreneurialContext}
               </div>
             )}
           </div>
         </div>
 
         {/* ── Prompt panel — rendered as formatted markdown ── */}
-        <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Your Personalised Assessment Challenge</h3>
+        <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+          <h3 className="text-lg font-bold text-ink mb-3">Your Personalised Assessment Challenge</h3>
           {renderVoiceBar(
             `${tailoredPrompt || selectedAssessment?.certification_prompt || ''}. Scoring rubric: Level 0, No Evidence: ${selectedAssessment?.certification_level0_metric}. Level 1, Emerging: ${selectedAssessment?.certification_level1_metric}. Level 2, Proficient: ${selectedAssessment?.certification_level2_metric}. Level 3, Advanced: ${selectedAssessment?.certification_level3_metric}.`,
             'Read challenge aloud'
@@ -1746,8 +1693,8 @@ Return ONLY the description, nothing else.`
             </ReactMarkdown>
           </div>
           {/* Closing instruction */}
-          <div className="mt-4 pt-4 border-t border-blue-200">
-            <p className="text-sm text-blue-900 font-medium leading-relaxed">
+          <div className="mt-4 pt-4 border-t border-hair">
+            <p className="text-sm text-ink font-medium leading-relaxed">
               Answer the questions below in the <strong>'Your Response'</strong> section without AI help.
               The more detailed you are in answering each question, the better your evaluation will be.
               Good luck. 🍀
@@ -1755,9 +1702,9 @@ Return ONLY the description, nothing else.`
           </div>
         </div>
 
-        <div className="bg-green-50 border-2 border-green-300 rounded-xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Scoring Rubric</h3>
-          <p className="text-sm text-gray-700 mb-3">Your response will be evaluated on a 0-3 scale:</p>
+        <div className="bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
+          <h3 className="text-lg font-bold text-ink mb-3">Scoring Rubric</h3>
+          <p className="text-sm text-body mb-3">Your response will be evaluated on a 0-3 scale:</p>
           <ul className="space-y-2 text-sm">
             <li><strong>0 (No Evidence):</strong> {selectedAssessment?.certification_level0_metric}</li>
             <li><strong>1 (Emerging):</strong> {selectedAssessment?.certification_level1_metric}</li>
@@ -1767,15 +1714,15 @@ Return ONLY the description, nothing else.`
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-body mb-2">
             Your Response <span className="text-red-500">*</span>
           </label>
           <textarea
             value={userResponse}
             onChange={(e) => setUserResponse(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none min-h-[300px] font-mono text-sm"
+            className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none min-h-[300px] font-mono text-sm"
           />
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-muted mt-2">
             This is your own work — no AI help during the attempt. Address all parts of the challenge above and connect your answer to your real-world context.
           </p>
         </div>
@@ -1784,7 +1731,7 @@ Return ONLY the description, nothing else.`
           <button
             onClick={handleImproveEnglish}
             disabled={!userResponse.trim() || isImproving}
-            className="flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isImproving
               ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Improving...</>
@@ -1802,7 +1749,7 @@ Return ONLY the description, nothing else.`
         <button
           onClick={handleResponseSubmit}
           disabled={loading || !userResponse.trim()}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-accent text-white px-6 py-3 rounded-lg font-bold text-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
             <><Loader2 className="h-5 w-5 animate-spin" /> Evaluating...</>
@@ -1820,9 +1767,9 @@ Return ONLY the description, nothing else.`
 
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-surface rounded-full mb-4">
               {evaluationScore !== null && evaluationScore >= 2 ? (
                 <Sparkles className="h-16 w-16 text-green-600" />
               ) : (
@@ -1830,15 +1777,15 @@ Return ONLY the description, nothing else.`
               )}
             </div>
             
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            <h2 className="text-3xl font-bold text-ink mb-2">
               {evaluationScore !== null && evaluationScore >= 2 ? 'Congratulations!' : 'Keep Learning!'}
             </h2>
             
-            <p className="text-xl text-gray-700 mb-4">
+            <p className="text-xl text-body mb-4">
               Your Score: <span className={`font-bold ${
                 evaluationScore === 0 ? 'text-red-600' :
                 evaluationScore === 1 ? 'text-yellow-600' :
-                evaluationScore === 2 ? 'text-green-600' : 'text-emerald-600'
+                evaluationScore === 2 ? 'text-green-600' : 'text-green-700'
               }`}>
                 {evaluationScore === 0 ? 'No Evidence' :
                  evaluationScore === 1 ? 'Emerging' :
@@ -1847,15 +1794,15 @@ Return ONLY the description, nothing else.`
             </p>
 
             {evaluationScore !== null && evaluationScore >= 2 && (
-              <p className="text-lg text-gray-700">
+              <p className="text-lg text-body">
                 You've successfully demonstrated proficiency in {selectedAssessment?.assessment_name}!
               </p>
             )}
           </div>
 
           {/* ── Assessment Feedback — rendered as formatted markdown ── */}
-          <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-3">Assessment Feedback</h3>
+          <div className="bg-paper border-2 border-hair rounded-xl p-6 mb-6">
+            <h3 className="text-lg font-bold text-ink mb-3">Assessment Feedback</h3>
             {renderVoiceBar(
               `Your score is ${evaluationScore !== null ? ['No Evidence', 'Emerging', 'Proficient', 'Advanced'][evaluationScore] : ''}. ${evaluationEvidence}${improvementAdvice ? ' ' + improvementAdvice.replace(/\*\*/g, '').replace(/\[.*?\]\(.*?\)/g, '') : ''}`,
               'Hear feedback'
@@ -1868,9 +1815,9 @@ Return ONLY the description, nothing else.`
           </div>
 
           {/* ── Improvement / Celebratory Advice — rendered as formatted markdown ── */}
-          <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-8">
-            <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <Brain className="h-6 w-6 text-blue-600" />
+          <div className="bg-surface border border-hair rounded-xl p-6 mb-8">
+            <h3 className="text-lg font-bold text-ink mb-3 flex items-center gap-2">
+              <Brain className="h-6 w-6 text-accent" />
               {evaluationScore !== null && evaluationScore >= 2 
                 ? evaluationScore === 3 
                   ? 'Excellent Work!' 
@@ -1884,7 +1831,7 @@ Return ONLY the description, nothing else.`
                   a: ({ href, children }: any) => (
                     <Link
                       to={href || '#'}
-                      className="text-blue-600 hover:text-blue-800 underline font-medium"
+                      className="text-accent hover:underline font-medium"
                     >
                       {children}
                     </Link>
@@ -1897,29 +1844,29 @@ Return ONLY the description, nothing else.`
           </div>
 
           {allPassed ? (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 mb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <div className="bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
+              <h3 className="text-xl font-bold text-ink mb-3 flex items-center gap-2">
                 <Trophy className="h-7 w-7 text-yellow-500" />
                 All Assessments Complete!
               </h3>
-              <p className="text-gray-700 mb-4">
+              <p className="text-body mb-4">
                 Congratulations! You've achieved proficiency in all {selectedCertification?.certification_name} assessments. 
                 You're ready to receive your certification!
               </p>
               <button
                 onClick={() => setViewMode('certificate')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                className="bg-accent text-white px-6 py-3 rounded-lg font-bold hover:bg-accent/90 transition-colors"
               >
                 Get Your Certificate
               </button>
             </div>
           ) : (
-            <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-3">Remaining Assessments</h3>
-              <p className="text-gray-700 mb-4">
+            <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-bold text-ink mb-3">Remaining Assessments</h3>
+              <p className="text-body mb-4">
                 You still need to achieve Proficient or higher in {remaining.length} assessment{remaining.length !== 1 ? 's' : ''}:
               </p>
-              <ul className="list-disc list-inside space-y-1 text-gray-700">
+              <ul className="list-disc list-inside space-y-1 text-body">
                 {remaining.map(r => (
                   <li key={r.assessment_name}>{r.assessment_name}</li>
                 ))}
@@ -1938,7 +1885,7 @@ Return ONLY the description, nothing else.`
                 setImprovementAdvice('');
                 setTailoredPrompt('');
               }}
-              className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+              className="flex-1 bg-gray-200 text-ink px-6 py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors"
             >
               Back to Overview
             </button>
@@ -1951,7 +1898,7 @@ Return ONLY the description, nothing else.`
                   setImprovementAdvice('');
                   setViewMode('define-context');
                 }}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                className="flex-1 bg-accent text-white px-6 py-3 rounded-lg font-bold hover:bg-accent/90 transition-colors"
               >
                 {evaluationScore >= 2 ? 'Try for Advanced' : 'Retake Assessment'}
               </button>
@@ -1964,20 +1911,20 @@ Return ONLY the description, nothing else.`
 
   const renderCertificate = () => (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg text-center">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm text-center">
         <div className="flex justify-center mb-6">
-          <Award className="h-24 w-24 text-purple-600" />
+          <Award className="h-24 w-24 text-accent" />
         </div>
 
-        <h2 className="text-4xl font-bold text-gray-800 mb-4">Congratulations! 🎉</h2>
+        <h2 className="text-4xl font-bold text-ink mb-4">Congratulations! 🎉</h2>
 
-        <p className="text-xl text-gray-700 mb-8">
+        <p className="text-xl text-body mb-8">
           You've successfully completed all {selectedCertification?.certification_name} assessments! 
           You're ready to receive your official certificate.
         </p>
 
-        <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-8 mb-8">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
+        <div className="bg-surface border border-hair rounded-xl p-8 mb-8">
+          <h3 className="text-lg font-bold text-ink mb-4">
             How would you like your name to appear on the certificate?
           </h3>
           <input
@@ -1985,14 +1932,14 @@ Return ONLY the description, nothing else.`
             value={certificateName}
             onChange={(e) => setCertificateName(e.target.value)}
             placeholder="Enter your full name"
-            className="w-full max-w-md mx-auto px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-center text-lg"
+            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg focus:border-accent focus:outline-none text-center text-lg"
           />
         </div>
 
         <button
           onClick={generateCertificate}
           disabled={!certificateName.trim() || generatingCertificate}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-3"
+          className="bg-accent text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-3"
         >
           {generatingCertificate ? (
             <><Loader2 className="h-6 w-6 animate-spin" /> Generating Certificate...</>
@@ -2011,7 +1958,7 @@ Return ONLY the description, nothing else.`
         <div className="mt-6">
           <button
             onClick={() => setViewMode('overview')}
-            className="text-purple-600 hover:text-purple-700 font-medium"
+            className="text-accent hover:underline font-medium"
           >
             Return to Overview
           </button>
@@ -2023,15 +1970,13 @@ Return ONLY the description, nothing else.`
   // Main render
   return (
     <AppLayout>
-      <DistortedBackground imageUrl="/background_ai_ready_skills.png" />
-
       {fallbackText && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm">
           <VoiceFallback text={fallbackText} onDismiss={clearFallback} />
         </div>
       )}
 
-      <div className="relative z-10">
+      <div>
         {viewMode === 'overview' && renderOverview()}
         {viewMode === 'select-assessment' && renderSelectAssessment()}
         {viewMode === 'define-context' && renderDefineContext()}
