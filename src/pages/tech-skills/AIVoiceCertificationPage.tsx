@@ -99,11 +99,11 @@ const EMOTIONS: { id: Emotion; label: string; emoji: string }[] = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const scoreLabel = (s: number | null) => {
-  if (s === null) return { text: 'Not assessed', color: 'text-gray-400',    bg: 'bg-gray-500/10',    border: 'border-gray-500/20'    };
-  if (s === 3)    return { text: 'Advanced',     color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' };
-  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/30'    };
-  if (s === 1)    return { text: 'Emerging',     color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30'   };
-  return               { text: 'No Evidence',  color: 'text-red-400',    bg: 'bg-red-500/10',     border: 'border-red-500/30'     };
+  if (s === null) return { text: 'Not assessed', color: 'text-muted',      bg: 'bg-gray-100',   border: 'border-gray-300'   };
+  if (s === 3)    return { text: 'Advanced',     color: 'text-green-800',  bg: 'bg-green-100',  border: 'border-green-300'  };
+  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-800',   bg: 'bg-blue-100',   border: 'border-blue-300'   };
+  if (s === 1)    return { text: 'Emerging',     color: 'text-yellow-800', bg: 'bg-yellow-100', border: 'border-yellow-300' };
+  return               { text: 'No Evidence',  color: 'text-red-800',    bg: 'bg-red-100',    border: 'border-red-300'    };
 };
 
 async function callEdgeFunction(
@@ -123,10 +123,10 @@ async function callEdgeFunction(
 const ScoreRing: React.FC<{ score: number | null }> = ({ score }) => {
   const pct = score !== null ? (score / 3) * 100 : 0;
   const r = 18; const circ = 2 * Math.PI * r; const dash = (pct / 100) * circ;
-  const color = score === null ? '#4b5563' : score >= 2 ? '#10b981' : score === 1 ? '#f59e0b' : '#ef4444';
+  const color = score === null ? '#A8A29E' : score === 3 ? '#16A34A' : score === 2 ? '#2563EB' : score === 1 ? '#D97706' : '#DC2626';
   return (
     <svg width={44} height={44} viewBox="0 0 44 44">
-      <circle cx={22} cy={22} r={r} fill="none" stroke="#1f2937" strokeWidth={4} />
+      <circle cx={22} cy={22} r={r} fill="none" stroke="#E7E5E0" strokeWidth={4} />
       <circle cx={22} cy={22} r={r} fill="none" stroke={color} strokeWidth={4}
         strokeLinecap="round" strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={circ / 4}
         style={{ transition: 'all 0.6s ease' }} />
@@ -154,26 +154,26 @@ const MiniAudioPlayer: React.FC<{ src: string }> = ({ src }) => {
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
   return (
-    <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-2.5 py-1.5">
+    <div className="flex items-center gap-2 bg-card rounded-lg px-2.5 py-1.5">
       <audio ref={audioRef} src={src}
         onTimeUpdate={e => setProgress(e.currentTarget.currentTime)}
         onLoadedMetadata={e => setDur(e.currentTarget.duration)}
         onEnded={() => { setPlaying(false); setProgress(0); }} />
       <button onClick={toggle}
-        className="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 rounded-full text-white flex-shrink-0 transition-colors">
+        className="w-6 h-6 flex items-center justify-center bg-accent hover:bg-accent/90 rounded-full text-white flex-shrink-0 transition-colors">
         {playing ? <Pause size={10} /> : <Play size={10} />}
       </button>
-      <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden cursor-pointer"
+      <div className="flex-1 h-1.5 bg-hair rounded-full overflow-hidden cursor-pointer"
         onClick={e => {
           const rect = e.currentTarget.getBoundingClientRect();
           const pct  = (e.clientX - rect.left) / rect.width;
           const a    = audioRef.current;
           if (a && dur) { a.currentTime = pct * dur; setProgress(pct * dur); }
         }}>
-        <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+        <div className="h-full bg-accent rounded-full"
           style={{ width: dur ? `${(progress / dur) * 100}%` : '0%' }} />
       </div>
-      <span className="text-[9px] text-gray-500 font-mono flex-shrink-0">
+      <span className="text-[9px] text-muted font-mono flex-shrink-0">
         {fmt(progress)}/{dur ? fmt(dur) : '--:--'}
       </span>
     </div>
@@ -188,27 +188,27 @@ const VoiceCard: React.FC<{ entry: VoiceEntry; onDelete: (id: string) => void }>
   const emotion = EMOTIONS.find(e => e.id === entry.emotion);
 
   return (
-    <div className="border border-gray-700 rounded-xl overflow-hidden bg-gray-800/40">
+    <div className="border border-hair rounded-xl overflow-hidden bg-card">
       <div className="flex items-center gap-3 px-3 py-2.5">
         {/* Status dot */}
-        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${entry.status === 'succeeded' ? 'bg-emerald-400' : entry.status === 'generating' ? 'bg-cyan-400 animate-pulse' : 'bg-red-400'}`} />
+        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${entry.status === 'succeeded' ? 'bg-accent' : entry.status === 'generating' ? 'bg-accent animate-pulse' : 'bg-red-400'}`} />
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-200 truncate font-medium">{entry.script}</p>
+          <p className="text-xs text-body truncate font-medium">{entry.script}</p>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            {entry.purpose && <span className="text-[10px] text-gray-500 truncate max-w-[120px]">📌 {entry.purpose}</span>}
-            <span className="text-[10px] text-emerald-500">{preset?.emoji} {preset?.label}</span>
-            <span className="text-[10px] text-gray-600">{emotion?.emoji} {entry.emotion}</span>
-            <span className="text-[10px] text-gray-600">{entry.speed}× · #{entry.iteration}</span>
+            {entry.purpose && <span className="text-[10px] text-muted truncate max-w-[120px]">📌 {entry.purpose}</span>}
+            <span className="text-[10px] text-accent">{preset?.emoji} {preset?.label}</span>
+            <span className="text-[10px] text-muted">{emotion?.emoji} {entry.emotion}</span>
+            <span className="text-[10px] text-muted">{entry.speed}× · #{entry.iteration}</span>
           </div>
         </div>
-        <button onClick={() => setExpanded(e => !e)} className="p-1.5 text-gray-500 hover:text-gray-300 flex-shrink-0">
+        <button onClick={() => setExpanded(e => !e)} className="p-1.5 text-muted hover:text-body flex-shrink-0">
           {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </button>
       </div>
       {expanded && (
-        <div className="px-3 pb-3 border-t border-gray-700 pt-2 space-y-2">
+        <div className="px-3 pb-3 border-t border-hair pt-2 space-y-2">
           {entry.status === 'generating' && (
-            <div className="flex items-center gap-2 text-xs text-emerald-400 py-1">
+            <div className="flex items-center gap-2 text-xs text-accent py-1">
               <Loader2 size={13} className="animate-spin" /> Generating audio…
             </div>
           )}
@@ -218,15 +218,15 @@ const VoiceCard: React.FC<{ entry: VoiceEntry; onDelete: (id: string) => void }>
           {entry.status === 'failed' && (
             <p className="text-xs text-red-400 bg-red-900/20 rounded px-2 py-1.5">Generation failed.</p>
           )}
-          <div className="space-y-0.5 text-[10px] text-gray-400">
-            <p><span className="text-gray-600">Script:</span> {entry.script}</p>
-            <p><span className="text-gray-600">Voice:</span> {preset?.label} ({preset?.style}) · {entry.emotion} · {entry.speed}× speed</p>
-            <p><span className="text-gray-600">Words:</span> {entry.wordCount}</p>
+          <div className="space-y-0.5 text-[10px] text-muted">
+            <p><span className="text-muted">Script:</span> {entry.script}</p>
+            <p><span className="text-muted">Voice:</span> {preset?.label} ({preset?.style}) · {entry.emotion} · {entry.speed}× speed</p>
+            <p><span className="text-muted">Words:</span> {entry.wordCount}</p>
           </div>
           <div className="flex gap-2">
             {entry.audioUrl && (
               <a href={entry.audioUrl} download target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] bg-emerald-700 hover:bg-emerald-600 text-white rounded px-2 py-1 transition-colors">
+                className="flex items-center gap-1 text-[10px] bg-accent hover:bg-accent/90 text-white rounded px-2 py-1 transition-colors">
                 <Download size={10} /> Download
               </a>
             )}
@@ -327,18 +327,18 @@ const AIVoiceCertificationPage: React.FC = () => {
   const stopSpeaking = () => cancelSpeech();
 
   const renderVoiceBar = (textToRead: string) => (
-    <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-800/40 border border-gray-700 rounded-xl mb-4">
-      <span className="text-xs font-semibold text-gray-400 flex items-center gap-1"><Volume2 size={13} className="text-emerald-400" /> Voice:</span>
-      <div className="flex rounded-lg overflow-hidden border border-gray-600">
+    <div className="flex flex-wrap items-center gap-2 p-3 bg-card border border-hair rounded-xl mb-4">
+      <span className="text-xs font-semibold text-muted flex items-center gap-1"><Volume2 size={13} className="text-accent" /> Voice:</span>
+      <div className="flex rounded-lg overflow-hidden border border-hair">
         {(['english', 'pidgin'] as const).map(m => (
           <button key={m} onClick={() => { stopSpeaking(); setVoiceMode(m); }}
-            className={`flex items-center gap-1 px-3 py-1 text-xs font-bold transition-all border-r border-gray-600 last:border-0 ${voiceMode === m ? (m === 'english' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') : 'bg-gray-800 text-gray-500 hover:bg-gray-700 hover:text-white'}`}>
+            className={`flex items-center gap-1 px-3 py-1 text-xs font-bold transition-all border-r border-hair last:border-0 ${voiceMode === m ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-hair hover:text-ink'}`}>
             {m === 'english' ? '🇬🇧 English' : '🇳🇬 Pidgin'}
           </button>
         ))}
       </div>
       <button onClick={() => isSpeaking ? stopSpeaking() : speak(textToRead)}
-        className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${isSpeaking ? 'bg-red-500/10 text-red-400 border border-red-500/30' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20'}`}>
+        className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${isSpeaking ? 'bg-red-500/10 text-red-400 border border-red-500/30' : 'bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20'}`}>
         {isSpeaking ? <><VolumeX size={12} /> Stop</> : <><Volume2 size={12} /> Read aloud</>}
       </button>
     </div>
@@ -642,17 +642,17 @@ Respond ONLY in this JSON format:
 
   if (loadingData) {
     return (
-      <div className="flex flex-col h-screen bg-gray-900">
+      <div className="flex flex-col h-screen bg-paper">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 size={36} className="animate-spin text-emerald-400" />
+          <Loader2 size={36} className="animate-spin text-accent" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-paper text-ink overflow-hidden">
       <Navbar />
 
       {/* Voice fallback — fixed overlay when TTS unavailable (e.g. no network voice in Nigeria) */}
@@ -665,16 +665,16 @@ Respond ONLY in this JSON format:
       <main className="flex-1 flex flex-col overflow-hidden" style={{ marginTop: '64px' }}>
 
         {/* ── Toolbar ───────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-hair flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Mic size={18} className="text-emerald-400" />
-              <span className="text-sm font-bold text-white">AI Voice Creation Certification</span>
+              <Mic size={18} className="text-accent" />
+              <span className="text-sm font-bold text-ink">AI Voice Creation Certification</span>
             </div>
             {view !== 'overview' && (
               <>
-                <div className="w-px h-5 bg-gray-600" />
-                <input className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-emerald-500 outline-none px-1 py-0.5 w-44"
+                <div className="w-px h-5 bg-hair" />
+                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-none px-1 py-0.5 w-44"
                   value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Portfolio name…" />
               </>
             )}
@@ -682,24 +682,24 @@ Respond ONLY in this JSON format:
               {(['overview', 'build', 'results', 'certificate'] as ViewMode[]).map(v => (
                 <button key={v} onClick={() => setView(v)}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors
-                    ${view === v ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'text-gray-600 border-gray-700 hover:text-gray-300 hover:border-gray-500'}`}>
+                    ${view === v ? 'bg-accent/20 text-accent border-accent/40' : 'text-muted border-hair hover:text-body hover:border-accent/40'}`}>
                   {v === 'certificate' ? '🏆 Cert' : v === 'build' ? '🎙️ Build' : v === 'results' ? '📊 Results' : '📋 Overview'}
                 </button>
               ))}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex rounded-lg overflow-hidden border border-gray-600">
+            <div className="flex rounded-lg overflow-hidden border border-hair">
               {(['english', 'pidgin'] as const).map(m => (
                 <button key={m} onClick={() => { stopSpeaking(); setVoiceMode(m); }}
-                  className={`px-2 py-1.5 text-xs font-bold transition-all border-r border-gray-600 last:border-0 ${voiceMode === m ? (m === 'english' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') : 'bg-gray-800 text-gray-500 hover:bg-gray-700 hover:text-white'}`}>
+                  className={`px-2 py-1.5 text-xs font-bold transition-all border-r border-hair last:border-0 ${voiceMode === m ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-hair hover:text-ink'}`}>
                   {m === 'english' ? '🇬🇧' : '🇳🇬'}
                 </button>
               ))}
             </div>
             {view === 'build' && (
               <button onClick={handleEvaluate} disabled={isEvaluating || succeededEntries.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg shadow disabled:opacity-50 transition-colors">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow disabled:opacity-50 transition-colors">
                 {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
                 {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
               </button>
@@ -722,12 +722,12 @@ Respond ONLY in this JSON format:
               ? 'Welcome to the AI Voice Creation Certification. You will write scripts and create AI voices, then be evaluated on your skill.'
               : 'Welcome to the AI Voice Creation Certification. Build a portfolio of MiniMax AI-generated voices demonstrating script writing, vocal direction, emotion control, and iterative refinement.')}
 
-            <div className="p-6 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-cyan-600/10 border border-emerald-500/30 rounded-2xl mb-6">
+            <div className="p-6 bg-surface border border-accent/30 rounded-2xl mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-emerald-600/30 rounded-xl"><Mic size={24} className="text-emerald-300" /></div>
+                <div className="p-2.5 bg-accent/30 rounded-xl"><Mic size={24} className="text-accent" /></div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">AI Voice Creation Certification</h1>
-                  <p className="text-emerald-300 text-sm">MiniMax Speech-02-Turbo · Script Writing · Vocal Direction</p>
+                  <h1 className="text-xl font-bold text-ink">AI Voice Creation Certification</h1>
+                  <p className="text-accent text-sm">MiniMax Speech-02-Turbo · Script Writing · Vocal Direction</p>
                   <div className="mt-2">
                     <PidginTooltip
                       originalText="MiniMax Speech-02-Turbo · Script Writing · Vocal Direction"
@@ -736,24 +736,24 @@ Respond ONLY in this JSON format:
                   </div>
                 </div>
               </div>
-              <p className="text-gray-300 text-sm leading-relaxed">
+              <p className="text-body text-sm leading-relaxed">
                 {lvl <= 1
                   ? 'In this certification, you write scripts and create AI voices by choosing a speaker, emotion, and speed. You will be judged on how well you write your scripts, whether they have a clear purpose, how you choose voices and emotions, and how much you improve by trying again.'
                   : 'Demonstrate your AI voice creation skills by building a portfolio of MiniMax-generated audio clips. Evaluation covers script quality, vocal direction (voice choice, emotion, speed), creative purpose, iteration and refinement, and the breadth of your portfolio.'}
               </p>
             </div>
 
-            <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl mb-5">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-1">💡 How the evaluation works</p>
-              <p className="text-sm text-gray-300 leading-relaxed">
+            <div className="p-4 bg-card border border-hair rounded-xl mb-5">
+              <p className="text-xs font-bold text-muted uppercase mb-1">💡 How the evaluation works</p>
+              <p className="text-sm text-body leading-relaxed">
                 {lvl <= 1
                   ? 'The evaluator reads your scripts and looks at your voice, emotion, and speed choices — not the audio itself. The better and more specific your scripts and choices, the higher your score. Always say why you are making each voice, and try the same script again to show improvement.'
                   : 'Evaluation analyses your written scripts, stated purposes, voice and emotion choices, speed settings, and iteration patterns. The evaluator examines the quality of your script writing, the deliberateness of your vocal direction decisions, and the range of your portfolio.'}
               </p>
             </div>
 
-            <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl mb-5">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-3">📋 Certification Guidelines</p>
+            <div className="p-4 bg-card border border-hair rounded-xl mb-5">
+              <p className="text-xs font-bold text-muted uppercase mb-3">📋 Certification Guidelines</p>
               <div className="space-y-2">
                 {[
                   { icon: '✅', text: lvl <= 1 ? 'Always say WHY you are making each voice — for an ad, a story, a news report.' : 'State a clear purpose for every voice entry. Purpose is a scored criterion.' },
@@ -764,27 +764,27 @@ Respond ONLY in this JSON format:
                 ].map((rule, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm">
                     <span className="flex-shrink-0 mt-0.5">{rule.icon}</span>
-                    <span className="text-gray-300">{rule.text}</span>
+                    <span className="text-body">{rule.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Script tip */}
-            <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl mb-5">
-              <p className="text-xs font-bold text-emerald-400 uppercase mb-2">🎙️ What makes a great voice script?</p>
-              <div className="space-y-1.5 text-xs text-gray-400">
+            <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl mb-5">
+              <p className="text-xs font-bold text-accent uppercase mb-2">🎙️ What makes a great voice script?</p>
+              <div className="space-y-1.5 text-xs text-muted">
                 <div className="flex items-start gap-2"><span className="text-red-400 flex-shrink-0 font-bold">✗ Weak:</span><span className="italic">"Hello. I like school."</span></div>
-                <div className="flex items-start gap-2"><span className="text-emerald-400 flex-shrink-0 font-bold">✓ Strong:</span><span className="italic">"Good morning, everyone. My name is Amara, and I am here today to tell you something important. Every girl in our community deserves access to technology. At the Davidson AI Center, that is exactly what we are building — together, one skill at a time."</span></div>
-                <p className="text-gray-500 mt-2">Strong scripts have: <span className="text-gray-300">a clear opening · a message · natural pacing · an audience in mind · an emotional tone</span></p>
+                <div className="flex items-start gap-2"><span className="text-accent flex-shrink-0 font-bold">✓ Strong:</span><span className="italic">"Good morning, everyone. My name is Amara, and I am here today to tell you something important. Every girl in our community deserves access to technology. At the Davidson AI Center, that is exactly what we are building — together, one skill at a time."</span></div>
+                <p className="text-muted mt-2">Strong scripts have: <span className="text-body">a clear opening · a message · natural pacing · an audience in mind · an emotional tone</span></p>
               </div>
             </div>
 
             {/* Assessment criteria */}
-            <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl mb-6">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-3">🎯 What You Will Be Evaluated On</p>
+            <div className="p-4 bg-card border border-hair rounded-xl mb-6">
+              <p className="text-xs font-bold text-muted uppercase mb-3">🎯 What You Will Be Evaluated On</p>
               {assessments.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">Loading criteria…</p>
+                <p className="text-sm text-muted italic">Loading criteria…</p>
               ) : (
                 <div className="space-y-2">
                   {assessments.map(a => {
@@ -795,10 +795,10 @@ Respond ONLY in this JSON format:
                         <div className="flex-shrink-0 mt-0.5"><ScoreRing score={sc?.score ?? null} /></div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-white">{a.assessment_name}</p>
+                            <p className="text-sm font-semibold text-ink">{a.assessment_name}</p>
                             {sc?.score !== null && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sl.bg} ${sl.color} ${sl.border}`}>{sl.text}</span>}
                           </div>
-                          <p className="text-xs text-gray-400 leading-relaxed">{a.description || a.certification_prompt.slice(0, 120) + '…'}</p>
+                          <p className="text-xs text-muted leading-relaxed">{a.description || a.certification_prompt.slice(0, 120) + '…'}</p>
                         </div>
                       </div>
                     );
@@ -808,24 +808,24 @@ Respond ONLY in this JSON format:
             </div>
 
             {anyScored && overallAvg !== null && (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl mb-5 flex items-center gap-4">
+              <div className="p-4 bg-accent/10 border border-accent/30 rounded-xl mb-5 flex items-center gap-4">
                 <Trophy size={28} className="text-amber-400 flex-shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-400 uppercase font-bold">Your current score</p>
-                  <p className="text-2xl font-black text-white">{overallAvg.toFixed(1)}<span className="text-base font-normal text-gray-500">/3.0</span></p>
+                  <p className="text-xs text-muted uppercase font-bold">Your current score</p>
+                  <p className="text-2xl font-black text-ink">{overallAvg.toFixed(1)}<span className="text-base font-normal text-muted">/3.0</span></p>
                 </div>
-                {allProficient && <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🏆 Eligible for Certificate</span>}
+                {allProficient && <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-bold bg-accent/20 text-accent border border-accent/30">🏆 Eligible for Certificate</span>}
               </div>
             )}
 
             <div className="flex gap-3">
               <button onClick={() => setView('build')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl transition-all hover:scale-[1.01] shadow-lg">
+                className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl transition-all hover:scale-[1.01] shadow-lg">
                 {succeededEntries.length > 0 ? <><RefreshCw size={16} /> Continue Building</> : <><Mic size={16} /> Start Creating Voices</>}
               </button>
               {anyScored && (
                 <button onClick={() => setView('results')}
-                  className="px-4 py-3 text-sm font-bold text-emerald-300 border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl transition-colors">
+                  className="px-4 py-3 text-sm font-bold text-accent border border-accent/30 bg-accent/10 hover:bg-accent/20 rounded-xl transition-colors">
                   View Results →
                 </button>
               )}
@@ -840,13 +840,13 @@ Respond ONLY in this JSON format:
           <div className="flex-1 flex overflow-hidden">
 
             {/* ── Left: Form + criteria ─────────────────────────────── */}
-            <div className="w-80 flex-shrink-0 flex flex-col bg-[#1a1d23] border-r border-gray-700 overflow-hidden">
-              <div className="flex-shrink-0 px-4 py-3 border-b border-emerald-500/30 bg-emerald-500/10">
+            <div className="w-80 flex-shrink-0 flex flex-col bg-surface border-r border-hair overflow-hidden">
+              <div className="flex-shrink-0 px-4 py-3 border-b border-accent/30 bg-accent/10">
                 <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-emerald-400" />
-                  <p className="text-sm font-bold text-emerald-300">Voice Script</p>
+                  <Sparkles size={16} className="text-accent" />
+                  <p className="text-sm font-bold text-accent">Voice Script</p>
                 </div>
-                <p className="text-[10px] text-gray-500 mt-0.5">
+                <p className="text-[10px] text-muted mt-0.5">
                   {lvl <= 1 ? 'Write what you want the voice to say.' : 'Write a script for spoken delivery — clear sentences, natural pacing.'}
                 </p>
               </div>
@@ -867,18 +867,18 @@ Respond ONLY in this JSON format:
 
                 {/* Purpose */}
                 <div>
-                  <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">
                     {lvl <= 1 ? 'Why are you making this voice? *' : 'Purpose / Use case *'}
                   </label>
                   <input type="text" value={purpose} onChange={e => setPurpose(e.target.value)}
                     placeholder={lvl <= 1 ? 'e.g. A radio ad for solar energy' : 'e.g. Narration for a community solar energy documentary'}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-emerald-500 transition-colors" />
-                  <p className="text-[9px] text-gray-600 mt-0.5">Stating a purpose is part of your evaluation.</p>
+                    className="w-full bg-paper border border-hair rounded-lg px-3 py-2 text-sm text-ink placeholder-muted outline-none focus:border-accent transition-colors" />
+                  <p className="text-[9px] text-muted mt-0.5">Stating a purpose is part of your evaluation.</p>
                 </div>
 
                 {/* Script */}
                 <div>
-                  <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">
                     {lvl <= 1 ? 'Your script *' : 'Script *'}
                   </label>
                   <textarea value={script} onChange={e => setScript(e.target.value)}
@@ -887,26 +887,26 @@ Respond ONLY in this JSON format:
                     placeholder={lvl <= 1
                       ? 'e.g. Hello! My name is Amara. Today I want to tell you about solar energy in our village…'
                       : 'e.g. Good morning. I am speaking to you today about a change that is coming to our community. Solar energy is not just about electricity — it is about opportunity, about education, about the future we are building together.'}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-emerald-500 transition-colors leading-relaxed" />
+                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-none focus:border-accent transition-colors leading-relaxed" />
                   <div className="flex justify-between mt-0.5">
-                    <p className="text-[9px] text-gray-700">Ctrl+Enter to generate · {script.trim().split(/\s+/).filter(Boolean).length} words</p>
-                    <span className={`text-[9px] ${script.length > 1800 ? 'text-amber-400' : 'text-gray-600'}`}>{script.length}/2000</span>
+                    <p className="text-[9px] text-muted">Ctrl+Enter to generate · {script.trim().split(/\s+/).filter(Boolean).length} words</p>
+                    <span className={`text-[9px] ${script.length > 1800 ? 'text-amber-400' : 'text-muted'}`}>{script.length}/2000</span>
                   </div>
                 </div>
 
                 {/* Voice preset */}
                 <div>
-                  <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">
                     {lvl <= 1 ? 'Choose a voice' : 'Voice'}
                   </label>
                   <div className="grid grid-cols-2 gap-1.5">
                     {VOICE_PRESETS.map(p => (
                       <button key={p.id} onClick={() => setVoiceId(p.id)}
-                        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-left transition-all ${voiceId === p.id ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-200' : 'border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200'}`}>
+                        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-left transition-all ${voiceId === p.id ? 'bg-accent/20 border-accent/50 text-accent' : 'border-hair text-muted hover:border-accent/40 hover:text-body'}`}>
                         <span className="text-base flex-shrink-0">{p.emoji}</span>
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold truncate">{p.label}</p>
-                          <p className="text-[9px] text-gray-600 truncate">{p.style}</p>
+                          <p className="text-[9px] text-muted truncate">{p.style}</p>
                         </div>
                       </button>
                     ))}
@@ -915,13 +915,13 @@ Respond ONLY in this JSON format:
 
                 {/* Emotion */}
                 <div>
-                  <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">
                     {lvl <= 1 ? 'Emotion' : 'Vocal emotion'}
                   </label>
                   <div className="flex flex-wrap gap-1.5">
                     {EMOTIONS.map(e => (
                       <button key={e.id} onClick={() => setEmotion(e.id)}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border transition-colors ${emotion === e.id ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' : 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'}`}>
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border transition-colors ${emotion === e.id ? 'bg-accent/20 border-accent/50 text-accent' : 'border-hair text-muted hover:border-accent/40 hover:text-body'}`}>
                         {e.emoji} {e.label}
                       </button>
                     ))}
@@ -931,23 +931,23 @@ Respond ONLY in this JSON format:
                 {/* Speed */}
                 <div>
                   <div className="flex justify-between mb-1">
-                    <label className="text-[10px] text-gray-500 uppercase font-bold">
+                    <label className="text-[10px] text-muted uppercase font-bold">
                       {lvl <= 1 ? 'Speed' : 'Speaking speed'}
                     </label>
-                    <span className="text-[10px] text-emerald-400 font-mono">{speed.toFixed(1)}×</span>
+                    <span className="text-[10px] text-accent font-mono">{speed.toFixed(1)}×</span>
                   </div>
                   <input type="range" min={0.5} max={2.0} step={0.1} value={speed}
                     onChange={e => setSpeed(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-gray-700 rounded-full appearance-none cursor-pointer accent-emerald-500" />
-                  <div className="flex justify-between text-[9px] text-gray-600 mt-0.5">
+                    className="w-full h-1.5 bg-hair rounded-full appearance-none cursor-pointer accent-accent" />
+                  <div className="flex justify-between text-[9px] text-muted mt-0.5">
                     <span>Slow</span><span>Normal</span><span>Fast</span>
                   </div>
                 </div>
 
                 {/* Stats if entries exist */}
                 {entries.length > 1 && (
-                  <div className="p-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-[10px] text-gray-400 space-y-0.5">
-                    <p><span className="text-emerald-400 font-bold">{succeededEntries.length}</span> complete · <span className="text-gray-500">{generatingCount > 0 ? `${generatingCount} generating` : ''}</span></p>
+                  <div className="p-2.5 bg-card border border-hair rounded-lg text-[10px] text-muted space-y-0.5">
+                    <p><span className="text-accent font-bold">{succeededEntries.length}</span> complete · <span className="text-muted">{generatingCount > 0 ? `${generatingCount} generating` : ''}</span></p>
                     <p>Voices used: {[...new Set(entries.map(e => e.voiceLabel))].join(', ')}</p>
                     <p>Emotions used: {[...new Set(entries.map(e => e.emotion))].join(', ')}</p>
                   </div>
@@ -955,7 +955,7 @@ Respond ONLY in this JSON format:
 
                 {/* Criteria accordion */}
                 <div>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase mb-2 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold text-muted uppercase mb-2 flex items-center gap-1.5">
                     <ClipboardList size={11} /> Rubric Criteria
                   </p>
                   <div className="space-y-1.5">
@@ -964,29 +964,29 @@ Respond ONLY in this JSON format:
                       const isOpen = expandedCrit === a.certification_id;
                       const sl = scoreLabel(sc?.score ?? null);
                       return (
-                        <div key={a.certification_id} className={`rounded-lg border overflow-hidden ${isOpen ? 'border-emerald-500/40' : 'border-gray-700'}`}>
+                        <div key={a.certification_id} className={`rounded-lg border overflow-hidden ${isOpen ? 'border-accent/40' : 'border-hair'}`}>
                           <button onClick={() => setExpandedCrit(isOpen ? null : a.certification_id)}
-                            className="w-full flex items-center gap-2 px-3 py-2 bg-gray-800/60 hover:bg-gray-700/60 text-left transition-colors">
+                            className="w-full flex items-center gap-2 px-3 py-2 bg-card hover:bg-hair text-left transition-colors">
                             <ScoreRing score={sc?.score ?? null} />
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-white truncate">{a.assessment_name}</p>
+                              <p className="text-xs font-bold text-ink truncate">{a.assessment_name}</p>
                               {sc?.score !== null && <span className={`text-[9px] font-bold ${sl.color}`}>{sl.text}</span>}
                             </div>
-                            {isOpen ? <ChevronUp size={12} className="text-gray-500 flex-shrink-0" /> : <ChevronDown size={12} className="text-gray-500 flex-shrink-0" />}
+                            {isOpen ? <ChevronUp size={12} className="text-muted flex-shrink-0" /> : <ChevronDown size={12} className="text-muted flex-shrink-0" />}
                           </button>
                           {isOpen && (
-                            <div className="px-3 py-2.5 bg-gray-900/60 border-t border-gray-700 space-y-2">
-                              <p className="text-[10px] text-gray-400 leading-relaxed">{a.description}</p>
+                            <div className="px-3 py-2.5 bg-paper border-t border-hair space-y-2">
+                              <p className="text-[10px] text-muted leading-relaxed">{a.description}</p>
                               <div className="space-y-1">
                                 {[
                                   { level: 0, text: a.certification_level0_metric, color: 'text-red-400' },
                                   { level: 1, text: a.certification_level1_metric, color: 'text-amber-400' },
                                   { level: 2, text: a.certification_level2_metric, color: 'text-blue-400' },
-                                  { level: 3, text: a.certification_level3_metric, color: 'text-emerald-400' },
+                                  { level: 3, text: a.certification_level3_metric, color: 'text-green-400' },
                                 ].map(({ level, text, color }) => (
                                   <div key={level} className={`flex items-start gap-1.5 text-[10px] ${color}`}>
                                     <span className="font-bold flex-shrink-0">L{level}:</span>
-                                    <span className="text-gray-400">{text}</span>
+                                    <span className="text-muted">{text}</span>
                                   </div>
                                 ))}
                               </div>
@@ -1001,7 +1001,7 @@ Respond ONLY in this JSON format:
 
               <div className="flex-shrink-0 px-4 pb-4 pt-2">
                 <button onClick={handleGenerate} disabled={isGenerating || !script.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl disabled:opacity-40 transition-colors">
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-40 transition-colors">
                   {isGenerating ? <Loader2 size={15} className="animate-spin" /> : <Mic size={15} />}
                   {isGenerating ? 'Generating…' : (lvl <= 1 ? 'Create My Voice 🎙️' : 'Generate Voice')}
                 </button>
@@ -1010,14 +1010,14 @@ Respond ONLY in this JSON format:
 
             {/* ── Right: Portfolio ──────────────────────────────────── */}
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2 bg-gray-800/80 border-b border-gray-700 flex-shrink-0">
+              <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-hair flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <Mic size={13} className="text-emerald-400" />
-                  <span className="text-xs font-semibold text-gray-300">Voice Portfolio</span>
-                  <span className="text-[10px] text-gray-600">{succeededEntries.length} complete · {generatingCount > 0 ? `${generatingCount} generating · ` : ''}{entries.length} total</span>
+                  <Mic size={13} className="text-accent" />
+                  <span className="text-xs font-semibold text-body">Voice Portfolio</span>
+                  <span className="text-[10px] text-muted">{succeededEntries.length} complete · {generatingCount > 0 ? `${generatingCount} generating · ` : ''}{entries.length} total</span>
                 </div>
                 <button onClick={handleEvaluate} disabled={isEvaluating || succeededEntries.length === 0}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg disabled:opacity-40 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg disabled:opacity-40 transition-colors">
                   {isEvaluating ? <Loader2 size={11} className="animate-spin" /> : <Award size={11} />}
                   {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit'}
                 </button>
@@ -1026,11 +1026,11 @@ Respond ONLY in this JSON format:
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {entries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center py-16 space-y-3">
-                    <Mic size={48} className="text-gray-700" />
-                    <p className="text-gray-500 text-sm font-medium">
+                    <Mic size={48} className="text-muted" />
+                    <p className="text-muted text-sm font-medium">
                       {lvl <= 1 ? 'Your voice recordings will appear here.' : 'Your voice portfolio builds up here as you generate.'}
                     </p>
-                    <div className="max-w-xs space-y-1 text-xs text-gray-600">
+                    <div className="max-w-xs space-y-1 text-xs text-muted">
                       <p>💡 {lvl <= 1 ? 'Write a script, choose a voice, then click Create.' : 'Write a purposeful script, direct the voice and emotion, then generate.'}</p>
                       <p>🔄 {lvl <= 1 ? 'Try the same script again with a better version.' : 'Iterate — try the same content with a different voice or emotion.'}</p>
                       <p>⚡ {lvl <= 1 ? 'Voices take 3–5 seconds to make.' : 'MiniMax Speech generates in ~3–5 seconds.'}</p>
@@ -1039,10 +1039,10 @@ Respond ONLY in this JSON format:
                 ) : (
                   <>
                     {entries.length > 1 && (
-                      <div className="flex items-center gap-3 p-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-xs text-gray-400">
-                        <span className="text-emerald-400 font-bold">{succeededEntries.length}</span> complete ·
-                        <span className="text-teal-400 font-bold">{Object.values(scriptGroupCount).filter(c => c > 1).length}</span> iterated ·
-                        <span className="text-cyan-400 font-bold">{entries.filter(e => e.purpose.trim()).length}</span> with purpose ·
+                      <div className="flex items-center gap-3 p-2.5 bg-card border border-hair rounded-lg text-xs text-muted">
+                        <span className="text-accent font-bold">{succeededEntries.length}</span> complete ·
+                        <span className="text-accent font-bold">{Object.values(scriptGroupCount).filter(c => c > 1).length}</span> iterated ·
+                        <span className="text-accent font-bold">{entries.filter(e => e.purpose.trim()).length}</span> with purpose ·
                         <span className="text-blue-400 font-bold">{[...new Set(entries.map(e => e.emotion))].length}</span> emotions used
                       </div>
                     )}
@@ -1067,26 +1067,26 @@ Respond ONLY in this JSON format:
 
             {!anyScored ? (
               <div className="text-center py-16 space-y-4">
-                <ClipboardList size={48} className="text-gray-600 mx-auto" />
-                <p className="text-gray-400">{lvl <= 1 ? 'You have not been evaluated yet. Go to Build and create some voices first.' : 'No evaluation data yet. Generate voices and submit for evaluation.'}</p>
-                <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">
+                <ClipboardList size={48} className="text-muted mx-auto" />
+                <p className="text-muted">{lvl <= 1 ? 'You have not been evaluated yet. Go to Build and create some voices first.' : 'No evaluation data yet. Generate voices and submit for evaluation.'}</p>
+                <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl">
                   <Mic size={16} /> Go to Build
                 </button>
               </div>
             ) : (
               <div className="space-y-5">
-                <div className="flex items-center gap-5 p-5 bg-gradient-to-br from-emerald-600/20 to-teal-600/10 border border-emerald-500/30 rounded-2xl">
+                <div className="flex items-center gap-5 p-5 bg-surface border border-accent/30 rounded-2xl">
                   <Trophy size={40} className="text-amber-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-400 uppercase font-bold">Overall Score</p>
-                    <p className="text-4xl font-black text-white">{overallAvg?.toFixed(1)}<span className="text-lg font-normal text-gray-500">/3.0</span></p>
-                    <p className={`text-sm font-bold mt-0.5 ${allProficient ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    <p className="text-xs text-muted uppercase font-bold">Overall Score</p>
+                    <p className="text-4xl font-black text-ink">{overallAvg?.toFixed(1)}<span className="text-lg font-normal text-muted">/3.0</span></p>
+                    <p className={`text-sm font-bold mt-0.5 ${allProficient ? 'text-accent' : 'text-amber-400'}`}>
                       {allProficient ? '🏆 Proficiency Achieved — Certificate Eligible' : `${assessmentScores.filter(s => (s.score ?? 0) >= 2).length}/${assessmentScores.length} criteria at Proficient or above`}
                     </p>
                   </div>
                   {allProficient && (
                     <button onClick={() => setView('certificate')}
-                      className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors">
+                      className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl text-sm transition-colors">
                       <Award size={16} /> Get Certificate
                     </button>
                   )}
@@ -1100,39 +1100,39 @@ Respond ONLY in this JSON format:
                     return (
                       <div key={sc.assessment_name} className={`rounded-xl border overflow-hidden ${sl.border} ${sl.bg}`}>
                         <button onClick={() => setExpandedCrit(isOpen ? null : sc.assessment_name)}
-                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-white/5 transition-colors">
+                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-paper transition-colors">
                           <ScoreRing score={sc.score} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white">{sc.assessment_name}</p>
+                            <p className="text-sm font-bold text-ink">{sc.assessment_name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className={`text-xs font-bold ${sl.color}`}>{sl.text}</span>
-                              <div className="h-1.5 w-24 bg-gray-700 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full ${sc.score === 3 ? 'bg-emerald-500' : sc.score === 2 ? 'bg-blue-500' : sc.score === 1 ? 'bg-amber-500' : 'bg-red-500'}`}
+                              <div className="h-1.5 w-24 bg-hair rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full ${sc.score === 3 ? 'bg-green-500' : sc.score === 2 ? 'bg-blue-500' : sc.score === 1 ? 'bg-amber-500' : 'bg-red-500'}`}
                                   style={{ width: `${((sc.score ?? 0) / 3) * 100}%` }} />
                               </div>
                             </div>
                           </div>
-                          {isOpen ? <ChevronUp size={14} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />}
+                          {isOpen ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-3">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-3">
                             {sc.evidence && (
                               <div>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Evidence</p>
-                                <p className="text-xs text-gray-300 leading-relaxed">{sc.evidence}</p>
+                                <p className="text-[10px] font-bold text-muted uppercase mb-1">Evidence</p>
+                                <p className="text-xs text-body leading-relaxed">{sc.evidence}</p>
                               </div>
                             )}
                             {assessment && (
                               <div>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Rubric</p>
+                                <p className="text-[10px] font-bold text-muted uppercase mb-1">Rubric</p>
                                 <div className="space-y-1">
                                   {[
                                     { level: 0, text: assessment.certification_level0_metric, color: 'text-red-400' },
                                     { level: 1, text: assessment.certification_level1_metric, color: 'text-amber-400' },
                                     { level: 2, text: assessment.certification_level2_metric, color: 'text-blue-400' },
-                                    { level: 3, text: assessment.certification_level3_metric, color: 'text-emerald-400' },
+                                    { level: 3, text: assessment.certification_level3_metric, color: 'text-green-400' },
                                   ].map(({ level, text, color }) => (
-                                    <div key={level} className={`flex gap-1.5 text-[10px] ${sc.score === level ? color : 'text-gray-600'}`}>
+                                    <div key={level} className={`flex gap-1.5 text-[10px] ${sc.score === level ? color : 'text-muted'}`}>
                                       <span className="font-bold flex-shrink-0">{sc.score === level ? '▶' : ' '} L{level}:</span>
                                       <span>{text}</span>
                                     </div>
@@ -1149,17 +1149,17 @@ Respond ONLY in this JSON format:
 
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => setView('build')}
-                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-emerald-300 border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl transition-colors">
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-accent border border-accent/30 bg-accent/10 hover:bg-accent/20 rounded-xl transition-colors">
                     <Mic size={15} /> Keep Creating
                   </button>
                   <button onClick={handleEvaluate} disabled={isEvaluating || succeededEntries.length === 0}
-                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl disabled:opacity-50 transition-colors">
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 transition-colors">
                     {isEvaluating ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
                     {isEvaluating ? 'Re-evaluating…' : 'Re-evaluate'}
                   </button>
                   {allProficient && (
                     <button onClick={() => setView('certificate')}
-                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors ml-auto">
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl transition-colors ml-auto">
                       <Award size={15} /> Get Certificate →
                     </button>
                   )}
@@ -1177,11 +1177,11 @@ Respond ONLY in this JSON format:
             {!allProficient ? (
               <div className="text-center py-16 space-y-4">
                 <XCircle size={48} className="text-amber-400 mx-auto" />
-                <h2 className="text-lg font-bold text-white">{lvl <= 1 ? 'Not ready yet.' : 'Certificate Not Yet Available'}</h2>
-                <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                <h2 className="text-lg font-bold text-ink">{lvl <= 1 ? 'Not ready yet.' : 'Certificate Not Yet Available'}</h2>
+                <p className="text-muted text-sm max-w-sm mx-auto">
                   {lvl <= 1 ? 'You need Proficient (2/3) in all criteria. Keep creating and improving.' : 'A Proficient score (2+) on all criteria is required. Generate more voices and re-evaluate.'}
                 </p>
-                <button onClick={() => setView('results')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">
+                <button onClick={() => setView('results')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl">
                   <BarChart3 size={16} /> View Results
                 </button>
               </div>
@@ -1192,42 +1192,41 @@ Respond ONLY in this JSON format:
                   : 'Congratulations on passing the AI Voice Creation Certification.')}
 
                 {/* Preview */}
-                <div className="p-6 bg-gradient-to-br from-emerald-900/40 via-teal-900/30 to-cyan-900/20 border-2 border-emerald-500/40 rounded-2xl text-center space-y-4 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #10b981 0, #10b981 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }} />
+                <div className="p-6 bg-surface border-2 border-accent/40 rounded-2xl text-center space-y-4 relative overflow-hidden">
                   <div className="relative">
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-amber-400" /></div>
-                    <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Certificate of Achievement</p>
-                    <p className="text-lg font-bold text-white mt-1">AI Voice Creation Certification</p>
-                    <p className="text-emerald-300 text-sm">MiniMax Speech · {scoreLabel(Math.min(...assessmentScores.map(s => s.score ?? 0))).text} Level · {succeededEntries.length} voice{succeededEntries.length !== 1 ? 's' : ''} produced</p>
-                    <div className="my-4 h-px bg-emerald-500/30" />
-                    <p className="text-gray-400 text-xs">Awarded to</p>
-                    <p className="text-2xl font-bold text-white mt-1">{certName || '[ Your Name ]'}</p>
-                    <p className="text-gray-400 text-xs mt-1">{branding.institutionName}</p>
-                    <div className="my-4 h-px bg-emerald-500/30" />
+                    <p className="text-xs font-bold text-accent uppercase tracking-widest">Certificate of Achievement</p>
+                    <p className="text-lg font-bold text-ink mt-1">AI Voice Creation Certification</p>
+                    <p className="text-accent text-sm">MiniMax Speech · {scoreLabel(Math.min(...assessmentScores.map(s => s.score ?? 0))).text} Level · {succeededEntries.length} voice{succeededEntries.length !== 1 ? 's' : ''} produced</p>
+                    <div className="my-4 h-px bg-accent/30" />
+                    <p className="text-muted text-xs">Awarded to</p>
+                    <p className="text-2xl font-bold text-ink mt-1">{certName || '[ Your Name ]'}</p>
+                    <p className="text-muted text-xs mt-1">{branding.institutionName}</p>
+                    <div className="my-4 h-px bg-accent/30" />
                     <div className="grid grid-cols-2 gap-2 text-left">
                       {assessmentScores.map(sc => {
                         const sl = scoreLabel(sc.score);
                         return (
                           <div key={sc.assessment_name} className={`px-2.5 py-1.5 rounded-lg border text-xs ${sl.bg} ${sl.border}`}>
                             <p className={`font-bold ${sl.color}`}>{sc.assessment_name}</p>
-                            <p className="text-gray-400">{sc.score}/3 — {sl.text}</p>
+                            <p className="text-muted">{sc.score}/3 — {sl.text}</p>
                           </div>
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-gray-600 mt-3">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    <p className="text-[10px] text-muted mt-3">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase block mb-1.5">Full name for the certificate:</label>
+                    <label className="text-xs font-bold text-muted uppercase block mb-1.5">Full name for the certificate:</label>
                     <input type="text" value={certName} onChange={e => setCertName(e.target.value)}
                       placeholder="e.g. Amara Okoye"
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm outline-none focus:border-emerald-500 transition-colors" />
+                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-none focus:border-accent transition-colors" />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
-                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl disabled:opacity-50 transition-all hover:scale-[1.01]">
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 transition-all hover:scale-[1.01]">
                     {isGenCert ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
                     {isGenCert ? 'Generating PDF…' : 'Download Certificate (PDF)'}
                   </button>

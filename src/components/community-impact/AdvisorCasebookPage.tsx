@@ -25,6 +25,8 @@ import { AIPidginCoachWrapper } from '../AIPidginCoachWrapper';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { ResolutionModal, ResolutionSubmitData } from './ResolutionModal';
 import { EvidencePicker } from './EvidencePicker';
+import QuietButton from '../ui/QuietButton';
+import ChatSurface from '../chat/ChatSurface';
 import {
   ArrowLeft, Send, Loader2, Plus, User,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
@@ -70,47 +72,6 @@ interface ChallengeEvalResult {
   follow_up_instruction: string;
   next_tier_hint: string;
 }
-
-// ─── Background ─────────────────────────────────────────────────────────────
-
-const AdvisorBackground: React.FC<{ image: string; overlayGradient: string }> = ({ image, overlayGradient }) => {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-  const [moving, setMoving] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      setMouse({ x: Math.max(0, e.clientX - 256), y: Math.max(0, e.clientY - 64) });
-      setMoving(true);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setMoving(false), 120);
-    };
-    window.addEventListener('mousemove', h);
-    return () => { window.removeEventListener('mousemove', h); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-  const img = `url('${image}')`;
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="advisor-distortion">
-            <feTurbulence type="fractalNoise" baseFrequency="0.007" numOctaves="3" seed="31" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="55" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-      <div className="fixed top-14 left-0 md:left-64 right-0 bottom-0" style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}>
-        <div className={`absolute inset-0 bg-gradient-to-br ${overlayGradient}`} />
-        <div className="absolute inset-0 bg-black/10" />
-      </div>
-      {moving && (
-        <div className="fixed top-14 left-0 md:left-64 right-0 bottom-0 pointer-events-none" style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 1, filter: 'url(#advisor-distortion)', WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)`, maskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)` }}>
-          <div className={`absolute inset-0 bg-gradient-to-br ${overlayGradient}`} />
-        </div>
-      )}
-    </>
-  );
-};
 
 // ─── Markdown renderer ──────────────────────────────────────────────────────
 
@@ -161,46 +122,45 @@ interface ProbePanelProps {
 const ProbePanel: React.FC<ProbePanelProps> = ({
   config, field, categoryValue, messages, loading, done, input, onInputChange, onSend, onClose, chatEndRef
 }) => {
-  const cc = config.categoryConfig[categoryValue];
-  const pa = config.probeAccent;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-2 pb-2">
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col" style={{ maxHeight: '85vh' }}>
-        <div className={classNames('flex items-center justify-between px-4 py-3 border-b rounded-t-2xl', pa.headerBg)}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 px-2 pb-2">
+      <div className="w-full max-w-lg bg-card border border-hair rounded-2xl shadow-lg flex flex-col" style={{ maxHeight: '85vh' }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-hair rounded-t-2xl bg-surface">
           <div>
-            <p className={classNames('text-xs font-bold uppercase tracking-wide', pa.labelText)}>Interview Coach</p>
-            <p className={classNames('text-sm font-bold', pa.titleText)}>Exploring: {field.label}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-muted">Interview Coach</p>
+            <p className="text-sm font-bold text-ink">Exploring: {field.label}</p>
           </div>
-          <button onClick={onClose} className={classNames('p-2 rounded-xl hover:bg-black/5', pa.labelText)}>
+          <button onClick={onClose} className="p-2 rounded-xl text-muted hover:text-ink hover:bg-paper">
             <X size={18}/>
           </button>
         </div>
 
-        <div className={classNames('px-4 py-2 text-xs flex items-start gap-2', pa.bannerBg, pa.bannerText)}>
+        <div className="px-4 py-2 text-xs flex items-start gap-2 bg-paper text-body border-b border-hair">
           <span className="text-base">💬</span>
           <span>Read each question aloud. Type or speak the answer, then tap Send. The AI will keep asking until this topic is fully characterised.</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {messages.map(msg => (
-            <div key={msg.id} className={classNames('flex items-start gap-2', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-              {msg.role === 'assistant' && (
-                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${cc.colour} flex items-center justify-center text-xs flex-shrink-0`}>{cc.emoji}</div>
+            <div key={msg.id} className={classNames('flex flex-col', msg.role === 'user' ? 'items-end' : 'items-start')}>
+              <span className="text-xs font-medium text-muted mb-1">
+                {msg.role === 'user' ? 'Your answer' : 'AI Interview Coach'}
+              </span>
+              {msg.role === 'user' ? (
+                <div className="max-w-[85%] rounded-xl bg-paper border border-hair px-3 py-2.5 text-sm leading-relaxed text-body">
+                  <MarkdownText text={msg.content}/>
+                </div>
+              ) : (
+                <div className="max-w-[85%] text-sm leading-relaxed text-body">
+                  <MarkdownText text={msg.content}/>
+                </div>
               )}
-              <div className={classNames('max-w-[85%] rounded-2xl px-3 py-2.5 text-sm leading-relaxed',
-                msg.role === 'user' ? `${pa.userBubbleBg} text-white rounded-tr-sm` : `${pa.assistantBubbleBg} text-gray-900 rounded-tl-sm border ${pa.assistantBubbleBorder}`)}>
-                {msg.role === 'assistant' && <p className={classNames('text-xs font-bold mb-1', pa.assistantLabelText)}>AI Interview Coach</p>}
-                {msg.role === 'user' && <p className={classNames('text-xs font-bold mb-1', pa.userLabelText)}>Your answer</p>}
-                <MarkdownText text={msg.content}/>
-              </div>
             </div>
           ))}
           {loading && (
-            <div className="flex items-start gap-2">
-              <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${cc.colour} flex items-center justify-center text-xs`}>{cc.emoji}</div>
-              <div className={classNames('rounded-2xl rounded-tl-sm px-3 py-2.5', pa.assistantBubbleBg)}>
-                <div className="flex gap-1 items-center h-4">{[0,150,300].map(d => <div key={d} className={classNames('w-2 h-2 rounded-full animate-bounce', pa.dotColor)} style={{ animationDelay: `${d}ms` }}/>)}</div>
-              </div>
+            <div className="flex flex-col items-start">
+              <span className="text-xs font-medium text-muted mb-1">AI Interview Coach</span>
+              <div className="flex gap-1 items-center h-4 py-1.5">{[0,150,300].map(d => <div key={d} className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse" style={{ animationDelay: `${d}ms` }}/>)}</div>
             </div>
           )}
           <div ref={chatEndRef}/>
@@ -213,7 +173,7 @@ const ProbePanel: React.FC<ProbePanelProps> = ({
           </div>
         )}
 
-        <div className="border-t px-3 py-3 rounded-b-2xl">
+        <div className="border-t border-hair px-3 py-3 rounded-b-2xl bg-card">
           <div className="flex gap-2">
             <input
               value={input}
@@ -221,14 +181,14 @@ const ProbePanel: React.FC<ProbePanelProps> = ({
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onSend(); } }}
               placeholder="Type the answer…"
               disabled={loading}
-              className={classNames('flex-1 px-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 disabled:opacity-50', config.focusRingClass)}
+              className="flex-1 px-3 py-2.5 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50"
             />
             <button onClick={onSend} disabled={!input.trim() || loading}
-              className={classNames('px-3 py-2.5 rounded-xl text-white disabled:opacity-40', pa.sendBg, pa.sendHoverBg)}>
+              className="px-3 py-2.5 rounded-xl text-white bg-accent hover:bg-accent/90 disabled:opacity-40">
               <Send size={15}/>
             </button>
             <button onClick={onClose}
-              className={classNames('px-4 py-2.5 rounded-xl text-white text-sm font-bold whitespace-nowrap', pa.moveOnBg, pa.moveOnHoverBg)}>
+              className="px-4 py-2.5 rounded-xl text-ink border border-hair bg-card hover:bg-paper text-sm font-bold whitespace-nowrap">
               Move On ✓
             </button>
           </div>
@@ -320,7 +280,9 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isSending]);
+  useEffect(() => {
+    if (chatEndRef.current) chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight;
+  }, [messages, isSending]);
   useEffect(() => { probeChatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [probeMessages, probeLoading]);
 
   // ─── Voice setup ──────────────────────────────────────────────────────────
@@ -762,15 +724,14 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
   if (mode === 'dashboard') {
     return (
       <AppLayout>
-        <AdvisorBackground image={config.backgroundImage} overlayGradient={config.bgOverlayGradient} />
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-5 mb-5">
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="bg-card border border-hair rounded-2xl p-5 mb-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${config.headerIconGradient} flex items-center justify-center text-2xl`}>{config.headerEmoji}</div>
+                <div className="w-12 h-12 rounded-xl bg-surface flex items-center justify-center text-2xl">{config.headerEmoji}</div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">{config.dashboardTitle}</h1>
-                  <p className="text-sm text-white/80">{config.dashboardSubtitle}</p>
+                  <h1 className="text-xl font-bold text-ink">{config.dashboardTitle}</h1>
+                  <p className="text-sm text-muted">{config.dashboardSubtitle}</p>
                   <div className="mt-2">
                     <PidginTooltip
                       originalText={config.dashboardSubtitle}
@@ -783,7 +744,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 {config.guideUrl && (
                   <Link
                     to={config.guideUrl}
-                    className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                    className="flex items-center gap-1.5 px-3 py-2.5 border border-hair bg-card text-body hover:border-accent/40 hover:text-accent rounded-xl font-semibold text-sm transition-colors"
                     title="Read the written guide"
                   >
                     <BookOpen size={16} /> Guide
@@ -791,13 +752,13 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 )}
                 <button
                   onClick={() => setShowOfflineModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                  className="flex items-center gap-1.5 px-3 py-2.5 border border-hair bg-card text-body hover:border-accent/40 hover:text-accent rounded-xl font-semibold text-sm transition-colors"
                   title="Use offline version"
                 >
                   📴 Offline
                 </button>
                 <button onClick={() => { resetAddEntity(); setMode('add-entity'); }}
-                  className={`flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r ${config.addButtonGradient} text-white rounded-xl font-semibold text-sm hover:opacity-90`}>
+                  className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold text-sm transition-colors">
                   <Plus size={16}/> Add {config.entityNounSingular}
                 </button>
               </div>
@@ -811,10 +772,10 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 { label: 'Open Cases', value: entities.reduce((s, e) => s + (e.open_cases ?? 0), 0), icon: '📋' },
                 { label: config.thirdStatCard.label, value: config.thirdStatCard.compute(entities), icon: config.thirdStatCard.icon },
               ].map(stat => (
-                <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center">
+                <div key={stat.label} className="bg-card border border-hair rounded-xl p-4 text-center">
                   <div className="text-2xl mb-1">{stat.icon}</div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
+                  <p className="text-2xl font-bold text-ink">{stat.value}</p>
+                  <p className="text-xs text-muted">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -822,28 +783,28 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
           {/* ── Challenge Banner — available (not enrolled) ── */}
           {!challengeLoading && availableChallenge && !activeChallenge && (
-            <div className={classNames('backdrop-blur-sm border rounded-2xl p-5 mb-4 shadow-lg', config.challengeAccent.available.bg, config.challengeAccent.available.border)}>
+            <div className="bg-surface border border-hair border-l-4 border-l-accent rounded-2xl p-5 mb-4">
               <div className="flex items-start gap-3">
-                <div className={classNames('w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0', config.challengeAccent.available.iconBg)}>
-                  <Award size={20} className={config.challengeAccent.available.iconText} />
+                <div className="w-10 h-10 rounded-xl bg-card border border-hair flex items-center justify-center flex-shrink-0">
+                  <Award size={20} className="text-accent" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={classNames('text-xs font-bold uppercase tracking-wide', config.challengeAccent.available.labelText)}>Community AI Challenge — This Week</span>
-                    <span className={classNames('text-xs px-2 py-0.5 rounded-full', config.challengeAccent.available.pillBg, config.challengeAccent.available.pillText)}>{availableChallenge.tier_target}</span>
+                    <span className="text-xs font-bold uppercase tracking-wide text-muted">Community AI Challenge — This Week</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-card border border-hair text-body">{availableChallenge.tier_target}</span>
                   </div>
-                  <p className="text-white font-bold text-base mb-1">{availableChallenge.title}</p>
-                  <p className={classNames('text-sm leading-relaxed mb-3', config.challengeAccent.available.bodyText)}>{availableChallenge.description}</p>
-                  <button
+                  <p className="text-ink font-bold text-base mb-1">{availableChallenge.title}</p>
+                  <p className="text-sm leading-relaxed mb-3 text-body">{availableChallenge.description}</p>
+                  <QuietButton
                     onClick={() => handleEnrollChallenge(availableChallenge)}
                     disabled={enrolling}
-                    className={classNames('w-full py-2.5 rounded-xl disabled:opacity-50 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2', config.challengeAccent.available.buttonBg, config.challengeAccent.available.buttonHoverBg)}
+                    loading={enrolling}
+                    icon={<ChevronRight size={16} />}
+                    variant="solid"
+                    className="w-full justify-center"
                   >
-                    {enrolling
-                      ? <><Loader2 size={14} className="animate-spin" /> Checking out…</>
-                      : <><ChevronRight size={16} /> Check out this challenge</>
-                    }
-                  </button>
+                    {enrolling ? 'Checking out…' : 'Check out this challenge'}
+                  </QuietButton>
                 </div>
               </div>
             </div>
@@ -851,28 +812,30 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
           {/* ── Challenge Banner — enrolled ── */}
           {activeChallenge && (
-            <div className={classNames('backdrop-blur-sm border rounded-2xl p-5 mb-4 shadow-lg', config.challengeAccent.active.bg, config.challengeAccent.active.border)}>
+            <div className="bg-surface border border-hair border-l-4 border-l-accent rounded-2xl p-5 mb-4">
               <div className="flex items-start gap-3">
-                <div className={classNames('w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0', config.challengeAccent.active.iconBg)}>
-                  <Award size={20} className={config.challengeAccent.active.iconText} />
+                <div className="w-10 h-10 rounded-xl bg-card border border-hair flex items-center justify-center flex-shrink-0">
+                  <Award size={20} className="text-accent" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={classNames('text-xs font-bold uppercase tracking-wide', config.challengeAccent.active.labelText)}>Community AI Challenge — Active</span>
-                    <span className={classNames('text-xs px-2 py-0.5 rounded-full', config.challengeAccent.active.pillBg, config.challengeAccent.active.pillText)}>{activeChallenge.tier_target}</span>
+                    <span className="text-xs font-bold uppercase tracking-wide text-accent">Community AI Challenge — Active</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-card border border-hair text-body">{activeChallenge.tier_target}</span>
                   </div>
-                  <p className="text-white font-bold text-base mb-1">{activeChallenge.title}</p>
-                  <p className={classNames('text-sm leading-relaxed mb-2', config.challengeAccent.active.bodyText)}>{activeChallenge.challenge_mode_intro}</p>
-                  <div className={classNames('rounded-xl p-3 mb-3', config.challengeAccent.active.missionBg)}>
-                    <p className={classNames('text-xs font-bold mb-1', config.challengeAccent.active.missionLabelText)}>Your mission:</p>
-                    <p className={classNames('text-sm', config.challengeAccent.active.missionText)}>{activeChallenge.challenge_instruction}</p>
+                  <p className="text-ink font-bold text-base mb-1">{activeChallenge.title}</p>
+                  <p className="text-sm leading-relaxed mb-2 text-body">{activeChallenge.challenge_mode_intro}</p>
+                  <div className="rounded-xl p-3 mb-3 bg-card border border-hair">
+                    <p className="text-xs font-bold mb-1 text-ink">Your mission:</p>
+                    <p className="text-sm text-body">{activeChallenge.challenge_instruction}</p>
                   </div>
-                  <button
+                  <QuietButton
                     onClick={() => setShowChallengeReflect(true)}
-                    className={classNames('w-full py-2.5 rounded-xl text-white font-bold text-sm transition-colors flex items-center justify-center gap-2', config.challengeAccent.active.buttonBg, config.challengeAccent.active.buttonHoverBg)}
+                    icon={<CheckCircle size={16} />}
+                    variant="solid"
+                    className="w-full justify-center"
                   >
-                    <CheckCircle size={16} /> I've done it — submit my reflection
-                  </button>
+                    I've done it — submit my reflection
+                  </QuietButton>
                 </div>
               </div>
             </div>
@@ -880,83 +843,84 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
           {/* ── Challenge Reflection Modal ── */}
           {showChallengeReflect && activeChallenge && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4">
+              <div className="bg-card rounded-2xl border border-hair w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-lg">
                 {challengeResult ? (
                   <div className="p-6">
                     <div className="text-center mb-6">
-                      <div className={classNames('w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3', config.challengeAccent.active.missionBg)}>
-                        <Award size={32} className={config.challengeAccent.active.iconText} />
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 bg-surface border border-hair">
+                        <Award size={32} className="text-accent" />
                       </div>
-                      <h2 className="text-2xl font-black text-gray-900">{challengeResult.tier_label}</h2>
-                      <p className={classNames('text-sm font-bold uppercase tracking-wide mt-1', config.challengeAccent.active.labelText)}>{challengeResult.tier} tier earned</p>
+                      <h2 className="text-2xl font-bold text-ink">{challengeResult.tier_label}</h2>
+                      <p className="text-sm font-bold uppercase tracking-wide mt-1 text-accent">{challengeResult.tier} tier earned</p>
                     </div>
-                    <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-4">
-                      <p className="text-sm font-bold text-teal-800 mb-1">What you achieved</p>
-                      <p className="text-sm text-teal-700 leading-relaxed">{challengeResult.summary}</p>
+                    <div className="bg-paper border border-hair rounded-xl p-4 mb-4">
+                      <p className="text-sm font-bold text-ink mb-1">What you achieved</p>
+                      <p className="text-sm text-body leading-relaxed">{challengeResult.summary}</p>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                      <p className="text-sm font-bold text-blue-800 mb-1">Why you earned this tier</p>
-                      <p className="text-sm text-blue-700 leading-relaxed">{challengeResult.tier_reasoning}</p>
+                    <div className="bg-paper border border-hair rounded-xl p-4 mb-4">
+                      <p className="text-sm font-bold text-ink mb-1">Why you earned this tier</p>
+                      <p className="text-sm text-body leading-relaxed">{challengeResult.tier_reasoning}</p>
                     </div>
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                      <p className="text-sm font-bold text-amber-800 mb-1">What to do next</p>
-                      <p className="text-sm text-amber-700 leading-relaxed">{challengeResult.follow_up_instruction}</p>
+                    <div className="bg-paper border border-hair rounded-xl p-4 mb-4">
+                      <p className="text-sm font-bold text-ink mb-1">What to do next</p>
+                      <p className="text-sm text-body leading-relaxed">{challengeResult.follow_up_instruction}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-xl p-3 mb-5">
-                      <p className="text-xs text-gray-500">{challengeResult.next_tier_hint}</p>
+                    <div className="bg-paper rounded-xl p-3 mb-5">
+                      <p className="text-xs text-muted">{challengeResult.next_tier_hint}</p>
                     </div>
-                    <button
+                    <QuietButton
                       onClick={() => { setShowChallengeReflect(false); setChallengeResult(null); setActiveChallenge(null); }}
-                      className="w-full py-3 rounded-xl bg-gray-800 text-white font-bold hover:bg-gray-900 transition-colors"
+                      variant="solid"
+                      className="w-full justify-center"
                     >
                       Done
-                    </button>
+                    </QuietButton>
                   </div>
                 ) : (
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-5">
                       <div>
-                        <p className={classNames('text-xs font-bold uppercase tracking-wide mb-0.5', config.challengeAccent.active.labelText)}>Challenge Reflection</p>
-                        <h2 className="text-xl font-black text-gray-900">{activeChallenge.title}</h2>
+                        <p className="text-xs font-bold uppercase tracking-wide mb-0.5 text-accent">Challenge Reflection</p>
+                        <h2 className="text-xl font-bold text-ink">{activeChallenge.title}</h2>
                       </div>
-                      <button onClick={() => setShowChallengeReflect(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                      <button onClick={() => setShowChallengeReflect(false)} className="text-muted hover:text-ink p-1">
                         <X size={20} />
                       </button>
                     </div>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-1.5">{activeChallenge.return_question_1}</label>
+                        <label className="block text-sm font-bold text-ink mb-1.5">{activeChallenge.return_question_1}</label>
                         <textarea value={challengeReflect1} onChange={e => setChallengeReflect1(e.target.value)} rows={3}
                           placeholder="Describe what you did…"
-                          className={classNames('w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 resize-none leading-relaxed', config.focusRingClass)}/>
+                          className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-1.5">{activeChallenge.return_question_2}</label>
+                        <label className="block text-sm font-bold text-ink mb-1.5">{activeChallenge.return_question_2}</label>
                         <textarea value={challengeReflect2} onChange={e => setChallengeReflect2(e.target.value)} rows={3}
                           placeholder="What happened…"
-                          className={classNames('w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 resize-none leading-relaxed', config.focusRingClass)}/>
+                          className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
                       </div>
                       {activeChallenge.return_question_3 && (
                         <div>
-                          <label className="block text-sm font-bold text-gray-800 mb-1.5">{activeChallenge.return_question_3}</label>
+                          <label className="block text-sm font-bold text-ink mb-1.5">{activeChallenge.return_question_3}</label>
                           <textarea value={challengeReflect3} onChange={e => setChallengeReflect3(e.target.value)} rows={2}
                             placeholder="Additional details…"
-                            className={classNames('w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 resize-none leading-relaxed', config.focusRingClass)}/>
+                            className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
                         </div>
                       )}
-                      <EvidencePicker sourceType="challenge_enrollment" sourceId={activeChallenge.enrollmentId} accent={config.challengeAccent.resultAccent} />
+                      <EvidencePicker sourceType="challenge_enrollment" sourceId={activeChallenge.enrollmentId} accent="violet" />
                     </div>
-                    <button
+                    <QuietButton
                       onClick={handleSubmitChallengeReflection}
                       disabled={!challengeReflect1.trim() || !challengeReflect2.trim() || challengeSubmitting}
-                      className={classNames('w-full mt-6 py-3.5 rounded-xl font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2', config.challengeAccent.active.buttonBg, config.challengeAccent.active.buttonHoverBg)}
+                      loading={challengeSubmitting}
+                      icon={<CheckCircle size={16} />}
+                      variant="solid"
+                      className="w-full justify-center mt-6"
                     >
-                      {challengeSubmitting
-                        ? <><Loader2 size={16} className="animate-spin" /> Evaluating your impact…</>
-                        : <><CheckCircle size={16} /> Submit reflection</>
-                      }
-                    </button>
+                      {challengeSubmitting ? 'Evaluating your impact…' : 'Submit reflection'}
+                    </QuietButton>
                   </div>
                 )}
               </div>
@@ -965,90 +929,89 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
           {/* ── Offline Mode Modal ── */}
           {showOfflineModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-                <div className="flex items-center justify-between px-5 py-4 border-b bg-gray-50 rounded-t-2xl">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4">
+              <div className="bg-card rounded-2xl border border-hair w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-lg">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-hair bg-surface rounded-t-2xl">
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Offline Mode</p>
-                    <h2 className="text-lg font-bold text-gray-900">{config.offlineModalTitle}</h2>
+                    <p className="text-xs font-bold text-muted uppercase tracking-wide">Offline Mode</p>
+                    <h2 className="text-lg font-bold text-ink">{config.offlineModalTitle}</h2>
                   </div>
-                  <button onClick={() => setShowOfflineModal(false)} className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                  <button onClick={() => setShowOfflineModal(false)} className="p-2 rounded-xl text-muted hover:text-ink hover:bg-surface">
                     <X size={18}/>
                   </button>
                 </div>
 
                 <div className="p-5 space-y-4">
-                  <div className={classNames('border rounded-xl p-4', config.accentBgClass, 'border-gray-200')}>
-                    <p className="text-sm font-bold text-gray-800 mb-2">📴 Use the offline advisor now</p>
-                    <p className="text-sm text-gray-700 mb-3 leading-relaxed">{config.offlineToolDescription}</p>
+                  <div className="border border-hair bg-paper rounded-xl p-4">
+                    <p className="text-sm font-bold text-ink mb-2">📴 Use the offline advisor now</p>
+                    <p className="text-sm text-body mb-3 leading-relaxed">{config.offlineToolDescription}</p>
                     <a
                       href={config.offlineToolUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r ${config.addButtonGradient} text-white font-bold text-sm hover:opacity-90 transition-opacity`}
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold text-sm transition-colors"
                     >
                       <span>📴</span> Open Offline Advisor
                     </a>
                   </div>
 
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <p className="text-sm font-bold text-amber-800 mb-2">💡 Tips for field use</p>
-                    <ul className="space-y-1.5 text-xs text-amber-700">
+                  <div className="bg-paper border border-hair rounded-xl p-4">
+                    <p className="text-sm font-bold text-ink mb-2">💡 Tips for field use</p>
+                    <ul className="space-y-1.5 text-xs text-body">
                       {config.offlineTips.map((tip, i) => <li key={i}>• {tip}</li>)}
                     </ul>
                   </div>
 
-                  <button
+                  <QuietButton
                     onClick={() => setShowOfflineModal(false)}
-                    className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition-colors"
+                    className="w-full justify-center"
                   >
                     Close
-                  </button>
+                  </QuietButton>
                 </div>
               </div>
             </div>
           )}
 
           {loadingEntities ? (
-            <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-white/70"/></div>
+            <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-accent"/></div>
           ) : entities.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-10 text-center">
+            <div className="bg-card border border-hair rounded-2xl p-10 text-center">
               <div className="text-5xl mb-4">{config.headerEmoji}</div>
-              <h2 className="text-lg font-bold text-gray-800 mb-2">No {config.entityNounSingular.toLowerCase()}s registered yet</h2>
-              <p className="text-sm text-gray-500 mb-5">Add your first {config.entityNounSingular.toLowerCase()} to start your casebook.</p>
-              <button onClick={() => { resetAddEntity(); setMode('add-entity'); }}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r ${config.addButtonGradient} text-white rounded-xl font-semibold hover:opacity-90`}>
-                <Plus size={16}/> Register First {config.entityNounSingular}
-              </button>
+              <h2 className="text-lg font-bold text-ink mb-2">No {config.entityNounSingular.toLowerCase()}s registered yet</h2>
+              <p className="text-sm text-muted mb-5">Add your first {config.entityNounSingular.toLowerCase()} to start your casebook.</p>
+              <QuietButton onClick={() => { resetAddEntity(); setMode('add-entity'); }} icon={<Plus size={16}/>} variant="solid">
+                Register First {config.entityNounSingular}
+              </QuietButton>
             </div>
           ) : (
             <div className="space-y-3">
               {entities.map(entity => (
                 <button key={entity.id}
                   onClick={() => { setSelectedEntity(entity); loadConsultations(entity.id); setMode('entity-detail'); }}
-                  className="w-full bg-white/90 backdrop-blur-sm rounded-2xl p-4 text-left hover:bg-white transition-colors border border-transparent hover:border-gray-300">
+                  className="w-full bg-card rounded-2xl p-4 text-left hover:bg-surface transition-colors border border-hair hover:border-accent/40">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg">{config.entityCardEmoji}</div>
+                      <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-lg">{config.entityCardEmoji}</div>
                       <div>
-                        <p className="font-bold text-gray-900">{entity.name}</p>
-                        <p className="text-sm text-gray-500">{entity.village}</p>
+                        <p className="font-bold text-ink">{entity.name}</p>
+                        <p className="text-sm text-muted">{entity.village}</p>
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {config.renderCategorySummary(entity.extra)}
                         </div>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
-                      <ChevronRight size={17} className="text-gray-400"/>
+                      <ChevronRight size={17} className="text-muted"/>
                       {(entity.open_cases ?? 0) > 0 && (
-                        <span className="text-xs bg-orange-100 text-orange-700 rounded-full px-2 py-0.5 font-semibold">{entity.open_cases} open</span>
+                        <span className="text-xs bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-full px-2 py-0.5 font-semibold">{entity.open_cases} open</span>
                       )}
                       {(entity.dangerCount ?? 0) > 0 && (
-                        <span className="text-xs bg-red-100 text-red-700 rounded-full px-2 py-0.5 font-bold">⚠️ Urgent</span>
+                        <span className="text-xs bg-red-100 text-red-700 border border-red-300 rounded-full px-2 py-0.5 font-bold">⚠️ Urgent</span>
                       )}
                     </div>
                   </div>
-                  <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
+                  <div className="mt-2 flex items-center gap-3 text-xs text-muted">
                     <span>{entity.total_consultations ?? 0} consultation{entity.total_consultations !== 1 ? 's' : ''}</span>
                     {entity.last_consultation_at && <span>Last: {formatDate(entity.last_consultation_at)}</span>}
                   </div>
@@ -1068,46 +1031,49 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
   if (mode === 'add-entity') {
     return (
       <AppLayout>
-        <AdvisorBackground image={config.backgroundImage} overlayGradient={config.bgOverlayGradient} />
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
             <div className="flex items-center gap-3 mb-5">
-              <button onClick={() => setMode('dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div><h2 className="text-xl font-bold text-gray-900">Register {config.entityNounSingular}</h2><p className="text-sm text-gray-500">Add to your casebook</p></div>
+              <button onClick={() => setMode('dashboard')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
+              <div><h2 className="text-xl font-bold text-ink">Register {config.entityNounSingular}</h2><p className="text-sm text-muted">Add to your casebook</p></div>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">{config.entityNounSingular} Name *</label>
+                <label className="block text-sm font-semibold text-ink mb-1">{config.entityNounSingular} Name *</label>
                 <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={config.registerNamePlaceholder}
-                  className={classNames('w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 text-base', config.focusRingClass)}/>
+                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-base"/>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Village *</label>
+                <label className="block text-sm font-semibold text-ink mb-1">Village *</label>
                 <select value={newVillage} onChange={e => setNewVillage(e.target.value)}
-                  className={classNames('w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 text-base bg-white', config.focusRingClass)}>
+                  className="w-full px-4 py-3 border border-hair rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-base bg-paper">
                   <option value="">Select village…</option>
                   {config.villages.map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Phone (optional)</label>
+                <label className="block text-sm font-semibold text-ink mb-1">Phone (optional)</label>
                 <input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+234 801 234 5678"
-                  className={classNames('w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 text-base', config.focusRingClass)}/>
+                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-base"/>
               </div>
 
               {config.renderExtraFields(newExtra, setNewExtra)}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Notes (optional)</label>
+                <label className="block text-sm font-semibold text-ink mb-1">Notes (optional)</label>
                 <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} rows={2}
                   placeholder="Past problems, special concerns…"
-                  className={classNames('w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 text-sm resize-none', config.focusRingClass)}/>
+                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-sm resize-none"/>
               </div>
-              <button onClick={saveEntity} disabled={!newName.trim() || !newVillage || savingEntity}
-                className={classNames('w-full py-3.5 rounded-xl font-bold text-white text-base transition-opacity',
-                  newName.trim() && newVillage && !savingEntity ? `bg-gradient-to-r ${config.addButtonGradient} hover:opacity-90` : 'bg-gray-300 cursor-not-allowed')}>
-                {savingEntity ? <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin"/>Saving…</span> : `Register ${config.entityNounSingular}`}
-              </button>
+              <QuietButton
+                onClick={saveEntity}
+                disabled={!newName.trim() || !newVillage || savingEntity}
+                loading={savingEntity}
+                variant="solid"
+                className="w-full justify-center py-3.5 text-base"
+              >
+                {savingEntity ? 'Saving…' : `Register ${config.entityNounSingular}`}
+              </QuietButton>
             </div>
           </div>
         </div>
@@ -1124,15 +1090,14 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
     const consultOptions = config.getConsultationOptions(entity);
     return (
       <AppLayout>
-        <AdvisorBackground image={config.backgroundImage} overlayGradient={config.bgOverlayGradient} />
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
             <div className="flex items-center gap-3 mb-4">
-              <button onClick={() => setMode('dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-2xl">{config.entityCardEmoji}</div>
+              <button onClick={() => setMode('dashboard')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
+              <div className="w-12 h-12 rounded-xl bg-surface flex items-center justify-center text-2xl">{config.entityCardEmoji}</div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900">{entity.name}</h2>
-                <p className="text-sm text-gray-500">{entity.village}{entity.phone ? ` · ${entity.phone}` : ''}</p>
+                <h2 className="text-xl font-bold text-ink">{entity.name}</h2>
+                <p className="text-sm text-muted">{entity.village}{entity.phone ? ` · ${entity.phone}` : ''}</p>
               </div>
             </div>
 
@@ -1140,20 +1105,20 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
               {config.renderCategorySummary(entity.extra)}
             </div>
 
-            {entity.notes && <p className="text-sm text-gray-600 italic bg-gray-50 rounded-lg px-3 py-2 mb-4">{entity.notes}</p>}
+            {entity.notes && <p className="text-sm text-body italic bg-paper rounded-lg px-3 py-2 mb-4">{entity.notes}</p>}
 
-            <p className="text-sm font-semibold text-gray-700 mb-2">Start new consultation for:</p>
+            <p className="text-sm font-semibold text-ink mb-2">Start new consultation for:</p>
             <div className="grid grid-cols-1 gap-2">
               {consultOptions.map(value => {
                 const cc = config.categoryConfig[value];
                 if (!cc) return null;
                 return (
                   <button key={value} onClick={() => startConsultation(entity, value)}
-                    className={classNames('flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-white text-sm bg-gradient-to-r hover:opacity-90 transition-opacity text-left', cc.colour)}>
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm bg-card border border-hair hover:border-accent/40 hover:bg-surface transition-colors text-left">
                     <span className="text-xl flex-shrink-0">{cc.emoji}</span>
                     <div>
-                      <div>{cc.label}</div>
-                      {cc.description && <div className="text-xs font-normal opacity-80">{cc.description}</div>}
+                      <div className="text-ink">{cc.label}</div>
+                      {cc.description && <div className="text-xs font-normal text-muted">{cc.description}</div>}
                     </div>
                   </button>
                 );
@@ -1162,53 +1127,51 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
           </div>
 
           {/* Case history */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <ClipboardList size={16} className={config.accentTextClass}/> Case History
+              <h3 className="text-base font-bold text-ink flex items-center gap-2">
+                <ClipboardList size={16} className="text-accent"/> Case History
               </h3>
-              <button onClick={() => loadConsultations(entity.id)} className="text-gray-400 hover:text-gray-700"><RefreshCw size={14}/></button>
+              <button onClick={() => loadConsultations(entity.id)} className="text-muted hover:text-ink"><RefreshCw size={14}/></button>
             </div>
             {loadingConsults ? (
-              <div className="flex justify-center py-6"><Loader2 size={20} className={classNames('animate-spin', config.accentTextClass)}/></div>
+              <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin text-accent"/></div>
             ) : consultations.length === 0 ? (
-              <p className="text-sm text-gray-400 italic text-center py-4">No consultations yet.</p>
+              <p className="text-sm text-muted italic text-center py-4">No consultations yet.</p>
             ) : (
               <div className="space-y-3">
                 {consultations.map(c => {
                   const cc = config.categoryConfig[c.categoryValue];
                   return (
-                    <div key={c.id} className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors">
+                    <div key={c.id} className="border border-hair rounded-xl p-4 hover:border-accent/40 transition-colors">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xl">{cc?.emoji}</span>
                           <div>
-                            <p className="font-semibold text-gray-900 text-sm">{cc?.label}</p>
-                            <p className="text-xs text-gray-500">{formatDate(c.created_at)}</p>
+                            <p className="font-semibold text-ink text-sm">{cc?.label}</p>
+                            <p className="text-xs text-muted">{formatDate(c.created_at)}</p>
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           {c.urgency_level && <UrgencyBadge level={c.urgency_level}/>}
                           {c.resolved
-                            ? <span className="text-xs text-green-600 font-semibold flex items-center gap-1"><CheckCircle size={11}/> Resolved</span>
-                            : <span className="text-xs text-orange-600 font-semibold">Open</span>}
+                            ? <span className="text-xs text-green-700 font-semibold flex items-center gap-1"><CheckCircle size={11}/> Resolved</span>
+                            : <span className="text-xs text-yellow-700 font-semibold">Open</span>}
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{c.summary}</p>
+                      <p className="text-sm text-body mt-2 line-clamp-2">{c.summary}</p>
                       {c.follow_up_needed && !c.resolved && c.follow_up_date && (
-                        <p className="text-xs text-blue-600 mt-1.5 flex items-center gap-1">
+                        <p className="text-xs text-blue-700 mt-1.5 flex items-center gap-1">
                           <Calendar size={11}/> Follow-up: {formatDate(c.follow_up_date)}
                         </p>
                       )}
                       <div className="flex gap-2 mt-3">
-                        <button onClick={() => { setSelectedConsultation(c); setMode('case-detail'); }}
-                          className="flex-1 py-2 text-xs font-semibold rounded-lg border border-gray-200 text-gray-700 hover:border-gray-300">
+                        <QuietButton onClick={() => { setSelectedConsultation(c); setMode('case-detail'); }} className="flex-1 justify-center py-2 text-xs">
                           View Case
-                        </button>
-                        <button onClick={() => openFollowupChat(entity, c)}
-                          className={classNames('flex-1 py-2 text-xs font-semibold rounded-lg', config.accentBgClass, config.accentTextClass)}>
+                        </QuietButton>
+                        <QuietButton onClick={() => openFollowupChat(entity, c)} className="flex-1 justify-center py-2 text-xs">
                           Ask AI Follow-up
-                        </button>
+                        </QuietButton>
                       </div>
                     </div>
                   );
@@ -1231,7 +1194,6 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
     return (
       <AppLayout>
-        <AdvisorBackground image={config.backgroundImage} overlayGradient={config.bgOverlayGradient} />
 
         {probeField && (
           <ProbePanel
@@ -1249,15 +1211,15 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
           />
         )}
 
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-sm p-4">
             <div className="flex items-center gap-3">
-              <button onClick={() => setMode('entity-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cc.colour} flex items-center justify-center text-xl`}>{cc.emoji}</div>
+              <button onClick={() => setMode('entity-detail')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
+              <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-xl">{cc.emoji}</div>
               <div>
-                <h2 className="text-base font-bold text-gray-900">{cc.label} Consultation</h2>
-                <p className="text-xs text-gray-500">{selectedEntity.name} · {selectedEntity.village}</p>
+                <h2 className="text-base font-bold text-ink">{cc.label} Consultation</h2>
+                <p className="text-xs text-muted">{selectedEntity.name} · {selectedEntity.village}</p>
               </div>
             </div>
           </div>
@@ -1272,24 +1234,24 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
             </div>
           )}
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 flex items-start gap-2">
-            <Lightbulb size={14} className={classNames('flex-shrink-0 mt-0.5', config.accentTextClass)}/>
-            <p className="text-xs text-gray-700">
+          <div className="bg-card border border-hair rounded-xl px-4 py-3 flex items-start gap-2">
+            <Lightbulb size={14} className="flex-shrink-0 mt-0.5 text-accent"/>
+            <p className="text-xs text-body">
               Fill in each field with what you learn. Tap <strong>🔍 Probe</strong> to get AI-coached interview questions for that topic — the AI will ask one question at a time until it fully understands. Then run AI Advice.
             </p>
           </div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
-            <h3 className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-2">
-              <ClipboardList size={15} className={config.accentTextClass}/> Intake — {cc.label}
+          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
+            <h3 className="text-sm font-bold text-ink mb-1 flex items-center gap-2">
+              <ClipboardList size={15} className="text-accent"/> Intake — {cc.label}
             </h3>
-            <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
-              <span className={classNames('font-bold', config.accentTextClass)}>🔍 Probe</span> — tap after a field to explore it deeper with AI interview coaching
+            <p className="text-xs text-muted mb-4 flex items-center gap-1">
+              <span className="font-bold text-accent">🔍 Probe</span> — tap after a field to explore it deeper with AI interview coaching
             </p>
             <div className="space-y-4">
               {fields.map(field => (
                 <div key={field.key}>
-                  <label className="text-xs font-semibold text-gray-600 flex items-center mb-1">
+                  <label className="text-xs font-semibold text-ink flex items-center mb-1">
                     {field.required && <span className="text-red-500 mr-1">*</span>}
                     {field.danger && <span className="text-red-500 mr-1">⚠️</span>}
                     {field.label}
@@ -1297,7 +1259,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                       text={field.tooltip}
                       open={openTooltip === field.key}
                       onToggle={() => setOpenTooltip(openTooltip === field.key ? null : field.key)}
-                      accent={config.accentTextClass}
+                      accent="text-accent"
                     />
                   </label>
                   <div className="flex gap-2">
@@ -1307,23 +1269,19 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                       rows={2}
                       placeholder={field.placeholder}
                       className={classNames(
-                        'flex-1 px-3 py-2.5 border rounded-xl text-sm resize-none focus:outline-none focus:ring-2',
+                        'flex-1 px-3 py-2.5 border rounded-xl text-sm bg-paper resize-none focus:outline-none focus:ring-2',
                         field.danger && intake[field.key]?.trim()
                           ? 'border-red-300 focus:ring-red-400 bg-red-50'
-                          : `border-gray-300 ${config.focusRingClass}`
+                          : 'border-hair focus:ring-accent/40 focus:border-accent'
                       )}
                     />
-                    <button
+                    <QuietButton
                       onClick={() => openProbe(field)}
-                      className={classNames(
-                        'px-3 py-2 rounded-xl text-xs font-bold border transition-colors flex-shrink-0 self-start mt-0.5',
-                        probeField?.key === field.key
-                          ? `text-white ${config.probeAccent.sendBg} border-transparent`
-                          : `${config.accentBgClass} ${config.accentTextClass} border-gray-300 hover:opacity-80`
-                      )}
+                      variant={probeField?.key === field.key ? 'solid' : 'quiet'}
+                      className="text-xs flex-shrink-0 self-start mt-0.5"
                     >
                       {probeField?.key === field.key ? '🔍 Probing…' : '🔍 Probe'}
-                    </button>
+                    </QuietButton>
                   </div>
                 </div>
               ))}
@@ -1331,30 +1289,26 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
           </div>
 
           {!adviceResult ? (
-            <button
+            <QuietButton
               onClick={runAdvice}
               disabled={isGeneratingAdvice || !intakeComplete}
-              className={classNames(
-                'w-full py-4 rounded-xl font-bold text-white text-base transition-opacity flex items-center justify-center gap-2',
-                !isGeneratingAdvice && intakeComplete
-                  ? `bg-gradient-to-r ${cc.colour} hover:opacity-90`
-                  : 'bg-gray-300 cursor-not-allowed'
-              )}
+              loading={isGeneratingAdvice}
+              icon={<ClipboardList size={18}/>}
+              variant="solid"
+              className="w-full justify-center py-4 text-base"
             >
-              {isGeneratingAdvice
-                ? <><Loader2 size={18} className="animate-spin"/>Generating AI Advice…</>
-                : <><ClipboardList size={18}/>Generate AI Advice{!intakeComplete && ' (fill required fields first)'}</>}
-            </button>
+              {isGeneratingAdvice ? 'Generating AI Advice…' : `Generate AI Advice${!intakeComplete ? ' (fill required fields first)' : ''}`}
+            </QuietButton>
           ) : (
-            <div className={classNames('bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5 border-2', config.urgencyConfig[adviceResult.urgency]?.border)}>
+            <div className={classNames('bg-card rounded-2xl shadow-sm p-5 border-2', config.urgencyConfig[adviceResult.urgency]?.border)}>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">AI Advisory Result</p>
+                  <p className="text-xs font-bold text-muted uppercase tracking-wide mb-1">AI Advisory Result</p>
                   <UrgencyBadge level={adviceResult.urgency}/>
-                  <p className="text-xs text-gray-500 mt-1">{config.urgencyConfig[adviceResult.urgency]?.description}</p>
+                  <p className="text-xs text-muted mt-1">{config.urgencyConfig[adviceResult.urgency]?.description}</p>
                 </div>
                 <button onClick={() => { setAdviceResult(null); runAdvice(); }}
-                  className={classNames('text-xs hover:underline flex items-center gap-1', config.accentTextClass)}>
+                  className="text-xs hover:underline flex items-center gap-1 text-accent">
                   <RefreshCw size={12}/> Re-run
                 </button>
               </div>
@@ -1366,50 +1320,50 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 </div>
               )}
 
-              <div className="text-sm text-gray-800 bg-gray-50 rounded-xl px-4 py-3 max-h-72 overflow-y-auto">
+              <div className="text-sm text-body bg-paper rounded-xl px-4 py-3 max-h-72 overflow-y-auto">
                 <MarkdownText text={adviceResult.text}/>
               </div>
 
-              <div className="mt-4 space-y-3 border-t pt-4">
+              <div className="mt-4 space-y-3 border-t border-hair pt-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">What did you advise / do?</label>
+                  <label className="block text-xs font-semibold text-ink mb-1">What did you advise / do?</label>
                   <textarea value={youthActionsTaken} onChange={e => setYouthActionsTaken(e.target.value)} rows={2}
                     placeholder="e.g. Advised on next steps and referred to the appropriate contact."
-                    className={classNames('w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2', config.focusRingClass)}/>
+                    className="w-full px-3 py-2 border border-hair bg-paper rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
                 </div>
                 <div className="flex items-center gap-3">
-                  <input type="checkbox" id="followup" checked={followUpNeeded} onChange={e => setFollowUpNeeded(e.target.checked)} className="w-4 h-4"/>
-                  <label htmlFor="followup" className="text-sm font-semibold text-gray-700">Follow-up visit needed</label>
+                  <input type="checkbox" id="followup" checked={followUpNeeded} onChange={e => setFollowUpNeeded(e.target.checked)} className="w-4 h-4 accent-accent"/>
+                  <label htmlFor="followup" className="text-sm font-semibold text-ink">Follow-up visit needed</label>
                 </div>
                 {followUpNeeded && (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Follow-up date</label>
+                      <label className="block text-xs font-semibold text-ink mb-1">Follow-up date</label>
                       <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)}
-                        className={classNames('w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2', config.focusRingClass)}/>
+                        className="w-full px-3 py-2 border border-hair bg-paper rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">What to check</label>
+                      <label className="block text-xs font-semibold text-ink mb-1">What to check</label>
                       <input value={followUpNotes} onChange={e => setFollowUpNotes(e.target.value)} placeholder="e.g. Check status and progress"
-                        className={classNames('w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2', config.focusRingClass)}/>
+                        className="w-full px-3 py-2 border border-hair bg-paper rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
                     </div>
                   </div>
                 )}
 
                 {consultSaved ? (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-green-700 font-semibold text-sm bg-green-50 rounded-xl px-4 py-3">
+                    <div className="flex items-center gap-2 text-green-800 font-semibold text-sm bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                       <CheckCircle size={16}/> Case saved to {selectedEntity.name}'s record.
                     </div>
                     {activeChallenge && (
-                      <div className="bg-blue-50 border border-blue-300 rounded-xl px-4 py-3 flex items-start gap-2">
-                        <Award size={16} className="text-blue-600 flex-shrink-0 mt-0.5"/>
+                      <div className="bg-surface border border-hair rounded-xl px-4 py-3 flex items-start gap-2">
+                        <Award size={16} className="text-accent flex-shrink-0 mt-0.5"/>
                         <div className="flex-1">
-                          <p className="text-sm font-bold text-blue-800 mb-1">Community AI Challenge active</p>
-                          <p className="text-xs text-blue-700 mb-2">You completed a consultation — did you also complete your challenge mission? Submit your reflection to earn your tier.</p>
+                          <p className="text-sm font-bold text-ink mb-1">Community AI Challenge active</p>
+                          <p className="text-xs text-body mb-2">You completed a consultation — did you also complete your challenge mission? Submit your reflection to earn your tier.</p>
                           <button
                             onClick={() => setShowChallengeReflect(true)}
-                            className="text-xs font-bold text-blue-700 underline hover:text-blue-900"
+                            className="text-xs font-bold text-accent underline hover:no-underline"
                           >
                             Submit challenge reflection →
                           </button>
@@ -1417,7 +1371,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                       </div>
                     )}
                     {savedConsultId && (
-                      <button
+                      <QuietButton
                         onClick={() => {
                           const saved = consultations.find(c => c.id === savedConsultId) ?? {
                             id: savedConsultId,
@@ -1443,25 +1397,26 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                           } as AdvisorConsultation;
                           openFollowupChat(selectedEntity, saved);
                         }}
-                        className={`w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r ${config.addButtonGradient} hover:opacity-90 flex items-center justify-center gap-2`}
+                        icon={<Send size={16}/>}
+                        variant="solid"
+                        className="w-full justify-center py-3"
                       >
-                        <Send size={16}/> Continue with AI Follow-up Chat
-                      </button>
+                        Continue with AI Follow-up Chat
+                      </QuietButton>
                     )}
                   </div>
                 ) : (
-                  <button onClick={saveConsultation} disabled={savingConsult}
-                    className={`w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r ${config.addButtonGradient} hover:opacity-90 disabled:opacity-50`}>
-                    {savingConsult ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin"/>Saving…</span> : 'Save Case Record'}
-                  </button>
+                  <QuietButton onClick={saveConsultation} disabled={savingConsult} loading={savingConsult} variant="solid" className="w-full justify-center py-3">
+                    {savingConsult ? 'Saving…' : 'Save Case Record'}
+                  </QuietButton>
                 )}
               </div>
             </div>
           )}
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 flex items-start gap-2">
-            <ShieldCheck size={14} className={classNames('flex-shrink-0 mt-0.5', config.accentTextClass)}/>
-            <p className="text-xs text-gray-600">{config.disclaimer}</p>
+          <div className="bg-card border border-hair rounded-xl px-4 py-3 flex items-start gap-2">
+            <ShieldCheck size={14} className="flex-shrink-0 mt-0.5 text-accent"/>
+            <p className="text-xs text-body">{config.disclaimer}</p>
           </div>
         </div>
       </AppLayout>
@@ -1480,95 +1435,71 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
     return (
       <AppLayout>
-        <AdvisorBackground image={config.backgroundImage} overlayGradient={config.bgOverlayGradient} />
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4 mb-4">
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="bg-card border border-hair rounded-2xl shadow-sm p-4 mb-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3">
-                <button onClick={() => { window.speechSynthesis.cancel(); setMode('entity-detail'); }} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cc.colour} flex items-center justify-center text-lg`}>{cc.emoji}</div>
+                <button onClick={() => { window.speechSynthesis.cancel(); setMode('entity-detail'); }} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
+                <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-lg">{cc.emoji}</div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">Follow-up Questions</h2>
-                  <p className="text-xs text-gray-500">{entity.name} · {cc.label}{consult.urgency_level ? ' · ' : ''}{consult.urgency_level && <UrgencyBadge level={consult.urgency_level}/>}</p>
+                  <h2 className="text-base font-bold text-ink">Follow-up Questions</h2>
+                  <p className="text-xs text-muted">{entity.name} · {cc.label}{consult.urgency_level ? ' · ' : ''}{consult.urgency_level && <UrgencyBadge level={consult.urgency_level}/>}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                <div className="flex rounded-full overflow-hidden border border-hair">
                   {(['pidgin', 'english'] as const).map(m => (
                     <button key={m} onClick={() => setVoiceMode(m)}
-                      className={`px-2.5 py-1.5 text-xs font-bold border-r border-gray-300 last:border-0 transition-all ${voiceMode===m?(m==='english'?'bg-blue-600 text-white':'bg-green-600 text-white'):'bg-white text-gray-500'}`}>
+                      className={classNames('px-2.5 py-1.5 text-xs font-bold transition-colors',
+                        m !== 'pidgin' && 'border-l border-hair',
+                        voiceMode === m ? 'bg-accent text-white' : 'bg-card text-body hover:bg-paper')}>
                       {m==='english'?'🇬🇧':'🇳🇬'}
                     </button>
                   ))}
                 </div>
                 <button onClick={() => { setSpeechOn(s => !s); if (speechOn) { window.speechSynthesis.cancel(); stopPidginSpeech(); } }}
-                  className={classNames('p-2 rounded-lg', speechOn ? `${config.accentBgClass} ${config.accentTextClass}` : 'bg-gray-100 text-gray-400')}>
+                  className={classNames('p-2 rounded-lg', speechOn ? 'bg-surface text-accent' : 'bg-paper text-muted')}>
                   {speechOn ? <Volume2 size={15}/> : <VolumeX size={15}/>}
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
-            <Lightbulb size={14} className={classNames('flex-shrink-0', config.accentTextClass)}/>
-            <p className="text-xs text-gray-700">Ask about the advice, how to explain it, what to observe on follow-up, or any related question for this case.</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg mb-4 flex flex-col" style={{ height: '460px' }}>
-            <div className="flex items-center justify-between px-5 py-3 border-b bg-gray-50 rounded-t-2xl text-xs text-gray-500">
-              <span className="font-semibold text-gray-700 flex items-center gap-1.5">{cc.emoji} AI Advisor</span>
-              <span>{userTurns} exchange{userTurns !== 1 ? 's' : ''}</span>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {messages.map(msg => (
-                <div key={msg.id} className={classNames('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                  {msg.role === 'assistant' && (
-                    <div className={`flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br ${cc.colour} flex items-center justify-center text-lg`}>{cc.emoji}</div>
-                  )}
-                  <div className={classNames('max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
-                    msg.role === 'user' ? `${config.probeAccent.userBubbleBg} text-white rounded-tr-sm` : 'bg-gray-100 text-gray-900 rounded-tl-sm')}>
-                    {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Advisor</p>}
-                    {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
-                    <MarkdownText text={msg.content}/>
-                    {msg.role === 'assistant' && <AIPidginCoachWrapper englishText={msg.content} />}
-                  </div>
-                  {msg.role === 'user' && (
-                    <div className={`flex-shrink-0 w-9 h-9 rounded-xl ${config.probeAccent.userBubbleBg} flex items-center justify-center`}>
-                      <User size={15} className="text-white"/>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {isSending && (
-                <div className="flex items-start gap-3">
-                  <div className={`flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br ${cc.colour} flex items-center justify-center text-lg`}>{cc.emoji}</div>
-                  <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
-                    <div className="flex gap-1.5 items-center h-4">{[0,150,300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: `${d}ms` }}/>)}</div>
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef}/>
-            </div>
-            <div className="border-t p-4 rounded-b-2xl">
-              <div className="flex items-end gap-2">
-                <textarea ref={inputRef} value={inputText} onChange={e => setInputText(e.target.value)} onKeyDown={handleKeyDown} rows={2}
-                  placeholder="Ask a follow-up question about this case…"
-                  disabled={isSending}
-                  className={classNames('flex-1 px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 resize-none leading-relaxed disabled:opacity-50', config.focusRingClass)}/>
-                <div className="flex flex-col gap-2">
-                  <button onClick={toggleListening}
-                    className={classNames('p-2.5 rounded-xl transition-all', isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')}>
-                    {isListening ? <MicOff size={16}/> : <Mic size={16}/>}
-                  </button>
-                  <button onClick={sendMessage} disabled={!inputText.trim() || isSending}
-                    className={classNames('p-2.5 rounded-xl transition-all',
-                      inputText.trim() && !isSending ? `bg-gradient-to-br ${cc.colour} text-white hover:opacity-90` : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
-                    <Send size={16}/>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ChatSurface
+            title={`${cc.emoji} AI Advisor`}
+            legend={<span className="text-xs text-muted">{userTurns} exchange{userTurns !== 1 ? 's' : ''}</span>}
+            messages={messages}
+            renderAssistant={(content) => (
+              <>
+                <MarkdownText text={content}/>
+                <AIPidginCoachWrapper englishText={content} />
+              </>
+            )}
+            submitting={isSending}
+            transcriptRef={chatEndRef}
+            transcriptHeightClassName="h-[28rem]"
+            value={inputText}
+            onChange={setInputText}
+            onKeyDown={handleKeyDown}
+            onSubmit={sendMessage}
+            disabled={isSending}
+            placeholder="Ask a follow-up question about this case…"
+            notice={
+              <p className="text-xs text-muted mb-3 flex items-start gap-1.5">
+                <Lightbulb size={14} className="flex-shrink-0 mt-0.5 text-accent"/>
+                Ask about the advice, how to explain it, what to observe on follow-up, or any related question for this case.
+              </p>
+            }
+            composerActions={
+              <QuietButton
+                onClick={toggleListening}
+                icon={isListening ? <MicOff size={14}/> : <Mic size={14}/>}
+                className={isListening ? 'border-red-300 text-red-600 hover:text-red-700 hover:border-red-400' : undefined}
+              >
+                {isListening ? 'Stop' : 'Speak'}
+              </QuietButton>
+            }
+          />
         </div>
       </AppLayout>
     );
@@ -1583,73 +1514,70 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
     const cc = config.categoryConfig[c.categoryValue];
     return (
       <AppLayout>
-        <AdvisorBackground image={config.backgroundImage} overlayGradient={config.bgOverlayGradient} />
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
             <div className="flex items-center gap-3 mb-4">
-              <button onClick={() => setMode('entity-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${cc.colour} flex items-center justify-center text-2xl`}>{cc.emoji}</div>
+              <button onClick={() => setMode('entity-detail')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
+              <div className="w-11 h-11 rounded-xl bg-surface flex items-center justify-center text-2xl">{cc.emoji}</div>
               <div className="flex-1">
-                <h2 className="text-base font-bold text-gray-900">{cc.label} Case — {selectedEntity.name}</h2>
-                <p className="text-xs text-gray-500">{formatDate(c.created_at)}</p>
+                <h2 className="text-base font-bold text-ink">{cc.label} Case — {selectedEntity.name}</h2>
+                <p className="text-xs text-muted">{formatDate(c.created_at)}</p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 {c.urgency_level && <UrgencyBadge level={c.urgency_level}/>}
                 {c.resolved
-                  ? <span className="text-xs text-green-600 font-semibold flex items-center gap-1"><CheckCircle size={11}/> Resolved</span>
-                  : <span className="text-xs text-orange-600 font-semibold">Open</span>}
+                  ? <span className="text-xs text-green-700 font-semibold flex items-center gap-1"><CheckCircle size={11}/> Resolved</span>
+                  : <span className="text-xs text-yellow-700 font-semibold">Open</span>}
               </div>
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Intake Summary</p>
-                <p className="text-sm text-gray-800 bg-gray-50 rounded-lg px-3 py-2">{c.summary}</p>
+                <p className="text-xs font-bold text-muted uppercase tracking-wide mb-1">Intake Summary</p>
+                <p className="text-sm text-body bg-paper rounded-lg px-3 py-2">{c.summary}</p>
               </div>
               {c.aiResponse && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">AI Advice</p>
-                  <div className={classNames('text-sm text-gray-800 rounded-lg px-3 py-2 max-h-48 overflow-y-auto border',
-                    c.urgency_level ? config.urgencyConfig[c.urgency_level]?.bg : 'bg-gray-50',
-                    c.urgency_level ? config.urgencyConfig[c.urgency_level]?.border : 'border-gray-200')}>
+                  <p className="text-xs font-bold text-muted uppercase tracking-wide mb-1">AI Advice</p>
+                  <div className={classNames('text-sm text-body rounded-lg px-3 py-2 max-h-48 overflow-y-auto border',
+                    c.urgency_level ? config.urgencyConfig[c.urgency_level]?.bg : 'bg-paper',
+                    c.urgency_level ? config.urgencyConfig[c.urgency_level]?.border : 'border-hair')}>
                     <MarkdownText text={c.aiResponse}/>
                   </div>
                 </div>
               )}
               {c.youth_actions_taken && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Actions Taken</p>
-                  <p className={classNames('text-sm text-gray-800 rounded-lg px-3 py-2', config.accentBgClass)}>{c.youth_actions_taken}</p>
+                  <p className="text-xs font-bold text-muted uppercase tracking-wide mb-1">Actions Taken</p>
+                  <p className="text-sm text-body rounded-lg px-3 py-2 bg-paper">{c.youth_actions_taken}</p>
                 </div>
               )}
               {c.follow_up_needed && (
-                <div className="flex items-start gap-2 text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
-                  <Calendar size={14} className="mt-0.5 flex-shrink-0"/>
+                <div className="flex items-start gap-2 text-ink bg-surface border border-hair rounded-lg px-3 py-2">
+                  <Calendar size={14} className="mt-0.5 flex-shrink-0 text-accent"/>
                   <div>
                     <p className="text-sm font-semibold">Follow-up{c.follow_up_date ? `: ${formatDate(c.follow_up_date)}` : ' needed'}</p>
-                    {c.follow_up_notes && <p className="text-xs mt-0.5">{c.follow_up_notes}</p>}
+                    {c.follow_up_notes && <p className="text-xs mt-0.5 text-body">{c.follow_up_notes}</p>}
                   </div>
                 </div>
               )}
               <div className="flex gap-2">
-                <button onClick={() => openFollowupChat(selectedEntity, c)}
-                  className={classNames('flex-1 py-2.5 text-sm font-bold rounded-xl', config.accentBgClass, config.accentTextClass)}>
+                <QuietButton onClick={() => openFollowupChat(selectedEntity, c)} className="flex-1 justify-center py-2.5 text-sm">
                   Ask AI Follow-up
-                </button>
+                </QuietButton>
                 {!c.resolved && (
-                  <button onClick={() => setShowResolutionModal(true)}
-                    className={`flex-1 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r ${config.addButtonGradient} hover:opacity-90`}>
+                  <QuietButton onClick={() => setShowResolutionModal(true)} variant="solid" className="flex-1 justify-center py-2.5 text-sm">
                     Mark Resolved ✓
-                  </button>
+                  </QuietButton>
                 )}
               </div>
               {c.resolved && c.resolution_narrative && (
-                <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 space-y-1.5">
-                  <p className="text-xs font-bold text-teal-700 uppercase tracking-wide">
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 space-y-1.5">
+                  <p className="text-xs font-bold text-green-800 uppercase tracking-wide">
                     Outcome: {c.resolution_outcome === 'applied' ? 'Advice applied fully' : c.resolution_outcome === 'partially_applied' ? 'Partially applied' : 'Not applied'}
                   </p>
-                  <p className="text-sm text-teal-800">{c.resolution_narrative}</p>
+                  <p className="text-sm text-green-800">{c.resolution_narrative}</p>
                   {c.resolution_value_amount != null && (
-                    <p className="text-xs font-semibold text-teal-700">
+                    <p className="text-xs font-semibold text-green-700">
                       {c.resolution_value_label}: {c.resolution_value_unit === 'NGN' ? '₦' : ''}{c.resolution_value_amount}{c.resolution_value_unit && c.resolution_value_unit !== 'NGN' ? ` ${c.resolution_value_unit}` : ''}
                     </p>
                   )}
@@ -1663,7 +1591,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
             consultationSummary={c.summary}
             defaultUnit="NGN"
             defaultValueLabel="Estimated value"
-            accent={config.challengeAccent.resultAccent}
+            accent="violet"
             onClose={() => setShowResolutionModal(false)}
             onSubmit={(data) => handleResolutionSubmit(c.id, data)}
           />

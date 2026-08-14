@@ -788,7 +788,7 @@ const OfflineClinicalAssessment: React.FC = () => {
   );
 
   const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
-    <input {...props} className={`w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 ${props.className || ''}`} />
+    <input {...props} className={`w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 ${props.className || ''}`} />
   );
 
   const Toggle: React.FC<{ label: string; checked: boolean; onChange: (v: boolean) => void; danger?: boolean; hint?: string }> = ({ label, checked, onChange, danger, hint }) => (
@@ -797,7 +797,7 @@ const OfflineClinicalAssessment: React.FC = () => {
       onClick={() => onChange(!checked)}
       className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 transition-all active:scale-[0.98] ${
         checked
-          ? danger ? 'border-red-400 bg-red-50' : 'border-teal-400 bg-teal-50'
+          ? danger ? 'border-red-400 bg-red-50' : 'border-accent/40 bg-teal-50'
           : 'border-gray-200 bg-white'
       }`}
     >
@@ -857,7 +857,7 @@ const OfflineClinicalAssessment: React.FC = () => {
                     <button key={opt} type="button" onClick={() => onAnswer(q.key, opt)}
                       className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all active:scale-95 ${
                         answers[q.key] === opt
-                          ? 'bg-teal-600 text-white'
+                          ? 'bg-accent text-white'
                           : 'bg-white border border-gray-300 text-gray-600'
                       }`}>
                       {opt}
@@ -871,7 +871,7 @@ const OfflineClinicalAssessment: React.FC = () => {
                     <button key={opt} type="button" onClick={() => onAnswer(q.key, opt)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all active:scale-[0.98] ${
                         answers[q.key] === opt
-                          ? 'bg-teal-600 text-white font-semibold'
+                          ? 'bg-accent text-white font-semibold'
                           : 'bg-white border border-gray-300 text-gray-600'
                       }`}>
                       {opt}
@@ -906,7 +906,7 @@ const OfflineClinicalAssessment: React.FC = () => {
   const renderPatientStep = () => (
     <SectionCard>
       <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-        <User size={20} className="text-teal-600"/> Patient Information
+        <User size={20} className="text-accent"/> Patient Information
       </h2>
       <div className="space-y-4">
         <div>
@@ -932,7 +932,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             {(['male', 'female'] as const).map(s => (
               <button key={s} type="button" onClick={() => setPatient({ ...patient, sex: s })}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                  patient.sex === s ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600 border border-gray-200'
+                  patient.sex === s ? 'bg-accent text-white' : 'bg-gray-100 text-gray-600 border border-gray-200'
                 }`}>
                 {s === 'male' ? '♂ Male' : '♀ Female'}
               </button>
@@ -945,7 +945,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             {(Object.entries(PATIENT_GROUPS) as [PatientGroup, { label: string; emoji: string }][]).map(([key, pg]) => (
               <button key={key} type="button" onClick={() => setPatient({ ...patient, group: key })}
                 className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${
-                  patient.group === key ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600 border border-gray-200'
+                  patient.group === key ? 'bg-accent text-white' : 'bg-gray-100 text-gray-600 border border-gray-200'
                 }`}>
                 <span>{pg.emoji}</span> {pg.label}
               </button>
@@ -958,7 +958,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             {VILLAGES.map(v => (
               <button key={v} type="button" onClick={() => setPatient({ ...patient, village: v })}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all active:scale-95 ${
-                  patient.village === v ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600'
+                  patient.village === v ? 'bg-accent text-white' : 'bg-gray-100 text-gray-600'
                 }`}>
                 {v}
               </button>
@@ -977,7 +977,7 @@ const OfflineClinicalAssessment: React.FC = () => {
   const renderVitalsStep = () => (
     <SectionCard>
       <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-        <Activity size={20} className="text-teal-600"/> Vital Signs
+        <Activity size={20} className="text-accent"/> Vital Signs
       </h2>
       <p className="text-xs text-gray-400 mb-4">Measure carefully. Record what you can — leave blank if equipment not available.</p>
       <div className="space-y-4">
@@ -1069,7 +1069,7 @@ const OfflineClinicalAssessment: React.FC = () => {
   const renderSymptomsStep = () => (
     <SectionCard>
       <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-        <Stethoscope size={20} className="text-teal-600"/> Symptoms & Signs
+        <Stethoscope size={20} className="text-accent"/> Symptoms & Signs
       </h2>
       <p className="text-xs text-gray-400 mb-4">Tick symptoms present. For key symptoms, a clinical interview will guide you through the right questions.</p>
 
@@ -1079,7 +1079,7 @@ const OfflineClinicalAssessment: React.FC = () => {
           <textarea value={symptoms.chiefComplaint}
             onChange={e => setSymptoms({ ...symptoms, chiefComplaint: e.target.value })}
             rows={2} placeholder="In the patient's own words, what is the main problem?"
-            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none" />
+            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none" />
         </div>
 
         {/* Main symptoms with structured interviews */}
@@ -1101,7 +1101,7 @@ const OfflineClinicalAssessment: React.FC = () => {
                   {data.present && (
                     <>
                       <button type="button" onClick={() => setActiveInterview(activeInterview === key ? null : key)}
-                        className="mt-1 ml-2 flex items-center gap-1 text-xs text-teal-600 font-semibold">
+                        className="mt-1 ml-2 flex items-center gap-1 text-xs text-accent font-semibold">
                         {activeInterview === key ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
                         {Object.keys(data.interview).length > 0
                           ? `${Object.keys(data.interview).length} questions answered`
@@ -1183,7 +1183,7 @@ const OfflineClinicalAssessment: React.FC = () => {
   const renderObservationsStep = () => (
     <SectionCard>
       <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-        <ClipboardList size={20} className="text-teal-600"/> Physical Observations
+        <ClipboardList size={20} className="text-accent"/> Physical Observations
       </h2>
       <p className="text-xs text-gray-400 mb-4">Describe what you SEE. Use your own words.</p>
       <div className="space-y-4">
@@ -1198,7 +1198,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             <textarea value={observations[field.key]}
               onChange={e => setObservations({ ...observations, [field.key]: e.target.value })}
               rows={2} placeholder={field.placeholder}
-              className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none" />
+              className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none" />
           </div>
         ))}
         <div>
@@ -1206,7 +1206,7 @@ const OfflineClinicalAssessment: React.FC = () => {
           <textarea value={observations.additionalNotes}
             onChange={e => setObservations({ ...observations, additionalNotes: e.target.value })}
             rows={3} placeholder="Anything else relevant — medications patient is taking, recent travel, contacts who are sick, etc."
-            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none" />
+            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none" />
         </div>
       </div>
     </SectionCard>
@@ -1328,7 +1328,7 @@ const OfflineClinicalAssessment: React.FC = () => {
           <div className="space-y-3">
             {!saved ? (
               <button type="button" onClick={saveAssessment}
-                className="w-full py-3 rounded-xl text-white font-bold text-base bg-gradient-to-r from-teal-600 to-blue-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                className="w-full py-3 rounded-xl text-white font-bold text-base bg-accent active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                 <Save size={18}/> Save Assessment (Offline)
               </button>
             ) : (
@@ -1362,15 +1362,15 @@ const OfflineClinicalAssessment: React.FC = () => {
   // ════════════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-paper">
       <div ref={topRef} />
 
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-20 bg-card border-b border-hair">
         <div className="max-w-lg mx-auto px-3 py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                 <Heart size={16} className="text-white" />
               </div>
               <div>
@@ -1455,7 +1455,7 @@ const OfflineClinicalAssessment: React.FC = () => {
               className={`flex-1 py-3 rounded-xl font-bold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-1 ${
                 step === 'patient' && !patient.name.trim()
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-teal-600 to-blue-600 text-white'
+                  : 'bg-accent text-white'
               }`}>
               {stepIndex === STEPS.length - 2 ? 'Run Triage' : 'Next'} <ArrowRight size={16}/>
             </button>

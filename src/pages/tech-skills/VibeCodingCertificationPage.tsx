@@ -40,47 +40,47 @@ import {
 
 const markdownComponents = {
   h1: ({ children }: any) => (
-    <h1 className="text-sm font-bold text-white mb-2 mt-3">{children}</h1>
+    <h1 className="text-sm font-bold text-ink mb-2 mt-3">{children}</h1>
   ),
   h2: ({ children }: any) => (
-    <h2 className="text-xs font-bold text-gray-100 mb-1.5 mt-3">{children}</h2>
+    <h2 className="text-xs font-bold text-ink mb-1.5 mt-3">{children}</h2>
   ),
   h3: ({ children }: any) => (
-    <h3 className="text-xs font-semibold text-gray-200 mb-1 mt-2">{children}</h3>
+    <h3 className="text-xs font-semibold text-body mb-1 mt-2">{children}</h3>
   ),
   p: ({ children }: any) => (
-    <p className="text-xs text-gray-300 mb-2 leading-relaxed">{children}</p>
+    <p className="text-xs text-body mb-2 leading-relaxed">{children}</p>
   ),
   strong: ({ children }: any) => (
-    <strong className="font-semibold text-white">{children}</strong>
+    <strong className="font-semibold text-ink">{children}</strong>
   ),
   em: ({ children }: any) => (
-    <em className="italic text-gray-400">{children}</em>
+    <em className="italic text-muted">{children}</em>
   ),
   ul: ({ children }: any) => (
-    <ul className="list-disc list-inside space-y-1 mb-2 text-gray-300 ml-2 text-xs">{children}</ul>
+    <ul className="list-disc list-inside space-y-1 mb-2 text-body ml-2 text-xs">{children}</ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="list-decimal list-inside space-y-1 mb-2 text-gray-300 ml-2 text-xs">{children}</ol>
+    <ol className="list-decimal list-inside space-y-1 mb-2 text-body ml-2 text-xs">{children}</ol>
   ),
   li: ({ children }: any) => (
     <li className="leading-relaxed">{children}</li>
   ),
-  hr: () => <hr className="my-3 border-gray-600" />,
+  hr: () => <hr className="my-3 border-hair" />,
   blockquote: ({ children }: any) => (
-    <blockquote className="border-l-4 border-pink-500 pl-3 italic text-gray-400 my-2 text-xs">{children}</blockquote>
+    <blockquote className="border-l-4 border-accent pl-3 italic text-muted my-2 text-xs">{children}</blockquote>
   ),
   a: ({ href, children }: any) => (
     <a href={href || '#'} target="_blank" rel="noopener noreferrer"
-      className="text-pink-400 hover:text-pink-300 underline font-medium">
+      className="text-accent hover:underline font-medium">
       {children}
     </a>
   ),
   code: ({ children }: any) => (
-    <code className="bg-gray-800 text-pink-300 px-1 py-0.5 rounded text-[10px] font-mono">{children}</code>
+    <code className="bg-paper text-accent px-1 py-0.5 rounded text-[10px] font-mono border border-hair">{children}</code>
   ),
   pre: ({ children }: any) => (
-    <pre className="bg-gray-900 text-green-400 p-2 rounded text-[10px] font-mono overflow-x-auto mb-2">{children}</pre>
+    <pre className="bg-surface text-ink p-2 rounded text-[10px] font-mono overflow-x-auto mb-2 border border-hair">{children}</pre>
   ),
 };
 
@@ -120,11 +120,11 @@ const makeId        = () => Math.random().toString(36).substring(2, 9);
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const scoreLabel = (s: number | null) => {
-  if (s === null) return { text: 'Not assessed', color: 'text-gray-400',    bg: 'bg-gray-500/10',    border: 'border-gray-500/20'    };
-  if (s === 3)    return { text: 'Advanced',     color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' };
-  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/30'    };
-  if (s === 1)    return { text: 'Emerging',     color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30'   };
-  return               { text: 'No Evidence',  color: 'text-red-400',    bg: 'bg-red-500/10',     border: 'border-red-500/30'     };
+  if (s === null) return { text: 'Not assessed', color: 'text-gray-500',  bg: 'bg-gray-100',   border: 'border-gray-300'   };
+  if (s === 3)    return { text: 'Advanced',     color: 'text-green-800', bg: 'bg-green-100',  border: 'border-green-300'  };
+  if (s === 2)    return { text: 'Proficient',   color: 'text-blue-800',  bg: 'bg-blue-100',   border: 'border-blue-300'   };
+  if (s === 1)    return { text: 'Emerging',     color: 'text-yellow-800',bg: 'bg-yellow-100', border: 'border-yellow-300' };
+  return               { text: 'No Evidence',  color: 'text-red-800',   bg: 'bg-red-100',    border: 'border-red-300'    };
 };
 
 // ─── Score Ring ───────────────────────────────────────────────────────────────
@@ -132,10 +132,10 @@ const scoreLabel = (s: number | null) => {
 const ScoreRing: React.FC<{ score: number | null }> = ({ score }) => {
   const pct = score !== null ? (score / 3) * 100 : 0;
   const r = 18; const circ = 2 * Math.PI * r; const dash = (pct / 100) * circ;
-  const color = score === null ? '#4b5563' : score >= 2 ? '#10b981' : score === 1 ? '#f59e0b' : '#ef4444';
+  const color = score === null ? '#A8A29E' : score >= 2 ? '#16a34a' : score === 1 ? '#d97706' : '#dc2626';
   return (
     <svg width={44} height={44} viewBox="0 0 44 44">
-      <circle cx={22} cy={22} r={r} fill="none" stroke="#1f2937" strokeWidth={4} />
+      <circle cx={22} cy={22} r={r} fill="none" stroke="#E7E5E0" strokeWidth={4} />
       <circle cx={22} cy={22} r={r} fill="none" stroke={color} strokeWidth={4}
         strokeLinecap="round" strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={circ / 4}
         style={{ transition: 'all 0.6s ease' }} />
@@ -540,20 +540,20 @@ Respond ONLY in this JSON format:
 
   // ── Voice bar ─────────────────────────────────────────────────────────────
   const renderVoiceBar = (textToRead: string) => (
-    <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-800/40 border border-gray-700 rounded-xl mb-4">
-      <span className="text-xs font-semibold text-gray-400 flex items-center gap-1">
-        <Volume2 size={13} className="text-pink-400" /> Voice:
+    <div className="flex flex-wrap items-center gap-2 p-3 bg-surface border border-hair rounded-xl mb-4">
+      <span className="text-xs font-semibold text-muted flex items-center gap-1">
+        <Volume2 size={13} className="text-accent" /> Voice:
       </span>
-      <div className="flex rounded-lg overflow-hidden border border-gray-600">
+      <div className="flex rounded-full overflow-hidden border border-hair">
         {(['english', 'pidgin'] as const).map(m => (
           <button key={m} onClick={() => { stopSpeaking(); setVoiceMode(m); }}
-            className={`flex items-center gap-1 px-3 py-1 text-xs font-bold transition-all border-r border-gray-600 last:border-0 ${voiceMode === m ? (m === 'english' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') : 'bg-gray-800 text-gray-500 hover:bg-gray-700 hover:text-white'}`}>
+            className={`flex items-center gap-1 px-3 py-1 text-xs font-bold transition-all border-r border-hair last:border-0 ${voiceMode === m ? 'bg-accent text-white' : 'bg-card text-muted hover:text-ink'}`}>
             {m === 'english' ? '🇬🇧 English' : '🇳🇬 Pidgin'}
           </button>
         ))}
       </div>
       <button onClick={() => isSpeaking ? stopSpeaking() : speak(textToRead)}
-        className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${isSpeaking ? 'bg-red-500/10 text-red-400 border border-red-500/30' : 'bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500/20'}`}>
+        className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all border ${isSpeaking ? 'bg-red-50 text-red-700 border-red-300' : 'bg-card text-accent border-hair hover:border-accent/40'}`}>
         {isSpeaking ? <><VolumeX size={12} /> Stop</> : <><Volume2 size={12} /> Read aloud</>}
       </button>
     </div>
@@ -565,17 +565,17 @@ Respond ONLY in this JSON format:
 
   if (loadingData) {
     return (
-      <div className="flex flex-col h-screen bg-gray-900">
+      <div className="flex flex-col h-screen bg-paper">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 size={36} className="animate-spin text-pink-400" />
+          <Loader2 size={32} className="animate-spin text-accent" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-paper text-body overflow-hidden">
       <Navbar />
 
       {fallbackText && (
@@ -587,17 +587,17 @@ Respond ONLY in this JSON format:
       <main className="flex-1 flex flex-col overflow-hidden" style={{ marginTop: '64px' }}>
 
         {/* ── Toolbar ───────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-hair flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Wand2 size={18} className="text-pink-400" />
-              <span className="text-sm font-bold text-white">Vibe Coding Certification</span>
+              <Wand2 size={18} className="text-accent" />
+              <span className="text-sm font-bold text-ink">Vibe Coding Certification</span>
             </div>
             <div className="flex items-center gap-1 ml-2">
               {(['overview', 'build', 'results', 'certificate'] as ViewMode[]).map(v => (
                 <button key={v} onClick={() => setView(v)}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors capitalize
-                    ${view === v ? 'bg-pink-500/20 text-pink-300 border-pink-500/40' : 'text-gray-600 border-gray-700 hover:text-gray-300 hover:border-gray-500'}`}>
+                    ${view === v ? 'bg-accent/10 text-accent border-accent/40' : 'text-muted border-hair hover:text-ink hover:border-accent/30'}`}>
                   {v === 'certificate' ? '🏆 Cert' : v === 'build' ? '🛠️ Build' : v === 'results' ? '📊 Results' : '📋 Overview'}
                 </button>
               ))}
@@ -605,10 +605,10 @@ Respond ONLY in this JSON format:
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex rounded-lg overflow-hidden border border-gray-600">
+            <div className="flex rounded-full overflow-hidden border border-hair">
               {(['english', 'pidgin'] as const).map(m => (
                 <button key={m} onClick={() => setVoiceMode(m)}
-                  className={`flex items-center gap-1 px-2 py-1.5 text-xs font-bold transition-all border-r border-gray-600 last:border-0 ${voiceMode === m ? (m === 'english' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') : 'bg-gray-800 text-gray-500 hover:bg-gray-700 hover:text-white'}`}>
+                  className={`flex items-center gap-1 px-2 py-1.5 text-xs font-bold transition-all border-r border-hair last:border-0 ${voiceMode === m ? 'bg-accent text-white' : 'bg-card text-muted hover:text-ink'}`}>
                   {m === 'english' ? '🇬🇧' : '🇳🇬'}
                 </button>
               ))}
@@ -616,7 +616,7 @@ Respond ONLY in this JSON format:
             {view === 'build' && (
               <button onClick={handleEvaluate}
                 disabled={isEvaluating || !certCode.trim()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-lg transition-colors shadow disabled:opacity-50">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-full transition-colors disabled:opacity-50">
                 {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
                 {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
               </button>
@@ -630,7 +630,7 @@ Respond ONLY in this JSON format:
         {view === 'overview' && (
           <div className="flex-1 overflow-y-auto p-6 max-w-3xl mx-auto w-full">
             {dataError && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex gap-2 text-sm text-red-300">
+              <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-xl flex gap-2 text-sm text-red-800">
                 <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />{dataError}
               </div>
             )}
@@ -640,12 +640,12 @@ Respond ONLY in this JSON format:
               : 'Welcome to the Vibe Coding Certification. Use the 4-phase workflow to build working code, then submit it for evaluation.')}
 
             {/* Hero */}
-            <div className="p-6 bg-gradient-to-br from-pink-600/20 via-purple-600/15 to-violet-600/10 border border-pink-500/30 rounded-2xl mb-6">
+            <div className="p-6 bg-surface border border-hair rounded-2xl mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-pink-600/30 rounded-xl"><Wand2 size={24} className="text-pink-300" /></div>
+                <div className="p-2.5 bg-accent/10 rounded-xl"><Wand2 size={24} className="text-accent" /></div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">Vibe Coding Certification</h1>
-                  <p className="text-pink-300 text-sm">Prompt Engineering · AI-Assisted Code Generation · Iterative Development</p>
+                  <h1 className="text-xl font-bold text-ink">Vibe Coding Certification</h1>
+                  <p className="text-muted text-sm">Prompt Engineering · AI-Assisted Code Generation · Iterative Development</p>
                   <div className="mt-2">
                     <PidginTooltip
                       originalText="Prompt Engineering · AI-Assisted Code Generation · Iterative Development"
@@ -654,7 +654,7 @@ Respond ONLY in this JSON format:
                   </div>
                 </div>
               </div>
-              <p className="text-gray-300 text-sm leading-relaxed">
+              <p className="text-body text-sm leading-relaxed">
                 {lvl <= 1
                   ? 'In this certification, you write instructions in plain English, let AI critique and improve them, then generate and run real code. You will be judged on how clearly you communicated what you wanted and how well you iterated to make it work.'
                   : 'Demonstrate your vibe coding skills by writing precise instructions, critiquing and refining them through AI feedback, generating working code, and iterating based on execution results. Your work is evaluated against professional rubric criteria covering prompt quality, code correctness, and iterative improvement.'}
@@ -662,8 +662,8 @@ Respond ONLY in this JSON format:
             </div>
 
             {/* How it works */}
-            <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl mb-5">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-3">🗺️ How the Certification Works</p>
+            <div className="p-4 bg-card border border-hair rounded-xl mb-5">
+              <p className="text-xs font-bold text-muted uppercase mb-3">🗺️ How the Certification Works</p>
               <div className="space-y-2.5">
                 {[
                   { step: '1', icon: '✍️', label: 'Write Your Instructions', desc: lvl <= 1 ? 'Describe what you want the code to do in plain English.' : 'Write clear, specific instructions describing the program you want to build.' },
@@ -673,10 +673,10 @@ Respond ONLY in this JSON format:
                   { step: '5', icon: '🏆', label: 'Submit for Evaluation', desc: lvl <= 1 ? 'When your code works, click "Submit for Evaluation" to get your score.' : 'Submit when your code runs successfully. AI evaluates your full submission against the rubric.' },
                 ].map(({ step, icon, label, desc }) => (
                   <div key={step} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500/20 text-pink-300 text-xs font-bold flex items-center justify-center mt-0.5">{step}</span>
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center mt-0.5">{step}</span>
                     <div>
-                      <p className="text-sm font-semibold text-white">{icon} {label}</p>
-                      <p className="text-xs text-gray-400 leading-relaxed">{desc}</p>
+                      <p className="text-sm font-semibold text-ink">{icon} {label}</p>
+                      <p className="text-xs text-muted leading-relaxed">{desc}</p>
                     </div>
                   </div>
                 ))}
@@ -684,10 +684,10 @@ Respond ONLY in this JSON format:
             </div>
 
             {/* Assessment criteria */}
-            <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl mb-6">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-3">🎯 What You Will Be Evaluated On</p>
+            <div className="p-4 bg-card border border-hair rounded-xl mb-6">
+              <p className="text-xs font-bold text-muted uppercase mb-3">🎯 What You Will Be Evaluated On</p>
               {assessments.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">Loading criteria…</p>
+                <p className="text-sm text-muted italic">Loading criteria…</p>
               ) : (
                 <div className="space-y-2">
                   {assessments.map(a => {
@@ -698,12 +698,12 @@ Respond ONLY in this JSON format:
                         <div className="flex-shrink-0 mt-0.5"><ScoreRing score={sc?.score ?? null} /></div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-white">{a.assessment_name}</p>
+                            <p className="text-sm font-semibold text-ink">{a.assessment_name}</p>
                             {sc?.score !== null && (
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sl.bg} ${sl.color} ${sl.border}`}>{sl.text}</span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-400 leading-relaxed">{a.description || a.certification_prompt.slice(0, 120) + '…'}</p>
+                          <p className="text-xs text-muted leading-relaxed">{a.description || a.certification_prompt.slice(0, 120) + '…'}</p>
                         </div>
                       </div>
                     );
@@ -714,15 +714,15 @@ Respond ONLY in this JSON format:
 
             {/* Score summary if any */}
             {anyScored && overallAvg !== null && (
-              <div className="p-4 bg-pink-500/10 border border-pink-500/30 rounded-xl mb-5 flex items-center gap-4">
-                <Trophy size={28} className="text-amber-400 flex-shrink-0" />
+              <div className="p-4 bg-surface border border-hair rounded-xl mb-5 flex items-center gap-4">
+                <Trophy size={28} className="text-accent flex-shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-400 uppercase font-bold">Your current score</p>
-                  <p className="text-2xl font-black text-white">{overallAvg.toFixed(1)}<span className="text-base font-normal text-gray-500">/3.0</span></p>
+                  <p className="text-xs text-muted uppercase font-bold">Your current score</p>
+                  <p className="text-2xl font-black text-ink">{overallAvg.toFixed(1)}<span className="text-base font-normal text-muted">/3.0</span></p>
                 </div>
                 {allProficient && (
                   <div className="ml-auto">
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
                       🏆 Eligible for Certificate
                     </span>
                   </div>
@@ -732,12 +732,12 @@ Respond ONLY in this JSON format:
 
             <div className="flex gap-3">
               <button onClick={() => setView('build')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-xl transition-all hover:scale-[1.01] shadow-lg">
+                className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl transition-colors">
                 {anyScored ? <><RefreshCw size={16} /> Continue Building</> : <><Wand2 size={16} /> Start Building</>}
               </button>
               {anyScored && (
                 <button onClick={() => setView('results')}
-                  className="px-4 py-3 text-sm font-bold text-pink-300 border border-pink-500/30 bg-pink-500/10 hover:bg-pink-500/20 rounded-xl transition-colors">
+                  className="px-4 py-3 text-sm font-bold text-accent border border-hair bg-card hover:border-accent/40 rounded-xl transition-colors">
                   View Results →
                 </button>
               )}
@@ -752,7 +752,7 @@ Respond ONLY in this JSON format:
           <div className="flex-1 flex overflow-hidden">
 
             {/* LEFT: VibeCodingWorkflow */}
-            <div className="w-1/2 flex-shrink-0 overflow-y-auto p-4 border-r border-gray-700 bg-gray-950">
+            <div className="w-1/2 flex-shrink-0 overflow-y-auto p-4 border-r border-hair bg-surface">
               <VibeCodingWorkflow
                 onExecuteCode={handleExecuteCode}
                 onGetAICritique={handleGetInstructionCritique}
@@ -767,25 +767,25 @@ Respond ONLY in this JSON format:
             <div className="flex-1 flex flex-col overflow-hidden">
 
               {/* Code output panel */}
-              <div className="flex-shrink-0 border-b border-gray-700">
-                <div className="flex items-center justify-between px-4 py-2 bg-gray-800/80">
+              <div className="flex-shrink-0 border-b border-hair">
+                <div className="flex items-center justify-between px-4 py-2 bg-surface">
                   <div className="flex items-center gap-2">
-                    <Code size={13} className="text-pink-400" />
-                    <span className="text-xs font-bold text-gray-300">Generated Code</span>
+                    <Code size={13} className="text-accent" />
+                    <span className="text-xs font-bold text-body">Generated Code</span>
                     {certLanguage && (
-                      <span className="text-[10px] px-2 py-0.5 bg-pink-500/20 text-pink-300 rounded-full font-bold">{certLanguage.toUpperCase()}</span>
+                      <span className="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-bold">{certLanguage.toUpperCase()}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     {isWebViewable && certCode && (
                       <button onClick={handleOpenAsWebPage}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors">
+                        className="flex items-center gap-1 px-2.5 py-1 bg-card border border-hair hover:border-accent/40 text-ink text-xs font-semibold rounded transition-colors">
                         <Globe size={11} /> Open as Web Page
                       </button>
                     )}
                     <button onClick={handleEvaluate}
                       disabled={isEvaluating || !certCode.trim()}
-                      className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-lg transition-colors disabled:opacity-50">
+                      className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-full transition-colors disabled:opacity-50">
                       {isEvaluating ? <Loader2 size={11} className="animate-spin" /> : <Award size={11} />}
                       {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
                     </button>
@@ -793,27 +793,27 @@ Respond ONLY in this JSON format:
                 </div>
 
                 {certCode ? (
-                  <pre className="bg-gray-900 text-green-400 px-4 py-3 text-xs font-mono overflow-x-auto max-h-48 overflow-y-auto leading-relaxed">
+                  <pre className="bg-ink text-green-400 px-4 py-3 text-xs font-mono overflow-x-auto max-h-48 overflow-y-auto leading-relaxed">
                     {certCode.slice(0, 2000)}{certCode.length > 2000 ? '\n… (truncated)' : ''}
                   </pre>
                 ) : (
-                  <div className="px-4 py-6 text-center text-gray-600 text-xs">
+                  <div className="px-4 py-6 text-center text-muted text-xs">
                     Generated code will appear here after Phase 3 in the workflow →
                   </div>
                 )}
 
                 {/* Execution result */}
                 {(isExecuting || execResult) && (
-                  <div className={`px-4 py-3 border-t border-gray-700 ${execResult?.error ? 'bg-red-900/20' : 'bg-emerald-900/20'}`}>
+                  <div className={`px-4 py-3 border-t border-hair ${execResult?.error ? 'bg-red-50' : 'bg-green-50'}`}>
                     <p className="text-[10px] font-bold uppercase mb-1 flex items-center gap-1">
                       {isExecuting
-                        ? <><Loader2 size={10} className="animate-spin text-gray-400" /><span className="text-gray-400">Running…</span></>
+                        ? <><Loader2 size={10} className="animate-spin text-muted" /><span className="text-muted">Running…</span></>
                         : execResult?.error
-                          ? <><AlertCircle size={10} className="text-red-400" /><span className="text-red-400">Error</span></>
-                          : <><CheckCircle size={10} className="text-emerald-400" /><span className="text-emerald-400">Output</span></>}
+                          ? <><AlertCircle size={10} className="text-red-700" /><span className="text-red-700">Error</span></>
+                          : <><CheckCircle size={10} className="text-green-700" /><span className="text-green-700">Output</span></>}
                     </p>
                     {execResult && (
-                      <pre className="text-xs font-mono whitespace-pre-wrap text-gray-300 max-h-24 overflow-y-auto">
+                      <pre className="text-xs font-mono whitespace-pre-wrap text-body max-h-24 overflow-y-auto">
                         {execResult.error || execResult.output || '(no output)'}
                       </pre>
                     )}
@@ -823,22 +823,22 @@ Respond ONLY in this JSON format:
 
               {/* AI Coach chat */}
               <div className="flex flex-col flex-1 min-h-0">
-                <div className="px-4 py-2 bg-gray-800/60 border-b border-gray-700 flex-shrink-0">
-                  <p className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                    <Bot size={13} className="text-pink-400" /> AI Coach
+                <div className="px-4 py-2 bg-surface border-b border-hair flex-shrink-0">
+                  <p className="text-xs font-bold text-body flex items-center gap-1.5">
+                    <Bot size={13} className="text-accent" /> AI Coach
                   </p>
-                  <p className="text-[10px] text-gray-500">Ask anything to improve your prompt or fix your code</p>
+                  <p className="text-[10px] text-muted">Ask anything to improve your prompt or fix your code</p>
                 </div>
 
                 <div ref={coachRef} className="flex-1 overflow-y-auto p-3 space-y-3">
                   {coachHistory.map((msg, i) => (
                     <div key={i} className={`flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                       {msg.role === 'assistant' && (
-                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-pink-500/20 flex items-center justify-center">
-                          <Bot size={12} className="text-pink-400" />
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-accent/10 flex items-center justify-center">
+                          <Bot size={12} className="text-accent" />
                         </div>
                       )}
-                      <div className={`max-w-xs rounded-lg px-3 py-2 text-xs leading-relaxed ${msg.role === 'assistant' ? 'bg-gray-800 text-gray-200' : 'bg-pink-600 text-white'}`}>
+                      <div className={`max-w-xs rounded-lg px-3 py-2 text-xs leading-relaxed ${msg.role === 'assistant' ? 'text-body' : 'bg-card border border-hair text-body'}`}>
                         {msg.role === 'assistant' ? (
                           <>
                             <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
@@ -849,7 +849,7 @@ Respond ONLY in this JSON format:
                         )}
                       </div>
                       {msg.role === 'user' && (
-                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-pink-600 flex items-center justify-center">
+                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-accent flex items-center justify-center">
                           <User size={12} className="text-white" />
                         </div>
                       )}
@@ -857,27 +857,27 @@ Respond ONLY in this JSON format:
                   ))}
                   {coachSubmitting && (
                     <div className="flex items-start gap-2">
-                      <div className="flex-shrink-0 h-6 w-6 rounded-full bg-pink-500/20 flex items-center justify-center">
-                        <Bot size={12} className="text-pink-400" />
+                      <div className="flex-shrink-0 h-6 w-6 rounded-full bg-accent/10 flex items-center justify-center">
+                        <Bot size={12} className="text-accent" />
                       </div>
-                      <div className="bg-gray-800 rounded-lg px-3 py-2 flex gap-1">
-                        {[0,1,2].map(d => <div key={d} className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: `${d * 150}ms` }} />)}
+                      <div className="bg-card border border-hair rounded-lg px-3 py-2 flex gap-1">
+                        {[0,1,2].map(d => <div key={d} className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" style={{ animationDelay: `${d * 150}ms` }} />)}
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="flex-shrink-0 px-3 py-2 border-t border-gray-700 flex gap-2">
+                <div className="flex-shrink-0 px-3 py-2 border-t border-hair flex gap-2">
                   <input
                     value={coachInput}
                     onChange={e => setCoachInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCoachSubmit(); } }}
                     placeholder="Ask the coach…"
                     disabled={coachSubmitting}
-                    className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-600 outline-none focus:border-pink-500 transition-colors"
+                    className="flex-1 bg-paper border border-hair rounded-full px-3 py-1.5 text-xs text-ink placeholder-muted outline-none focus:border-accent transition-colors"
                   />
                   <button onClick={handleCoachSubmit} disabled={!coachInput.trim() || coachSubmitting}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-pink-600 hover:bg-pink-700 disabled:opacity-40 text-white text-xs font-semibold rounded-lg transition-colors">
+                    className="flex items-center gap-1 px-3 py-1.5 bg-accent hover:bg-accent/90 disabled:opacity-40 text-white text-xs font-semibold rounded-full transition-colors">
                     <Send size={12} />
                   </button>
                 </div>
@@ -897,22 +897,22 @@ Respond ONLY in this JSON format:
 
             {!anyScored ? (
               <div className="text-center py-16 space-y-4">
-                <ClipboardList size={48} className="text-gray-600 mx-auto" />
-                <p className="text-gray-400">{lvl <= 1
+                <ClipboardList size={48} className="text-muted mx-auto" />
+                <p className="text-muted">{lvl <= 1
                   ? 'You have not been evaluated yet. Go to Build and submit your code.'
                   : 'No evaluation data yet. Build your project and click Submit for Evaluation.'}</p>
-                <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl transition-colors">
+                <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors">
                   <Wand2 size={16} /> Go to Build
                 </button>
               </div>
             ) : (
               <div className="space-y-5">
-                <div className="flex items-center gap-5 p-5 bg-gradient-to-br from-pink-600/20 to-purple-600/10 border border-pink-500/30 rounded-2xl">
-                  <Trophy size={40} className="text-amber-400 flex-shrink-0" />
+                <div className="flex items-center gap-5 p-5 bg-surface border border-hair rounded-2xl">
+                  <Trophy size={40} className="text-accent flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-400 uppercase font-bold">Overall Score</p>
-                    <p className="text-4xl font-black text-white">{overallAvg?.toFixed(1)}<span className="text-lg font-normal text-gray-500">/3.0</span></p>
-                    <p className={`text-sm font-bold mt-0.5 ${allProficient ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    <p className="text-xs text-muted uppercase font-bold">Overall Score</p>
+                    <p className="text-4xl font-black text-ink">{overallAvg?.toFixed(1)}<span className="text-lg font-normal text-muted">/3.0</span></p>
+                    <p className={`text-sm font-bold mt-0.5 ${allProficient ? 'text-green-700' : 'text-yellow-700'}`}>
                       {allProficient
                         ? '🏆 Proficiency Achieved — Certificate Eligible'
                         : `${assessmentScores.filter(s => (s.score ?? 0) >= 2).length}/${assessmentScores.length} criteria at Proficient or above`}
@@ -920,7 +920,7 @@ Respond ONLY in this JSON format:
                   </div>
                   {allProficient && (
                     <button onClick={() => setView('certificate')}
-                      className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors text-sm">
+                      className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors text-sm">
                       <Award size={16} /> Get Certificate
                     </button>
                   )}
@@ -934,33 +934,29 @@ Respond ONLY in this JSON format:
                     return (
                       <div key={sc.assessment_name} className={`rounded-xl border overflow-hidden ${sl.border} ${sl.bg}`}>
                         <button onClick={() => setExpandedCrit(isOpen ? null : sc.assessment_name)}
-                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-white/5 transition-colors">
+                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors">
                           <ScoreRing score={sc.score} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white">{sc.assessment_name}</p>
+                            <p className="text-sm font-bold text-ink">{sc.assessment_name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className={`text-xs font-bold ${sl.color}`}>{sl.text}</span>
-                              <div className="h-1.5 w-24 bg-gray-700 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full transition-all ${sc.score === 3 ? 'bg-emerald-500' : sc.score === 2 ? 'bg-blue-500' : sc.score === 1 ? 'bg-amber-500' : 'bg-red-500'}`}
+                              <div className="h-1.5 w-24 bg-hair rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full transition-all ${sc.score === 3 ? 'bg-green-600' : sc.score === 2 ? 'bg-blue-600' : sc.score === 1 ? 'bg-yellow-600' : 'bg-red-600'}`}
                                   style={{ width: `${((sc.score ?? 0) / 3) * 100}%` }} />
                               </div>
                             </div>
                           </div>
-                          {isOpen ? <ChevronUp size={14} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />}
+                          {isOpen ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-2">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-2">
                             {sc.evidence && (
-                              <div className="prose-invert">
-                                <ReactMarkdown components={markdownComponents}>{sc.evidence}</ReactMarkdown>
-                              </div>
+                              <ReactMarkdown components={markdownComponents}>{sc.evidence}</ReactMarkdown>
                             )}
                             {assessment && sc.score !== null && sc.score < 2 && (
-                              <div className="p-2 bg-blue-500/10 rounded-lg">
-                                <p className="text-[10px] font-bold text-blue-400 uppercase mb-1">To reach Proficient:</p>
-                                <div className="prose-invert">
-                                  <ReactMarkdown components={markdownComponents}>{assessment.certification_level2_metric}</ReactMarkdown>
-                                </div>
+                              <div className="p-2 bg-blue-50 rounded-lg">
+                                <p className="text-[10px] font-bold text-blue-700 uppercase mb-1">To reach Proficient:</p>
+                                <ReactMarkdown components={markdownComponents}>{assessment.certification_level2_metric}</ReactMarkdown>
                               </div>
                             )}
                           </div>
@@ -971,18 +967,18 @@ Respond ONLY in this JSON format:
                 </div>
 
                 {evalError && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex gap-2 text-sm text-red-300">
+                  <div className="p-3 bg-red-50 border border-red-300 rounded-xl flex gap-2 text-sm text-red-800">
                     <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />{evalError}
                   </div>
                 )}
 
                 <div className="flex gap-3">
                   <button onClick={() => setView('build')}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-colors text-sm">
+                    className="flex items-center gap-2 px-5 py-2.5 border border-hair bg-card hover:border-accent/40 text-ink font-bold rounded-xl transition-colors text-sm">
                     <Wand2 size={15} /> Continue Building
                   </button>
                   <button onClick={handleEvaluate} disabled={isEvaluating || !certCode.trim()}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-pink-600 hover:bg-pink-700 disabled:opacity-50 text-white font-bold rounded-xl transition-colors text-sm">
+                    className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-bold rounded-xl transition-colors text-sm">
                     {isEvaluating ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
                     Re-evaluate
                   </button>
@@ -1000,7 +996,7 @@ Respond ONLY in this JSON format:
             {renderVoiceBar('Enter your name to generate your Vibe Coding Certificate.')}
 
             {!allProficient && (
-              <div className="p-4 bg-amber-500/15 border border-amber-500/30 rounded-xl text-amber-300 text-sm flex gap-2">
+              <div className="p-4 bg-yellow-50 border border-yellow-300 rounded-xl text-yellow-800 text-sm flex gap-2">
                 <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
                 {lvl <= 1
                   ? 'You need a score of 2 or more on all criteria to get your certificate. Keep building and re-submit!'
@@ -1010,11 +1006,11 @@ Respond ONLY in this JSON format:
 
             {allProficient && (
               <>
-                <div className="p-6 bg-gradient-to-br from-pink-900/40 to-purple-900/20 border border-pink-500/25 rounded-2xl text-center space-y-4">
-                  <Trophy size={48} className="text-pink-400 mx-auto" />
+                <div className="p-6 bg-surface border border-hair rounded-2xl text-center space-y-4">
+                  <Trophy size={48} className="text-accent mx-auto" />
                   <div>
-                    <h2 className="text-xl font-bold text-white">🎓 Certification Achieved!</h2>
-                    <p className="text-sm text-gray-300 mt-1">
+                    <h2 className="text-xl font-bold text-ink">🎓 Certification Achieved!</h2>
+                    <p className="text-sm text-body mt-1">
                       {lvl <= 1
                         ? 'Well done! You showed you can describe code clearly, improve your instructions, and build something that works. Enter your name to download your certificate.'
                         : 'You have demonstrated Proficient or Advanced performance across all Vibe Coding criteria. Enter your name to generate your certificate.'}
@@ -1024,8 +1020,8 @@ Respond ONLY in this JSON format:
                     {assessmentScores.map(sc => {
                       const { text, color } = scoreLabel(sc.score);
                       return (
-                        <div key={sc.assessment_name} className="flex items-center justify-between px-3 py-1.5 bg-gray-800/60 rounded-lg">
-                          <span className="text-gray-300 truncate">{sc.assessment_name}</span>
+                        <div key={sc.assessment_name} className="flex items-center justify-between px-3 py-1.5 bg-card border border-hair rounded-lg">
+                          <span className="text-body truncate">{sc.assessment_name}</span>
                           <span className={`font-bold flex-shrink-0 ml-2 ${color}`}>{text}</span>
                         </div>
                       );
@@ -1035,28 +1031,28 @@ Respond ONLY in this JSON format:
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-1.5">
+                    <label className="block text-sm font-semibold text-ink mb-1.5">
                       {lvl <= 1 ? 'Your full name (for the certificate):' : 'Full name as it should appear on the certificate:'}
                     </label>
                     <input
                       type="text" value={certName} onChange={e => setCertName(e.target.value)}
                       placeholder="e.g. Amara Johnson"
-                      className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-pink-500 text-base"
+                      className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-none focus:border-accent text-base"
                     />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
-                    className="w-full flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all">
+                    className="w-full flex items-center justify-center gap-3 py-3.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-bold rounded-xl transition-colors">
                     {isGenCert ? <><Loader2 size={18} className="animate-spin" /> Generating PDF…</> : <><Download size={18} /> Download Certificate</>}
                   </button>
-                  <p className="text-center text-xs text-gray-500">
-                    {`Pink-themed PDF · ${branding.institutionName}`}
+                  <p className="text-center text-xs text-muted">
+                    {`${branding.institutionName} Programme`}
                   </p>
                 </div>
               </>
             )}
 
             <button onClick={() => setView('overview')}
-              className="w-full py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+              className="w-full py-2 text-xs text-muted hover:text-ink transition-colors">
               ← Back to Overview
             </button>
           </div>

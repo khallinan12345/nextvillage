@@ -481,44 +481,6 @@ const LEVEL_LABELS: Record<number, { text: string; color: string; bg: string }> 
 
 // ─── Background ───────────────────────────────────────────────────────────────
 
-const EntrepreneurshipBackground: React.FC = () => {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-  const [moving, setMoving] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      setMouse({ x: Math.max(0, e.clientX - 256), y: Math.max(0, e.clientY - 64) });
-      setMoving(true);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setMoving(false), 120);
-    };
-    window.addEventListener('mousemove', h);
-    return () => { window.removeEventListener('mousemove', h); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-  const img = "url('/background_entrepreneurship_consulting.png')";
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="entrep-distortion">
-            <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="3" seed="31" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="55" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-      <div className="fixed top-14 left-0 right-0 bottom-0" style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/70 via-orange-900/60 to-yellow-900/65" />
-        <div className="absolute inset-0 bg-black/10" />
-      </div>
-      {moving && (
-        <div className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none" style={{ backgroundImage: img, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 1, filter: 'url(#entrep-distortion)', WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)`, maskImage: `radial-gradient(circle 160px at ${mouse.x}px ${mouse.y}px, black 0%, black 45%, transparent 100%)` }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-900/70 via-orange-900/60 to-yellow-900/65" />
-        </div>
-      )}
-    </>
-  );
-};
 
 // ─── Markdown renderer ────────────────────────────────────────────────────────
 
@@ -577,7 +539,7 @@ interface ProbePanelProps {
 const ProbePanel: React.FC<ProbePanelProps> = ({ field, consultType, messages, loading, done, input, onInputChange, onSend, onClose, chatEndRef }) => {
   const ct = CONSULT_TYPES[consultType];
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-2 pb-2">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-card border border-hair px-2 pb-2">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col" style={{ maxHeight: '85vh' }}>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-amber-50 rounded-t-2xl">
           <div>
@@ -1306,50 +1268,49 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   if (mode === 'select') {
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-4xl mx-auto px-6 py-10">
-          <div className="bg-black/35 backdrop-blur-sm rounded-2xl p-6 mb-6">
+          <div className="bg-card border border-hair rounded-2xl p-6 mb-6">
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-3">
-                <Briefcase className="h-10 w-10 text-amber-300" />
-                <h1 className="text-4xl font-bold text-white">Entrepreneurship Advisor</h1>
+                <Briefcase className="h-9 w-9 text-accent" />
+                <h1 className="text-3xl font-bold text-ink">Entrepreneurship Advisor</h1>
               </div>
               <Link
                 to="/tutorials/entrepreneurship-consultant"
-                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0 border border-white/30"
+                className="flex items-center gap-1.5 border border-hair bg-card text-body hover:text-accent hover:border-accent/40 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors shrink-0"
               >
                 <BookOpen size={14} /> Guide
               </Link>
             </div>
-            <p className="text-xl text-amber-100 max-w-2xl">
+            <p className="text-lg text-body max-w-2xl">
               Help young Nigerian entrepreneurs start, grow, and fix their businesses — using AI to give them access to information and strategies they couldn't afford before.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <button onClick={() => setMode('learn-topics')}
-              className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-amber-400">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center mb-3"><BookOpen size={24} className="text-white" /></div>
+              className="text-left bg-card border border-hair rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-amber-400">
+              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mb-3"><BookOpen size={24} className="text-white" /></div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Learn Mode</h3>
               <p className="text-sm text-gray-600 leading-relaxed">Study 6 business topics including how to use AI to grow a Nigerian business.</p>
               <div className="mt-2 flex items-center gap-1 text-amber-700 font-semibold text-sm">Study first <ChevronRight size={14} /></div>
             </button>
             <button onClick={() => setMode('casebook-dashboard')}
-              className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-orange-400">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-600 to-amber-700 flex items-center justify-center mb-3"><ClipboardList size={24} className="text-white" /></div>
+              className="text-left bg-card border border-hair rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-orange-400">
+              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mb-3"><ClipboardList size={24} className="text-white" /></div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Casebook</h3>
               <p className="text-sm text-gray-600 leading-relaxed">Register real entrepreneurs, run structured consultations, save case records and follow-ups.</p>
               <div className="mt-2 flex items-center gap-1 text-orange-700 font-semibold text-sm">Real clients <ChevronRight size={14} /></div>
             </button>
             <button onClick={() => setMode('enterprise-dashboard')}
-              className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-emerald-400">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center mb-3"><Store size={24} className="text-white" /></div>
+              className="text-left bg-card border border-hair rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-emerald-400">
+              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mb-3"><Store size={24} className="text-white" /></div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">My Enterprise</h3>
               <p className="text-sm text-gray-600 leading-relaxed">Log your own sales week by week — a business you're building for yourself.</p>
               <div className="mt-2 flex items-center gap-1 text-emerald-700 font-semibold text-sm">Build your own <ChevronRight size={14} /></div>
             </button>
             <button onClick={() => setMode('consult-personas')}
-              className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-red-400">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-orange-600 flex items-center justify-center mb-3"><Users size={24} className="text-white" /></div>
+              className="text-left bg-card border border-hair rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-red-400">
+              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mb-3"><Users size={24} className="text-white" /></div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Practice Mode</h3>
               <p className="text-sm text-gray-600 leading-relaxed">AI plays a young Nigerian entrepreneur. Practise advising and get evaluated.</p>
               <div className="mt-2 flex items-center gap-1 text-red-700 font-semibold text-sm">Practice advising <ChevronRight size={14} /></div>
@@ -1357,13 +1318,13 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { icon: <Briefcase size={15}/>, title: 'CAC registration from ~₦10,000', desc: 'Enables a business bank account, grants, and formal contracts', colour: 'bg-amber-900/60 border-amber-400/40 text-amber-200' },
-              { icon: <Handshake size={15}/>, title: 'Ajo is as powerful as a bank', desc: 'Rotating savings cooperatives fund more Nigerian businesses than formal loans', colour: 'bg-orange-900/60 border-orange-400/40 text-orange-200' },
-              { icon: <Zap size={15}/>, title: 'AI gives small businesses superpowers', desc: 'Free AI tools give access to marketing, pricing, and planning skills previously unaffordable', colour: 'bg-yellow-900/60 border-yellow-400/40 text-yellow-200' },
+              { icon: <Briefcase size={15}/>, title: 'CAC registration from ~₦10,000', desc: 'Enables a business bank account, grants, and formal contracts' },
+              { icon: <Handshake size={15}/>, title: 'Ajo is as powerful as a bank', desc: 'Rotating savings cooperatives fund more Nigerian businesses than formal loans' },
+              { icon: <Zap size={15}/>, title: 'AI gives small businesses superpowers', desc: 'Free AI tools give access to marketing, pricing, and planning skills previously unaffordable' },
             ].map((f, i) => (
-              <div key={i} className={`rounded-xl border backdrop-blur-sm p-4 ${f.colour}`}>
-                <div className="flex items-center gap-2 mb-1 font-bold text-sm">{f.icon} {f.title}</div>
-                <p className="text-xs opacity-80">{f.desc}</p>
+              <div key={i} className="rounded-xl border border-hair bg-card p-4 text-ink">
+                <div className="flex items-center gap-2 mb-1 font-bold text-sm text-accent">{f.icon} {f.title}</div>
+                <p className="text-xs text-muted">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -1379,7 +1340,6 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   if (mode === 'learn-topics') {
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-3xl mx-auto px-6 py-10">
           <button onClick={() => setMode('select')} className="flex items-center gap-2 text-amber-200 hover:text-white mb-6 transition-colors"><ArrowLeft size={18}/> Back</button>
           <h2 className="text-3xl font-bold text-white mb-2">Choose a Learning Topic</h2>
@@ -1387,7 +1347,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           <div className="space-y-3">
             {LEARNING_TOPICS.map(t => (
               <button key={t.id} onClick={() => { setTopic(t); setMessages([]); setMode('learn-chat'); }}
-                className="w-full text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow hover:shadow-xl hover:scale-[1.01] transition-all border-2 border-transparent hover:border-amber-400 flex items-start gap-4">
+                className="w-full text-left bg-card border border-hair rounded-2xl p-5 shadow hover:shadow-xl hover:scale-[1.01] transition-all border-2 border-transparent hover:border-amber-400 flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${t.colour} flex items-center justify-center text-white flex-shrink-0`}>{t.icon}</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1412,13 +1372,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   if (mode === 'casebook-dashboard') {
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-5 mb-5">
+          <div className="bg-card border border-hair rounded-2xl p-5 mb-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button onClick={() => setMode('select')} className="text-white/70 hover:text-white p-1"><ArrowLeft size={18}/></button>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center text-2xl">💼</div>
+                <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-2xl">💼</div>
                 <div>
                   <h1 className="text-xl font-bold text-white">Entrepreneur Casebook</h1>
                   <p className="text-sm text-amber-200">Your client records · Oloibiri & Ibiade</p>
@@ -1453,7 +1412,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 { label: 'Open Cases', value: clients.reduce((s, c) => s + (c.open_cases ?? 0), 0), icon: '📋' },
                 { label: 'This Month', value: clients.filter(c => c.last_consultation_at && new Date(c.last_consultation_at) > new Date(Date.now() - 30*24*60*60*1000)).length, icon: '📅' },
               ].map(stat => (
-                <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center">
+                <div key={stat.label} className="bg-card border border-hair rounded-xl p-4 text-center">
                   <div className="text-2xl mb-1">{stat.icon}</div>
                   <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                   <p className="text-xs text-gray-500">{stat.label}</p>
@@ -1522,7 +1481,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
           {/* ── Challenge Reflection Modal ── */}
           {showChallengeReflect && activeChallenge && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-card border border-hair p-4">
               <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
                 {challengeResult ? (
                   <div className="p-6">
@@ -1607,7 +1566,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
           {/* ── Offline Mode Modal ────────────────────────────────────────── */}
           {showOfflineModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-card border border-hair p-4">
               <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div className="flex items-center justify-between px-5 py-4 border-b bg-amber-50 rounded-t-2xl">
                   <div>
@@ -1697,7 +1656,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           {loadingClients ? (
             <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-amber-300"/></div>
           ) : clients.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-10 text-center">
+            <div className="bg-card border border-hair rounded-2xl p-10 text-center">
               <div className="text-5xl mb-4">💼</div>
               <h2 className="text-lg font-bold text-gray-800 mb-2">No clients registered yet</h2>
               <p className="text-sm text-gray-500 mb-5">Add your first entrepreneur client to start your casebook.</p>
@@ -1711,10 +1670,10 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               {clients.map(client => (
                 <button key={client.id}
                   onClick={() => { setSelectedClient(client); loadConsultations(client.id); setMode('client-detail'); }}
-                  className="w-full bg-white/90 backdrop-blur-sm rounded-2xl p-4 text-left hover:bg-white transition-colors border border-transparent hover:border-amber-300">
+                  className="w-full bg-card border border-hair rounded-2xl p-4 text-left hover:bg-white transition-colors border border-transparent hover:border-amber-300">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-lg">💼</div>
+                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-lg">💼</div>
                       <div>
                         <p className="font-bold text-gray-900">{client.client_name}</p>
                         <p className="text-sm text-gray-500">{client.village}</p>
@@ -1751,9 +1710,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   if (mode === 'add-client') {
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center gap-3 mb-5">
               <button onClick={() => setMode('casebook-dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div><h2 className="text-xl font-bold text-gray-900">Register Client</h2><p className="text-sm text-gray-500">Add entrepreneur to your casebook</p></div>
@@ -1824,13 +1782,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-5 mb-5">
+          <div className="bg-card border border-hair rounded-2xl p-5 mb-5">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => setMode('select')} className="text-white/70 hover:text-white p-1"><ArrowLeft size={18}/></button>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center"><Store size={22} className="text-white" /></div>
+                <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center"><Store size={22} className="text-white" /></div>
                 <div>
                   {editingEnterpriseName ? (
                     <div className="flex items-center gap-2">
@@ -1859,7 +1816,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               { label: 'All-Time', value: `₦${allTimeTotal.toLocaleString()}`, icon: '💰' },
               { label: 'Sales Logged', value: enterpriseEntries.length, icon: '🧾' },
             ].map(stat => (
-              <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center">
+              <div key={stat.label} className="bg-card border border-hair rounded-xl p-4 text-center">
                 <div className="text-2xl mb-1">{stat.icon}</div>
                 <p className="text-xl font-bold text-gray-900">{stat.value}</p>
                 <p className="text-xs text-gray-500">{stat.label}</p>
@@ -1867,7 +1824,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             ))}
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-md overflow-hidden">
+          <div className="bg-card border border-hair rounded-2xl shadow-md overflow-hidden">
             {loadingEnterprise ? (
               <div className="flex items-center justify-center gap-2 py-12 text-gray-500 text-sm">
                 <Loader2 size={16} className="animate-spin" /> Loading your sales…
@@ -1917,9 +1874,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   if (mode === 'enterprise-add') {
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center gap-3 mb-5">
               <button onClick={() => setMode('enterprise-dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div><h2 className="text-xl font-bold text-gray-900">Log a Sale</h2><p className="text-sm text-gray-500">What did you sell this week?</p></div>
@@ -1981,12 +1937,11 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     const client = selectedClient;
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('casebook-dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-2xl">💼</div>
+              <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center text-2xl">💼</div>
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-gray-900">{client.client_name}</h2>
                 <p className="text-sm text-gray-500">{client.village}{client.phone ? ` · ${client.phone}` : ''}</p>
@@ -2012,7 +1967,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-gray-900 flex items-center gap-2"><ClipboardList size={16} className="text-amber-600"/> Case History</h3>
               <button onClick={() => loadConsultations(client.id)} className="text-gray-400 hover:text-gray-700"><RefreshCwIcon size={14}/></button>
@@ -2072,13 +2027,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         {probeField && (
           <ProbePanel field={probeField} consultType={consultationType} messages={probeMessages} loading={probeLoading} done={probeDone}
             input={probeInput} onInputChange={setProbeInput} onSend={sendProbeMessage} onClose={closeProbe} chatEndRef={probeChatEndRef}/>
         )}
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4">
             <div className="flex items-center gap-3">
               <button onClick={() => setMode('client-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ct.colour} flex items-center justify-center text-xl`}>{ct.emoji}</div>
@@ -2102,12 +2056,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 flex items-start gap-2">
+          <div className="bg-card border border-hair rounded-xl px-4 py-3 flex items-start gap-2">
             <Lightbulb size={14} className="text-amber-700 flex-shrink-0 mt-0.5"/>
             <p className="text-xs text-gray-700">Fill each field with what the entrepreneur tells you. Tap <strong>🔍 Probe</strong> to get AI-coached interview questions — one at a time. When done, run AI Advice.</p>
           </div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-2"><FileText size={15} className="text-amber-600"/> Intake — {ct.label}</h3>
             <p className="text-xs text-gray-400 mb-4 flex items-center gap-1"><span className="text-amber-600 font-bold">🔍 Probe</span> — tap after a field to explore it deeper</p>
             <div className="space-y-4">
@@ -2139,7 +2093,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               {isGeneratingAdvice ? <><Loader2 size={18} className="animate-spin"/>Generating AI Advice…</> : <><Briefcase size={18}/>Generate AI Advice{!intakeComplete && ' (fill required fields first)'}</>}
             </button>
           ) : (
-            <div className={classNames('bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5 border-2', URGENCY_CONFIG[adviceResult.urgency].border)}>
+            <div className={classNames('bg-card border border-hair rounded-2xl shadow-md p-5 border-2', URGENCY_CONFIG[adviceResult.urgency].border)}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">AI Advisory Result</p>
@@ -2237,9 +2191,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     const followupTurns = messages.filter(m => m.role === 'user').length;
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-black/50 backdrop-blur-sm rounded-2xl shadow-md p-4 mb-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-4 mb-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => { window.speechSynthesis.cancel(); setMode('client-detail'); }} className="text-white/70 hover:text-white p-1"><ArrowLeft size={20}/></button>
@@ -2318,9 +2271,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     const ct = CONSULT_TYPES[c.consultation_type];
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('client-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${ct.colour} flex items-center justify-center text-2xl`}>{ct.emoji}</div>
@@ -2406,7 +2358,6 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   if (mode === 'consult-personas') {
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-4xl mx-auto px-6 py-10">
           <button onClick={() => setMode('select')} className="flex items-center gap-2 text-amber-200 hover:text-white mb-6 transition-colors"><ArrowLeft size={18}/> Back</button>
           <h2 className="text-3xl font-bold text-white mb-2">Choose an Entrepreneur to Advise</h2>
@@ -2414,7 +2365,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {ENTREPRENEUR_PERSONAS.map(p => (
               <button key={p.id} onClick={() => { setPersona(p); setMode('consult-prepare'); }}
-                className="text-left bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-amber-400">
+                className="text-left bg-card border border-hair rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-amber-400">
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${p.colour} flex items-center justify-center text-2xl`}>{p.emoji}</div>
                   <div><h3 className="text-xl font-bold text-gray-900">{p.name}</h3><p className="text-sm text-gray-500">{p.age} years · {p.description}</p></div>
@@ -2438,10 +2389,9 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   if (mode === 'consult-prepare' && selectedPersona) {
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
         <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
           <button onClick={() => setMode('consult-personas')} className="flex items-center gap-2 text-amber-200 hover:text-white mb-6 transition-colors"><ArrowLeft size={18}/> Back</button>
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-card border border-hair rounded-2xl shadow-xl overflow-hidden">
             <div className={`bg-gradient-to-r ${selectedPersona.colour} p-6`}>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-4xl">{selectedPersona.emoji}</div>
@@ -2486,10 +2436,9 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
     return (
       <AppLayout>
-        <EntrepreneurshipBackground />
 
         {showEvalModal && evaluation && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-card border border-hair p-4">
             <div className="bg-white rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
               <div className={`sticky top-0 bg-gradient-to-r ${activeColour} px-6 py-4 rounded-t-2xl flex items-center justify-between`}>
                 <h2 className="text-white font-bold text-lg">Consultation Evaluation</h2>
@@ -2539,7 +2488,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
         )}
 
         <div className="relative z-10 max-w-3xl mx-auto px-6 py-8">
-          <div className="bg-black/50 backdrop-blur-sm rounded-2xl shadow-lg p-5 mb-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-lg p-5 mb-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => { window.speechSynthesis.cancel(); setMode(isConsultChat ? 'consult-personas' : 'learn-topics'); setMessages([]); }} className="text-white/70 hover:text-white p-1"><ArrowLeft size={20}/></button>
@@ -2577,7 +2526,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
+          <div className="bg-card border border-hair rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
             <ShieldCheck size={15} className="text-amber-700 flex-shrink-0"/>
             <p className="text-sm text-gray-700">
               {isConsultChat ? `You are the advisor. Ask about their capital and situation before recommending anything. Connect AI tools to their specific business.` : `Ask freely. The tutor will check your understanding with practical examples.`}
@@ -2626,7 +2575,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           </div>
 
           {isConsultChat && userTurns >= 3 && !showEvalModal && (
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between shadow">
+            <div className="bg-card border border-hair rounded-xl p-4 flex items-center justify-between shadow">
               <div className="flex items-center gap-2"><Award size={20} className="text-amber-600"/><p className="text-base font-semibold text-gray-800">Good session — get your evaluation when ready.</p></div>
               <button onClick={handleEvaluate} disabled={isEvaluating}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r ${activeColour} hover:opacity-90`}>
