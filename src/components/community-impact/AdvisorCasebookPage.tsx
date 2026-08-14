@@ -15,7 +15,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../layout/AppLayout';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { resolveChallengeOrgSlug } from '../../lib/communityChallengeScope';
 import { chatText } from '../../lib/chatClient';
@@ -29,7 +29,7 @@ import {
   ArrowLeft, Send, Loader2, Plus, User,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
   ClipboardList, Calendar,
-  Mic, MicOff, Volume2, VolumeX, Lightbulb, ShieldCheck, RefreshCw, Award,
+  Mic, MicOff, Volume2, VolumeX, Lightbulb, ShieldCheck, RefreshCw, Award, BookOpen,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { DomainConfig, IntakeField, AdvisorEntity, AdvisorConsultation } from '../../data/community-impact/domainConfig';
@@ -780,6 +780,15 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {config.guideUrl && (
+                  <Link
+                    to={config.guideUrl}
+                    className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                    title="Read the written guide"
+                  >
+                    <BookOpen size={16} /> Guide
+                  </Link>
+                )}
                 <button
                   onClick={() => setShowOfflineModal(true)}
                   className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"

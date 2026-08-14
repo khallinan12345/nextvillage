@@ -15,13 +15,13 @@
 // URL) rather than creating a duplicate.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON } from '../../lib/chatClient';
 import { buildHarnessedHtml, useGameSmokeTest, GameTestReport } from '../../lib/gameTestHarness';
-import { Gamepad2, Send, Loader2, Sparkles, CheckCircle2, AlertTriangle, Rocket, Save, FolderOpen, Plus, X, Trash2 } from 'lucide-react';
+import { Gamepad2, Send, Loader2, Sparkles, CheckCircle2, AlertTriangle, Rocket, Save, FolderOpen, Plus, X, Trash2, BookOpen } from 'lucide-react';
 
 interface ChatEntry {
   role: 'user' | 'assistant';
@@ -286,14 +286,22 @@ const CreateGamePage: React.FC = () => {
               <p className="text-sm text-gray-500">Describe a game idea — Claude builds it, tests it, and you save it.</p>
             </div>
           </div>
-          {(gameCode || myGames.length > 0) && (
-            <button
-              onClick={handleStartNew}
-              className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-emerald-600 border border-gray-200 hover:border-emerald-200 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              to="/tutorials/create-game"
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-emerald-600 border border-gray-200 hover:border-emerald-200 rounded-lg px-3 py-1.5 transition-colors"
             >
-              <Plus size={13} /> New game
-            </button>
-          )}
+              <BookOpen size={13} /> Guide
+            </Link>
+            {(gameCode || myGames.length > 0) && (
+              <button
+                onClick={handleStartNew}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-emerald-600 border border-gray-200 hover:border-emerald-200 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                <Plus size={13} /> New game
+              </button>
+            )}
+          </div>
         </div>
 
         {myGames.length > 0 && (

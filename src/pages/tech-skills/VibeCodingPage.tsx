@@ -6,6 +6,7 @@
 //   RIGHT — VibeCodingWorkflow (phases 1–4)
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../../lib/chatClient';
 import AppLayout from '../../components/layout/AppLayout';
@@ -18,7 +19,7 @@ import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import {
   Bot, User, Send, Mic, Wand2, Save, CheckCircle,
-  Volume2, VolumeX, Code, FolderOpen, Plus, X, ChevronDown, Edit3, Check,
+  Volume2, VolumeX, Code, FolderOpen, Plus, X, ChevronDown, Edit3, Check, BookOpen,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -618,6 +619,12 @@ Respond with ONLY valid JSON:
                 </svg>
                 Tutorial
               </a>
+              <Link
+                to="/tutorials/vibe-coding"
+                title="Read the written guide"
+                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shrink-0 border border-white/30">
+                <BookOpen className="h-3.5 w-3.5" /> Guide
+              </Link>
             </div>
             {/* Session controls in header */}
             <div className="flex items-center gap-2">

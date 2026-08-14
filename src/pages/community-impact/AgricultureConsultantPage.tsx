@@ -69,6 +69,7 @@ const config: DomainConfig = {
   dashboardSubtitle: 'Your farmer casebook · Oloibiri & Ibiade',
   entityCardEmoji: '👨🏿‍🌾',
   registerNamePlaceholder: 'e.g. Mama Ebiere Okoro',
+  guideUrl: '/tutorials/community-impact/agriculture',
 
   villages: VILLAGES,
   categoryConfig: CONSULT_TYPES as unknown as DomainConfig['categoryConfig'],

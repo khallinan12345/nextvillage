@@ -10,6 +10,7 @@
 //   • WEEKLY LIMIT: per-user (profiles.videos_per_week); default 5, elevated to 50 for privileged users
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
@@ -20,7 +21,7 @@ import {
   Film, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
   Volume2, VolumeX, Wand2, MessageSquare, Lightbulb, Save,
-  AlertTriangle, ImagePlus, X as XIcon, ArrowRight, Mail, Trash2,
+  AlertTriangle, ImagePlus, X as XIcon, ArrowRight, Mail, Trash2, BookOpen,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -1155,6 +1156,10 @@ Return ONLY the improved text. No explanation, no preamble.`
 
               {/* Voice controls */}
               <div className="flex items-center gap-2">
+                <Link to="/tutorials/creative-ai/ai-video-creation"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition-all">
+                  <BookOpen size={16} /> Guide
+                </Link>
                 <button onClick={() => { if (isSpeaking) stopSpeaking(); else setVoiceEnabled(e => !e); }}
                   className={classNames(
                     'p-2 rounded-lg border transition-all',

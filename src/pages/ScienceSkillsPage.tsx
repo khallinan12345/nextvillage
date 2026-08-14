@@ -10,6 +10,7 @@
 //           evaluation object includes { pathway: 'reasoning' | 'life' | 'physical', stage_id, ... }
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import {
   Mic, MicOff, MessageSquare, Lock, ArrowLeft, Send,
@@ -1376,6 +1377,14 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
               <p className="text-xl text-emerald-100 max-w-2xl mx-auto">
                 Explore Scientific Reasoning, Life Sciences, and Physical Sciences — all stages are open, in any order.
               </p>
+              <div className="mt-4 flex justify-center">
+                <Link
+                  to="/tutorials/foundations/science-skills"
+                  className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                >
+                  <BookOpen className="h-3.5 w-3.5" /> Guide
+                </Link>
+              </div>
             </div>
             <div className="mt-4">
               <PidginTooltip

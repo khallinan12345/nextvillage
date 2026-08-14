@@ -87,6 +87,7 @@ const config: DomainConfig = {
   dashboardSubtitle: 'Your client casebook · Oloibiri & Niger Delta',
   entityCardEmoji: '🎣',
   registerNamePlaceholder: 'e.g. Papa Charles Amabebe',
+  guideUrl: '/tutorials/community-impact/fishing',
 
   villages: VILLAGES,
   categoryConfig: CONSULT_TYPES as unknown as DomainConfig['categoryConfig'],

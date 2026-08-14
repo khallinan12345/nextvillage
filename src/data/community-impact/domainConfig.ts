@@ -113,6 +113,7 @@ export interface DomainConfig {
   dashboardSubtitle: string;  // 'Your farmer casebook · Oloibiri & Ibiade'
   entityCardEmoji: string;    // 👨🏿‍🌾 / 🎣
   registerNamePlaceholder: string;
+  guideUrl?: string;
 
   // ── Data ──────────────────────────────────────────────────────────────
   villages: string[];

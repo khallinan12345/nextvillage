@@ -17,6 +17,7 @@
 //   • Save session to dashboard
 //   *Note: The first voice creation could take 1-2 minutes.
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
@@ -27,7 +28,7 @@ import {
   Mic, Sparkles, Clock, CheckCircle, XCircle,
   Download, RotateCcw, ChevronDown, ChevronUp,
   Volume2, VolumeX, Wand2, MessageSquare, Lightbulb,
-  Save, AlertTriangle, Play, Pause, StopCircle,
+  Save, AlertTriangle, Play, Pause, StopCircle, BookOpen,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -716,6 +717,10 @@ const VoiceCreationPage: React.FC = () => {
 
               {/* UI narration voice controls */}
               <div className="flex items-center gap-2">
+                <Link to="/tutorials/creative-ai/ai-voice-creation"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition-all">
+                  <BookOpen size={16} /> Guide
+                </Link>
                 <button onClick={() => { if (isSpeaking) stopSpeaking(); else setVoiceEnabled(e => !e); }}
                   className={classNames('p-2 rounded-lg border transition-all',
                     voiceEnabled ? 'bg-slate-700 border-slate-600 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500')}>

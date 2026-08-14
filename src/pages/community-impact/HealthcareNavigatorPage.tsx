@@ -23,7 +23,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { resolveChallengeOrgSlug } from '../../lib/communityChallengeScope';
 import { chatText } from '../../lib/chatClient';
@@ -38,7 +38,7 @@ import {
   FileText, AlertTriangle, CheckCircle, Clock, ChevronRight,
   ClipboardList, RefreshCw, Calendar, Mic, MicOff,
   Volume2, VolumeX, X, Lightbulb, Thermometer, Activity,
-  Baby, Stethoscope, ShieldCheck, AlertCircle, XCircle, Award,
+  Baby, Stethoscope, ShieldCheck, AlertCircle, XCircle, Award, BookOpen,
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -1533,6 +1533,13 @@ const HealthcareNavigatorPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                <Link
+                  to="/tutorials/healthcare-navigator"
+                  className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
+                  title="Read the written guide"
+                >
+                  <BookOpen size={16} /> <span className="hidden xs:inline">Guide</span>
+                </Link>
                 <button
                   onClick={() => setShowOfflineModal(true)}
                   className="flex items-center gap-1.5 px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold text-sm transition-colors border border-white/30"
