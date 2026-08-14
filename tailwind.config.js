@@ -4,9 +4,17 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
       },
       colors: {
+        paper:   '#FAF9F5',
+        surface: '#FDFCFA',
+        card:    '#FFFFFF',
+        hair:    '#E7E5E0',
+        ink:     '#292524',
+        body:    '#44403C',
+        muted:   '#A8A29E',
+        accent:  '#7C3AED',
         blue: {
           50: '#eff6ff',
           100: '#dbeafe',
