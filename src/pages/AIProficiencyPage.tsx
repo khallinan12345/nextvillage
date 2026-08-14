@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import AppLayout from '../components/layout/AppLayout';
+import QuietButton from '../components/ui/QuietButton';
 import { 
   Award, 
   Brain, 
@@ -30,60 +31,6 @@ import { VoiceFallback } from '../components/VoiceFallback';
 import { useBranding, addBrandingToPDF } from '../lib/useBranding';
 import { jsPDF } from 'jspdf';
 
-
-// Distorted Background Component
-const DistortedBackground: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
-  const [mousePixels, setMousePixels] = React.useState({ x: 0, y: 0 });
-  const [isMouseMoving, setIsMouseMoving] = React.useState(false);
-  const mouseTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const sidebarOffset = 256;
-      const topOffset = 64;
-      const x = Math.max(0, e.clientX - sidebarOffset);
-      const y = Math.max(0, e.clientY - topOffset);
-      setMousePixels({ x, y });
-      setIsMouseMoving(true);
-      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      mouseTimeoutRef.current = setTimeout(() => setIsMouseMoving(false), 120);
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('mousemove', handleMouseMove);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      };
-    }
-  }, []);
-
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="ai-proficiency-distortion" x="-20%" y="-20%" width="140%" height="140%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="4" seed="5" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="100" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1.5" />
-          </filter>
-        </defs>
-      </svg>
-
-      <div className="fixed top-14 left-0 right-0 bottom-0" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 0 }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
-        <div className="absolute inset-0 bg-white/10" />
-      </div>
-
-      {isMouseMoving && (
-        <div className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none transition-opacity duration-100" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 1, filter: 'url(#ai-proficiency-distortion)', WebkitMaskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskImage: `radial-gradient(circle 180px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-pink-400/25 to-blue-400/30" />
-          <div className="absolute inset-0 bg-white/10" />
-        </div>
-      )}
-    </>
-  );
-};
 
 // Types
 interface Assessment {
@@ -299,40 +246,38 @@ const AIProficiencyPage: React.FC = () => {
 
   // ── Reusable voice toggle + read-aloud bar ─────────────────────────────
   const renderVoiceBar = (textToRead: string, label = 'Read aloud') => (
-    <div className="flex flex-wrap items-center gap-3 mb-5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
-      <span className="text-sm font-semibold text-gray-600 flex items-center gap-1.5">
-        <Volume2 className="h-4 w-4 text-purple-500" /> Coach voice:
+    <div className="flex flex-wrap items-center gap-3 mb-5 p-3 bg-paper border border-hair rounded-xl">
+      <span className="text-sm font-semibold text-body flex items-center gap-1.5">
+        <Volume2 className="h-4 w-4 text-accent" /> Coach voice:
       </span>
-      <div className="flex rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+      <div className="flex rounded-lg overflow-hidden border border-hair">
         <button
           onClick={() => { stopSpeaking(); setVoiceMode('english'); }}
           title="British English — Google UK English Female"
-          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold transition-all border-r border-gray-300
-            ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
+          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold transition-colors border-r border-hair
+            ${voiceMode === 'english' ? 'bg-accent text-white' : 'bg-card text-muted hover:text-ink'}`}
         >
           🇬🇧 British English
         </button>
         <button
           onClick={() => { stopSpeaking(); setVoiceMode('pidgin'); }}
           title="Nigerian English / Pidgin voice"
-          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold transition-all
-            ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
+          className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold transition-colors
+            ${voiceMode === 'pidgin' ? 'bg-accent text-white' : 'bg-card text-muted hover:text-ink'}`}
         >
           🇳🇬 Nigerian Pidgin
         </button>
       </div>
-      <span className="text-xs text-gray-400 italic hidden sm:inline">
+      <span className="text-xs text-muted italic hidden sm:inline">
         {'Ezinne'}
       </span>
-      <button
+      <QuietButton
         onClick={() => isSpeaking ? stopSpeaking() : speak(textToRead)}
-        className={`ml-auto flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all
-          ${isSpeaking
-            ? 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200'
-            : 'bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-200'}`}
+        icon={isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+        className="ml-auto"
       >
-        {isSpeaking ? <><VolumeX className="h-4 w-4" /> Stop</> : <><Volume2 className="h-4 w-4" /> {label}</>}
-      </button>
+        {isSpeaking ? 'Stop' : label}
+      </QuietButton>
     </div>
   );
 
@@ -1208,172 +1153,141 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
   // Render functions
   const renderOverview = () => (
     <>
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 mb-8 text-white shadow-xl">
-        <div className="flex items-center gap-4 mb-4">
-          <Award className="h-12 w-12" />
-          <h1 className="text-4xl font-bold">AI Proficiency Certification</h1>
+      <div className="flex items-center gap-3 mb-8">
+        <Award className="h-9 w-9 text-accent" />
+        <div>
+          <h1 className="text-3xl font-bold text-ink">AI Proficiency Certification</h1>
+          <p className="text-lg text-body mt-1">
+            Master the ability to use and reason with AI tools — your foundation for success in an AI-powered world.
+          </p>
         </div>
-        <p className="text-xl text-purple-100">
-          Master the ability to use and reason with AI tools — your foundation for success in an AI-powered world.
-        </p>
       </div>
 
       {assessments.length > 0 && (
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-            <Trophy className="h-8 w-8 text-yellow-500" />
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+          <h2 className="text-lg font-semibold text-ink mb-6 flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-accent" />
             Your Progress
           </h2>
-          
-          <div className="space-y-4 mb-6">
+
+          <div className="space-y-3 mb-6">
             {assessments.map((assessment) => {
               const score = assessmentScores.find(s => s.assessment_name === assessment.assessment_name);
               const isPassed = score?.score !== null && score?.score !== undefined && score.score >= 2;
               const isCompleted = score?.score === 3; // Advanced level
-              
+
               return (
                 <div
                   key={assessment.assessment_name}
-                  className={`w-full p-5 rounded-lg transition-all border-2 ${
-                    isCompleted 
-                      ? 'bg-gray-50 border-gray-300 opacity-80' 
-                      : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-md'
+                  className={`w-full p-5 rounded-xl transition-colors border ${
+                    isCompleted
+                      ? 'bg-paper border-hair opacity-80'
+                      : 'bg-paper border-hair hover:border-accent/40'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-lg text-gray-800">{assessment.assessment_name}</h3>
+                    <h3 className="font-semibold text-base text-ink">{assessment.assessment_name}</h3>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                       {score && score.score !== null && score.score !== undefined ? (
                         <>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
-                            score.score >= 2 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap border ${
+                            score.score >= 2
+                              ? 'bg-green-100 text-green-800 border-green-300'
+                              : 'bg-yellow-100 text-yellow-800 border-yellow-300'
                           }`}>
                             Score: {score.score}/3 - {
-                              score.score === 0 ? 'No Evidence' : 
+                              score.score === 0 ? 'No Evidence' :
                               score.score === 1 ? 'Emerging' :
                               score.score === 2 ? 'Proficient' : 'Advanced'
                             }
                           </span>
-                          {isPassed && <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />}
+                          {isPassed && <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />}
                           {isCompleted && (
-                            <span className="text-xs text-green-700 font-medium">(Completed)</span>
+                            <span className="text-xs text-muted font-medium">(Completed)</span>
                           )}
                         </>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-surface text-muted border border-hair">
                           Not Started
                         </span>
                       )}
                     </div>
                   </div>
-                  
-                  <p className="text-[10pt] leading-relaxed text-gray-600 mb-3">
+
+                  <p className="text-sm leading-relaxed text-body mb-3">
                     {assessment.description}
                   </p>
-                  
+
                   {!isCompleted && (
-                    <button
+                    <QuietButton
                       onClick={() => {
-                        console.log('[AIProficiency] Assessment card clicked:', assessment.assessment_name);
                         setSelectedAssessment(assessment);
                         setViewMode('define-context');
                       }}
-                      className="mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-colors flex items-center gap-2"
+                      icon={<ArrowRight size={14} />}
                     >
                       Begin Assessment
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
+                    </QuietButton>
                   )}
                 </div>
               );
             })}
           </div>
 
-          <div className="flex gap-4">
-            <button
-              onClick={() => {
-                console.log('[AIProficiency] Begin Assessment clicked, changing to select-assessment');
-                setViewMode('select-assessment');
-              }}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors"
+          <div className="flex gap-3">
+            <QuietButton
+              onClick={() => setViewMode('select-assessment')}
+              variant="solid"
+              className="flex-1 justify-center py-3 text-base"
             >
               {checkAllAssessmentsPassed() ? 'View Assessments' : 'Begin Assessment'}
-            </button>
-            
+            </QuietButton>
+
             {checkAllAssessmentsPassed() && (
-              <button
+              <QuietButton
                 onClick={() => setViewMode('certificate')}
-                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-colors flex items-center justify-center gap-2"
+                icon={<Download size={16} />}
+                className="flex-1 justify-center py-3 text-base"
               >
-                <Download className="h-5 w-5" />
                 Download Certificate
-              </button>
+              </QuietButton>
             )}
           </div>
         </div>
       )}
 
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">How Certification Works</h2>
-        
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+        <h2 className="text-xl font-semibold text-ink mb-6">How Certification Works</h2>
+
         <div className="mb-8">
-          <p className="text-lg text-gray-700 mb-4">
-            To earn your AI Proficiency certification, you must demonstrate competence (score of <strong>Proficient or higher</strong>) in <strong>all assessments</strong>. 
+          <p className="text-base text-body mb-4">
+            To earn your AI Proficiency certification, you must demonstrate competence (score of <strong className="text-ink">Proficient or higher</strong>) in <strong className="text-ink">all assessments</strong>.
           </p>
-          <p className="text-lg text-gray-700">
+          <p className="text-base text-body">
             You can retake evaluations as many times as needed — there's no limit. Each assessment is uniquely tailored to your chosen context.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="relative">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 h-full border-2 border-blue-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
-                  1
+          {[
+            { num: 1, icon: ClipboardList, title: 'Define Context', body: 'Choose a real-world topic, setting, constraints, and audience for your assessment.' },
+            { num: 2, icon: Brain, title: 'Complete Assessment', body: 'Respond to the assessment prompt demonstrating your AI proficiency skills.' },
+            { num: 3, icon: GraduationCap, title: 'Get Feedback & Certificate', body: 'Receive your score with personalized improvement advice. Earn your certificate upon completion.' },
+          ].map((step, i) => (
+            <div key={step.num} className="relative">
+              <div className="bg-paper rounded-xl p-6 h-full border border-hair">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-accent text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                    {step.num}
+                  </div>
+                  <step.icon className="h-6 w-6 text-accent" />
                 </div>
-                <ClipboardList className="h-8 w-8 text-blue-600" />
+                <h3 className="text-lg font-semibold text-ink mb-2">{step.title}</h3>
+                <p className="text-body text-sm">{step.body}</p>
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Define Context</h3>
-              <p className="text-gray-700">
-                Choose a real-world topic, setting, constraints, and audience for your assessment.
-              </p>
+              {i < 2 && <ArrowRight className="hidden md:block absolute top-1/2 -right-8 transform -translate-y-1/2 h-6 w-6 text-muted" />}
             </div>
-            <ArrowRight className="hidden md:block absolute top-1/2 -right-8 transform -translate-y-1/2 h-8 w-8 text-gray-400" />
-          </div>
-
-          <div className="relative">
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 h-full border-2 border-purple-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-purple-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
-                  2
-                </div>
-                <Brain className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Complete Assessment</h3>
-              <p className="text-gray-700">
-                Respond to the assessment prompt demonstrating your AI proficiency skills.
-              </p>
-            </div>
-            <ArrowRight className="hidden md:block absolute top-1/2 -right-8 transform -translate-y-1/2 h-8 w-8 text-gray-400" />
-          </div>
-
-          <div className="relative">
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 h-full border-2 border-green-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
-                  3
-                </div>
-                <GraduationCap className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Get Feedback & Certificate</h3>
-              <p className="text-gray-700">
-                Receive your score with personalized improvement advice. Earn your certificate upon completion.
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </>
@@ -1396,45 +1310,42 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             setViewMode('overview');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+          className="flex items-center gap-2 text-sm text-body hover:text-accent mb-6"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
           Back to Overview
         </button>
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Select an Assessment</h2>
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+          <h2 className="text-xl font-semibold text-ink mb-6">Select an Assessment</h2>
           {assessments.length === 0 ? (
             <div className="text-center py-12">
-              <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">No assessments found.</p>
-              <p className="text-sm text-gray-500">
+              <AlertCircle className="h-10 w-10 text-muted mx-auto mb-4" />
+              <p className="text-body mb-4">No assessments found.</p>
+              <p className="text-sm text-muted">
                 Make sure your certification_assessments table has entries with certification_name = "AI Proficiency"
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {assessments.map((assessment) => {
                 const score = assessmentScores.find(s => s.assessment_name === assessment.assessment_name);
                 const isPassed = score?.score !== null && score?.score !== undefined && score.score >= 2;
                 return (
                   <button
                     key={assessment.assessment_name}
-                    onClick={() => {
-                      console.log('[AIProficiency] Button clicked for:', assessment.assessment_name);
-                      handleSelectAssessment(assessment);
-                    }}
-                    className="w-full text-left p-6 bg-gray-50 rounded-xl hover:bg-purple-50 transition-colors border-2 border-transparent hover:border-purple-300"
+                    onClick={() => handleSelectAssessment(assessment)}
+                    className="w-full text-left p-6 bg-paper rounded-xl hover:border-accent/40 transition-colors border border-hair"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-gray-800">{assessment.assessment_name}</h3>
-                          {isPassed && <CheckCircle className="h-6 w-6 text-green-600" />}
+                          <h3 className="text-lg font-semibold text-ink">{assessment.assessment_name}</h3>
+                          {isPassed && <CheckCircle className="h-5 w-5 text-green-600" />}
                         </div>
-                        <p className="text-gray-600 mb-3">{assessment.description}</p>
+                        <p className="text-body mb-3 text-sm">{assessment.description}</p>
                         {score && score.score !== null && score.score !== undefined && (
-                          <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                            score.score >= 2 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${
+                            score.score >= 2 ? 'bg-green-100 text-green-800 border-green-300' : 'bg-yellow-100 text-yellow-800 border-yellow-300'
                           }`}>
                             Current: {score.score === 0 ? 'No Evidence' :
                                      score.score === 1 ? 'Emerging' :
@@ -1442,7 +1353,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
                           </span>
                         )}
                       </div>
-                      <ArrowRight className="h-6 w-6 text-gray-400 flex-shrink-0 mt-2" />
+                      <ArrowRight className="h-5 w-5 text-muted flex-shrink-0 mt-2" />
                     </div>
                   </button>
                 );
@@ -1458,31 +1369,31 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
     <div className="max-w-4xl mx-auto">
       <button
         onClick={() => setViewMode('select-assessment')}
-        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+        className="flex items-center gap-2 text-sm text-body hover:text-accent mb-6"
       >
-        <ArrowLeft className="h-5 w-5" />
+        <ArrowLeft className="h-4 w-4" />
         Back to Assessment Selection
       </button>
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <h2 className="text-xl font-semibold text-ink mb-4">
           {selectedAssessment?.assessment_name}
         </h2>
-        <p className="text-gray-600 mb-6">{selectedAssessment?.description}</p>
-        <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-8">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Define Your Context</h3>
-          <p className="text-gray-700 mb-4">
-            Choose a real-world scenario that matters to you. This makes the assessment more meaningful 
-            and helps you apply AI skills to authentic situations. You can retake this assessment anytime 
+        <p className="text-body mb-6">{selectedAssessment?.description}</p>
+        <div className="bg-surface border border-hair border-l-4 border-l-accent rounded-xl p-6 mb-8">
+          <h3 className="text-base font-semibold text-ink mb-3">Define Your Context</h3>
+          <p className="text-body mb-4 text-sm">
+            Choose a real-world scenario that matters to you. This makes the assessment more meaningful
+            and helps you apply AI skills to authentic situations. You can retake this assessment anytime
             with a different context.
           </p>
-          <p className="text-sm text-gray-600">
-            <strong>Note:</strong> Once you score Proficient or higher, it will be stored in your record 
+          <p className="text-sm text-muted">
+            <strong className="text-body">Note:</strong> Once you score Proficient or higher, it will be stored in your record
             and you won't need to retake this particular assessment.
           </p>
         </div>
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-ink mb-2">
               Topic <span className="text-red-500">*</span>
             </label>
             <input
@@ -1490,18 +1401,18 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               value={learnerContext.topic}
               onChange={(e) => setLearnerContext({ ...learnerContext, topic: e.target.value })}
               placeholder="e.g., Clean water access, school attendance, crop yields"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
             />
-            <p className="text-sm text-gray-500 mt-1">Choose a local problem, interest, or opportunity you care about</p>
+            <p className="text-sm text-muted mt-1">Choose a local problem, interest, or opportunity you care about</p>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-ink mb-2">
               Setting <span className="text-red-500">*</span>
             </label>
             <select
               value={learnerContext.setting}
               onChange={(e) => setLearnerContext({ ...learnerContext, setting: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
             >
               <option value="">Select a setting...</option>
               <option value="village">Village</option>
@@ -1514,7 +1425,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-ink mb-2">
               Constraints <span className="text-red-500">*</span>
             </label>
             <input
@@ -1522,12 +1433,12 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               value={learnerContext.constraints}
               onChange={(e) => setLearnerContext({ ...learnerContext, constraints: e.target.value })}
               placeholder="e.g., Limited internet, low budget, time constraints"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
             />
-            <p className="text-sm text-gray-500 mt-1">Include at least one real limitation (power, internet, money, time, etc.)</p>
+            <p className="text-sm text-muted mt-1">Include at least one real limitation (power, internet, money, time, etc.)</p>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-ink mb-2">
               Audience <span className="text-red-500">*</span>
             </label>
             <input
@@ -1535,27 +1446,25 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               value={learnerContext.audience}
               onChange={(e) => setLearnerContext({ ...learnerContext, audience: e.target.value })}
               placeholder="e.g., My peers, family members, community leaders"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
             />
-            <p className="text-sm text-gray-500 mt-1">Who is the solution for? (peer, family, community member, etc.)</p>
+            <p className="text-sm text-muted mt-1">Who is the solution for? (peer, family, community member, etc.)</p>
           </div>
           {error && (
-            <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 flex items-start gap-3">
+            <div className="bg-red-50 border border-red-300 rounded-lg p-4 flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-red-700">{error}</p>
+              <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
-          <button
+          <QuietButton
             onClick={handleContextSubmit}
             disabled={loading || !learnerContext.topic || !learnerContext.setting || !learnerContext.constraints || !learnerContext.audience}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            loading={loading}
+            variant="solid"
+            className="w-full justify-center py-3 text-base"
           >
-            {loading ? (
-              <><Loader2 className="h-5 w-5 animate-spin" /> Personalizing Your Assessment...</>
-            ) : (
-              'Continue to Assessment'
-            )}
-          </button>
+            {loading ? 'Personalizing Your Assessment...' : 'Continue to Assessment'}
+          </QuietButton>
         </div>
       </div>
     </div>
@@ -1569,30 +1478,30 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
     <div className="max-w-4xl mx-auto">
       <button
         onClick={() => setViewMode('define-context')}
-        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+        className="flex items-center gap-2 text-sm text-body hover:text-accent mb-6"
       >
-        <ArrowLeft className="h-5 w-5" />
+        <ArrowLeft className="h-4 w-4" />
         Back to Context
       </button>
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <h2 className="text-xl font-semibold text-ink mb-4">
           {selectedAssessment?.assessment_name}
         </h2>
 
         {/* Context summary */}
-        <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Your Context</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div><span className="font-semibold text-gray-700">Topic:</span> {learnerContext.topic}</div>
-            <div><span className="font-semibold text-gray-700">Setting:</span> {learnerContext.setting}</div>
-            <div><span className="font-semibold text-gray-700">Constraints:</span> {learnerContext.constraints}</div>
-            <div><span className="font-semibold text-gray-700">Audience:</span> {learnerContext.audience}</div>
+        <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+          <h3 className="text-base font-semibold text-ink mb-3">Your Context</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm text-body">
+            <div><span className="font-semibold text-ink">Topic:</span> {learnerContext.topic}</div>
+            <div><span className="font-semibold text-ink">Setting:</span> {learnerContext.setting}</div>
+            <div><span className="font-semibold text-ink">Constraints:</span> {learnerContext.constraints}</div>
+            <div><span className="font-semibold text-ink">Audience:</span> {learnerContext.audience}</div>
           </div>
         </div>
 
         {/* ── Personalized Assessment Prompt (rendered as markdown) ── */}
-        <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Your Personalized Assessment Prompt</h3>
+        <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+          <h3 className="text-base font-semibold text-ink mb-3">Your Personalized Assessment Prompt</h3>
 
           {renderVoiceBar(
             `${tailoredPrompt || selectedAssessment?.certification_prompt || ''}. Scoring rubric: Level 0, No Evidence: ${selectedAssessment?.certification_level0_metric}. Level 1, Emerging: ${selectedAssessment?.certification_level1_metric}. Level 2, Proficient: ${selectedAssessment?.certification_level2_metric}. Level 3, Advanced: ${selectedAssessment?.certification_level3_metric}.`,
@@ -1600,10 +1509,10 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
           )}
 
           {/* Markdown-rendered prompt */}
-          <div className="prose prose-blue max-w-none text-gray-800
-            prose-headings:text-gray-900 prose-headings:font-bold
+          <div className="prose max-w-none text-body
+            prose-headings:text-ink prose-headings:font-semibold
             prose-h1:text-xl prose-h2:text-xl prose-h3:text-lg
-            prose-strong:text-gray-900
+            prose-strong:text-ink
             prose-li:my-1 prose-ul:my-2 prose-ol:my-2
             prose-p:leading-relaxed prose-p:my-2
             [&>h2]:mb-2 [&>h2]:mt-5
@@ -1615,73 +1524,70 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
           </div>
 
           {/* Closing instruction message */}
-          <div className="mt-5 pt-4 border-t border-blue-200">
-            <p className="text-gray-700 text-sm leading-relaxed">
-              Answer the questions below in the <strong>"Your Response"</strong> section without AI help.&nbsp;
+          <div className="mt-5 pt-4 border-t border-hair">
+            <p className="text-body text-sm leading-relaxed">
+              Answer the questions below in the <strong className="text-ink">"Your Response"</strong> section without AI help.&nbsp;
               The more detailed you are in answering each question, the better your evaluation will be.
             </p>
-            <p className="text-gray-700 text-sm font-semibold mt-1">Good luck. 🍀</p>
+            <p className="text-body text-sm font-semibold mt-1">Good luck. 🍀</p>
           </div>
         </div>
 
         {/* Scoring rubric */}
-        <div className="bg-green-50 border-2 border-green-300 rounded-xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Scoring Rubric</h3>
-          <p className="text-sm text-gray-700 mb-3">Your response will be evaluated on a 0-3 scale:</p>
-          <ul className="space-y-2 text-sm">
-            <li><strong>0 (No Evidence):</strong> {selectedAssessment?.certification_level0_metric}</li>
-            <li><strong>1 (Emerging):</strong> {selectedAssessment?.certification_level1_metric}</li>
-            <li><strong>2 (Proficient):</strong> {selectedAssessment?.certification_level2_metric}</li>
-            <li><strong>3 (Advanced):</strong> {selectedAssessment?.certification_level3_metric}</li>
+        <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+          <h3 className="text-base font-semibold text-ink mb-3">Scoring Rubric</h3>
+          <p className="text-sm text-body mb-3">Your response will be evaluated on a 0-3 scale:</p>
+          <ul className="space-y-2 text-sm text-body">
+            <li><strong className="text-ink">0 (No Evidence):</strong> {selectedAssessment?.certification_level0_metric}</li>
+            <li><strong className="text-ink">1 (Emerging):</strong> {selectedAssessment?.certification_level1_metric}</li>
+            <li><strong className="text-ink">2 (Proficient):</strong> {selectedAssessment?.certification_level2_metric}</li>
+            <li><strong className="text-ink">3 (Advanced):</strong> {selectedAssessment?.certification_level3_metric}</li>
           </ul>
         </div>
 
         {/* ── Your Response textarea (pre-populated with answer template) ── */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-ink mb-2">
             Your Response <span className="text-red-500">*</span>
           </label>
           <textarea
             value={userResponse}
             onChange={(e) => setUserResponse(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none min-h-[420px] font-mono text-sm leading-relaxed"
+            className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent min-h-[420px] font-mono text-sm leading-relaxed"
           />
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-muted mt-2">
             Answer each question by replacing <em>[Answer Here]</em> with your own response. Use the 💡 hints above each question to make sure you cover the key points — the more specific and detailed you are, the better your evaluation will be.
           </p>
         </div>
 
         {/* Improve English button */}
         <div className="flex justify-end mb-3">
-          <button
+          <QuietButton
             onClick={handleImproveEnglish}
             disabled={!userResponse.trim() || isImproving}
-            className="flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            loading={isImproving}
+            icon={<Wand2 size={14} />}
           >
-            {isImproving
-              ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Improving...</>
-              : <><Wand2 size={15} /> Improve my English</>}
-          </button>
+            Improve my English
+          </QuietButton>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 flex items-start gap-3 mb-6">
+          <div className="bg-red-50 border border-red-300 rounded-lg p-4 flex items-start gap-3 mb-6">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-red-700">{error}</p>
+            <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
 
-        <button
+        <QuietButton
           onClick={handleResponseSubmit}
           disabled={loading || !userResponse.trim()}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          loading={loading}
+          variant="solid"
+          className="w-full justify-center py-3 text-base"
         >
-          {loading ? (
-            <><Loader2 className="h-5 w-5 animate-spin" /> Evaluating...</>
-          ) : (
-            'Submit for Evaluation'
-          )}
-        </button>
+          {loading ? 'Evaluating...' : 'Submit for Evaluation'}
+        </QuietButton>
       </div>
     </div>
   );
@@ -1691,27 +1597,27 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
     const allPassed = checkAllAssessmentsPassed();
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-          <div className={`text-center mb-8 p-8 rounded-xl ${
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+          <div className={`text-center mb-8 p-8 rounded-xl border ${
             evaluationScore !== null && evaluationScore >= 2
-              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300'
-              : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+              ? 'bg-green-50 border-green-300'
+              : 'bg-yellow-50 border-yellow-300'
           }`}>
             <div className="flex justify-center mb-4">
               {evaluationScore !== null && evaluationScore >= 2 ? (
-                <Sparkles className="h-16 w-16 text-green-600" />
+                <Sparkles className="h-12 w-12 text-green-600" />
               ) : (
-                <RefreshCw className="h-16 w-16 text-yellow-600" />
+                <RefreshCw className="h-12 w-12 text-yellow-600" />
               )}
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            <h2 className="text-2xl font-semibold text-ink mb-2">
               {evaluationScore !== null && evaluationScore >= 2 ? 'Congratulations!' : 'Keep Learning!'}
             </h2>
-            <p className="text-xl text-gray-700 mb-4">
+            <p className="text-lg text-body mb-4">
               Your Score: <span className={`font-bold ${
                 evaluationScore === 0 ? 'text-red-600' :
-                evaluationScore === 1 ? 'text-yellow-600' :
-                evaluationScore === 2 ? 'text-green-600' : 'text-emerald-600'
+                evaluationScore === 1 ? 'text-yellow-700' :
+                evaluationScore === 2 ? 'text-blue-700' : 'text-green-700'
               }`}>
                 {evaluationScore === 0 ? '0 - No Evidence' :
                  evaluationScore === 1 ? '1 - Emerging' :
@@ -1719,28 +1625,28 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               </span>
             </p>
           </div>
-          <div className="bg-gray-50 rounded-xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-3">Assessment Feedback</h3>
+          <div className="bg-paper border border-hair rounded-xl p-6 mb-6">
+            <h3 className="text-base font-semibold text-ink mb-3">Assessment Feedback</h3>
             {renderVoiceBar(
               `Your score is ${evaluationScore !== null ? ['No Evidence', 'Emerging', 'Proficient', 'Advanced'][evaluationScore] : ''}. ${evaluationEvidence}${improvementAdvice ? ' ' + improvementAdvice.replace(/\*\*/g, '').replace(/\[.*?\]\(.*?\)/g, '') : ''}`,
               'Hear feedback'
             )}
-            <div className="prose prose-gray max-w-none text-gray-700 prose-p:leading-relaxed prose-p:my-2 prose-strong:text-gray-900 prose-strong:font-bold prose-ul:my-2 prose-li:my-1 prose-headings:text-gray-900 prose-headings:font-bold prose-h2:text-base prose-h3:text-base prose-hr:my-3">
+            <div className="prose max-w-none text-body prose-p:leading-relaxed prose-p:my-2 prose-strong:text-ink prose-strong:font-semibold prose-ul:my-2 prose-li:my-1 prose-headings:text-ink prose-headings:font-semibold prose-h2:text-base prose-h3:text-base prose-hr:my-3">
               <ReactMarkdown>{evaluationEvidence}</ReactMarkdown>
             </div>
           </div>
           {improvementAdvice && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-3">
+            <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+              <h3 className="text-base font-semibold text-ink mb-3">
                 {evaluationScore !== null && evaluationScore >= 2
                   ? evaluationScore === 3 ? 'Excellent Work!' : 'Path to Advanced'
                   : 'Improvement Advice'}
               </h3>
-              <div className="prose prose-blue max-w-none text-gray-700 prose-p:leading-relaxed prose-p:my-3 prose-strong:text-gray-900 prose-strong:font-bold prose-ul:my-2 prose-li:my-1 prose-headings:text-gray-900 prose-headings:font-semibold prose-h1:text-sm prose-h2:text-sm prose-h3:text-sm prose-hr:my-4 prose-a:text-blue-600 prose-a:underline [&_h1]:mt-4 [&_h2]:mt-4 [&_h3]:mt-3">
+              <div className="prose max-w-none text-body prose-p:leading-relaxed prose-p:my-3 prose-strong:text-ink prose-strong:font-semibold prose-ul:my-2 prose-li:my-1 prose-headings:text-ink prose-headings:font-semibold prose-h1:text-sm prose-h2:text-sm prose-h3:text-sm prose-hr:my-4 prose-a:text-accent prose-a:underline [&_h1]:mt-4 [&_h2]:mt-4 [&_h3]:mt-3">
                 <ReactMarkdown
                   components={{
                     a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
-                      <Link to={href || '#'} className="text-blue-600 hover:text-blue-800 underline font-medium">
+                      <Link to={href || '#'} className="text-accent hover:underline font-medium">
                         {children}
                       </Link>
                     )
@@ -1752,26 +1658,23 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             </div>
           )}
           {allPassed ? (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 mb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <Trophy className="h-7 w-7 text-yellow-500" />
+            <div className="bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
+                <Trophy className="h-6 w-6 text-yellow-500" />
                 All Assessments Complete!
               </h3>
-              <p className="text-gray-700 mb-4">
-                Congratulations! You've achieved proficiency in all AI Proficiency assessments. 
+              <p className="text-body mb-4">
+                Congratulations! You've achieved proficiency in all AI Proficiency assessments.
                 You're ready to receive your certification!
               </p>
-              <button
-                onClick={() => setViewMode('certificate')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
-              >
+              <QuietButton onClick={() => setViewMode('certificate')} variant="solid">
                 Get Your Certificate
-              </button>
+              </QuietButton>
             </div>
           ) : (
-            <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-3">Remaining Assessments</h3>
-              <p className="text-gray-700 mb-4">
+            <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
+              <h3 className="text-base font-semibold text-ink mb-3">Remaining Assessments</h3>
+              <p className="text-body mb-4">
                 You still need to achieve Proficient or higher in {remaining.length} assessment{remaining.length !== 1 ? 's' : ''}:
               </p>
               <ul className="space-y-2 mt-2">
@@ -1781,7 +1684,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
                     <li key={r.assessment_name}>
                       <button
                         onClick={() => fullAssessment && handleSelectAssessment(fullAssessment)}
-                        className="flex items-center gap-2 text-purple-700 font-semibold hover:text-purple-900 hover:underline transition-colors"
+                        className="flex items-center gap-2 text-accent font-semibold hover:underline transition-colors"
                       >
                         <ArrowRight className="h-4 w-4 flex-shrink-0" />
                         {r.assessment_name}
@@ -1792,8 +1695,8 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               </ul>
             </div>
           )}
-          <div className="flex gap-4">
-            <button
+          <div className="flex gap-3">
+            <QuietButton
               onClick={() => {
                 setViewMode('overview');
                 setSelectedAssessment(null);
@@ -1803,22 +1706,23 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
                 setImprovementAdvice('');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+              className="flex-1 justify-center py-3"
             >
               Back to Overview
-            </button>
+            </QuietButton>
             {evaluationScore !== null && evaluationScore < 3 && (
-              <button
+              <QuietButton
                 onClick={() => {
                   setUserResponse('');
                   setEvaluationScore(null);
                   setImprovementAdvice('');
                   setViewMode('define-context');
                 }}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                variant="solid"
+                className="flex-1 justify-center py-3"
               >
                 {evaluationScore >= 2 ? 'Try for Advanced' : 'Retake Assessment'}
-              </button>
+              </QuietButton>
             )}
           </div>
         </div>
@@ -1828,17 +1732,17 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
 
   const renderCertificate = () => (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg text-center">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm text-center">
         <div className="flex justify-center mb-6">
-          <Award className="h-24 w-24 text-purple-600" />
+          <Award className="h-16 w-16 text-accent" />
         </div>
-        <h2 className="text-4xl font-bold text-gray-800 mb-4">Congratulations! 🎉</h2>
-        <p className="text-xl text-gray-700 mb-8">
-          You've successfully completed all AI Proficiency assessments! 
+        <h2 className="text-3xl font-bold text-ink mb-4">Congratulations! 🎉</h2>
+        <p className="text-lg text-body mb-8">
+          You've successfully completed all AI Proficiency assessments!
           You're ready to receive your official certificate.
         </p>
-        <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-8 mb-8">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
+        <div className="bg-surface border border-hair rounded-xl p-8 mb-8">
+          <h3 className="text-base font-semibold text-ink mb-4">
             How would you like your name to appear on the certificate?
           </h3>
           <input
@@ -1846,21 +1750,21 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             value={certificateName}
             onChange={(e) => setCertificateName(e.target.value)}
             placeholder="Enter your full name"
-            className="w-full max-w-md mx-auto px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none text-center text-lg"
+            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-center text-lg"
           />
         </div>
         <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Your Achievements:</h3>
+          <h3 className="text-base font-semibold text-ink mb-3">Your Achievements:</h3>
           <div className="flex flex-wrap justify-center gap-3">
             {assessments.map(a => (
-              <span key={a.assessment_name} className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-medium flex items-center gap-2">
+              <span key={a.assessment_name} className="px-4 py-2 bg-green-100 text-green-800 border border-green-300 rounded-full font-medium flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4" />
                 {a.assessment_name}
               </span>
             ))}
           </div>
         </div>
-        <button
+        <QuietButton
           onClick={async () => {
             if (certificateName.trim()) {
               await generateCertificate();
@@ -1868,17 +1772,18 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             }
           }}
           disabled={!certificateName.trim()}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto"
+          icon={<Download size={18} />}
+          variant="solid"
+          className="px-8 py-3 text-base mx-auto"
         >
-          <Download className="h-6 w-6" />
           Download Certificate
-        </button>
-        <p className="text-sm text-gray-600 mt-6">
-          Issued by: <strong>{branding.institutionName}</strong>
+        </QuietButton>
+        <p className="text-sm text-muted mt-6">
+          Issued by: <strong className="text-body">{branding.institutionName}</strong>
         </p>
         <button
           onClick={() => setViewMode('overview')}
-          className="mt-8 text-purple-600 hover:text-purple-700 font-medium"
+          className="mt-8 text-accent hover:underline font-medium text-sm"
         >
           Return to Overview
         </button>
@@ -1889,11 +1794,10 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
   if (loading && assessments.length === 0) {
     return (
       <AppLayout>
-        <DistortedBackground imageUrl="/background_ai_proficiency.png" />
-        <div className="relative z-10 max-w-6xl mx-auto flex items-center justify-center min-h-[60vh]">
+        <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading assessments...</p>
+            <Loader2 className="h-10 w-10 animate-spin text-accent mx-auto mb-4" />
+            <p className="text-muted">Loading assessments...</p>
           </div>
         </div>
       </AppLayout>
@@ -1902,8 +1806,6 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
 
   return (
     <AppLayout>
-      <DistortedBackground imageUrl="/background_ai_proficiency.png" />
-
       {/* Voice fallback — shown when TTS unavailable (e.g. no network voice in Nigeria) */}
       {fallbackText && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm">
@@ -1911,7 +1813,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
         </div>
       )}
 
-      <div className="relative z-10 max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {(() => {
           console.log('[AIProficiency] Rendering viewMode:', viewMode);
           console.log('[AIProficiency] Assessments count:', assessments.length);
