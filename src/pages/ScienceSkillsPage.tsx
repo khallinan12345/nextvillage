@@ -95,67 +95,6 @@ Always respond as a deeply thoughtful tutor. Your answers must:
 The AI must provide large, comprehensive answers capable of thoroughly addressing any user question.
 The AI should act like a human tutor, responding in depth and following up with several highly relevant questions tailored to the specific activity.`;
 
-// ─── Distorted Background ─────────────────────────────────────────────────────
-
-const ScienceDistortedBackground: React.FC = () => {
-  const [mousePixels, setMousePixels] = React.useState({ x: 0, y: 0 });
-  const [isMouseMoving, setIsMouseMoving] = React.useState(false);
-  const mouseTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePixels({
-        x: Math.max(0, e.clientX - 256),
-        y: Math.max(0, e.clientY - 64),
-      });
-      setIsMouseMoving(true);
-      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      mouseTimeoutRef.current = setTimeout(() => setIsMouseMoving(false), 120);
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-    };
-  }, []);
-
-  const imageUrl = '/background_science-skills_page.png';
-
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="science-ripple-distortion" x="0%" y="0%" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="3" seed="13" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="65" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-      <div
-        className="fixed top-14 left-0 right-0 bottom-0"
-        style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 via-teal-300/25 to-cyan-300/30" />
-        <div className="absolute inset-0 bg-white/10" />
-      </div>
-      {isMouseMoving && (
-        <div
-          className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none"
-          style={{
-            backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center',
-            zIndex: 1, filter: 'url(#science-ripple-distortion)',
-            WebkitMaskImage: `radial-gradient(circle 150px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`,
-            maskImage: `radial-gradient(circle 150px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`,
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 via-teal-300/25 to-cyan-300/30" />
-        </div>
-      )}
-    </>
-  );
-};
-
 // ─── Tier 1: Scientific Reasoning Stages ─────────────────────────────────────
 
 const REASONING_STAGES = [
@@ -679,9 +618,9 @@ const renderInline = (text: string, key: string | number): React.ReactNode => {
     <React.Fragment key={key}>
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**'))
-          return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
+          return <strong key={i} className="font-bold text-ink">{part.slice(2, -2)}</strong>;
         if (part.startsWith('`') && part.endsWith('`'))
-          return <code key={i} className="bg-gray-200 text-emerald-700 rounded px-1 text-sm font-mono">{part.slice(1, -1)}</code>;
+          return <code key={i} className="bg-paper text-emerald-700 rounded px-1 text-sm font-mono">{part.slice(1, -1)}</code>;
         return part;
       })}
     </React.Fragment>
@@ -705,7 +644,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
           return (
             <ol key={bi} className="list-decimal list-inside space-y-1 pl-1">
               {lines.map((l, li) => (
-                <li key={li} className="text-gray-800">{renderInline(l.replace(/^\d+\.\s/, ''), li)}</li>
+                <li key={li} className="text-ink">{renderInline(l.replace(/^\d+\.\s/, ''), li)}</li>
               ))}
             </ol>
           );
@@ -716,7 +655,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
           return (
             <ul key={bi} className="list-disc list-inside space-y-1 pl-1">
               {lines.map((l, li) => (
-                <li key={li} className="text-gray-800">{renderInline(l.replace(/^[-•*]\s/, ''), li)}</li>
+                <li key={li} className="text-ink">{renderInline(l.replace(/^[-•*]\s/, ''), li)}</li>
               ))}
             </ul>
           );
@@ -825,42 +764,42 @@ const EvaluationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
+      <div className="bg-card border border-hair rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
         <div className={`sticky top-0 ${stage.glowBg} border-b ${stage.border} rounded-t-2xl px-6 py-4 flex items-start justify-between`}>
           <div>
-            <h2 className="text-gray-900 font-bold text-lg">{stage.name} — Session Evaluation</h2>
+            <h2 className="text-ink font-bold text-lg">{stage.name} — Session Evaluation</h2>
             <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-semibold ${overall.bg} ${overall.color} border ${overall.border}`}>
               {overall.emoji} Overall: {evaluation.overall_level}
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 p-1"><X size={22} /></button>
+          <button onClick={onClose} className="text-muted hover:text-ink p-1"><X size={22} /></button>
         </div>
 
         <div className="px-6 py-5 space-y-3">
-          <h3 className="text-gray-500 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
+          <h3 className="text-muted font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
           {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
             return (
               <div key={i} className={`rounded-xl border ${lc.border} ${lc.bg} p-4`}>
                 <div className="flex items-center justify-between mb-2 gap-3">
-                  <span className="text-gray-900 font-semibold text-sm">{sub.name}</span>
+                  <span className="text-ink font-semibold text-sm">{sub.name}</span>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${lc.bg} ${lc.color} ${lc.border}`}>{lc.emoji} {sub.level}</span>
-                    <span className="text-gray-500 text-xs font-mono">{sub.score}/100</span>
+                    <span className="text-muted text-xs font-mono">{sub.score}/100</span>
                   </div>
                 </div>
                 <div className="h-1.5 bg-slate-700/60 rounded-full mb-3 overflow-hidden">
                   <div className={`h-full rounded-full bg-gradient-to-r ${stage.gradient} transition-all duration-700`} style={{ width: `${sub.score}%` }} />
                 </div>
-                <p className="text-gray-600 text-xs"><span className="text-gray-500 mr-1">Evidence:</span>{sub.evidence}</p>
+                <p className="text-body text-xs"><span className="text-muted mr-1">Evidence:</span>{sub.evidence}</p>
               </div>
             );
           })}
         </div>
 
         <div className="px-6 pb-4">
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <p className="text-gray-700 text-sm">🌟 {evaluation.encouragement}</p>
+          <div className="bg-paper border border-hair rounded-xl p-4">
+            <p className="text-body text-sm">🌟 {evaluation.encouragement}</p>
           </div>
         </div>
 
@@ -885,9 +824,9 @@ const EvaluationModal: React.FC<{
                 <p className="text-amber-800 text-xs font-semibold uppercase tracking-wider mb-2">🎯 Focus here next</p>
                 <ul className="space-y-1">
                   {growth.map((s, i) => (
-                    <li key={i} className="text-gray-600 text-sm flex items-start gap-2">
+                    <li key={i} className="text-body text-sm flex items-start gap-2">
                       <span className="text-amber-600 mt-0.5">•</span>
-                      <span><strong className="text-gray-900">{s.name}</strong> — {s.evidence}</span>
+                      <span><strong className="text-ink">{s.name}</strong> — {s.evidence}</span>
                     </li>
                   ))}
                 </ul>
@@ -908,9 +847,9 @@ const EvaluationModal: React.FC<{
               <p className="text-blue-800 text-sm">✅ <strong>Proficient</strong> in all skills! Keep practising to reach Advanced.</p>
             </div>
           ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
-              <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
-              <p className="text-gray-600 text-sm">Reach <strong className="text-blue-700">Proficient</strong> in all skills to master this stage.</p>
+            <div className="bg-paper border border-hair rounded-xl p-4 flex items-start gap-3">
+              <TrendingUp className="h-5 w-5 text-muted flex-shrink-0 mt-0.5" />
+              <p className="text-body text-sm">Reach <strong className="text-blue-700">Proficient</strong> in all skills to master this stage.</p>
             </div>
           )}
         </div>
@@ -1327,15 +1266,15 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
             ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
             : isActive
               ? `${stage.glowBg} ${stage.border} backdrop-blur-sm cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-              : 'bg-gray-100/80 border-gray-300 backdrop-blur-sm cursor-not-allowed opacity-70'}`}
+              : 'bg-surface/80 border-hair backdrop-blur-sm cursor-not-allowed opacity-70'}`}
       >
         <div className="flex items-start gap-5">
           <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
-            {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-gray-400" />}
+            {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-muted" />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>Stage {idx + 1}</span>
+              <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-muted'}`}>Stage {idx + 1}</span>
               {isCompleted && <span className="font-bold text-green-700">Completed</span>}
               {!isCompleted && scoreBadge && (
                 <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
@@ -1343,10 +1282,10 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 </span>
               )}
             </div>
-            <h3 className={`text-xl font-bold ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>{stage.name}</h3>
-            <p className={`text-sm font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-gray-400'}`}>{stage.subtitle}</p>
-            <p className={`text-sm mt-1 ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
-            <p className={`text-xs mt-2 ${isUnlocked ? 'text-slate-400' : 'text-gray-400'}`}>
+            <h3 className={`text-xl font-bold ${isUnlocked ? 'text-white' : 'text-muted'}`}>{stage.name}</h3>
+            <p className={`text-sm font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-muted'}`}>{stage.subtitle}</p>
+            <p className={`text-sm mt-1 ${isUnlocked ? 'text-slate-300' : 'text-muted'}`}>{stage.description || 'Description could not be loaded.'}</p>
+            <p className={`text-xs mt-2 ${isUnlocked ? 'text-slate-400' : 'text-muted'}`}>
               {(STAGE_RUBRICS[stage.pathway]?.[idx] ?? []).join(' · ')}
             </p>
           </div>
@@ -1362,7 +1301,6 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
   if (view === 'stages') {
     return (
       <AppLayout>
-        <ScienceDistortedBackground />
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10">
 
           {/* Header */}
@@ -1399,11 +1337,11 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <Volume2 className="h-5 w-5 text-white" />
                 <span>Choose your coach&apos;s voice:</span>
               </div>
-              <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
+              <div className="flex rounded-xl overflow-hidden border border-hair shadow-lg">
                 <button
                   onClick={e => { e.stopPropagation(); setVoiceMode('english'); }}
                   className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
-                    ${voiceMode === 'english' ? 'bg-blue-600 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    ${voiceMode === 'english' ? 'bg-accent text-white shadow-inner' : 'bg-paper text-body hover:bg-hair'}`}
                 >
                   🇬🇧 British English
                 </button>
@@ -1411,7 +1349,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <button
                   onClick={e => { e.stopPropagation(); setVoiceMode('pidgin'); }}
                   className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
-                    ${voiceMode === 'pidgin' ? 'bg-green-600 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    ${voiceMode === 'pidgin' ? 'bg-green-600 text-white shadow-inner' : 'bg-paper text-body hover:bg-hair'}`}
                 >
                   🇳🇬 Nigerian Pidgin
                 </button>
@@ -1500,7 +1438,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                         </div>
                         <div className="text-left">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold text-gray-900">Life Sciences</h3>
+                            <h3 className="text-xl font-bold text-ink">Life Sciences</h3>
                             <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full border border-green-400">
                               {(progress?.life?.completedStages ?? []).filter(Boolean).length}/5 complete
                             </span>
@@ -1531,7 +1469,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                         </div>
                         <div className="text-left">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold text-gray-900">Physical Sciences</h3>
+                            <h3 className="text-xl font-bold text-ink">Physical Sciences</h3>
                             <span className="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full border border-orange-400">
                               {(progress?.physical?.completedStages ?? []).filter(Boolean).length}/5 complete
                             </span>
@@ -1571,45 +1509,44 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
     return (
       <AppLayout>
-        <ScienceDistortedBackground />
         <main className="relative z-10 flex-1 min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
-            <button onClick={() => { cancel(); setView('stages'); }} className="flex items-center gap-2 text-gray-400 hover:text-gray-900 mb-8 transition-colors">
+            <button onClick={() => { cancel(); setView('stages'); }} className="flex items-center gap-2 text-muted hover:text-ink mb-8 transition-colors">
               <ArrowLeft size={20} /> Back to Stages
             </button>
 
-            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 mb-6">
+            <div className="bg-card border-2 border-hair rounded-2xl p-8 mb-6">
               <div className="text-center mb-7">
-                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{pathwayLabel}</div>
+                <div className="text-xs font-bold text-muted uppercase tracking-wider mb-1">{pathwayLabel}</div>
                 <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                   <Icon className="h-10 w-10 text-white" />
                 </div>
-                <div className="text-base font-semibold text-gray-500 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
-                <h2 className="text-4xl font-bold text-gray-900">{selectedStage.name}</h2>
+                <div className="text-base font-semibold text-muted uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
+                <h2 className="text-4xl font-bold text-ink">{selectedStage.name}</h2>
                 <p className={`text-lg font-medium mt-1 ${selectedStage.textColor}`}>{selectedStage.subtitle}</p>
-                <p className="text-gray-700 text-lg mt-3">{selectedStage.description?.trim() || 'Description could not be loaded.'}</p>
-                <p className="text-gray-500 text-sm mt-2">{(STAGE_RUBRICS[selectedStage.pathway]?.[selectedStage.id] ?? []).join(' · ')}</p>
+                <p className="text-body text-lg mt-3">{selectedStage.description?.trim() || 'Description could not be loaded.'}</p>
+                <p className="text-muted text-sm mt-2">{(STAGE_RUBRICS[selectedStage.pathway]?.[selectedStage.id] ?? []).join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}
-                  className="mt-4 inline-flex items-center gap-2 text-base text-gray-700 border border-gray-300 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition-all"
+                  className="mt-4 inline-flex items-center gap-2 text-base text-body border border-hair bg-surface px-4 py-2 rounded-full hover:bg-paper transition-all"
                 >
                   <Volume2 size={16} /> Hear instructions again
                 </button>
               </div>
 
               {/* Voice */}
-              <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <p className="text-gray-900 text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
+              <div className="mb-6 bg-paper border border-hair rounded-xl p-4">
+                <p className="text-ink text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
                   <Volume2 size={18} className="text-emerald-600" /> Choose your coach&apos;s voice
                 </p>
-                <div className="flex rounded-xl overflow-hidden border border-gray-300">
+                <div className="flex rounded-xl overflow-hidden border border-hair">
                   <button onClick={() => setVoiceMode('english')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'english' ? 'bg-accent text-white' : 'bg-paper text-body hover:bg-hair'}`}>
                     🇬🇧 British English
                   </button>
                   <div className="w-px bg-slate-500" />
                   <button onClick={() => setVoiceMode('pidgin')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-paper text-body hover:bg-hair'}`}>
                     🇳🇬 Nigerian Pidgin
                   </button>
                 </div>
@@ -1617,10 +1554,10 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
               {/* Topic input */}
               <div className="mb-4">
-                <label className="block text-gray-900 text-lg font-semibold mb-2">
+                <label className="block text-ink text-lg font-semibold mb-2">
                   What context should your science coach use today?
                 </label>
-                <p className="text-gray-500 text-sm mb-3">
+                <p className="text-muted text-sm mb-3">
                   Choose something from your world — the Niger Delta, your farm, fishing, cooking, the sky, animals nearby. Science is everywhere.
                 </p>
                 <input
@@ -1629,7 +1566,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   onChange={e => setTopicInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && topicInput.trim()) startSession(); }}
                   placeholder="e.g., mangrove forests, cassava farming, the harmattan, fishing, solar panels..."
-                  className={`w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-4 text-lg focus:outline-none focus:${selectedStage.border} placeholder-gray-400 transition-colors`}
+                  className={`w-full bg-card border border-hair text-ink rounded-xl px-4 py-4 text-lg focus:outline-none focus:${selectedStage.border} placeholder-gray-400 transition-colors`}
                 />
               </div>
               <button
@@ -1646,17 +1583,17 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
             {activeSessions.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
                   <MessageSquare size={18} /> Continue a Session
                 </h3>
                 <div className="space-y-3">
                   {(activeSessions ?? []).map(session => (
                     <div key={session.id} onClick={() => resumeSession(session)}
-                      className={`bg-white border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-all`}>
+                      className={`bg-card border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-paper transition-all`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 font-semibold text-base truncate">{session.sub_category}</p>
-                          <p className="text-gray-500 text-sm mt-0.5">{new Date(session.updated_at).toLocaleDateString()} · {session.progress}</p>
+                          <p className="text-ink font-semibold text-base truncate">{session.sub_category}</p>
+                          <p className="text-muted text-sm mt-0.5">{new Date(session.updated_at).toLocaleDateString()} · {session.progress}</p>
                           {session.science_skills_evaluation && (
                             <span className={`mt-1 inline-flex text-xs px-2 py-0.5 rounded-full border font-semibold
                               ${LEVEL_CONFIG[session.science_skills_evaluation.overall_level].bg}
@@ -1676,7 +1613,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
             {finishedSessions.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
                   <CheckCircle size={18} className="text-green-600" /> Completed Sessions
                 </h3>
                 <div className="space-y-2">
@@ -1686,7 +1623,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-green-700 font-semibold text-base truncate">🏆 {session.sub_category}</p>
-                          <p className="text-gray-500 text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
+                          <p className="text-muted text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
                         </div>
                         <ChevronRight size={20} className="text-green-600" />
                       </div>
@@ -1711,25 +1648,24 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
     return (
       <AppLayout>
-        <ScienceDistortedBackground />
         {showEvalModal && evaluation && (
           <EvaluationModal evaluation={evaluation} stage={selectedStage} onClose={() => setShowEvalModal(false)} onSpeak={speakAlways} />
         )}
 
         <main className="relative z-10 flex flex-col h-[calc(100vh-64px)]">
           {/* Chat header */}
-          <div className={`flex-shrink-0 border-b ${selectedStage.border} bg-white/95 backdrop-blur px-4 py-3`}>
+          <div className="flex-shrink-0 border-b border-hair bg-card px-4 py-3">
             <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <button onClick={() => { cancel(); setView('topic'); }} className="text-gray-400 hover:text-gray-900 transition-colors flex-shrink-0">
+                <button onClick={() => { cancel(); setView('topic'); }} className="text-muted hover:text-ink transition-colors flex-shrink-0">
                   <ArrowLeft size={22} />
                 </button>
-                <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center flex-shrink-0`}>
-                  <Icon className="h-5 w-5 text-white" />
+                <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                  <Icon className="h-5 w-5 text-accent" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-gray-900 font-bold text-base leading-tight truncate">{selectedStage.name}</p>
-                  <p className={`text-xs ${selectedStage.textColor} truncate`}>{pathwayLabel} · {topic}</p>
+                  <p className="text-ink font-bold text-base leading-tight truncate">{selectedStage.name}</p>
+                  <p className="text-xs text-muted truncate">{pathwayLabel} · {topic}</p>
                 </div>
               </div>
 
@@ -1740,21 +1676,21 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     {LEVEL_CONFIG[evaluation.overall_level].emoji} {evaluation.overall_level}
                   </button>
                 )}
-                <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                <div className="flex rounded-full overflow-hidden border border-hair">
                   <button onClick={() => setVoiceMode('english')} title="British English voice"
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-gray-300
-                      ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}>
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors border-r border-hair
+                      ${voiceMode === 'english' ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-paper hover:text-body'}`}>
                     🇬🇧 <span className="hidden sm:inline">English</span>
                   </button>
                   <button onClick={() => setVoiceMode('pidgin')} title="Nigerian Pidgin voice"
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all
-                      ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}>
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors
+                      ${voiceMode === 'pidgin' ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-paper hover:text-body'}`}>
                     🇳🇬 <span className="hidden sm:inline">Pidgin</span>
                   </button>
                 </div>
                 <button
                   onClick={() => { setSpeechEnabled(s => !s); if (speechEnabled) cancel(); }}
-                  className={`p-2 rounded-lg transition-all ${speechEnabled ? `${selectedStage.glowBg} ${selectedStage.textColor} border ${selectedStage.border}` : 'bg-slate-700 text-slate-500'}`}
+                  className={`p-2 rounded-full transition-colors border ${speechEnabled ? 'bg-surface text-accent border-accent/30' : 'border-hair text-muted'}`}
                 >
                   {isSpeaking && speechEnabled ? <Volume2 size={16} className="animate-pulse" /> : speechEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 </button>
@@ -1764,32 +1700,27 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-5">
-            <div className="max-w-3xl mx-auto space-y-4">
+            <div className="max-w-3xl mx-auto space-y-6">
               {messages.map(msg => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-3`}>
-                  {msg.role === 'assistant' && (
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center flex-shrink-0 mt-1`}>
-                      <Icon className="h-4 w-4 text-white" />
+                <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <span className="text-xs font-medium text-muted mb-1.5">{msg.role === 'user' ? 'You' : 'AI Coach'}</span>
+                  {msg.role === 'user' ? (
+                    <div className="max-w-[80%] rounded-xl bg-card border border-hair px-4 py-3 text-[15px] leading-[1.7] text-body">
+                      <MessageContent content={msg.content} />
+                    </div>
+                  ) : (
+                    <div className="max-w-[80%] text-[15px] leading-[1.7] text-body">
+                      <MessageContent content={msg.content} />
+                      <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
                     </div>
                   )}
-                  <div className={`max-w-[80%] rounded-2xl px-5 py-4 text-lg leading-relaxed
-                    ${msg.role === 'user' ? 'bg-slate-700 text-white rounded-tr-sm' : 'bg-gray-50 border border-gray-200 text-gray-800 rounded-tl-sm'}`}>
-                    <MessageContent content={msg.content} />
-                    {msg.role === 'assistant' && (
-                      <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
-                    )}
-                  </div>
                 </div>
               ))}
               {busy && (
-                <div className="flex justify-start gap-3">
-                  <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
-                    <Icon className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-5 py-3">
-                    <div className="flex gap-1 items-center h-4">
-                      {[0, 150, 300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
-                    </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-medium text-muted mb-1.5">AI Coach</span>
+                  <div className="flex gap-1 items-center h-4">
+                    {[0, 150, 300].map(d => <div key={d} className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse" style={{ animationDelay: `${d}ms` }} />)}
                   </div>
                 </div>
               )}
@@ -1803,62 +1734,64 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
           </div>
 
           {/* Input */}
-          <div className={`flex-shrink-0 border-t ${selectedStage.border} bg-white/90 backdrop-blur px-4 pt-3 pb-4`}>
+          <div className="flex-shrink-0 border-t border-hair bg-card px-4 pt-3 pb-4">
             <div className="max-w-3xl mx-auto">
-              <textarea
-                ref={inputRef}
-                value={inputText}
-                onChange={e => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your observation, hypothesis, or answer here... or tap the mic to speak."
-                rows={3}
-                disabled={isSending || isImproving}
-                className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-400 placeholder-gray-400 resize-none text-lg leading-relaxed disabled:opacity-50 transition-colors mb-2"
-              />
+              <div className="relative mb-2">
+                <textarea
+                  ref={inputRef}
+                  value={inputText}
+                  onChange={e => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your observation, hypothesis, or answer here... or tap the mic to speak."
+                  rows={3}
+                  disabled={isSending || isImproving}
+                  className="w-full bg-transparent text-body rounded-xl px-1 py-1 focus:outline-none placeholder:text-muted resize-none text-lg leading-relaxed disabled:opacity-50 transition-colors"
+                />
+              </div>
               <div className="flex items-center justify-between mb-2 gap-2">
                 <button onClick={toggleListening}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-medium transition-all
-                    ${isListening ? 'bg-red-500 animate-pulse text-white shadow-lg shadow-red-500/40' : 'bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700'}`}>
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-base font-medium transition-colors border
+                    ${isListening ? 'bg-red-50 border-red-300 text-red-600' : 'border-hair bg-card text-body hover:border-accent/40 hover:text-accent'}`}>
                   {isListening ? <MicOff size={17} /> : <Mic size={17} />}
                   {isListening ? 'Stop' : 'Speak'}
                 </button>
                 <button onClick={sendMessage} disabled={!inputText.trim() || isSending}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-base font-bold transition-all
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-base font-semibold transition-colors
                     ${inputText.trim() && !isSending
-                      ? `bg-gradient-to-r ${selectedStage.gradient} text-white hover:opacity-90 shadow-lg`
-                      : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}>
+                      ? 'bg-accent text-white hover:bg-accent/90'
+                      : 'bg-hair text-muted cursor-not-allowed'}`}>
                   <Send size={16} /> Send
                 </button>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={handleImprove} disabled={!inputText.trim() || isImproving || isSending}
                   title="AI polishes your scientific explanation"
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all border
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold transition-colors border
                     ${inputText.trim() && !isImproving && !isSending
-                      ? 'bg-violet-100 border-violet-300 text-violet-700 hover:bg-violet-200'
-                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
+                      ? 'border-hair bg-card text-body hover:border-accent/40 hover:text-accent'
+                      : 'border-hair bg-card text-muted cursor-not-allowed opacity-60'}`}>
                   <Wand2 size={15} />
                   {isImproving ? 'Polishing...' : 'Improve my explanation'}
                 </button>
                 <button onClick={handleSave} disabled={isSaving || isSending || messages.length < 2}
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
+                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-colors border
                     ${!isSaving && messages.length >= 2
-                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200'
-                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
+                      ? 'border-hair bg-card text-body hover:border-accent/40 hover:text-accent'
+                      : 'border-hair bg-card text-muted cursor-not-allowed opacity-60'}`}>
                   <Save size={15} />
                   {isSaving ? 'Saving...' : 'Save Session'}
                 </button>
                 <button onClick={handleEvaluate} disabled={isEvaluating || isSending || userMessageCount < 2}
                   title={userMessageCount < 2 ? 'Send at least 2 messages first' : 'Get your science evaluation'}
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
+                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-colors
                     ${!isEvaluating && userMessageCount >= 2
-                      ? 'bg-blue-600 border-blue-500 text-white hover:bg-blue-700'
-                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}>
+                      ? 'bg-accent text-white hover:bg-accent/90'
+                      : 'bg-hair text-muted cursor-not-allowed'}`}>
                   <BarChart3 size={15} />
                   {isEvaluating ? 'Evaluating...' : 'Evaluate'}
                 </button>
               </div>
-              <p className="text-center text-gray-500 text-base mt-2">
+              <p className="text-center text-muted text-base mt-2">
                 Enter to send · Shift+Enter for new line
                 {userMessageCount < 2 && ` · Send ${2 - userMessageCount} more message${userMessageCount === 1 ? '' : 's'} to enable evaluation`}
               </p>
