@@ -79,97 +79,6 @@ interface UserProgress {
   stageLevels: (ProficiencyLevel | null)[];
 }
 
-// ─── Distorted Background ───────────────────────────────────────────────────
-
-const MathDistortedBackground: React.FC = () => {
-  const [mousePixels, setMousePixels] = React.useState({ x: 0, y: 0 });
-  const [isMouseMoving, setIsMouseMoving] = React.useState(false);
-  const mouseTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const sidebarOffset = 256;
-      const topOffset = 64;
-      setMousePixels({
-        x: Math.max(0, e.clientX - sidebarOffset),
-        y: Math.max(0, e.clientY - topOffset),
-      });
-      setIsMouseMoving(true);
-      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-      mouseTimeoutRef.current = setTimeout(() => setIsMouseMoving(false), 120);
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-    };
-  }, []);
-
-  const imageUrl = '/background_math-skillls_page.jpeg';
-
-  return (
-    <>
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="math-ripple-distortion" x="0%" y="0%" width="100%" height="100%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.012"
-              numOctaves="3"
-              seed="9"
-              result="noise"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="noise"
-              scale="55"
-              xChannelSelector="R"
-              yChannelSelector="G"
-              result="displaced"
-            />
-            <feGaussianBlur in="displaced" stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Static background layer */}
-      <div
-        className="fixed top-14 left-0 right-0 bottom-0"
-        style={{
-          backgroundImage: `url('${imageUrl}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          zIndex: 0,
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/30 via-slate-300/25 to-cyan-300/30" />
-        <div className="absolute inset-0 bg-white/10" />
-      </div>
-
-      {isMouseMoving && (
-        <div
-          className="fixed top-14 left-0 right-0 bottom-0 pointer-events-none"
-          style={{
-            backgroundImage: `url('${imageUrl}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            zIndex: 1,
-            filter: 'url(#math-ripple-distortion)',
-            WebkitMaskImage: `radial-gradient(circle 150px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`,
-            maskImage: `radial-gradient(circle 150px at ${mousePixels.x}px ${mousePixels.y}px, black 0%, black 50%, transparent 100%)`,
-            maskSize: '100% 100%',
-            WebkitMaskSize: '100% 100%',
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/30 via-slate-300/25 to-cyan-300/30" />
-        </div>
-      )}
-    </>
-  );
-};
-
 // ─── Core tutoring rule — appended to every stage's system prompt ────────────
 // Placed last (after the level-language block and viz instructions) so it has
 // maximum recency in the assembled prompt. Exists because the stage prompts
@@ -664,35 +573,35 @@ const EvaluationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
+      <div className="bg-card border border-hair rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
 
         {/* Header */}
         <div className={`sticky top-0 ${stage.glowBg} border-b ${stage.border} rounded-t-2xl px-6 py-4 flex items-start justify-between`}>
           <div>
-            <h2 className="text-gray-900 font-bold text-lg">{stage.name} — Session Evaluation</h2>
+            <h2 className="text-ink font-bold text-lg">{stage.name} — Session Evaluation</h2>
             <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-semibold ${overall.bg} ${overall.color} border ${overall.border}`}>
               {overall.emoji} Overall: {evaluation.overall_level}
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 p-1 mt-0.5 flex-shrink-0">
+          <button onClick={onClose} className="text-muted hover:text-ink p-1 mt-0.5 flex-shrink-0">
             <X size={22} />
           </button>
         </div>
 
         {/* Sub-categories */}
         <div className="px-6 py-5 space-y-3">
-          <h3 className="text-gray-500 font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
+          <h3 className="text-muted font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
           {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
             return (
               <div key={i} className={`rounded-xl border ${lc.border} ${lc.bg} p-4`}>
                 <div className="flex items-center justify-between mb-2 gap-3">
-                  <span className="text-gray-900 font-semibold text-sm">{sub.name}</span>
+                  <span className="text-ink font-semibold text-sm">{sub.name}</span>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${lc.bg} ${lc.color} ${lc.border}`}>
                       {lc.emoji} {sub.level}
                     </span>
-                    <span className="text-gray-500 text-xs font-mono">{sub.score}/100</span>
+                    <span className="text-muted text-xs font-mono">{sub.score}/100</span>
                   </div>
                 </div>
                 <div className="h-1.5 bg-slate-700/60 rounded-full mb-3 overflow-hidden">
@@ -701,7 +610,7 @@ const EvaluationModal: React.FC<{
                     style={{ width: `${sub.score}%` }}
                   />
                 </div>
-                <p className="text-gray-600 text-xs leading-relaxed">
+                <p className="text-body text-xs leading-relaxed">
                   <span className="text-slate-500 mr-1">Evidence:</span>{sub.evidence}
                 </p>
               </div>
@@ -711,8 +620,8 @@ const EvaluationModal: React.FC<{
 
         {/* Encouragement */}
         <div className="px-6 pb-4">
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <p className="text-gray-700 text-sm leading-relaxed">🌟 {evaluation.encouragement}</p>
+          <div className="bg-paper border border-hair rounded-xl p-4">
+            <p className="text-body text-sm leading-relaxed">🌟 {evaluation.encouragement}</p>
           </div>
         </div>
 
@@ -730,9 +639,9 @@ const EvaluationModal: React.FC<{
                 </p>
                 <ul className="space-y-1">
                   {growthSkills.map((s, i) => (
-                    <li key={i} className="text-gray-600 text-sm flex items-start gap-2">
+                    <li key={i} className="text-body text-sm flex items-start gap-2">
                       <span className="text-amber-600 mt-0.5">•</span>
-                      <span><strong className="text-gray-900">{s.name}</strong> — {s.evidence}</span>
+                      <span><strong className="text-ink">{s.name}</strong> — {s.evidence}</span>
                     </li>
                   ))}
                 </ul>
@@ -758,9 +667,9 @@ const EvaluationModal: React.FC<{
               </p>
             </div>
           ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
-              <TrendingUp className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
-              <p className="text-gray-600 text-sm">
+            <div className="bg-paper border border-hair rounded-xl p-4 flex items-start gap-3">
+              <TrendingUp className="h-5 w-5 text-muted flex-shrink-0 mt-0.5" />
+              <p className="text-body text-sm">
                 Keep going! Reach <strong className="text-blue-700">Proficient</strong> in all skill areas to master this stage.
               </p>
             </div>
@@ -1197,7 +1106,6 @@ LANGUAGE RULES:
   if (view === 'stages') {
     return (
       <AppLayout>
-        <MathDistortedBackground />
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10">
           <div className="text-center mb-10">
             <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
@@ -1228,15 +1136,15 @@ LANGUAGE RULES:
 
             {/* Voice selector */}
             <div className="mt-5 inline-flex flex-col items-center gap-2">
-              <div className="flex items-center gap-2 text-base text-white font-medium bg-indigo-600 rounded-xl px-4 py-2 shadow-lg">
+              <div className="flex items-center gap-2 text-base text-white font-medium bg-accent rounded-xl px-4 py-2 shadow-lg">
                 <Volume2 className="h-5 w-5 text-white" />
                 <span>Choose your coach&apos;s voice:</span>
               </div>
-              <div className="flex rounded-xl overflow-hidden border border-gray-300 shadow-lg">
+              <div className="flex rounded-xl overflow-hidden border border-hair shadow-lg">
                 <button
                   onClick={e => { e.stopPropagation(); setVoiceMode('english'); }}
                   className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
-                    ${voiceMode === 'english' ? 'bg-blue-600 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    ${voiceMode === 'english' ? 'bg-accent text-white shadow-inner' : 'bg-paper text-body hover:bg-hair'}`}
                 >
                   🇬🇧 British English
                 </button>
@@ -1244,12 +1152,12 @@ LANGUAGE RULES:
                 <button
                   onClick={e => { e.stopPropagation(); setVoiceMode('pidgin'); }}
                   className={`flex items-center gap-2 px-5 py-3 text-base font-semibold transition-all
-                    ${voiceMode === 'pidgin' ? 'bg-green-600 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    ${voiceMode === 'pidgin' ? 'bg-green-600 text-white shadow-inner' : 'bg-paper text-body hover:bg-hair'}`}
                 >
                   🇳🇬 Nigerian Pidgin
                 </button>
               </div>
-              <p className="text-sm text-white font-medium bg-indigo-600 rounded-xl px-4 py-2 shadow-lg">
+              <p className="text-sm text-white font-medium bg-accent rounded-xl px-4 py-2 shadow-lg">
                 {voiceMode === 'english'
                   ? 'British English voice — clear standard accent'
                   : 'Nigerian English voice (en-NG) — familiar local accent, works offline on Chromebook'}
@@ -1267,7 +1175,7 @@ LANGUAGE RULES:
                     window.speechSynthesis.speak(utt);
                     setTimeout(() => hookSpeak('Welcome to Math Skills. Tap a stage card to begin your journey.'), 300);
                   }}
-                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all text-base animate-pulse"
+                  className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent/90 active:bg-accent/80 text-white font-bold rounded-xl shadow-lg transition-all text-base animate-pulse"
                 >
                   <Volume2 className="h-5 w-5" />
                   🔊 Tap here to enable voice
@@ -1321,7 +1229,7 @@ LANGUAGE RULES:
                         ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
                         : isActive
                           ? `${stage.glowBg} ${stage.border} backdrop-blur-sm cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-                          : 'bg-gray-100/80 border-gray-300 backdrop-blur-sm cursor-not-allowed opacity-70'}`}
+                          : 'bg-surface/80 border-hair backdrop-blur-sm cursor-not-allowed opacity-70'}`}
                   >
                     <div className="flex items-start gap-5">
                       <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
@@ -1329,12 +1237,12 @@ LANGUAGE RULES:
                           ? <CheckCircle className="h-7 w-7 text-white" />
                           : isUnlocked
                             ? <Icon className="h-7 w-7 text-white" />
-                            : <Lock className="h-6 w-6 text-gray-400" />
+                            : <Lock className="h-6 w-6 text-muted" />
                         }
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap mb-1">
-                          <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>Stage {idx + 1}</span>
+                          <span className={`text-sm font-semibold uppercase tracking-wider ${isUnlocked ? 'text-slate-300' : 'text-muted'}`}>Stage {idx + 1}</span>
                           {isCompleted && <span className="font-bold text-green-700">Completed</span>}
                           {!isCompleted && scoreBadge && (
                             <span className="text-sm bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full border border-slate-600/80">
@@ -1342,10 +1250,10 @@ LANGUAGE RULES:
                             </span>
                           )}
                         </div>
-                        <h3 className={`text-2xl font-bold ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>{stage.name}</h3>
-                        <p className={`text-base font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-gray-400'}`}>{stage.subtitle}</p>
-                        <p className={`text-base mt-1 ${isUnlocked ? 'text-slate-300' : 'text-gray-400'}`}>{stage.description || 'Description could not be loaded.'}</p>
-                        <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-gray-400'}`}>{(STAGE_RUBRICS[idx] ?? []).join(' · ')}</p>
+                        <h3 className={`text-2xl font-bold ${isUnlocked ? 'text-white' : 'text-muted'}`}>{stage.name}</h3>
+                        <p className={`text-base font-medium mt-0.5 ${isUnlocked ? stage.textColor : 'text-muted'}`}>{stage.subtitle}</p>
+                        <p className={`text-base mt-1 ${isUnlocked ? 'text-slate-300' : 'text-muted'}`}>{stage.description || 'Description could not be loaded.'}</p>
+                        <p className={`text-sm mt-2 ${isUnlocked ? 'text-slate-400' : 'text-muted'}`}>{(STAGE_RUBRICS[idx] ?? []).join(' · ')}</p>
                       </div>
                       {isActive && <ChevronRight className={`h-6 w-6 ${stage.textColor} flex-shrink-0 mt-1`} />}
                     </div>
@@ -1369,26 +1277,25 @@ LANGUAGE RULES:
 
     return (
       <AppLayout>
-        <MathDistortedBackground />
         <main className="relative z-10 flex-1 min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
             <button
               onClick={() => { cancel(); setView('stages'); }}
-              className="flex items-center gap-2 text-gray-400 hover:text-gray-900 mb-8 transition-colors text-base"
+              className="flex items-center gap-2 text-muted hover:text-ink mb-8 transition-colors text-base"
             >
               <ArrowLeft size={20} /> Back to Stages
             </button>
 
-            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 mb-6">
+            <div className="bg-card border-2 border-hair rounded-2xl p-8 mb-6">
               <div className="text-center mb-7">
                 <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                   <Icon className="h-10 w-10 text-white" />
                 </div>
-                <div className="text-base font-semibold text-gray-500 uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
-                <h2 className="text-4xl font-bold text-gray-900">{selectedStage.name}</h2>
-                <p className="text-lg font-medium mt-1 text-gray-600">{selectedStage.subtitle}</p>
-                <p className="text-gray-700 text-lg mt-3">{selectedStage.description || 'Description could not be loaded.'}</p>
-                <p className="text-gray-500 text-base mt-2">{(STAGE_RUBRICS[selectedStage.id] ?? []).join(' · ')}</p>
+                <div className="text-base font-semibold text-muted uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
+                <h2 className="text-4xl font-bold text-ink">{selectedStage.name}</h2>
+                <p className="text-lg font-medium mt-1 text-body">{selectedStage.subtitle}</p>
+                <p className="text-body text-lg mt-3">{selectedStage.description || 'Description could not be loaded.'}</p>
+                <p className="text-muted text-base mt-2">{(STAGE_RUBRICS[selectedStage.id] ?? []).join(' · ')}</p>
                 <button
                   onClick={() => speak(selectedStage.voiceIntro)}
                   className="mt-4 inline-flex items-center gap-2 text-base text-indigo-700 hover:text-indigo-800 border border-indigo-300 hover:border-indigo-400 bg-indigo-100 px-4 py-2 rounded-full transition-all"
@@ -1398,15 +1305,15 @@ LANGUAGE RULES:
               </div>
 
               {/* Voice mode */}
-              <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <p className="text-gray-900 text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
+              <div className="mb-6 bg-paper border border-hair rounded-xl p-4">
+                <p className="text-ink text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
                   <Volume2 size={18} className="text-indigo-600" /> Choose your coach&apos;s voice
                 </p>
-                <div className="flex rounded-xl overflow-hidden border border-gray-300">
+                <div className="flex rounded-xl overflow-hidden border border-hair">
                   <button
                     onClick={() => setVoiceMode('english')}
                     className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all
-                      ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                      ${voiceMode === 'english' ? 'bg-accent text-white' : 'bg-paper text-body hover:bg-hair'}`}
                   >
                     🇬🇧 British English
                   </button>
@@ -1414,7 +1321,7 @@ LANGUAGE RULES:
                   <button
                     onClick={() => setVoiceMode('pidgin')}
                     className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-lg font-bold transition-all
-                      ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                      ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-paper text-body hover:bg-hair'}`}
                   >
                     🇳🇬 Nigerian Pidgin
                   </button>
@@ -1423,10 +1330,10 @@ LANGUAGE RULES:
 
               {/* Topic input */}
               <div className="mb-4">
-                <label className="block text-gray-900 text-lg font-semibold mb-2">
+                <label className="block text-ink text-lg font-semibold mb-2">
                   What context or topic should your math coach use today?
                 </label>
-                <p className="text-gray-500 text-sm mb-3">
+                <p className="text-muted text-sm mb-3">
                   Choose something you love — farming, trading, cooking, football, building, or anything else. Your coach will teach math through it.
                 </p>
                 <input
@@ -1435,7 +1342,7 @@ LANGUAGE RULES:
                   onChange={e => setTopicInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && topicInput.trim()) startSession(); }}
                   placeholder="e.g., market trading, football, farming, building construction..."
-                  className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-4 text-lg focus:outline-none focus:border-indigo-400 placeholder-gray-400 transition-colors"
+                  className="w-full bg-card border border-hair text-ink rounded-xl px-4 py-4 text-lg focus:outline-none focus:border-indigo-400 placeholder-gray-400 transition-colors"
                 />
               </div>
               <button
@@ -1453,7 +1360,7 @@ LANGUAGE RULES:
             {/* Active sessions */}
             {activeSessions.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
                   <MessageSquare size={18} /> Continue a Session
                 </h3>
                 <div className="space-y-3">
@@ -1461,12 +1368,12 @@ LANGUAGE RULES:
                     <div
                       key={session.id}
                       onClick={() => resumeSession(session)}
-                      className={`bg-white border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-all`}
+                      className={`bg-card border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-paper transition-all`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 font-semibold text-base truncate">{session.sub_category}</p>
-                          <p className="text-gray-500 text-sm mt-0.5">
+                          <p className="text-ink font-semibold text-base truncate">{session.sub_category}</p>
+                          <p className="text-muted text-sm mt-0.5">
                             {new Date(session.updated_at).toLocaleDateString()} · {session.progress}
                           </p>
                           {session.math_skills_evaluation && (
@@ -1491,7 +1398,7 @@ LANGUAGE RULES:
             {/* Completed sessions */}
             {finishedSessions.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
                   <CheckCircle size={18} className="text-green-600" /> Completed Sessions
                 </h3>
                 <div className="space-y-2">
@@ -1504,7 +1411,7 @@ LANGUAGE RULES:
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-green-700 font-semibold text-base truncate">🏆 {session.sub_category}</p>
-                          <p className="text-gray-500 text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
+                          <p className="text-muted text-sm">{new Date(session.updated_at).toLocaleDateString()}</p>
                         </div>
                         <ChevronRight size={20} className="text-green-600" />
                       </div>
@@ -1526,7 +1433,6 @@ LANGUAGE RULES:
     const Icon = selectedStage.icon;
     return (
       <AppLayout>
-        <MathDistortedBackground />
 
         {showEvalModal && evaluation && (
           <EvaluationModal
@@ -1539,21 +1445,21 @@ LANGUAGE RULES:
 
         <main className="relative z-10 flex flex-col h-[calc(100vh-64px)]">
           {/* Chat header */}
-          <div className={`flex-shrink-0 border-b ${selectedStage.border} bg-white/95 backdrop-blur px-4 py-3`}>
+          <div className="flex-shrink-0 border-b border-hair bg-card px-4 py-3">
             <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <button
                   onClick={() => { cancel(); setView('topic'); }}
-                  className="text-gray-400 hover:text-gray-900 transition-colors flex-shrink-0"
+                  className="text-muted hover:text-ink transition-colors flex-shrink-0"
                 >
                   <ArrowLeft size={22} />
                 </button>
-                <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center flex-shrink-0`}>
-                  <Icon className="h-5 w-5 text-white" />
+                <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                  <Icon className="h-5 w-5 text-accent" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-gray-900 font-bold text-base leading-tight truncate">{selectedStage.name}</p>
-                  <p className={`text-sm ${selectedStage.textColor} truncate`}>{topic}</p>
+                  <p className="text-ink font-bold text-base leading-tight truncate">{selectedStage.name}</p>
+                  <p className="text-sm text-muted truncate">{topic}</p>
                 </div>
               </div>
 
@@ -1568,20 +1474,20 @@ LANGUAGE RULES:
                 )}
 
                 {/* Voice toggle */}
-                <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                <div className="flex rounded-full overflow-hidden border border-hair">
                   <button
                     onClick={() => setVoiceMode('english')}
                     title="British English voice"
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all border-r border-gray-300
-                      ${voiceMode === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors border-r border-hair
+                      ${voiceMode === 'english' ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-paper hover:text-body'}`}
                   >
                     🇬🇧 <span className="hidden sm:inline">English</span>
                   </button>
                   <button
                     onClick={() => setVoiceMode('pidgin')}
                     title="Nigerian Pidgin voice"
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all
-                      ${voiceMode === 'pidgin' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-700'}`}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors
+                      ${voiceMode === 'pidgin' ? 'bg-accent text-white' : 'bg-card text-muted hover:bg-paper hover:text-body'}`}
                   >
                     🇳🇬 <span className="hidden sm:inline">Pidgin</span>
                   </button>
@@ -1589,7 +1495,7 @@ LANGUAGE RULES:
 
                 <button
                   onClick={() => { setSpeechEnabled(s => !s); if (speechEnabled) cancel(); }}
-                  className={`p-2 rounded-lg transition-all ${speechEnabled ? `${selectedStage.glowBg} ${selectedStage.textColor} border ${selectedStage.border}` : 'bg-slate-700 text-slate-500'}`}
+                  className={`p-2 rounded-full transition-colors border ${speechEnabled ? 'bg-surface text-accent border-accent/30' : 'border-hair text-muted'}`}
                 >
                   {isSpeaking && speechEnabled ? <Volume2 size={16} className="animate-pulse" /> : speechEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 </button>
@@ -1599,37 +1505,29 @@ LANGUAGE RULES:
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-5">
-            <div className="max-w-3xl mx-auto space-y-4">
+            <div className="max-w-3xl mx-auto space-y-6">
               {messages.map(msg => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-3`}>
-                  {msg.role === 'assistant' && (
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center flex-shrink-0 mt-1`}>
-                      <Icon className="h-4 w-4 text-white" />
+                <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <span className="text-xs font-medium text-muted mb-1.5">{msg.role === 'user' ? 'You' : 'AI Coach'}</span>
+                  {msg.role === 'user' ? (
+                    <div className="max-w-[80%] rounded-xl bg-card border border-hair px-4 py-3 text-[15px] leading-[1.7] text-body">
+                      <MessageContent content={msg.content} />
+                    </div>
+                  ) : (
+                    <div className="max-w-[80%] text-[15px] leading-[1.7] text-body">
+                      <MessageContent content={msg.content} />
+                      <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
                     </div>
                   )}
-                  <div className={`max-w-[80%] rounded-2xl px-5 py-4 text-lg leading-relaxed
-                    ${msg.role === 'user'
-                      ? 'bg-slate-700 text-white rounded-tr-sm'
-                      : 'bg-gray-50 border border-gray-200 text-gray-800 rounded-tl-sm'}`}
-                  >
-                    <MessageContent content={msg.content} />
-                    {msg.role === 'assistant' && (
-                      <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
-                    )}
-                  </div>
                 </div>
               ))}
               {busy && (
-                <div className="flex justify-start gap-3">
-                  <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
-                    <Icon className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-5 py-3">
-                    <div className="flex gap-1 items-center h-4">
-                      {[0, 150, 300].map(d => (
-                        <div key={d} className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
-                      ))}
-                    </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-medium text-muted mb-1.5">AI Coach</span>
+                  <div className="flex gap-1 items-center h-4">
+                    {[0, 150, 300].map(d => (
+                      <div key={d} className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse" style={{ animationDelay: `${d}ms` }} />
+                    ))}
                   </div>
                 </div>
               )}
@@ -1644,27 +1542,29 @@ LANGUAGE RULES:
           </div>
 
           {/* Input */}
-          <div className={`flex-shrink-0 border-t ${selectedStage.border} bg-white/90 backdrop-blur px-4 pt-3 pb-4`}>
+          <div className="flex-shrink-0 border-t border-hair bg-card px-4 pt-3 pb-4">
             <div className="max-w-3xl mx-auto">
-              <textarea
-                ref={inputRef}
-                value={inputText}
-                onChange={e => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your answer, working, or question here... or tap the mic to speak."
-                rows={3}
-                disabled={isSending || isImproving}
-                className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3
-                  focus:outline-none focus:border-indigo-400 placeholder-slate-400 resize-none text-lg
-                  leading-relaxed disabled:opacity-50 transition-colors mb-2"
-              />
+              <div className="relative mb-2">
+                <textarea
+                  ref={inputRef}
+                  value={inputText}
+                  onChange={e => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your answer, working, or question here... or tap the mic to speak."
+                  rows={3}
+                  disabled={isSending || isImproving}
+                  className="w-full bg-transparent text-body rounded-xl px-1 py-1
+                    focus:outline-none placeholder:text-muted resize-none text-lg
+                    leading-relaxed disabled:opacity-50 transition-colors"
+                />
+              </div>
 
               {/* Row 1: Mic + Send */}
               <div className="flex items-center justify-between mb-2 gap-2">
                 <button
                   onClick={toggleListening}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-medium transition-all
-                    ${isListening ? 'bg-red-500 animate-pulse text-white shadow-lg shadow-red-500/40' : 'bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700'}`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-base font-medium transition-colors border
+                    ${isListening ? 'bg-red-50 border-red-300 text-red-600' : 'border-hair bg-card text-body hover:border-accent/40 hover:text-accent'}`}
                 >
                   {isListening ? <MicOff size={17} /> : <Mic size={17} />}
                   {isListening ? 'Stop' : 'Speak'}
@@ -1672,10 +1572,10 @@ LANGUAGE RULES:
                 <button
                   onClick={sendMessage}
                   disabled={!inputText.trim() || isSending}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-base font-bold transition-all
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-base font-semibold transition-colors
                     ${inputText.trim() && !isSending
-                      ? `bg-gradient-to-r ${selectedStage.gradient} text-white hover:opacity-90 shadow-lg`
-                      : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                      ? 'bg-accent text-white hover:bg-accent/90'
+                      : 'bg-hair text-muted cursor-not-allowed'}`}
                 >
                   <Send size={16} /> Send
                 </button>
@@ -1687,10 +1587,10 @@ LANGUAGE RULES:
                   onClick={handleImprove}
                   disabled={!inputText.trim() || isImproving || isSending}
                   title="AI polishes your mathematical explanation while keeping your ideas"
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all border
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold transition-colors border
                     ${inputText.trim() && !isImproving && !isSending
-                      ? 'bg-violet-100 border-violet-300 text-violet-700 hover:bg-violet-200'
-                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
+                      ? 'border-hair bg-card text-body hover:border-accent/40 hover:text-accent'
+                      : 'border-hair bg-card text-muted cursor-not-allowed opacity-60'}`}
                 >
                   <Wand2 size={15} />
                   {isImproving ? 'Polishing...' : 'Improve my explanation'}
@@ -1700,10 +1600,10 @@ LANGUAGE RULES:
                   onClick={handleSave}
                   disabled={isSaving || isSending || messages.length < 2}
                   title="Save session and get your full evaluation"
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
+                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-colors border
                     ${!isSaving && messages.length >= 2
-                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700 hover:bg-emerald-200'
-                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
+                      ? 'border-hair bg-card text-body hover:border-accent/40 hover:text-accent'
+                      : 'border-hair bg-card text-muted cursor-not-allowed opacity-60'}`}
                 >
                   <Save size={15} />
                   {isSaving ? 'Saving...' : 'Save Session'}
@@ -1713,17 +1613,17 @@ LANGUAGE RULES:
                   onClick={handleEvaluate}
                   disabled={isEvaluating || isSending || userMessageCount < 2}
                   title={userMessageCount < 2 ? 'Send at least 2 messages first' : 'Get your full math evaluation'}
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border
+                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-colors
                     ${!isEvaluating && userMessageCount >= 2
-                      ? 'bg-blue-600 border-blue-500 text-white hover:bg-blue-700'
-                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'}`}
+                      ? 'bg-accent text-white hover:bg-accent/90'
+                      : 'bg-hair text-muted cursor-not-allowed'}`}
                 >
                   <BarChart3 size={15} />
                   {isEvaluating ? 'Evaluating...' : 'Evaluate'}
                 </button>
               </div>
 
-              <p className="text-center text-gray-500 text-base mt-2">
+              <p className="text-center text-muted text-base mt-2">
                 Enter to send · Shift+Enter for new line
                 {userMessageCount < 2 && ` · Send ${2 - userMessageCount} more message${userMessageCount === 1 ? '' : 's'} to enable evaluation`}
               </p>
