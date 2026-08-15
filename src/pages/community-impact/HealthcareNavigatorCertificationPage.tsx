@@ -29,6 +29,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
+import { saveEvaluation } from '../../lib/evaluations';
 import { useBranding } from '../../lib/useBranding';
 import {
   Heart, Award, Trophy, Loader2, Download, AlertCircle,
@@ -638,6 +639,27 @@ Return valid JSON only (no markdown, no code fences):
 
       setAssessmentScores(scores);
       await saveToDashboard(portfolio, scores);
+
+      // Dual-write to the shared evaluations table alongside the legacy
+      // healthcare_cert_evaluation column saveToDashboard just wrote — see
+      // src/lib/evaluations.ts. The legacy column stays authoritative for
+      // this page's own read path.
+      if (dashboardRowId && user?.id) {
+        saveEvaluation(user.id, {
+          dashboardId: dashboardRowId,
+          activityType: 'healthcare_navigator_certification',
+          overallScore: result.overall_score ?? 0,
+          maxScore: 3,
+          evidence: result.summary,
+          criteria: scores.map((s, i) => ({
+            key: `${s.assessment_name}-${i}`,
+            label: s.assessment_name,
+            score: s.score ?? 0,
+            evidence: s.evidence ?? undefined,
+          })),
+        }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
+
       setView('results');
     } catch (err: any) {
       setEvalError('Evaluation failed. Please check your portfolio is complete and try again.');
