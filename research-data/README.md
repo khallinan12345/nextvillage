@@ -14,7 +14,7 @@
 ## Repository Contents
 
 ```
-data/
+research-data/
   learner_daily_panel.csv          # Longitudinal daily panel — primary analysis dataset
   learner_cohort_summary.csv       # One row per learner — cohort characteristics and totals
   disruption_periods.csv           # Monthly aggregates — natural experiment data
