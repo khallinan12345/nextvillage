@@ -6,6 +6,8 @@ import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../../lib/
 import AppLayout from '../../components/layout/AppLayout';
 import QuietButton from '../../components/ui/QuietButton';
 import ChatSurface from '../../components/chat/ChatSurface';
+import EvaluationPanel from '../../components/evaluation/EvaluationPanel';
+import { saveEvaluation } from '../../lib/evaluations';
 import {
   Brain,
   Wand2,
@@ -2170,7 +2172,27 @@ CRITICAL: Return ONLY the JSON object. No preamble, no explanation, no markdown.
 
       if (error) throw error;
 
-      setAllAIActivities(prev => 
+      // Dual-write to the shared evaluations table alongside the legacy
+      // dashboard columns above — see src/lib/evaluations.ts. The legacy
+      // columns stay authoritative for dashboard/profile score badges
+      // until those are migrated too.
+      if (unescoScores && user?.id) {
+        saveEvaluation(user.id, {
+          dashboardId: activityId,
+          activityType: 'ai_learning',
+          overallScore: evaluationScore,
+          maxScore: 3,
+          evidence: evaluationEvidence,
+          criteria: [
+            { key: 'understanding_ai', label: 'Understanding of AI Principles', score: unescoScores.competency_1_score, evidence: unescoScores.competency_1_evidence },
+            { key: 'human_centred', label: 'Human-Centred Mindset', score: unescoScores.competency_2_score, evidence: unescoScores.competency_2_evidence },
+            { key: 'application', label: 'Application of AI Tools', score: unescoScores.competency_3_score, evidence: unescoScores.competency_3_evidence },
+            { key: 'critical_evaluation', label: 'Critical Evaluation', score: unescoScores.competency_4_score, evidence: unescoScores.competency_4_evidence },
+          ],
+        }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
+
+      setAllAIActivities(prev =>
         prev.map(activity => 
           activity.id === activityId 
             ? { 
@@ -3468,73 +3490,20 @@ Respond ONLY with valid JSON:
 
                   {/* Content */}
                   <div className="space-y-4">
-                    {/* Overall Certification Score Display */}
-                    <div className="mb-6 p-6 bg-surface rounded-xl border border-hair">
-                      <div className="text-center">
-                        <div className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
-                          Overall Certification Score
-                        </div>
-                        <div className="flex items-center justify-center gap-4 mb-2">
-                          <div className="text-6xl font-extrabold text-ink">
-                            {evaluationResult.score}<span className="text-3xl text-muted">/3</span>
-                          </div>
-                        </div>
-                        <div className={classNames(
-                          "inline-block px-6 py-3 rounded-full text-2xl font-bold mt-2",
-                          evaluationResult.score === 3 ? 'bg-green-100 text-green-800' :
-                          evaluationResult.score === 2 ? 'bg-blue-100 text-blue-800' :
-                          evaluationResult.score === 1 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        )}>
-                          {evaluationResult.score === 3 ? 'Advanced' :
-                           evaluationResult.score === 2 ? 'Proficient' :
-                           evaluationResult.score === 1 ? 'Emerging' :
-                           'No Evidence'}
-                        </div>
-                        <div className="text-xs text-muted mt-3">
-                          {evaluationResult.score === 0 && 'No evidence of competency demonstrated'}
-                          {evaluationResult.score === 1 && 'Emerging understanding of competency'}
-                          {evaluationResult.score === 2 && 'Proficient - Meets certification standard ✓'}
-                          {evaluationResult.score === 3 && 'Advanced - Exceeds certification standard ✓'}
-                        </div>
-                        {evaluationResult.score === 3 && (
-                          <div className="mt-3 text-sm text-green-700 font-semibold">
-                            Activity marked as completed!
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* UNESCO Competency Sub-Scores */}
-                    {evaluationResult.unescoScores && (
-                      <div className="mb-6">
-                        <h4 className="font-semibold text-base text-ink mb-3">UNESCO AI Competency Scores</h4>
-                        <div className="space-y-3">
-                          {([
-                            { label: 'Understanding of AI Principles', score: evaluationResult.unescoScores.competency_1_score, evidence: evaluationResult.unescoScores.competency_1_evidence },
-                            { label: 'Human-Centred Mindset', score: evaluationResult.unescoScores.competency_2_score, evidence: evaluationResult.unescoScores.competency_2_evidence },
-                            { label: 'Application of AI Tools', score: evaluationResult.unescoScores.competency_3_score, evidence: evaluationResult.unescoScores.competency_3_evidence },
-                            { label: 'Critical Evaluation', score: evaluationResult.unescoScores.competency_4_score, evidence: evaluationResult.unescoScores.competency_4_evidence },
-                          ]).map(c => (
-                            <div key={c.label} className="bg-paper rounded-lg p-4 border border-hair">
-                              <div className="flex items-center justify-between mb-2">
-                                <h5 className="font-semibold text-ink text-sm">{c.label}</h5>
-                                <span className={classNames(
-                                  "px-3 py-1 rounded-full text-sm font-bold border",
-                                  c.score === 3 ? "bg-green-100 text-green-800 border-green-300" :
-                                  c.score === 2 ? "bg-blue-100 text-blue-800 border-blue-300" :
-                                  c.score === 1 ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
-                                  "bg-red-100 text-red-800 border-red-300"
-                                )}>
-                                  {c.score}/3
-                                </span>
-                              </div>
-                              <p className="text-sm text-body">
-                                <span className="font-medium text-ink">Evidence:</span> {c.evidence}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
+                    <EvaluationPanel
+                      title="Overall Certification Score"
+                      overallScore={evaluationResult.score}
+                      maxScore={3}
+                      criteria={evaluationResult.unescoScores ? [
+                        { key: 'understanding_ai', label: 'Understanding of AI Principles', score: evaluationResult.unescoScores.competency_1_score, evidence: evaluationResult.unescoScores.competency_1_evidence },
+                        { key: 'human_centred', label: 'Human-Centred Mindset', score: evaluationResult.unescoScores.competency_2_score, evidence: evaluationResult.unescoScores.competency_2_evidence },
+                        { key: 'application', label: 'Application of AI Tools', score: evaluationResult.unescoScores.competency_3_score, evidence: evaluationResult.unescoScores.competency_3_evidence },
+                        { key: 'critical_evaluation', label: 'Critical Evaluation', score: evaluationResult.unescoScores.competency_4_score, evidence: evaluationResult.unescoScores.competency_4_evidence },
+                      ] : []}
+                    />
+                    {evaluationResult.score === 3 && (
+                      <div className="text-sm text-green-700 font-semibold text-center">
+                        Activity marked as completed!
                       </div>
                     )}
 
