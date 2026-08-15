@@ -1,9 +1,9 @@
-// src/pages/AIReadySkillsCertificationPage.tsx
+// src/pages/learning/AIReadySkillsCertificationPage.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import AppLayout from '../components/layout/AppLayout';
+import AppLayout from '../../components/layout/AppLayout';
 import { 
   Brain,
   Code,
@@ -27,12 +27,12 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { chatText, chatJSON } from '../lib/chatClient';
-import { supabase } from '../lib/supabaseClient';
-import { useVoice } from '../hooks/useVoice';
-import { VoiceFallback } from '../components/VoiceFallback';
-import { useBranding, addBrandingToPDF } from '../lib/useBranding';
+import { useAuth } from '../../hooks/useAuth';
+import { chatText, chatJSON } from '../../lib/chatClient';
+import { supabase } from '../../lib/supabaseClient';
+import { useVoice } from '../../hooks/useVoice';
+import { VoiceFallback } from '../../components/VoiceFallback';
+import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
 
 // ---------------------------------------------------------------------------
 // Shared prose styles for ReactMarkdown rendering

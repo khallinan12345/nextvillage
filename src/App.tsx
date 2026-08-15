@@ -41,8 +41,8 @@ const AILearningPage = lazy(() => import('./pages/learning/AILearningPage'));
 const AIReadySkillsPage = lazy(() => import('./pages/learning/AIReadySkillsPage'));
 
 // Certification Pages
-const AILearningCertificationPage = lazy(() => import('./pages/AILearningCertificationPage'));
-const AIReadySkillsCertificationPage = lazy(() => import('./pages/AIReadySkillsCertificationPage'));
+const AILearningCertificationPage = lazy(() => import('./pages/learning/AILearningCertificationPage'));
+const AIReadySkillsCertificationPage = lazy(() => import('./pages/learning/AIReadySkillsCertificationPage'));
 const AIPlaygroundPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundPage'));
 const AIPlaygroundTogetherPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundTogetherPage'));
 const SystemsThinkPage = lazy(() => import('./pages/AIPlayground/SystemsThinkPage'));
