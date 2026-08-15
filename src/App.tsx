@@ -1,9 +1,9 @@
 // src/App.tsx
 
 import React, { useEffect, useMemo, lazy, Suspense } from 'react';
-const EnglishSkillsPage = lazy(() => import('./pages/EnglishSkillsPage'));
-const MathSkillsPage = lazy(() => import('./pages/MathSkillsPage'));
-const ScienceSkillsPage = lazy(() => import('./pages/ScienceSkillsPage'));
+const EnglishSkillsPage = lazy(() => import('./pages/Foundations/EnglishSkillsPage'));
+const MathSkillsPage = lazy(() => import('./pages/Foundations/MathSkillsPage'));
+const ScienceSkillsPage = lazy(() => import('./pages/Foundations/ScienceSkillsPage'));
 import {
   BrowserRouter,
   Routes,

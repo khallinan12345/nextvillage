@@ -2,20 +2,20 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import AppLayout from '../components/layout/AppLayout';
+import AppLayout from '../../components/layout/AppLayout';
 import {
   Mic, MicOff, MessageSquare, BookOpen, PenLine, Sparkles,
   Lock, ArrowLeft, Send, Volume2, VolumeX, CheckCircle,
   TrendingUp, ChevronRight, Globe2, Wand2, Save,
   BarChart3, PlayCircle, Clock, X,
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabaseClient';
-import { chatText, chatJSON } from '../lib/chatClient';
-import { useVoice } from '../hooks/useVoice';
-import { PidginTooltip } from '../components/PidginTooltip';
-import { VoiceFallback } from '../components/VoiceFallback';
-import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
+import { chatText, chatJSON } from '../../lib/chatClient';
+import { useVoice } from '../../hooks/useVoice';
+import { PidginTooltip } from '../../components/PidginTooltip';
+import { VoiceFallback } from '../../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
