@@ -25,7 +25,7 @@
 //
 // Doesn't use the AI Playground — the actual practice and evaluation happens
 // on the Skill Development page; this is the locked map plus the deep links
-// into it (see SkillsDevelopmentPage.tsx's ?activity=/?create= handling).
+// into it (see AIReadySkillsPage.tsx (learning/)'s ?activity=/?create= handling).
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';

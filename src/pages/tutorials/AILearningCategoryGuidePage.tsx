@@ -2,7 +2,7 @@
 //
 // One Guide per AI Learning category — Understanding AI, Prompt Engineering,
 // AI Ethics & Responsible Use, Evaluating AI Outputs, and AI Applications.
-// The taxonomy is flat (confirmed against AILearningPage.tsx's
+// The taxonomy is flat (confirmed against AILearningPage.tsx (learning/)'s
 // aiLearningCategories array and the learning_modules/dashboard schema —
 // there is no real sub-category tier underneath the 5), so this is one
 // dynamic route (/tutorials/ai-learning/:categoryId) driven by the
@@ -22,7 +22,7 @@
 //
 // All of that content is transcribed from the real system prompts
 // (AI_SESSION_BUILDER_PROMPT and buildUNESCOAssessmentInstructions in
-// AILearningPage.tsx) — nothing here is invented or approximate, since a
+// AILearningPage.tsx (learning/)) — nothing here is invented or approximate, since a
 // Guide that misdescribes its own grading would actively mislead a student.
 //
 // No AI Playground swivel: AILearningStartPage's own header comment

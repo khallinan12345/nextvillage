@@ -16,7 +16,7 @@
 //
 // Doesn't use the AI Playground — the actual learning and evaluation happens
 // on the AI Learning page; this is the locked map plus the deep links into it
-// (see AILearningPage.tsx's ?activity=/?create= handling).
+// (see AILearningPage.tsx (learning/)'s ?activity=/?create= handling).
 //
 // Scores come from `dashboard.certification_evaluation_score`, keyed by
 // learning_module_id — and that id is different per city_town (Oloibiri /

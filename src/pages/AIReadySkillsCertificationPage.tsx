@@ -1,4 +1,4 @@
-// src/pages/AIReadySkillsPage.tsx
+// src/pages/AIReadySkillsCertificationPage.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -176,7 +176,7 @@ interface PersonalityBaseline {
 type ViewMode = 'overview' | 'select-certification' | 'select-assessment' | 'define-context' | 'take-assessment' | 'results' | 'certificate';
 
 
-const AIReadySkillsPage: React.FC = () => {
+const AIReadySkillsCertificationPage: React.FC = () => {
   const { user } = useAuth();
   
   // State management
@@ -1988,4 +1988,4 @@ Return ONLY the description, nothing else.`
   );
 };
 
-export default AIReadySkillsPage;
+export default AIReadySkillsCertificationPage;

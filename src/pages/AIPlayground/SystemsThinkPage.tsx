@@ -1,4 +1,4 @@
-// src/pages/SystemsThinkPage.tsx
+// src/pages/AIPlayground/SystemsThinkPage.tsx
 //
 // "Systems Think" — a reflective thinking-partner tool. The voice in this
 // conversation is Ngozi, an original Nigerian character — not a stand-in or
@@ -28,9 +28,9 @@
 // session-persistence state.
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import AppLayout from '../components/layout/AppLayout';
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabaseClient';
+import AppLayout from '../../components/layout/AppLayout';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';

@@ -1,9 +1,9 @@
 // src/App.tsx
 
 import React, { useEffect, useMemo, lazy, Suspense } from 'react';
-const EnglishSkillsPage = lazy(() => import('./pages/Foundations/EnglishSkillsPage'));
-const MathSkillsPage = lazy(() => import('./pages/Foundations/MathSkillsPage'));
-const ScienceSkillsPage = lazy(() => import('./pages/Foundations/ScienceSkillsPage'));
+const EnglishSkillsPage = lazy(() => import('./pages/foundations/EnglishSkillsPage'));
+const MathSkillsPage = lazy(() => import('./pages/foundations/MathSkillsPage'));
+const ScienceSkillsPage = lazy(() => import('./pages/foundations/ScienceSkillsPage'));
 import {
   BrowserRouter,
   Routes,
@@ -37,15 +37,15 @@ const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Learning Pages
-const AILearningPage = lazy(() => import('./pages/AILearningPage'));
-const SkillsDevelopmentPage = lazy(() => import('./pages/SkillsDevelopmentPage'));
+const AILearningPage = lazy(() => import('./pages/learning/AILearningPage'));
+const AIReadySkillsPage = lazy(() => import('./pages/learning/AIReadySkillsPage'));
 
 // Certification Pages
-const AIProficiencyPage = lazy(() => import('./pages/AIProficiencyPage'));
-const AIReadySkillsPage = lazy(() => import('./pages/AIReadySkillsPage'));
-const AIPlaygroundPage = lazy(() => import('./pages/AIPlaygroundPage'));
-const PlaygroundTogetherPage = lazy(() => import('./pages/PlaygroundTogetherPage'));
-const SystemsThinkPage = lazy(() => import('./pages/SystemsThinkPage'));
+const AILearningCertificationPage = lazy(() => import('./pages/AILearningCertificationPage'));
+const AIReadySkillsCertificationPage = lazy(() => import('./pages/AIReadySkillsCertificationPage'));
+const AIPlaygroundPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundPage'));
+const AIPlaygroundTogetherPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundTogetherPage'));
+const SystemsThinkPage = lazy(() => import('./pages/AIPlayground/SystemsThinkPage'));
 
 // Tech Skills Pages
 const WebDevelopmentPage = lazy(() => import('./pages/tech-skills/WebDevelopmentPage'));
@@ -60,7 +60,7 @@ const VideoGenerationPage = lazy(() => import('./pages/tech-skills/VideoGenerati
 const VideoStudioPage = lazy(() => import('./pages/tech-skills/VideoStudioPage'));
 const DocumentStudioPage = lazy(() => import('./pages/tech-skills/DocumentStudioPage'));
 const VoiceCreationPage = lazy(() => import('./pages/tech-skills/VoiceCreationPage'));
-const AIContentCreationPage = lazy(() => import('./pages/AIContentCreationPage'));
+const AIContentCreationPage = lazy(() => import('./pages/tech-skills/AIContentCreationPage'));
 const AIWorkflowDevPage = lazy(() => import('./pages/tech-skills/AIWorkflowDevPage'));
 const AIForBusinessPage = lazy(() => import('./pages/tech-skills/AIForBusinessPage'));
 const MicrosoftAI900Page = lazy(() => import('./pages/tech-skills/MicrosoftAI900Page'));
@@ -252,11 +252,11 @@ export const AppContent: React.FC = () => {
         <Route path="/math-skills" element={<MathSkillsPage />} />
         <Route path="/science-skills" element={<ScienceSkillsPage />} />
         <Route path="/learning/ai" element={<AILearningPage />} />
-        <Route path="/learning/skills" element={<SkillsDevelopmentPage />} />
+        <Route path="/learning/skills" element={<AIReadySkillsPage />} />
 
         {/* Certification Routes */}
-        <Route path="/certifications/ai-proficiency" element={<AIProficiencyPage />} />
-        <Route path="/certifications/ai-ready-skills" element={<AIReadySkillsPage />} />
+        <Route path="/certifications/ai-proficiency" element={<AILearningCertificationPage />} />
+        <Route path="/certifications/ai-ready-skills" element={<AIReadySkillsCertificationPage />} />
         <Route path="/certifications/vibe-coding" element={<VibeCodingCertificationPage />} />
         <Route path="/certifications/web-dev-certification" element={<WebDevCertificationPage />} />
         <Route path="/certifications/full-stack-certification" element={<FullStackCertificationPage />} />
@@ -267,7 +267,7 @@ export const AppContent: React.FC = () => {
         <Route path="/certifications/ai-workflow-dev" element={<AIWorkflowDevCertificationPage />} />
         <Route path="/certifications/ai-for-business" element={<AIForBusinessCertificationPage />} />
         <Route path="/playground" element={<AIPlaygroundPage />} />
-        <Route path="/playground/together" element={<PlaygroundTogetherPage />} />
+        <Route path="/playground/together" element={<AIPlaygroundTogetherPage />} />
         <Route path="/systems-think" element={<SystemsThinkPage />} />
 
         {/* Tech Skills Routes */}

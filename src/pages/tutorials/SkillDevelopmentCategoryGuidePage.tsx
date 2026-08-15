@@ -4,7 +4,7 @@
 // Thinking, Problem-Solving, Creativity, Communication. Same shape as
 // AILearningCategoryGuidePage.tsx (one dynamic route, one config-driven
 // component, since the taxonomy is flat here too — confirmed against
-// SkillsDevelopmentPage.tsx's skillCategories array and the same
+// AIReadySkillsPage.tsx (learning/)'s skillCategories array and the same
 // dashboard/learning_modules tables AI Learning uses, just category='Skills'
 // instead of AI Learning's category value).
 //
@@ -14,13 +14,13 @@
 // 1. Only ONE scoring layer here, not two. AI Learning has an in-chat 0–3
 //    rubric AND a separate UNESCO Comprehensive Assessment. Skills has just
 //    the one rubric (buildSkillsFacilitatorPrompt / RUBRIC_DEFINITIONS in
-//    SkillsDevelopmentPage.tsx) — it does double duty as both the live
+//    AIReadySkillsPage.tsx (learning/)) — it does double duty as both the live
 //    coaching signal and the final certification score. There is no second
 //    "formal assessment" pass to describe here.
 //
 // 2. The overall score is the MINIMUM across a category's dimensions, not
 //    an average (`Math.min(...dimensions.map(d => d.score))`,
-//    SkillsDevelopmentPage.tsx). One weak dimension caps the whole category
+//    AIReadySkillsPage.tsx (learning/)). One weak dimension caps the whole category
 //    — worth teaching explicitly, especially for Digital Fluency, which has
 //    7 dimensions instead of the other four categories' 2.
 //
@@ -32,7 +32,7 @@
 // invitation to design a session around the same kind of scenario just
 // walked through.
 //
-// AI-world framing: SkillsDevelopmentPage.tsx and SkillDevelopmentStartPage
+// AI-world framing: AIReadySkillsPage.tsx (learning/) and SkillDevelopmentStartPage
 // never explain why these 5 skills matter, and the only in-app AI framing
 // is one thin subtitle line. The real, citable material is in
 // AboutPage.tsx's "AI Ready Skills" certification card: "AI amplifies

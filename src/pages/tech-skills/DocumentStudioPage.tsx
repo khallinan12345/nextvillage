@@ -9,7 +9,7 @@
 //
 // Dependencies that may need installing:
 //   npm i jspdf html2canvas
-//   (jspdf is already used in PlaygroundTogetherPage)
+//   (jspdf is already used in AIPlaygroundTogetherPage)
 
 import React, {
   useState, useEffect, useRef, useCallback, useMemo,
@@ -191,7 +191,7 @@ const DocumentStudioPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // ── Org resolution (same pattern as PlaygroundTogetherPage) ────────────────
+  // ── Org resolution (same pattern as AIPlaygroundTogetherPage) ────────────────
   const [effectiveOrgId, setEffectiveOrgId] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 

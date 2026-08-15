@@ -1,11 +1,11 @@
 // AILearningPage.tsx - Dashboard-based AI learning with interactive activities
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
-import AppLayout from '../components/layout/AppLayout';
-import QuietButton from '../components/ui/QuietButton';
-import ChatSurface from '../components/chat/ChatSurface';
+import { supabase } from '../../lib/supabaseClient';
+import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../../lib/chatClient';
+import AppLayout from '../../components/layout/AppLayout';
+import QuietButton from '../../components/ui/QuietButton';
+import ChatSurface from '../../components/chat/ChatSurface';
 import {
   Brain,
   Wand2,
@@ -27,11 +27,11 @@ import {
   X
 } from 'lucide-react';
 import classNames from 'classnames';
-import { useAuth } from '../hooks/useAuth';
-import { useVoice } from '../hooks/useVoice';
-import { PidginTooltip } from '../components/PidginTooltip';
-import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
-import { VoiceFallback } from '../components/VoiceFallback';
+import { useAuth } from '../../hooks/useAuth';
+import { useVoice } from '../../hooks/useVoice';
+import { PidginTooltip } from '../../components/PidginTooltip';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { VoiceFallback } from '../../components/VoiceFallback';
 // Helper function to check and trigger baseline assessment
 // Helper function to check and trigger baseline assessment
 async function checkAndTriggerBaseline(userId: string, userToken: string): Promise<void> {

@@ -1,4 +1,4 @@
-// src/pages/PlaygroundTogetherPage.tsx
+// src/pages/AIPlayground/AIPlaygroundTogetherPage.tsx
 //
 // "Use Claude Together" — multi-user collaborative chat rooms, available to
 // every organization, each scoped to its own rooms only. Any org member can
@@ -14,10 +14,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import AppLayout from '../components/layout/AppLayout';
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabaseClient';
-import { BACK_TO_BASICS_ORG_ID } from '../lib/backToBasicsScope';
+import AppLayout from '../../components/layout/AppLayout';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
+import { BACK_TO_BASICS_ORG_ID } from '../../lib/backToBasicsScope';
 import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X, Image as ImageIcon, BookOpen, Download } from 'lucide-react';
 
 const QUOTA_TOKENS    = 25000;
@@ -92,7 +92,7 @@ interface TogetherMessage {
   deleted_by: string | null;
 }
 
-const PlaygroundTogetherPage: React.FC = () => {
+const AIPlaygroundTogetherPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -875,4 +875,4 @@ const PlaygroundTogetherPage: React.FC = () => {
   );
 };
 
-export default PlaygroundTogetherPage;
+export default AIPlaygroundTogetherPage;
