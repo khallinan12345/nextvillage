@@ -29,6 +29,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
+import { upsertEvaluationCriterion } from '../../lib/evaluations';
 import { jsPDF } from 'jspdf';
 
 
@@ -653,6 +654,8 @@ Respond ONLY in this JSON format:
         updated_at: new Date().toISOString()
       };
 
+      let dashboardRowId: string | null = existingRecord?.id ?? null;
+
       // Only update progress if:
       // 1. It's not already 'completed', OR
       // 2. The new status is 'completed' (advanced score)
@@ -661,14 +664,14 @@ Respond ONLY in this JSON format:
         if (existingRecord.progress !== 'completed' || progressStatus === 'completed') {
           updateData.progress = progressStatus;
         }
-        
+
         await supabase
           .from('dashboard')
           .update(updateData)
           .eq('id', existingRecord.id);
       } else {
         // Insert new record
-        await supabase
+        const { data: inserted } = await supabase
           .from('dashboard')
           .insert({
             user_id: user.id,
@@ -676,10 +679,29 @@ Respond ONLY in this JSON format:
             category_activity: 'Certification',
             progress: progressStatus,
             ...updateData
-          });
+          })
+          .select('id')
+          .single();
+        dashboardRowId = inserted?.id ?? null;
       }
 
       console.log('[AIProficiency] Saved to dashboard:', { score, progressStatus });
+
+      // Dual-write to the shared evaluations table alongside the legacy
+      // per-assessment dashboard columns above — see src/lib/evaluations.ts.
+      // Each of the 4 assessments here is scored independently (one at a
+      // time, not all at once like AILearningPage), so this merges just
+      // this criterion into whatever's already been scored for this
+      // dashboard row rather than overwriting the whole evaluation.
+      if (dashboardRowId) {
+        upsertEvaluationCriterion(
+          user.id,
+          dashboardRowId,
+          'ai_learning_certification',
+          { key: columnBase, label: selectedAssessment.assessment_name, score, evidence },
+          3
+        ).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
 
       // Refresh scores
       await fetchAssessmentsAndScores();
