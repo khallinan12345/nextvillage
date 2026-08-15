@@ -55,6 +55,8 @@ import AppLayout from '../../components/layout/AppLayout';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import QuietButton from '../../components/ui/QuietButton';
 import ChatSurface from '../../components/chat/ChatSurface';
+import EvaluationPanel from '../../components/evaluation/EvaluationPanel';
+import { saveEvaluation } from '../../lib/evaluations';
 import {
   Monitor,
   Lightbulb,
@@ -2763,6 +2765,27 @@ Provide assessment now:`;
       }
       
       console.log('[Skills Rubric Update] Success');
+
+      // Dual-write to the shared evaluations table alongside the legacy
+      // per-dimension dashboard columns above — see src/lib/evaluations.ts.
+      // The legacy columns stay authoritative for dashboard/profile score
+      // badges until those are migrated too.
+      if (user?.id) {
+        saveEvaluation(user.id, {
+          dashboardId: activityId,
+          activityType: 'ai_ready_skills',
+          overallScore: evaluationScore,
+          maxScore: 3,
+          evidence: aggregateEvidence,
+          criteria: rubricEvaluation.dimensions.map((dim, index) => ({
+            key: `${dim.dimension}-${index}`,
+            label: dim.dimension.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+            score: dim.score,
+            evidence: dim.evidence,
+          })),
+        }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
+
       return { score: evaluationScore, completed: shouldComplete };
     } catch (err) {
       console.error('[Skills Rubric Update] Error:', err);
@@ -3798,71 +3821,20 @@ Provide assessment now:`;
       const rubricEval = evaluationResult as SkillsRubricEvaluation;
       // Use MINIMUM score instead of average for overall certification score
       const overallScore = Math.min(...rubricEval.dimensions.map(dim => dim.score));
-      
-      // Get certification level label
-      const getCertificationLabel = (score: number) => {
-        switch(score) {
-          case 0: return 'No Evidence';
-          case 1: return 'Emerging';
-          case 2: return 'Proficient';
-          case 3: return 'Advanced';
-          default: return '';
-        }
-      };
 
       return (
         <div>
-          <div className="mb-6 p-6 bg-surface rounded-xl border border-hair">
-            <div className="text-center">
-              <div className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
-                Overall Certification Score
-              </div>
-              <div className="flex items-center justify-center gap-4 mb-2">
-                <div className="text-6xl font-extrabold text-ink">
-                  {overallScore}<span className="text-3xl text-muted">/3</span>
-                </div>
-              </div>
-              <div className={classNames(
-                "inline-block px-6 py-3 rounded-full text-2xl font-bold mt-2",
-                overallScore === 3 ? 'bg-green-100 text-green-800' :
-                overallScore === 2 ? 'bg-blue-100 text-blue-800' :
-                overallScore === 1 ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              )}>
-                {getCertificationLabel(overallScore)}
-              </div>
-              <div className="text-xs text-muted mt-3">
-                {overallScore === 0 && 'No evidence of competency demonstrated'}
-                {overallScore === 1 && 'Emerging understanding of competency'}
-                {overallScore === 2 && 'Proficient - Meets certification standard ✓'}
-                {overallScore === 3 && 'Advanced - Exceeds certification standard ✓'}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 mb-6">
-            <h4 className="font-semibold text-ink">Dimension Scores:</h4>
-            {rubricEval.dimensions.map((dim, index) => (
-              <div key={index} className="border-l-2 border-hair pl-4 py-2">
-                <div className="flex items-center justify-between mb-1">
-                  <h5 className="font-medium text-ink capitalize">
-                    {dim.dimension.replace(/_/g, ' ')}
-                  </h5>
-                  <div className="flex items-center space-x-2">
-                    <span className={classNames('px-3 py-1 rounded-full text-xs font-medium border', rubricScoreColor(dim.score))}>
-                      {rubricScoreLabel(dim.score)}
-                    </span>
-                    <span className="text-lg font-bold text-ink">
-                      {dim.score}/3
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm text-body mt-1">
-                  {dim.evidence}
-                </p>
-              </div>
-            ))}
-          </div>
+          <EvaluationPanel
+            title="Overall Certification Score"
+            overallScore={overallScore}
+            maxScore={3}
+            criteria={rubricEval.dimensions.map((dim, index) => ({
+              key: `${dim.dimension}-${index}`,
+              label: dim.dimension.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+              score: dim.score,
+              evidence: dim.evidence,
+            }))}
+          />
 
           {/* Improvement Advice Section */}
           {rubricEval.improvementAdvice && (
