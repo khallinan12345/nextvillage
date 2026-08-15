@@ -26,6 +26,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { resolveChallengeOrgSlug } from '../../lib/communityChallengeScope';
 import { chatText, chatJSON } from '../../lib/chatClient';
+import { saveEvaluation } from '../../lib/evaluations';
 import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { PidginTooltip } from '../../components/PidginTooltip';
@@ -1110,7 +1111,35 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
       progress: eval_?.can_advance ? 'completed' : 'started',
       updated_at: new Date().toISOString(),
     }).eq('id', dashboardId);
-  }, [dashboardId]);
+
+    // Dual-write to the shared evaluations table alongside the legacy
+    // english_skills_evaluation jsonb column above (this page's legacy
+    // column is misnamed — a copy-paste leftover, left as-is) — see
+    // src/lib/evaluations.ts. The legacy column stays authoritative for
+    // this page's own read path.
+    if (eval_ && user?.id) {
+      const dimLabels: Record<string, string> = {
+        diagnosis: 'Problem Diagnosis',
+        knowledge: 'Business Knowledge',
+        practical: 'Practical & Affordable',
+        action: 'Action Planning',
+        communication: 'Communication',
+      };
+      saveEvaluation(user.id, {
+        dashboardId,
+        activityType: 'entrepreneurship_consultant',
+        overallScore: eval_.overall_score ?? 0,
+        maxScore: 3,
+        evidence: eval_.encouragement,
+        criteria: Object.entries(dimLabels).map(([key, label]) => ({
+          key,
+          label,
+          score: eval_.scores?.[key] ?? 0,
+          evidence: eval_.evidence?.[key],
+        })),
+      }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+    }
+  }, [dashboardId, user?.id]);
 
   const initiateSession = async () => {
     setIsSending(true);
