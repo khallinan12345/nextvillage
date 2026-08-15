@@ -1,4 +1,4 @@
-// src/pages/AIContentCreationPage.tsx
+// src/pages/tech-skills/AIContentCreationPage.tsx
 //
 // AI-Assisted Content Creation Workshop
 // Three-phase curriculum: Understand → Create → Polish
@@ -9,10 +9,10 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import { PidginTooltip } from '../components/PidginTooltip';
-import { playPidginVoice, stopPidginSpeech } from '../lib/speechCoordination';
-import { supabase } from '../lib/supabaseClient';
+import Navbar from '../../components/layout/Navbar';
+import { PidginTooltip } from '../../components/PidginTooltip';
+import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
+import { supabase } from '../../lib/supabaseClient';
 import {
   PenLine, Sparkles, Loader2, Save, FolderOpen, Download,
   CheckCircle, ArrowRight, ArrowUpCircle, SkipForward,

@@ -1,4 +1,4 @@
-// SkillsPage.tsx - Dashboard-based skills tracking with continuous evaluation
+// AIReadySkillsPage.tsx - Dashboard-based skills tracking with continuous evaluation
 /**
  * DASHBOARD ENTRY LIFECYCLE:
  * 
@@ -49,12 +49,12 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../lib/chatClient';
-import AppLayout from '../components/layout/AppLayout';
-import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
-import QuietButton from '../components/ui/QuietButton';
-import ChatSurface from '../components/chat/ChatSurface';
+import { supabase } from '../../lib/supabaseClient';
+import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../../lib/chatClient';
+import AppLayout from '../../components/layout/AppLayout';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import QuietButton from '../../components/ui/QuietButton';
+import ChatSurface from '../../components/chat/ChatSurface';
 import {
   Monitor,
   Lightbulb,
@@ -77,9 +77,9 @@ import {
   X
 } from 'lucide-react';
 import classNames from 'classnames';
-import { useAuth } from '../hooks/useAuth';
-import { useVoice } from '../hooks/useVoice';
-import { VoiceFallback } from '../components/VoiceFallback';
+import { useAuth } from '../../hooks/useAuth';
+import { useVoice } from '../../hooks/useVoice';
+import { VoiceFallback } from '../../components/VoiceFallback';
 
 
 interface CodeExecution {
@@ -1339,7 +1339,7 @@ Next question: <one question only — focused on the weakest rubric dimension; c
 };
 
 
-const SkillsPage: React.FC = () => {
+const AIReadySkillsPage: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const deepLinkHandledRef = useRef(false);
@@ -1572,11 +1572,11 @@ const SkillsPage: React.FC = () => {
             }
           }
           setHistoryCache(restored);
-          console.log('[SkillsPage] Restored historyCache from localStorage:', Object.keys(restored).length, 'activities');
+          console.log('[AIReadySkillsPage] Restored historyCache from localStorage:', Object.keys(restored).length, 'activities');
         }
       }
     } catch (err) {
-      console.warn('[SkillsPage] Failed to restore historyCache from localStorage:', err);
+      console.warn('[AIReadySkillsPage] Failed to restore historyCache from localStorage:', err);
     }
   }, []);
 
@@ -1585,9 +1585,9 @@ const SkillsPage: React.FC = () => {
     if (Object.keys(historyCache).length === 0) return; // Don't save empty cache
     try {
       localStorage.setItem('SkillsDevelopmentPage_historyCache', JSON.stringify(historyCache));
-      console.log('[SkillsPage] Saved historyCache to localStorage:', Object.keys(historyCache).length, 'activities');
+      console.log('[AIReadySkillsPage] Saved historyCache to localStorage:', Object.keys(historyCache).length, 'activities');
     } catch (err) {
-      console.warn('[SkillsPage] Failed to save historyCache to localStorage:', err);
+      console.warn('[AIReadySkillsPage] Failed to save historyCache to localStorage:', err);
     }
   }, [historyCache]);
 
@@ -4819,4 +4819,4 @@ Provide assessment now:`;
   );
 };
 
-export default SkillsPage;
+export default AIReadySkillsPage;

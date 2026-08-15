@@ -1,13 +1,13 @@
-// src/pages/AIPlaygroundPage.tsx
+// src/pages/AIPlayground/AIPlaygroundPage.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabaseClient';
-import { useVoice } from '../hooks/useVoice';
-import { VoiceFallback } from '../components/VoiceFallback';
-import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
-import { useBranding } from '../lib/useBranding';
-import { isBackToBasicsMember } from '../lib/backToBasicsScope';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
+import { useVoice } from '../../hooks/useVoice';
+import { VoiceFallback } from '../../components/VoiceFallback';
+import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { useBranding } from '../../lib/useBranding';
+import { isBackToBasicsMember } from '../../lib/backToBasicsScope';
 import {
   Plus, Search, Trash2, Download, Send, Paperclip,
   ChevronLeft, ChevronRight, Edit3, Check, X,

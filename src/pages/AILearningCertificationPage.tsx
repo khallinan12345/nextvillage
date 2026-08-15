@@ -1,4 +1,4 @@
-// src/pages/AIProficiencyPage.tsx
+// src/pages/AILearningCertificationPage.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -125,7 +125,7 @@ const buildAnswerTemplate = (promptText: string): string => {
 };
 
 
-const AIProficiencyPage: React.FC = () => {
+const AILearningCertificationPage: React.FC = () => {
   const { user } = useAuth();
   
   // State management
@@ -1831,4 +1831,4 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
   );
 };
 
-export default AIProficiencyPage;
+export default AILearningCertificationPage;
