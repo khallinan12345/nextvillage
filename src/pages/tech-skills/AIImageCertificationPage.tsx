@@ -16,6 +16,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { chatJSON } from '../../lib/chatClient';
+import { saveEvaluation } from '../../lib/evaluations';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
@@ -262,6 +263,7 @@ const AIImageCertificationPage: React.FC = () => {
   const [sessionId,      setSessionId]      = useState<string | null>(null);
   const [sessionName,    setSessionName]    = useState('My Image Portfolio');
   const sessionIdRef = useRef<string | null>(null);
+  const dashboardRowIdRef = useRef<string | null>(null);
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
 
   // ── Image portfolio ───────────────────────────────────────────────────
@@ -340,6 +342,8 @@ const AIImageCertificationPage: React.FC = () => {
       const { data: dash } = await supabase.from('dashboard').select('*')
         .eq('user_id', user.id).eq('activity', CERT_ACTIVITY).maybeSingle();
 
+      if (dash?.id) dashboardRowIdRef.current = dash.id;
+
       const evalData = dash?.image_cert_evaluation as any;
       const scores: AssessmentScore[] = (aData || []).map(a => ({
         assessment_name: a.assessment_name,
@@ -369,12 +373,13 @@ const AIImageCertificationPage: React.FC = () => {
     if (sessionIdRef.current) return sessionIdRef.current;
     const sid = makeId(); sessionIdRef.current = sid; setSessionId(sid);
     if (user?.id) {
-      await supabase.from('dashboard').insert({
+      const { data: inserted } = await supabase.from('dashboard').insert({
         user_id: user.id, activity: CERT_ACTIVITY,
         category_activity: 'Certification', progress: 'started',
         image_cert_session_id: sid, image_prompt: sessionName,
         image_chat_history: [], image_cert_evaluation: {},
-      });
+      }).select('id').single();
+      if (inserted?.id) dashboardRowIdRef.current = inserted.id;
     }
     return sid;
   }, [user?.id, sessionName]);
@@ -555,6 +560,24 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
         progress: allPass ? 'completed' : 'started',
         updated_at: new Date().toISOString(),
       }).eq('user_id', user.id).eq('image_cert_session_id', sessionIdRef.current!);
+
+      // Dual-write to the shared evaluations table alongside the legacy
+      // image_cert_evaluation jsonb column above — see src/lib/evaluations.ts.
+      // The legacy column stays authoritative for this page's own read path.
+      if (dashboardRowIdRef.current) {
+        saveEvaluation(user.id, {
+          dashboardId: dashboardRowIdRef.current,
+          activityType: 'ai_image_certification',
+          overallScore: avgCalc,
+          maxScore: 3,
+          criteria: newScores.map((s, i) => ({
+            key: `${s.assessment_name}-${i}`,
+            label: s.assessment_name,
+            score: s.score ?? 0,
+            evidence: s.evidence ?? undefined,
+          })),
+        }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
 
       if (newScores.some(s => (s.score ?? 0) >= 2)) {
         try {
