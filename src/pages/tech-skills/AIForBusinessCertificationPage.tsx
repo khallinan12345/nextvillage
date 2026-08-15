@@ -16,6 +16,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { chatJSON } from '../../lib/chatClient';
+import { saveEvaluation } from '../../lib/evaluations';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
@@ -211,6 +212,7 @@ const AIForBusinessCertificationPage: React.FC = () => {
   const [sessionId,   setSessionId]   = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('My AI Business');
   const sessionIdRef = useRef<string | null>(null);
+  const dashboardRowIdRef = useRef<string | null>(null);
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
 
   // ── Business canvas ───────────────────────────────────────────────────
@@ -281,6 +283,8 @@ const AIForBusinessCertificationPage: React.FC = () => {
       const { data: dash } = await supabase.from('dashboard').select('*')
         .eq('user_id', user.id).eq('activity', CERT_ACTIVITY).maybeSingle();
 
+      if (dash?.id) dashboardRowIdRef.current = dash.id;
+
       const evalData = dash?.biz_cert_evaluation as any;
       const scores: AssessmentScore[] = (aData || []).map(a => ({
         assessment_name: a.assessment_name,
@@ -309,7 +313,7 @@ const AIForBusinessCertificationPage: React.FC = () => {
     if (sessionIdRef.current) return sessionIdRef.current;
     const sid = makeId(); sessionIdRef.current = sid; setSessionId(sid);
     if (user?.id) {
-      const { error } = await supabase.from('dashboard').insert({
+      const { data: inserted, error } = await supabase.from('dashboard').insert({
         user_id: user.id, activity: CERT_ACTIVITY,
         category_activity: 'Certification', progress: 'started',
         biz_cert_session_id: sid,
@@ -317,9 +321,9 @@ const AIForBusinessCertificationPage: React.FC = () => {
         biz_cert_evaluation: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      });
+      }).select('id').single();
       if (error) console.error('[Certifications] ensureRecord insert error:', error);
-      else console.log('[Certifications] Saved to dashboard:', { sid });
+      else { console.log('[Certifications] Saved to dashboard:', { sid }); if (inserted?.id) dashboardRowIdRef.current = inserted.id; }
     }
     return sid;
   }, [user?.id]);
@@ -479,6 +483,24 @@ Respond ONLY in this JSON format:
         updated_at: new Date().toISOString(),
       }).eq('user_id', user.id).eq('activity', CERT_ACTIVITY);
       if (updateErr) console.error('[Certifications] evaluation update error:', updateErr);
+
+      // Dual-write to the shared evaluations table alongside the legacy
+      // biz_cert_evaluation jsonb column above — see src/lib/evaluations.ts.
+      // The legacy column stays authoritative for this page's own read path.
+      if (dashboardRowIdRef.current) {
+        saveEvaluation(user.id, {
+          dashboardId: dashboardRowIdRef.current,
+          activityType: 'ai_for_business_certification',
+          overallScore: avgCalc,
+          maxScore: 3,
+          criteria: newScores.map((s, i) => ({
+            key: `${s.assessment_name}-${i}`,
+            label: s.assessment_name,
+            score: s.score ?? 0,
+            evidence: s.evidence ?? undefined,
+          })),
+        }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
 
       if (newScores.some(s => (s.score ?? 0) >= 2)) {
         try {
