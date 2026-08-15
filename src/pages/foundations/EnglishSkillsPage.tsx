@@ -16,6 +16,7 @@ import { useVoice } from '../../hooks/useVoice';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
+import { saveEvaluation } from '../../lib/evaluations';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -955,7 +956,31 @@ Respond ONLY with valid JSON:
         updated_at: new Date().toISOString(),
       })
       .eq('id', dashboardRowId.current);
-  }, []);
+
+    // Dual-write to the shared evaluations table alongside the legacy
+    // english_skills_evaluation jsonb column above — see
+    // src/lib/evaluations.ts. The legacy column stays authoritative for
+    // this page's own read path until it's migrated too.
+    if (eval_ !== null && user?.id) {
+      const overallScore = eval_.sub_categories.length > 0
+        ? eval_.sub_categories.reduce((sum, s) => sum + s.score, 0) / eval_.sub_categories.length
+        : 0;
+      saveEvaluation(user.id, {
+        dashboardId: dashboardRowId.current,
+        activityType: 'english_skills',
+        overallScore,
+        maxScore: 100,
+        evidence: eval_.encouragement,
+        criteria: eval_.sub_categories.map((s, i) => ({
+          key: `${s.name}-${i}`,
+          label: s.name,
+          score: s.score,
+          maxScore: 100,
+          evidence: s.evidence,
+        })),
+      }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+    }
+  }, [user?.id]);
 
   // ── Start session ─────────────────────────────────────────────────────
   const startSession = async () => {
