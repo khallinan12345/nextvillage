@@ -41,6 +41,38 @@ export async function saveEvaluation(userId: string, record: EvaluationRecord): 
   if (error) throw error;
 }
 
+// For activities that score one criterion at a time (e.g. a portfolio
+// certification where each assessment is submitted and graded separately)
+// rather than producing a full rubric result in one shot: merges a single
+// criterion into whatever evaluation already exists for this dashboard row
+// (replacing it by key if already scored, appending otherwise), recomputes
+// overallScore as the mean of all known criteria, and upserts.
+export async function upsertEvaluationCriterion(
+  userId: string,
+  dashboardId: string,
+  activityType: string,
+  criterion: EvaluationCriterion,
+  maxScore: number = 3
+): Promise<void> {
+  const existing = await loadEvaluation(dashboardId);
+  const criteria = existing?.criteria ? [...existing.criteria] : [];
+  const idx = criteria.findIndex(c => c.key === criterion.key);
+  if (idx >= 0) criteria[idx] = criterion;
+  else criteria.push(criterion);
+
+  const overallScore = criteria.length > 0
+    ? criteria.reduce((sum, c) => sum + c.score, 0) / criteria.length
+    : 0;
+
+  await saveEvaluation(userId, {
+    dashboardId,
+    activityType,
+    overallScore,
+    maxScore,
+    criteria,
+  });
+}
+
 export async function loadEvaluation(dashboardId: string): Promise<EvaluationRecord | null> {
   const { data, error } = await supabase
     .from('evaluations')
