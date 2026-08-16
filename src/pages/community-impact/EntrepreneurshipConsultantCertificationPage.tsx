@@ -29,6 +29,7 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { saveEvaluation } from '../../lib/evaluations';
 import { useBranding } from '../../lib/useBranding';
+import { generateCertificatePdf } from '../../lib/certificatePdf';
 import {
   Briefcase, Award, Trophy, Loader2, Download, AlertCircle,
   Volume2, VolumeX, Star, CheckCircle, ArrowRight, RefreshCw,
@@ -562,22 +563,16 @@ Return valid JSON only (no markdown, no code fences):
     if (!certName.trim() || !allProficient) return;
     setIsGenCert(true);
     try {
-      const r = await fetch('/api/generate-certificate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: certName.trim(), certification: CERT_NAME, scores: assessmentScores, sessionId,
-          date: new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
-          theme: 'amber', subtitle: 'Community Impact Track',
-          description: 'Has demonstrated the ability to advise young Nigerian entrepreneurs — with accurate business knowledge, practical recommendations within real budget constraints, and clear action plans grounded in the economic realities of Oloibiri, Bayelsa State, and Nigeria.',
-        }),
+      await generateCertificatePdf({
+        recipientName: certName,
+        title: CERT_NAME,
+        description: 'Has demonstrated the ability to advise young Nigerian entrepreneurs — with accurate business knowledge, practical recommendations within real budget constraints, and clear action plans grounded in the economic realities of Oloibiri, Bayelsa State, and Nigeria.',
+        assessmentScores,
+        branding,
+        theme: 'amber',
+        idPrefix: 'ENTR',
+        filenameSuffix: 'EntrepreneurshipConsultant',
       });
-      if (!r.ok) throw new Error('Certificate generation failed');
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${certName.trim().replace(/\s+/g, '_')}_Entrepreneurship_Consultant_Certificate.pdf`;
-      a.click(); URL.revokeObjectURL(url);
     } catch { alert('Certificate generation failed. Please try again.'); }
     finally { setIsGenCert(false); }
   };

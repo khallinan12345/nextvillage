@@ -21,7 +21,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { PidginTooltip } from '../../components/PidginTooltip';
-import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
+import { useBranding } from '../../lib/useBranding';
+import { generateCertificatePdf } from '../../lib/certificatePdf';
 import {
   Briefcase, Award, Trophy, XCircle, Loader2,
   Download, AlertCircle, Volume2, VolumeX,
@@ -519,73 +520,24 @@ Respond ONLY in this JSON format:
     if (!certName.trim()) return;
     setIsGenCert(true);
     try {
-      const jsPDFModule = await import('jspdf').catch(() => null);
-      if (!jsPDFModule) { alert('PDF not available.'); return; }
-      const { jsPDF } = jsPDFModule;
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const W = doc.internal.pageSize.getWidth();
-      const H = doc.internal.pageSize.getHeight();
-      const minScore  = Math.min(...assessmentScores.map(s => s.score ?? 0));
-      const certLevel = minScore === 3 ? 'Advanced' : minScore >= 2 ? 'Proficient' : 'Emerging';
-      const avg       = assessmentScores.reduce((s, a) => s + (a.score ?? 0), 0) / assessmentScores.length;
-
-      // Amber/orange theme for business
-      doc.setLineWidth(3); doc.setDrawColor(217, 119, 6); doc.rect(10, 10, W - 20, H - 20);
-      doc.setLineWidth(1); doc.setDrawColor(245, 158, 11); doc.rect(15, 15, W - 30, H - 30);
-
-      doc.setFontSize(34); doc.setFont('helvetica', 'bold'); doc.setTextColor(217, 119, 6);
-      doc.text('Certificate of Achievement', W / 2, 30, { align: 'center' });
-      doc.setFontSize(20); doc.setTextColor(245, 158, 11);
-      doc.text(`AI for Business Certification — ${certLevel}`, W / 2, 43, { align: 'center' });
-      await addBrandingToPDF({ doc, pageWidth: W, pageHeight: H, footerY: 53, branding, fontSize: 13, textColor: [80, 80, 80] });
-      doc.setFontSize(13); doc.setFont('helvetica', 'normal'); doc.setTextColor(80, 80, 80);
-      doc.text('This certificate is proudly presented to', W / 2, 64, { align: 'center' });
-
-      doc.setFontSize(36); doc.setFont('helvetica', 'bold'); doc.setTextColor(20, 20, 20);
-      doc.text(certName.trim(), W / 2, 78, { align: 'center' });
-
-      doc.setFontSize(12); doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
-      doc.text('For successfully completing the AI for Business Certification,', W / 2, 88, { align: 'center' });
-      doc.text('demonstrating the ability to identify a market opportunity, design an AI-powered service,', W / 2, 95, { align: 'center' });
-      doc.text('price it, validate it, and build a complete 30-day launch plan.', W / 2, 102, { align: 'center' });
-
-      doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(217, 119, 6);
-      doc.text(`Overall Score: ${avg.toFixed(1)}/3.0 — ${certLevel} · Business Canvas: ${filledCount}/8 sections`, W / 2, 112, { align: 'center' });
-
-      // Business idea summary
-      if (canvas.offer.trim()) {
-        doc.setFontSize(11); doc.setFont('helvetica', 'italic'); doc.setTextColor(100, 100, 100);
-        const offerText = `Business Idea: "${canvas.offer.trim().slice(0, 120)}${canvas.offer.length > 120 ? '…' : ''}"`;
-        doc.text(offerText, W / 2, 120, { align: 'center', maxWidth: W - 40 });
-      }
-
-      doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(50, 50, 50);
-      doc.text('Assessment Competencies:', 20, 128);
-
-      const cols = assessmentScores.length <= 4 ? 2 : 3;
-      const colW = (W - 40) / cols;
-      let yPos = 134; let col = 0;
-      assessmentScores.forEach(sc => {
-        const xPos = 20 + col * colW;
-        const levelText = sc.score === 3 ? 'Advanced' : sc.score === 2 ? 'Proficient' : sc.score === 1 ? 'Emerging' : 'No Evidence';
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(40, 40, 40);
-        doc.text(`${sc.assessment_name}: ${sc.score ?? 0}/3 — ${levelText}`, xPos, yPos);
-        if (sc.evidence) {
-          doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(80, 80, 80);
-          const lines = doc.splitTextToSize(sc.evidence, colW - 5);
-          lines.slice(0, 3).forEach((line: string, li: number) => { doc.text(line, xPos, yPos + 4 + li * 3.5); });
-        }
-        col++; if (col >= cols) { col = 0; yPos += 22; }
+      const offer = canvas.offer.trim();
+      await generateCertificatePdf({
+        recipientName: certName,
+        title: 'AI for Business Certification',
+        description: [
+          'For successfully completing the AI for Business Certification,',
+          'demonstrating the ability to identify a market opportunity, design an AI-powered service,',
+          'price it, validate it, and build a complete 30-day launch plan.',
+        ],
+        scoreSuffix: `· Business Canvas: ${filledCount}/8 sections`,
+        excerpt: offer ? `Business Idea: "${offer.slice(0, 120)}${offer.length > 120 ? '…' : ''}"` : undefined,
+        assessmentScores,
+        branding,
+        theme: 'amber',
+        idPrefix: 'BIZ',
+        filenameSuffix: 'AIBusiness',
       });
-
-      const footerY = H - 22;
-      doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(130, 130, 130);
-      doc.text(`Awarded: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`, 20, footerY);
-      doc.text(`${branding.institutionName} Programme`, W / 2, footerY, { align: 'center' });
-      doc.text(`Certification ID: BIZ-${makeId().toUpperCase()}`, W - 20, footerY, { align: 'right' });
-
-      doc.save(`${certName.trim().replace(/\s+/g, '-')}-AIBusiness-Certificate.pdf`);
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); alert('PDF not available.'); }
     finally { setIsGenCert(false); }
   }, [certName, assessmentScores, filledCount, canvas.offer, branding]);
 
