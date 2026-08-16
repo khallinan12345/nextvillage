@@ -1841,7 +1841,10 @@ type GeneratedPreview = {
   community_role: string;
 };
 
-const CreateChallengePanel: React.FC = () => {
+const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatformAdmin }) => {
+  // Site leaders can only publish challenges for their own program —
+  // Oloibiri is the only org with a live community-challenge program today
+  // (see communityChallengeScope.ts). Only platform admins get the org toggle.
   const [orgId, setOrgId] = useState<'oloibiri' | 'ibiade'>('oloibiri');
   const [templateSlug, setTemplateSlug] = useState<string>('');
   const [tier, setTier] = useState<string>('');
@@ -1936,20 +1939,29 @@ const CreateChallengePanel: React.FC = () => {
 
         <div className="p-6 space-y-5">
           {/* Org */}
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">Organization</label>
-            <div className="inline-flex rounded-full border border-gray-200 bg-gray-50 p-0.5">
-              {(['oloibiri', 'ibiade'] as const).map(o => (
-                <button key={o} onClick={() => setOrgId(o)}
-                  className={classNames(
-                    'px-4 py-1.5 rounded-full text-sm font-semibold transition-colors capitalize',
-                    orgId === o ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  )}>
-                  {o}
-                </button>
-              ))}
+          {isPlatformAdmin ? (
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">Organization</label>
+              <div className="inline-flex rounded-full border border-gray-200 bg-gray-50 p-0.5">
+                {(['oloibiri', 'ibiade'] as const).map(o => (
+                  <button key={o} onClick={() => setOrgId(o)}
+                    className={classNames(
+                      'px-4 py-1.5 rounded-full text-sm font-semibold transition-colors capitalize',
+                      orgId === o ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    )}>
+                    {o}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">Organization</label>
+              <div className="inline-flex px-4 py-1.5 rounded-full text-sm font-semibold capitalize bg-purple-600 text-white">
+                {orgId}
+              </div>
+            </div>
+          )}
 
           {/* Template slug */}
           <div>
@@ -2842,7 +2854,7 @@ const AdminStudentDashboard: React.FC = () => {
         <div className="flex gap-1 mb-5 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
           {([
             { id: 'platform-global' as const, label: 'Global Overview', icon: <Globe size={14} />, show: isPlatformAdmin },
-            { id: 'create-challenge' as const, label: 'Create Challenge', icon: <Sparkles size={14} />, show: isPlatformAdmin },
+            { id: 'create-challenge' as const, label: 'Create Challenge', icon: <Sparkles size={14} />, show: isPlatformAdmin || isLeader },
             { id: 'student' as const, label: 'Student Activity', icon: <BookOpen size={14} />, show: true },
             { id: 'community-impact' as const, label: 'Community Impact', icon: <Sprout size={14} />, show: isPlatformAdmin || isLeader },
             { id: 'youth-enterprises' as const, label: 'Youth Enterprises', icon: <Store size={14} />, show: isPlatformAdmin || isLeader },
@@ -3280,7 +3292,7 @@ const AdminStudentDashboard: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'create-challenge' && <CreateChallengePanel />}
+        {activeTab === 'create-challenge' && <CreateChallengePanel isPlatformAdmin={isPlatformAdmin} />}
 
         {activeTab === 'platform-global' && (
           <PlatformGlobalPanel
