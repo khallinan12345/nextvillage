@@ -33,7 +33,6 @@ const EmailConfirmationSuccess = lazy(() => import('./pages/auth/EmailConfirmati
 const PublicLandingPage = lazy(() => import('./pages/PublicLandingPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Learning Pages
@@ -244,7 +243,6 @@ export const AppContent: React.FC = () => {
         {/* Main App Routes */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/about" element={<AboutPage />} />
         <Route path="/profile" element={<ProfilePage />} />
 
         {/* Learning Routes */}

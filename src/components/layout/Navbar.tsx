@@ -166,7 +166,6 @@ const Navbar: React.FC = () => {
     },
     { name: 'Guides', path: '/tutorials', shorthand: 'Guides' },
     { name: 'Dashboard', path: '/dashboard', shorthand: 'Dashboard' },
-    { name: 'About', path: '/about', shorthand: 'About' },
   ];
 
   const isActivePath = (path: string) => {
