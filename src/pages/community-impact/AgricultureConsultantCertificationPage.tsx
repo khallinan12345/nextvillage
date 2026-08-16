@@ -29,6 +29,8 @@ import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { saveEvaluation } from '../../lib/evaluations';
+import { useBranding } from '../../lib/useBranding';
+import { generateCertificatePdf } from '../../lib/certificatePdf';
 import {
   Sprout, Award, Trophy, Loader2, Download, AlertCircle,
   Volume2, VolumeX, Star, CheckCircle, ArrowRight, RefreshCw,
@@ -338,6 +340,7 @@ const ScoreRing: React.FC<{ score: number | null }> = ({ score }) => {
 
 const AgricultureConsultantCertificationPage: React.FC = () => {
   const { user } = useAuth();
+  const branding = useBranding();
   const [view, setView]                         = useState<ViewMode>('overview');
   const [buildTab, setBuildTab]                 = useState<BuildTab>('written');
   const [portfolio, setPortfolio]               = useState<AgriculturePortfolio>(EMPTY_PORTFOLIO);
@@ -668,28 +671,16 @@ Return valid JSON only (no markdown, no code fences):
     if (!certName.trim() || !allProficient) return;
     setIsGenCert(true);
     try {
-      const r = await fetch('/api/generate-certificate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:          certName.trim(),
-          certification: CERT_NAME,
-          scores:        assessmentScores,
-          sessionId,
-          date:          new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
-          theme:         'green',
-          subtitle:      'Community Impact Track',
-          description:   'Has demonstrated the ability to advise smallholder farmers in the Niger Delta — with accurate agricultural knowledge, climate-informed recommendations, and practical advice adapted to each farmer\'s resources and situation in Oloibiri, Bayelsa State, Nigeria.',
-        }),
+      await generateCertificatePdf({
+        recipientName: certName,
+        title: CERT_NAME,
+        description: 'Has demonstrated the ability to advise smallholder farmers in the Niger Delta — with accurate agricultural knowledge, climate-informed recommendations, and practical advice adapted to each farmer\'s resources and situation in Oloibiri, Bayelsa State, Nigeria.',
+        assessmentScores,
+        branding,
+        theme: 'green',
+        idPrefix: 'AGRI',
+        filenameSuffix: 'AgricultureConsultant',
       });
-      if (!r.ok) throw new Error('Certificate generation failed');
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${certName.trim().replace(/\s+/g, '_')}_Agriculture_Consultant_Certificate.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
     } catch {
       alert('Certificate generation failed. Please try again.');
     } finally {
