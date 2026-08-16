@@ -16,7 +16,6 @@ const PAGE_NAMES: Record<string, string> = {
   '/home':                                          'home',
   '/dashboard':                                     'dashboard',
   '/profile':                                       'profile',
-  '/about':                                         'about',
 
   // Priority 1 — entry pages
   '/english-skills':                                'english_skills',

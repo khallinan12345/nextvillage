@@ -141,6 +141,24 @@ interface GrandSubmission {
   community_member_name: string | null;
 }
 
+interface GrandChallengeLeaderEntry {
+  id: string;
+  learner_id: string;
+  org_id: string;
+  quarter: string;
+  title: string;
+  community_member_name: string | null;
+  community_impact_slug: string;
+  journal_entry_count: number;
+  weeks_documented: number;
+  tier_awarded: string | null;
+  is_quarter_winner: boolean;
+  status: string;
+  learner_name: string;
+  avatar_url: string | null;
+  rank: number;
+}
+
 interface PastChallenge {
   id: string;
   title: string;
@@ -592,6 +610,8 @@ const DashboardPage: React.FC = () => {
   const [grandWeeksActive, setGrandWeeksActive]       = useState(0);
   const [grandShowInstructions, setGrandShowInstructions] = useState(false);
   const [priorSubmissions, setPriorSubmissions]       = useState<GrandSubmission[]>([]);
+  const [grandChallengeLeaderboard, setGrandChallengeLeaderboard] = useState<GrandChallengeLeaderEntry[]>([]);
+  const [grandChallengeLbLoading, setGrandChallengeLbLoading]     = useState(false);
 
   // ── Past challenge history state ─────────────────────────────────────────
   const [pastChallenges, setPastChallenges]           = useState<PastChallenge[]>([]);
@@ -1044,6 +1064,17 @@ const DashboardPage: React.FC = () => {
           .single();
         if (!quarter) return;
         setGrandChallenge(quarter);
+
+        // Get this quarter's leaderboard — everyone with a submitted/
+        // evaluated/awarded entry, ranked by tier then depth of documentation
+        setGrandChallengeLbLoading(true);
+        const { data: grandLb } = await supabase
+          .from('grand_challenge_leaderboard')
+          .select('*')
+          .eq('quarter', quarter.quarter)
+          .order('rank', { ascending: true });
+        if (grandLb) setGrandChallengeLeaderboard(grandLb as GrandChallengeLeaderEntry[]);
+        setGrandChallengeLbLoading(false);
 
         // Get learner's existing submission for this quarter
         const { data: sub } = await supabase
@@ -2586,6 +2617,72 @@ ${prior.impact_arc}
                   </div>
                 )}
 
+              </div>
+            )}
+
+            {/* ── Grand Challenge Leaderboard ──────────────────────────────── */}
+            {grandChallenge && (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-50 to-orange-50 flex items-center gap-2">
+                  <Trophy className="h-6 w-6 text-amber-600" />
+                  <h2 className="text-xl font-bold text-gray-900">Grand Challenge Leaderboard</h2>
+                  <span className="text-xs text-gray-400 ml-1">{grandChallenge.quarter}</span>
+                </div>
+
+                {grandChallengeLbLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-400" />
+                  </div>
+                ) : grandChallengeLeaderboard.length === 0 ? (
+                  <div className="px-6 py-10 text-center">
+                    <div className="text-4xl mb-3">🏆</div>
+                    <p className="text-sm font-semibold text-gray-700 mb-1">No submissions yet this quarter</p>
+                    <p className="text-xs text-gray-400">Submit your Grand Challenge story above to appear on the leaderboard.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {grandChallengeLeaderboard.map(entry => {
+                      const isMe = entry.learner_id === user?.id;
+                      const medal = MEDAL[entry.rank];
+                      const tc = TIER_COLOURS[entry.tier_awarded ?? 'seed'] ?? TIER_COLOURS.seed;
+                      return (
+                        <div key={entry.id}
+                          className={classNames(
+                            'flex items-start gap-4 px-6 py-4 transition-colors',
+                            isMe && 'bg-amber-50/60'
+                          )}
+                        >
+                          <div className="w-8 flex-shrink-0 text-center">
+                            {medal ? (
+                              <span className="text-xl leading-none">{medal}</span>
+                            ) : (
+                              <span className="text-sm font-bold text-gray-400">{entry.rank}</span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className={classNames('text-sm font-semibold', isMe ? 'text-amber-900' : 'text-gray-900')}>
+                                {entry.learner_name}{isMe && <span className="text-xs font-normal text-amber-600 ml-1">(you)</span>}
+                              </p>
+                              {entry.is_quarter_winner && <span className="text-base leading-none" title="Quarter winner">🏆</span>}
+                              {entry.tier_awarded && (
+                                <span className={classNames('inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold border', tc.bg, tc.text, tc.border)}>
+                                  <span className={classNames('w-1.5 h-1.5 rounded-full', tc.dot)} />
+                                  {TIER_LABELS_MAP[entry.tier_awarded] ?? entry.tier_awarded}
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-400">
+                                {SLUG_EMOJI[entry.community_impact_slug] ?? ''} {entry.community_impact_slug}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 truncate">{entry.title}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{entry.journal_entry_count} field notes · {entry.weeks_documented} weeks documented</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
