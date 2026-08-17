@@ -615,6 +615,65 @@ const ArtifactPanelView: React.FC<{
   );
 };
 
+// ── Attachment text extraction ──────────────────────────────────────────────────
+// PDF/Word/Excel are binary formats; each needs its own real parser rather than
+// FileReader.readAsText (which just returns garbled binary noise for them).
+// Libraries are dynamically imported so they don't bloat this page's initial
+// bundle — same pattern as the jsPDF import elsewhere in this codebase.
+
+async function extractPdfText(file: File): Promise<string> {
+  const pdfjsLib = await import('pdfjs-dist');
+  const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pages: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    pages.push(content.items.map((item: any) => ('str' in item ? item.str : '')).join(' '));
+  }
+  return pages.join('\n\n');
+}
+
+async function extractDocxText(file: File): Promise<string> {
+  const mammoth = await import('mammoth');
+  const arrayBuffer = await file.arrayBuffer();
+  const { value } = await mammoth.extractRawText({ arrayBuffer });
+  return value;
+}
+
+async function extractXlsxText(file: File): Promise<string> {
+  const XLSX = await import('xlsx');
+  const arrayBuffer = await file.arrayBuffer();
+  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+  return workbook.SheetNames
+    .map(name => `--- Sheet: ${name} ---\n${XLSX.utils.sheet_to_csv(workbook.Sheets[name])}`)
+    .join('\n\n');
+}
+
+const DOC_EXTRACTORS: Record<string, (file: File) => Promise<string>> = {
+  pdf: extractPdfText,
+  docx: extractDocxText,
+  xlsx: extractXlsxText,
+  xls: extractXlsxText,
+};
+
+async function extractFileText(file: File): Promise<string> {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+  const extractor = DOC_EXTRACTORS[ext];
+  if (!extractor) {
+    return await file.text();
+  }
+  try {
+    const text = await extractor(file);
+    return text.trim() || `[This ${ext.toUpperCase()} file didn't contain any extractable text — it may be a scanned/image-only document. Try converting it to plain text first.]`;
+  } catch (err) {
+    console.error('[Playground] file extraction error:', err);
+    return `[Could not read this ${ext.toUpperCase()} file — it may be corrupted, password-protected, or (for .doc) in the old pre-2007 Word format, which isn't supported; try saving it as .docx. You can also just copy and paste the text directly into the chat.]`;
+  }
+}
+
 // ── Playground streaming via Edge function (no timeout, no CORS issues) ────────
 // Calls /api/chat-stream which proxies to Anthropic server-side.
 async function* streamPlayground(
@@ -1527,19 +1586,20 @@ const AIPlaygroundPage: React.FC = () => {
   };
 
   // ── File handling ─────────────────────────────────────────────────────────────
+  // PDF/Word/Excel are binary formats — reading them with FileReader.readAsText
+  // (the old behaviour) just produces garbled binary noise, not usable text.
+  // extractFileText branches by extension and pulls real text out of each
+  // format client-side before it ever reaches the existing plain-text
+  // attachment pipeline below.
+  const readFileAsText = (file: File) => {
+    extractFileText(file).then(content => {
+      setAttachments(prev => [...prev, { name: file.name, content, type: file.type }]);
+    });
+  };
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => setAttachments(prev => [...prev, { name: file.name, content: reader.result as string, type: file.type }]);
-      reader.readAsText(file);
-    });
+    files.forEach(file => readFileAsText(file));
     e.target.value = '';
-  };
-  const readFileAsText = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => setAttachments(prev => [...prev, { name: file.name, content: reader.result as string, type: file.type }]);
-    reader.readAsText(file);
   };
   const handleDragOver  = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = (e: React.DragEvent) => { if (!dropZoneRef.current?.contains(e.relatedTarget as Node)) setIsDragging(false); };
@@ -1942,7 +2002,7 @@ const AIPlaygroundPage: React.FC = () => {
             )}
             <div className="flex items-end gap-2 bg-white border border-gray-300 rounded-2xl px-4 py-3 shadow-sm focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
               <button onClick={() => fileInputRef.current?.click()} className="flex-shrink-0 p-1 text-gray-400 hover:text-purple-600 transition-colors mb-0.5" title="Attach file (inline — included in this message only)"><Paperclip size={17} /></button>
-              <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" accept=".txt,.md,.csv,.json,.py,.js,.ts,.tsx,.jsx,.html,.css" multiple />
+              <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" accept=".txt,.md,.csv,.json,.py,.js,.ts,.tsx,.jsx,.html,.css,.pdf,.doc,.docx,.xls,.xlsx" multiple />
               <button onClick={() => contextFileInputRef.current?.click()} disabled={contextUploading} className="flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition-colors mb-0.5" title="Pin file to context (stays in system prompt for entire chat — ideal for large code files)">
                 {contextUploading ? <Loader2 size={17} className="animate-spin" /> : <Pin size={17} />}
               </button>
