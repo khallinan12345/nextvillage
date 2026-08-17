@@ -110,6 +110,7 @@ const FishMarketTutorialPage = lazy(() => import('./pages/tutorials/FishMarketTu
 const AILearningStartPage = lazy(() => import('./pages/tutorials/AILearningStartPage'));
 const SkillDevelopmentStartPage = lazy(() => import('./pages/tutorials/SkillDevelopmentStartPage'));
 const AddNewGuidePage = lazy(() => import('./pages/tutorials/AddNewGuidePage'));
+const CreateAICampGuidePage = lazy(() => import('./pages/tutorials/CreateAICampGuidePage'));
 const VibeCodingGuidePage = lazy(() => import('./pages/tutorials/VibeCodingGuidePage'));
 const SupabaseDatabaseGuidePage = lazy(() => import('./pages/tutorials/SupabaseDatabaseGuidePage'));
 const AILearningCategoryGuidePage = lazy(() => import('./pages/tutorials/AILearningCategoryGuidePage'));
@@ -317,6 +318,7 @@ export const AppContent: React.FC = () => {
         <Route path="/tutorials/ai-learning-start" element={<AILearningStartPage />} />
         <Route path="/tutorials/skill-development-start" element={<SkillDevelopmentStartPage />} />
         <Route path="/tutorials/add-new-guide" element={<AddNewGuidePage />} />
+        <Route path="/tutorials/create-ai-camp" element={<CreateAICampGuidePage />} />
         <Route path="/tutorials/vibe-coding" element={<VibeCodingGuidePage />} />
         <Route path="/tutorials/supabase-database" element={<SupabaseDatabaseGuidePage />} />
         <Route path="/tutorials/ai-learning/:categoryId" element={<AILearningCategoryGuidePage />} />
