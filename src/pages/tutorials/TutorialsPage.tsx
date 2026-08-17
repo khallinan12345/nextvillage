@@ -523,6 +523,19 @@ const TRACKS: Track[] = [
     category: 'managing-platform',
     Icon: GitBranch,
   },
+  {
+    id: 'create-ai-camp',
+    path: '/tutorials/create-ai-camp',
+    title: 'Create an AI Camp',
+    blurb:
+      'A focused version of "Add or Improve a Page" for one specific job: turning a curriculum plan you already have — a PDF or Word document — into a real, published, student-facing guide. Draft it with Use Claude or Gemini\'s free version, save it into the project, test it locally, then take it through review to merged. Same AI chat carries you from first draft through every revision.',
+    duration: 'about 90 minutes',
+    totalSteps: 7,
+    tags: ['GitHub', 'Claude', 'Curriculum', 'Contributing'],
+    available: true,
+    category: 'managing-platform',
+    Icon: GraduationCap,
+  },
 ];
 
 // ── Search: rough-description matching ──────────────────────────────────────
