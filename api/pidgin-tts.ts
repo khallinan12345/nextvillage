@@ -4,8 +4,13 @@ const SPEECHGEN_API_URL = 'https://speechgen.io/index.php?r=api/text';
 
 type VoiceMode = 'pidgin' | 'english';
 
+// Both modes use Ezinne — the Clergy Pidgin clone voice cost 2x more per
+// character and was dropped entirely to control SpeechGen spend. `mode` is
+// kept (rather than collapsed away) since it's still meaningful plumbing —
+// same voice today, but a distinct, cheaper-if-possible voice per mode is
+// one config change away if that's ever wanted again.
 const VOICE_BY_MODE: Record<VoiceMode, string> = {
-  pidgin: 'ClergyPidgin clone',
+  pidgin: 'Ezinne',
   english: 'Ezinne',
 };
 
@@ -28,7 +33,7 @@ type SpeechGenResponse = SpeechGenSuccessResponse | SpeechGenErrorResponse;
 async function generateSpeechGenAudio(text: string, mode: VoiceMode): Promise<{ audioUrl: string } | { error: string; statusCode?: number }> {
   const token = process.env.SPEECHGEN_TOKEN;
   const email = process.env.SPEECHGEN_EMAIL;
-  const voice = process.env.SPEECHGEN_VOICE || VOICE_BY_MODE[mode] || 'ClergyPidgin clone';
+  const voice = process.env.SPEECHGEN_VOICE || VOICE_BY_MODE[mode] || 'Ezinne';
 
   if (!token || !email) {
     return {
