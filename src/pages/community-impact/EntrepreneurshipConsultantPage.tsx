@@ -34,6 +34,7 @@ import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination'
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 import {
   Briefcase, BookOpen, Users, ArrowLeft, Send, Mic, MicOff,
@@ -727,10 +728,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    void playPidginVoice(text.slice(0, 380), 'english', {
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    const spokenText = extractIllustration(text).text;
+    void playPidginVoice(spokenText.slice(0, 380), 'english', {
       onError: (err) => {
         console.warn('[EntrepreneurshipConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser]);

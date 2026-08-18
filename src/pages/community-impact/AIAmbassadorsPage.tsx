@@ -31,6 +31,7 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 import {
   Users, MessageSquare, Volume2, VolumeX, ArrowLeft, Send,
@@ -1128,12 +1129,14 @@ const AIAmbassadorsPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    const spokenText = extractIllustration(text).text;
     setIsSpeaking(true);
-    void playPidginVoice(text.slice(0, 350), 'english', {
+    void playPidginVoice(spokenText.slice(0, 350), 'english', {
       onEnd: () => setIsSpeaking(false),
       onError: (err) => {
         console.warn('[AIAmbassadorsPage] SpeechGen TTS failed, falling back to browser voice:', err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser]);
