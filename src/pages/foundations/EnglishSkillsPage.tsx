@@ -17,6 +17,9 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { saveEvaluation } from '../../lib/evaluations';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
+import { SceneIllustration } from '../../components/community-impact/SceneIllustration';
+import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -258,7 +261,7 @@ const evaluateSession = async (
   const stage = STAGES[stageId];
   const subcats = STAGE_RUBRICS[stageId];
   const fullHistory = chatHistory.slice(-10)
-    .map(m => `${m.role === 'user' ? 'STUDENT' : 'COACH'}: ${m.content.slice(0, 500)}`)
+    .map(m => `${m.role === 'user' ? 'STUDENT' : 'COACH'}: ${extractIllustration(m.content).text.slice(0, 500)}`)
     .join('\n\n');
 
   const encouragementInstruction = communicationLevel <= 0
@@ -344,29 +347,33 @@ Explanation: 2–3 warm sentences to the student explaining WHAT changed and WHY
 };
 
 const MessageContent: React.FC<{ content: string }> = ({ content }) => {
-  const lines = content.split('\n');
+  const { text: cleanedContent, scene } = extractIllustration(content);
+  const lines = cleanedContent.split('\n');
   return (
-    <span>
-      {lines.map((line, i) => {
-        const isCorrection = line.trimStart().startsWith('✅');
-        if (isCorrection) {
+    <>
+      <span>
+        {lines.map((line, i) => {
+          const isCorrection = line.trimStart().startsWith('✅');
+          if (isCorrection) {
+            return (
+              <React.Fragment key={i}>
+                {i > 0 && <br />}
+                <br />
+                <strong className="text-green-700 font-bold">{line}</strong>
+                <br />
+              </React.Fragment>
+            );
+          }
           return (
             <React.Fragment key={i}>
               {i > 0 && <br />}
-              <br />
-              <strong className="text-green-700 font-bold">{line}</strong>
-              <br />
+              {line}
             </React.Fragment>
           );
-        }
-        return (
-          <React.Fragment key={i}>
-            {i > 0 && <br />}
-            {line}
-          </React.Fragment>
-        );
-      })}
-    </span>
+        })}
+      </span>
+      {scene && <SceneIllustration scene={scene} />}
+    </>
   );
 };
 
@@ -700,13 +707,14 @@ const EnglishSkillsPage: React.FC = () => {
   // ── Core speak (ignores speechEnabled — used for modal/eval voice) ────
   const speakAlways = useCallback((text: string) => {
     if (!ttsUnlocked) return;
-    hookSpeak(text);
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    hookSpeak(extractIllustration(text).text);
   }, [hookSpeak, ttsUnlocked]);
 
   // ── Speak (respects speechEnabled toggle) ────────────────────────────
   const speak = useCallback((text: string) => {
     if (!speechEnabled || !ttsUnlocked) return;
-    hookSpeak(text);
+    hookSpeak(extractIllustration(text).text);
   }, [speechEnabled, hookSpeak, ttsUnlocked]);
 
   // ── Stages intro voice ────────────────────────────────────────────────
@@ -1010,12 +1018,12 @@ Respond ONLY with valid JSON:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + '\n\n' + ILLUSTRATION_INSTRUCTIONS;
       const welcome = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: [{ role: 'user', content: `The student has chosen the topic: "${t}". Give a warm 2-sentence welcome and ask your very first question or prompt. Be friendly and encouraging.` }],
         system: sysPrompt,
-        max_tokens: 400,
+        max_tokens: 550,
       });
       const welcomeMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: welcome, timestamp: new Date().toISOString() };
       setMessages([welcomeMsg]);
@@ -1053,12 +1061,12 @@ Respond ONLY with valid JSON:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + '\n\n' + ILLUSTRATION_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
         system: sysPrompt,
-        max_tokens: 400,
+        max_tokens: 550,
       });
       const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: aiText, timestamp: new Date().toISOString() };
       const finalMsgs = [...withUser, aiMsg];

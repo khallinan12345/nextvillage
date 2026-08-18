@@ -57,6 +57,9 @@ import QuietButton from '../../components/ui/QuietButton';
 import ChatSurface from '../../components/chat/ChatSurface';
 import EvaluationPanel from '../../components/evaluation/EvaluationPanel';
 import { saveEvaluation } from '../../lib/evaluations';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
+import { SceneIllustration } from '../../components/community-impact/SceneIllustration';
+import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 import {
   Monitor,
   Lightbulb,
@@ -182,7 +185,7 @@ const extractRubricKeyLines = (paragraph: string): { suggestion: string | null; 
 // same content the chat bubble shows (suggestion + next question for a
 // rubric turn, or the plain text otherwise), not the full detailed rubric.
 const extractChatVisibleText = (aiResponse: string): string =>
-  aiResponse.split('\n\n').map(paragraph => {
+  extractIllustration(aiResponse).text.split('\n\n').map(paragraph => {
     if (!paragraph.trim()) return '';
     if (isRubricParagraph(paragraph)) {
       const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
@@ -209,6 +212,7 @@ const MarkdownText: React.FC<{
   rubricMode?: 'compact' | 'full';
   onViewEvaluation?: (evaluationText: string) => void;
 }> = ({ text, rubricMode = 'compact', onViewEvaluation }) => {
+  const { text: cleanedText, scene } = extractIllustration(text);
   const renderParagraph = (paragraph: string, pIndex: number) => {
     const lines = paragraph.split('\n').filter(l => l.trim());
     if (!lines.length) return null;
@@ -368,7 +372,8 @@ const MarkdownText: React.FC<{
 
   return (
     <div className="leading-relaxed">
-      {text.split('\n\n').map((p, i) => renderParagraph(p, i)).filter(Boolean)}
+      {cleanedText.split('\n\n').map((p, i) => renderParagraph(p, i)).filter(Boolean)}
+      {scene && <SceneIllustration scene={scene} />}
     </div>
   );
 };
@@ -1682,7 +1687,9 @@ ${personalizedBlock}
 GOAL: Your primary goal is to help the learner improve their skills in ${subCategory} based on the following rubric dimensions:
 ${(RUBRIC_DEFINITIONS[subCategory] || []).map(d => `- ${d.replace(/_/g, ' ')}`).join('\n')}
 
-Since this learner is just starting, focus on building foundational understanding across all dimensions.`;
+Since this learner is just starting, focus on building foundational understanding across all dimensions.
+
+${ILLUSTRATION_INSTRUCTIONS}`;
     }
 
     // Build performance summary
@@ -1721,7 +1728,9 @@ Reference the specific rubric criteria naturally in your feedback. For example:
 - "Excellent! That response demonstrates proficient [dimension] because..."
 - "I notice you're still at the no evidence level for [dimension]. Let's work on that by..."
 
-Remember: Every response is an opportunity to help them improve. Be specific, encouraging, and always tie feedback back to the rubric dimensions.`;
+Remember: Every response is an opportunity to help them improve. Be specific, encouraging, and always tie feedback back to the rubric dimensions.
+
+${ILLUSTRATION_INSTRUCTIONS}`;
   };
 
   // Load dashboard activities
@@ -2145,7 +2154,7 @@ LANGUAGE RULES:
       const response = await chatText({
         messages,
         system: contextualPrompt,
-        max_tokens: 500,
+        max_tokens: 650,
         temperature: 0.7,
         page: 'SkillsDevelopmentPage',  // → Groq Llama 3.3 70B
       });

@@ -33,6 +33,7 @@ import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination'
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import { useAuth } from '../../hooks/useAuth';
 import {
   Heart, ArrowLeft, Send, Save, Loader2, Plus, User,
@@ -938,10 +939,12 @@ const HealthcareNavigatorPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    void playPidginVoice(text.slice(0, 400), 'english', {
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    const spokenText = extractIllustration(text).text;
+    void playPidginVoice(spokenText.slice(0, 400), 'english', {
       onError: (err) => {
         console.warn('[HealthcareNavigatorPage] SpeechGen TTS failed, falling back to browser voice:', err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser]);

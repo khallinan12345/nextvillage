@@ -28,6 +28,7 @@ import { EvidencePicker } from './EvidencePicker';
 import QuietButton from '../ui/QuietButton';
 import ChatSurface from '../chat/ChatSurface';
 import { MarkdownText } from './MarkdownText';
+import { extractIllustration } from './illustrationParser';
 import {
   ArrowLeft, Send, Loader2, Plus, User,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
@@ -294,10 +295,13 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    void playPidginVoice(text.slice(0, 400), 'english', {
+    // Strip any trailing <illustration> block first — it's meant to be seen,
+    // not read aloud as raw JSON.
+    const spokenText = extractIllustration(text).text;
+    void playPidginVoice(spokenText.slice(0, 400), 'english', {
       onError: (err) => {
         console.warn(`[${config.pageName}] SpeechGen TTS failed, falling back to browser voice:`, err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser, config.pageName]);
