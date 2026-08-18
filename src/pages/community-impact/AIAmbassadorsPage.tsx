@@ -30,6 +30,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
+import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 import {
   Users, MessageSquare, Volume2, VolumeX, ArrowLeft, Send,
   Mic, MicOff, CheckCircle, Star, Loader2,
@@ -174,7 +176,9 @@ The student may ask: "How could I have handled that better?", "What should I hav
 - Reference specific moments from the transcript when relevant
 - Be warm but direct — the student wants to improve, not just reassurance
 - If they ask to practice a specific moment again, walk through it with them
-- Never be generic; always connect to ${persona.name}'s specific world and the actual conversation`;
+- Never be generic; always connect to ${persona.name}'s specific world and the actual conversation
+
+${ILLUSTRATION_INSTRUCTIONS}`;
 }
 
 // ─── Personas ─────────────────────────────────────────────────────────────────
@@ -774,17 +778,6 @@ const LEVEL_LABELS: Record<number, { text: string; color: string; bg: string }> 
   3: { text: 'Advanced',    color: 'text-emerald-700', bg: 'bg-emerald-100' },
 };
 
-// ─── Markdown renderer ────────────────────────────────────────────────────────
-
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
-  <div className="space-y-1.5">
-    {text.split('\n').map((line, i) => {
-      if (!line.trim()) return <div key={i} className="h-2" />;
-      const html = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
-    })}
-  </div>
-);
 
 
 // ─── Prep Coach Panel ─────────────────────────────────────────────────────────
