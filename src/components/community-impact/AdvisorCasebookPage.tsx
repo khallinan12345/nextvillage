@@ -27,6 +27,7 @@ import { ResolutionModal, ResolutionSubmitData } from './ResolutionModal';
 import { EvidencePicker } from './EvidencePicker';
 import QuietButton from '../ui/QuietButton';
 import ChatSurface from '../chat/ChatSurface';
+import { MarkdownText } from './MarkdownText';
 import {
   ArrowLeft, Send, Loader2, Plus, User,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
@@ -72,20 +73,6 @@ interface ChallengeEvalResult {
   follow_up_instruction: string;
   next_tier_hint: string;
 }
-
-// ─── Markdown renderer ──────────────────────────────────────────────────────
-
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
-  <div className="space-y-1.5">
-    {text.split('\n').map((line, i) => {
-      if (!line.trim()) return <div key={i} className="h-1.5" />;
-      const html = line
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
-    })}
-  </div>
-);
 
 // ─── Info Tooltip ───────────────────────────────────────────────────────────
 

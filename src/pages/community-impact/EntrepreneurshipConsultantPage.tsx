@@ -33,6 +33,8 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
+import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 import {
   Briefcase, BookOpen, Users, ArrowLeft, Send, Mic, MicOff,
   Volume2, VolumeX, Save, Star, Loader2, X, ChevronRight,
@@ -373,7 +375,9 @@ FORMAT:
 - Plain language the advisor can read aloud to the entrepreneur
 ${urgencyHint}
 
-⚠️ DISCLAIMER: This is advisory support only. For legal, tax, or formal registration matters, refer to a CAC-registered agent or appropriate authority.`;
+⚠️ DISCLAIMER: This is advisory support only. For legal, tax, or formal registration matters, refer to a CAC-registered agent or appropriate authority.
+
+${ILLUSTRATION_INSTRUCTIONS}`;
 }
 
 // ─── Follow-up Chat Prompt ────────────────────────────────────────────────────
@@ -394,7 +398,9 @@ AI ADVICE GIVEN: ${consultation.ai_advice ?? 'see case record'}
 
 The advisor may ask follow-up questions about the advice, how to explain something to the entrepreneur, referral logistics (CAC, TEF, Ajo, LAPO), or any practical business question related to this case.
 
-Respond with practical, specific, actionable advice. Reference Naira amounts, local contacts, and Nigerian tools. Keep answers concise.`;
+Respond with practical, specific, actionable advice. Reference Naira amounts, local contacts, and Nigerian tools. Keep answers concise.
+
+${ILLUSTRATION_INSTRUCTIONS}`;
 }
 
 // ─── Learning Topics ──────────────────────────────────────────────────────────
@@ -483,17 +489,6 @@ const LEVEL_LABELS: Record<number, { text: string; color: string; bg: string }> 
 // ─── Background ───────────────────────────────────────────────────────────────
 
 
-// ─── Markdown renderer ────────────────────────────────────────────────────────
-
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
-  <div className="space-y-1.5">
-    {text.split('\n').map((line, i) => {
-      if (!line.trim()) return <div key={i} className="h-1.5" />;
-      const html = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
-    })}
-  </div>
-);
 
 // ─── Info Tooltip ─────────────────────────────────────────────────────────────
 

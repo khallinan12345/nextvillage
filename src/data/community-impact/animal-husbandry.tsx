@@ -11,6 +11,7 @@
 
 import React from 'react';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { ILLUSTRATION_INSTRUCTIONS } from './illustrationPrompt';
 
 export type Species = 'poultry' | 'goats_sheep' | 'cattle' | 'pigs';
 export type UrgencyLevel = 'low' | 'medium' | 'high' | 'emergency';
@@ -244,7 +245,9 @@ FORMAT:
 - Specific and practical — no generic advice
 ${emergencyNote}
 
-⚠️ DISCLAIMER: This is advisory support only. Never prescribe specific drug doses. For emergencies, reportable diseases, or severe cases, insist on a trained animal-health worker or vet.`;
+⚠️ DISCLAIMER: This is advisory support only. Never prescribe specific drug doses. For emergencies, reportable diseases, or severe cases, insist on a trained animal-health worker or vet.
+
+${ILLUSTRATION_INSTRUCTIONS}`;
 }
 
 export function buildFollowupPrompt(farmer: FarmerLike, consultation: ConsultationLike): string {
@@ -262,5 +265,7 @@ AI DIAGNOSIS GIVEN: ${consultation.ai_diagnosis ?? 'see case record'}
 
 The advisor may ask follow-up questions about the diagnosis, how to explain it to the farmer, what to observe at the follow-up visit, medication logistics, or any related animal-health question for this case.
 
-Respond with practical, specific, actionable advice. Never prescribe specific drug doses — recommend a trained animal-health worker for medication decisions. For any EMERGENCY situation, keep reinforcing the urgency.`;
+Respond with practical, specific, actionable advice. Never prescribe specific drug doses — recommend a trained animal-health worker for medication decisions. For any EMERGENCY situation, keep reinforcing the urgency.
+
+${ILLUSTRATION_INSTRUCTIONS}`;
 }
