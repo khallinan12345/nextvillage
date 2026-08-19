@@ -15,7 +15,7 @@ import React from 'react';
 export const SYMBOL_IDS: ReadonlySet<string> = new Set([
   'person-stand', 'person-sit', 'person-point', 'person-carry',
   'face-happy', 'face-worried', 'face-neutral',
-  'fish', 'pond', 'plant', 'goat', 'chicken', 'phone', 'house',
+  'fish', 'pond', 'plant', 'tree', 'apple', 'goat', 'chicken', 'phone', 'house',
   'market-stall', 'coin', 'medical-cross', 'speech-bubble', 'sun', 'drum', 'boat', 'book',
 ]);
 
@@ -24,7 +24,7 @@ export const SYMBOL_IDS: ReadonlySet<string> = new Set([
 export const SYMBOL_DEFAULT_WIDTH: Record<string, number> = {
   'person-stand': 44, 'person-sit': 44, 'person-point': 48, 'person-carry': 50,
   'face-happy': 44, 'face-worried': 44, 'face-neutral': 44,
-  fish: 50, pond: 110, plant: 40, goat: 60, chicken: 40, phone: 30, house: 70,
+  fish: 50, pond: 110, plant: 40, tree: 60, apple: 20, goat: 60, chicken: 40, phone: 30, house: 70,
   'market-stall': 80, coin: 30, 'medical-cross': 30, 'speech-bubble': 60, sun: 40, drum: 40, boat: 90, book: 50,
 };
 
@@ -109,6 +109,17 @@ export const IllustrationSymbolDefs: React.FC = () => (
       <line x1="50" y1="80" x2="50" y2="52" {...STROKE} />
       <path d="M50,62 Q34,52 38,35" fill="none" stroke="currentColor" strokeWidth={5} strokeLinecap="round" />
       <path d="M50,68 Q66,56 60,40" fill="none" stroke="currentColor" strokeWidth={5} strokeLinecap="round" />
+    </symbol>
+
+    <symbol id="tree" viewBox="0 0 100 100">
+      <circle cx="50" cy="38" r="30" {...STROKE} />
+      <rect x="44" y="64" width="12" height="32" rx="2" {...STROKE} />
+    </symbol>
+
+    <symbol id="apple" viewBox="0 0 100 100">
+      <circle cx="50" cy="58" r="24" {...STROKE} />
+      <line x1="50" y1="34" x2="48" y2="20" {...STROKE} />
+      <ellipse cx="60" cy="24" rx="10" ry="5" {...STROKE} />
     </symbol>
 
     <symbol id="goat" viewBox="0 0 100 100">

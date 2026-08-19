@@ -1018,7 +1018,7 @@ Respond ONLY with valid JSON:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + '\n\n' + ILLUSTRATION_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + '\n\n' + ILLUSTRATION_INSTRUCTIONS + '\n\n' + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const welcome = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: [{ role: 'user', content: `The student has chosen the topic: "${t}". Give a warm 2-sentence welcome and ask your very first question or prompt. Be friendly and encouraging.` }],
@@ -1061,7 +1061,7 @@ Respond ONLY with valid JSON:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + '\n\n' + ILLUSTRATION_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + '\n\n' + ILLUSTRATION_INSTRUCTIONS + '\n\n' + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: withUser.map(m => ({ role: m.role, content: m.content })),

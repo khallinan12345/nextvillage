@@ -1683,13 +1683,13 @@ IMPORTANT: Adapt your tone, questioning style, pacing, and feedback delivery to 
     if (!evalState || Object.keys(evalState.dimensions).length === 0) {
       // No evaluation yet - use base instructions
       return `${baseFacilitatorInstructions}
+
+${ILLUSTRATION_INSTRUCTIONS}
 ${personalizedBlock}
 GOAL: Your primary goal is to help the learner improve their skills in ${subCategory} based on the following rubric dimensions:
 ${(RUBRIC_DEFINITIONS[subCategory] || []).map(d => `- ${d.replace(/_/g, ' ')}`).join('\n')}
 
-Since this learner is just starting, focus on building foundational understanding across all dimensions.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+Since this learner is just starting, focus on building foundational understanding across all dimensions.`;
     }
 
     // Build performance summary
@@ -1707,6 +1707,8 @@ ${ILLUSTRATION_INSTRUCTIONS}`;
       : 'overall performance';
 
     return `${baseFacilitatorInstructions}
+
+${ILLUSTRATION_INSTRUCTIONS}
 ${personalizedBlock}
 CURRENT LEARNER PERFORMANCE IN ${subCategory}:
 Overall Score: ${evalState.overallScore}/3
@@ -1728,9 +1730,7 @@ Reference the specific rubric criteria naturally in your feedback. For example:
 - "Excellent! That response demonstrates proficient [dimension] because..."
 - "I notice you're still at the no evidence level for [dimension]. Let's work on that by..."
 
-Remember: Every response is an opportunity to help them improve. Be specific, encouraging, and always tie feedback back to the rubric dimensions.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+Remember: Every response is an opportunity to help them improve. Be specific, encouraging, and always tie feedback back to the rubric dimensions.`;
   };
 
   // Load dashboard activities
