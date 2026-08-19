@@ -547,7 +547,13 @@ async function callGroq(model, messages, system, max_tokens, temperature) {
       'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
       'Content-Type':  'application/json',
     },
-    body: JSON.stringify({ model, messages: groqMessages, max_tokens, temperature }),
+    // reasoning_effort: 'low' — gpt-oss-120b is a reasoning model that can
+    // spend its entire max_tokens budget on a hidden reasoning trace and
+    // return a successful (200 OK) response with an EMPTY content field
+    // once it runs out of budget before writing the actual answer. Callers
+    // here use fairly tight max_tokens (300-1500), so minimizing hidden
+    // reasoning leaves the budget for the answer itself.
+    body: JSON.stringify({ model, messages: groqMessages, max_tokens, temperature, reasoning_effort: 'low' }),
   });
 
   const data = await upstream.json();
@@ -779,7 +785,11 @@ async function callCerebras(model, messages, system, max_tokens, temperature) {
       'Authorization': `Bearer ${process.env.CEREBRAS_API_KEY}`,
       'Content-Type':  'application/json',
     },
-    body: JSON.stringify({ model, messages: csMessages, max_tokens, temperature }),
+    // reasoning_effort: 'low' — same gpt-oss-120b reasoning-model behavior
+    // as callGroq above (dual-homed, identical weights): without this, it
+    // can burn the whole max_tokens budget on hidden reasoning and return
+    // an empty content field on an otherwise-successful response.
+    body: JSON.stringify({ model, messages: csMessages, max_tokens, temperature, reasoning_effort: 'low' }),
   });
 
   const data = await upstream.json();
@@ -886,6 +896,18 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
     try {
       console.log(`[chat.js] Trying ${provider.name} (${provider.model})...`);
       const result = await provider.fn();
+
+      // A reasoning model (gpt-oss-120b, on both groq and cerebras) can
+      // return a successful 200 with an EMPTY content field if it spends
+      // its whole max_tokens budget on hidden reasoning before writing the
+      // actual answer. That's useless to the caller — treat it as a
+      // failure so the chain moves on to the next provider instead of
+      // silently returning a blank response.
+      const contentText = result?.choices?.[0]?.message?.content;
+      if (!contentText || !contentText.trim()) {
+        throw new Error(`${provider.name} returned empty content (likely a reasoning model exhausting its token budget before answering)`);
+      }
+
       console.log(`[chat.js] ✅ Success via ${provider.name}`);
       return {
         result,
