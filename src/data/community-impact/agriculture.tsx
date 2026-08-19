@@ -245,10 +245,20 @@ export const VILLAGES = ['Oloibiri', 'Ibiade', 'Otuabagi', 'Nembe', 'Ogbia', 'Ye
 // row types satisfy these by having a superset of these fields, so no import
 // back into the page is needed and this file stays fully self-contained.
 
+// Matches AdvisorEntity (src/data/community-impact/domainConfig.ts) — the
+// shape AdvisorCasebookPage.tsx actually passes in. `extra` carries this
+// domain's crop list (see AgricultureConsultantPage.tsx's mapEntityFromRow:
+// name <- farmer_name, extra <- crops). Every buildXPrompt function here
+// MUST read `.name`/`.extra`, never `.farmer_name`/`.crops` — those fields
+// don't exist on the real runtime object, and calling .map() on the
+// resulting undefined is exactly what was silently breaking every
+// Agriculture advice/follow-up call since the July 13 shared-component
+// refactor (confirmed against production data: 0 failures before, 100% of
+// August's 13 consultations failing after).
 interface ClientLike {
-  farmer_name: string;
+  name: string;
   village: string;
-  crops: CropType[];
+  extra: CropType[];
 }
 
 interface ConsultationLike {
@@ -260,7 +270,7 @@ interface ConsultationLike {
 
 export function buildProbePrompt(field: IntakeField, consultType: ConsultationType, client: ClientLike, currentIntake: Record<string, string>): string {
   const ct = CONSULT_TYPES[consultType];
-  const cropList = client.crops.map(c => CROP_OPTIONS.find(o => o.value === c)?.label ?? c).join(', ') || 'mixed crops';
+  const cropList = client.extra.map(c => CROP_OPTIONS.find(o => o.value === c)?.label ?? c).join(', ') || 'mixed crops';
   const filledSoFar = Object.entries(currentIntake)
     .filter(([, v]) => v?.trim())
     .map(([k, v]) => `${k}: ${v}`)
@@ -268,7 +278,7 @@ export function buildProbePrompt(field: IntakeField, consultType: ConsultationTy
 
   return `You are coaching a youth agricultural advisor in ${client.village === 'Ibiade' || client.village === 'Sagamu' || client.village === 'Abeokuta' ? 'Ibiade (Ogun State)' : 'Oloibiri (Bayelsa State)'}, Nigeria. They are sitting with a smallholder farmer RIGHT NOW and need you to guide an in-depth interview about one specific topic.
 
-FARMER: ${client.farmer_name}, ${client.village}
+FARMER: ${client.name}, ${client.village}
 CROPS GROWN: ${cropList}
 
 CONSULTATION TYPE: ${ct.emoji} ${ct.label}
@@ -295,7 +305,7 @@ Start now with your FIRST question about: "${field.label}"`;
 
 export function buildAdvicePrompt(consultType: ConsultationType, client: ClientLike, intake: Record<string, string>): string {
   const ct = CONSULT_TYPES[consultType];
-  const cropList = client.crops.map(c => CROP_OPTIONS.find(o => o.value === c)?.label ?? c).join(', ') || 'mixed crops';
+  const cropList = client.extra.map(c => CROP_OPTIONS.find(o => o.value === c)?.label ?? c).join(', ') || 'mixed crops';
   const intakeSummary = INTAKE_FIELDS[consultType]
     .map(f => `${f.label}: ${intake[f.key]?.trim() || 'not provided'}`)
     .join('\n');
@@ -316,7 +326,7 @@ export function buildAdvicePrompt(consultType: ConsultationType, client: ClientL
 ${AGRICULTURE_CONTEXT}
 
 CONSULTATION: ${ct.emoji} ${ct.label}
-FARMER: ${client.farmer_name}, ${client.village}
+FARMER: ${client.name}, ${client.village}
 CROPS GROWN: ${cropList}
 
 
@@ -351,7 +361,7 @@ export function buildFollowupPrompt(client: ClientLike, consultation: Consultati
 
 ${AGRICULTURE_CONTEXT}
 
-FARMER ON FILE: ${client.farmer_name}, ${client.village}
+FARMER ON FILE: ${client.name}, ${client.village}
 CONSULTATION TYPE: ${ct.emoji} ${ct.label}
 URGENCY: ${uc ? uc.label : 'not assessed'}
 PROBLEM SUMMARY: ${consultation.problem_summary}
