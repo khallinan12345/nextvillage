@@ -59,7 +59,7 @@ import EvaluationPanel from '../../components/evaluation/EvaluationPanel';
 import { saveEvaluation } from '../../lib/evaluations';
 import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import { SceneIllustration } from '../../components/community-impact/SceneIllustration';
-import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
+import { withIllustration } from '../../lib/illustrationAgent';
 import {
   Monitor,
   Lightbulb,
@@ -1683,8 +1683,6 @@ IMPORTANT: Adapt your tone, questioning style, pacing, and feedback delivery to 
     if (!evalState || Object.keys(evalState.dimensions).length === 0) {
       // No evaluation yet - use base instructions
       return `${baseFacilitatorInstructions}
-
-${ILLUSTRATION_INSTRUCTIONS}
 ${personalizedBlock}
 GOAL: Your primary goal is to help the learner improve their skills in ${subCategory} based on the following rubric dimensions:
 ${(RUBRIC_DEFINITIONS[subCategory] || []).map(d => `- ${d.replace(/_/g, ' ')}`).join('\n')}
@@ -1707,8 +1705,6 @@ Since this learner is just starting, focus on building foundational understandin
       : 'overall performance';
 
     return `${baseFacilitatorInstructions}
-
-${ILLUSTRATION_INSTRUCTIONS}
 ${personalizedBlock}
 CURRENT LEARNER PERFORMANCE IN ${subCategory}:
 Overall Score: ${evalState.overallScore}/3
@@ -2154,7 +2150,7 @@ LANGUAGE RULES:
       const response = await chatText({
         messages,
         system: contextualPrompt,
-        max_tokens: 650,
+        max_tokens: 500,
         temperature: 0.7,
         page: 'SkillsDevelopmentPage',  // → Groq Llama 3.3 70B
       });
@@ -3466,10 +3462,11 @@ Provide assessment now:`;
     try {
       // Get AI response with contextual facilitation
       const aiResponse = await callOpenAI(currentInput, chatHistory, aiFacilitatorInstructions);
-      
+      const illustratedResponse = await withIllustration(currentInput, aiResponse);
+
       const aiMessage: ChatMessage = {
         role: 'assistant',
-        content: aiResponse,
+        content: illustratedResponse,
         timestamp: new Date()
       };
 
