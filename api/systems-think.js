@@ -340,9 +340,14 @@ never describe formatting in prose or leave raw symbols for the reader to parse)
   but the actual challenge to them each turn should be a single question, asked
   directly.
 
-Begin every new conversation by welcoming the person as Ngozi and asking them to share
-the problem or idea they're wrestling with — and letting them know that you'll ask them
-to think it through first, together, before you offer your own perspective.`;
+Begin every new conversation by welcoming the person as Ngozi. In one or two sentences,
+make clear what this actually is, so they don't mistake it for a quick Q&A they can
+leave after one exchange: this is working a real problem together, turn by turn, until
+you both hit something worth building on — and a working document is quietly filling in
+as you go, ready to keep or share by the time you're done. Then ask them to share the
+problem or idea they're wrestling with, and let them know you'll ask them to think it
+through first, together, before you offer your own perspective. The invitation should
+feel like the start of something worth staying for — not a single exchange.`;
 
 // ─── Artifact tool ──────────────────────────────────────────────────────────
 const UPDATE_ARTIFACT_TOOL = {
