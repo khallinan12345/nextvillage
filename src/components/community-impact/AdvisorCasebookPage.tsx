@@ -28,6 +28,7 @@ import { EvidencePicker } from './EvidencePicker';
 import QuietButton from '../ui/QuietButton';
 import ChatSurface from '../chat/ChatSurface';
 import { MarkdownText } from './MarkdownText';
+import { withIllustration } from '../../lib/illustrationAgent';
 import { extractIllustration } from './illustrationParser';
 import {
   ArrowLeft, Send, Loader2, Plus, User,
@@ -529,7 +530,8 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
         max_tokens: 1500,
       });
       const urgency = config.detectUrgency(reply);
-      setAdviceResult({ urgency, text: reply });
+      const illustratedReply = await withIllustration('', reply);
+      setAdviceResult({ urgency, text: illustratedReply });
       speak(reply.slice(0, 300));
     } catch {
       setAdviceResult({ urgency: 'medium', text: 'Unable to generate advice. Check intake data and try again.' });
@@ -593,7 +595,8 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
         system: systemPrompt,
         max_tokens: 1200,
       });
-      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() };
+      const illustratedReply = await withIllustration(userMsg.content, reply);
+      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedReply, timestamp: new Date() };
       const updated = [...history, aiMsg];
       setMessages(updated);
       speak(reply);

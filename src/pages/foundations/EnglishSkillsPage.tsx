@@ -19,7 +19,7 @@ import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { saveEvaluation } from '../../lib/evaluations';
 import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import { SceneIllustration } from '../../components/community-impact/SceneIllustration';
-import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
+import { withIllustration } from '../../lib/illustrationAgent';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -1018,14 +1018,15 @@ Respond ONLY with valid JSON:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + '\n\n' + ILLUSTRATION_INSTRUCTIONS + '\n\n' + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const welcome = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: [{ role: 'user', content: `The student has chosen the topic: "${t}". Give a warm 2-sentence welcome and ask your very first question or prompt. Be friendly and encouraging.` }],
         system: sysPrompt,
-        max_tokens: 550,
+        max_tokens: 400,
       });
-      const welcomeMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: welcome, timestamp: new Date().toISOString() };
+      const illustratedWelcome = await withIllustration(t, welcome);
+      const welcomeMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedWelcome, timestamp: new Date().toISOString() };
       setMessages([welcomeMsg]);
       await persistToDashboard([welcomeMsg]);
     } catch {
@@ -1061,14 +1062,15 @@ Respond ONLY with valid JSON:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + '\n\n' + ILLUSTRATION_INSTRUCTIONS + '\n\n' + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: withUser.map(m => ({ role: m.role, content: m.content })),
         system: sysPrompt,
-        max_tokens: 550,
+        max_tokens: 400,
       });
-      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: aiText, timestamp: new Date().toISOString() };
+      const illustratedText = await withIllustration(userText, aiText);
+      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedText, timestamp: new Date().toISOString() };
       const finalMsgs = [...withUser, aiMsg];
       setMessages(finalMsgs);
       await persistToDashboard(finalMsgs, evaluation);

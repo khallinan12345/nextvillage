@@ -11,7 +11,6 @@
 
 import React from 'react';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
-import { ILLUSTRATION_INSTRUCTIONS } from './illustrationPrompt';
 
 export type ConsultationType =
   | 'crop-disease'
@@ -342,9 +341,7 @@ FORMAT:
 - Plain language the advisor can read aloud to the farmer
 ${urgencyHint}
 
-⚠️ DISCLAIMER: This is advisory support only. For crop disease outbreaks: contact ADP and IITA. For food safety emergencies (aflatoxin): the produce must NOT be sold or consumed. The youth advisor must use their own judgement and training.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+⚠️ DISCLAIMER: This is advisory support only. For crop disease outbreaks: contact ADP and IITA. For food safety emergencies (aflatoxin): the produce must NOT be sold or consumed. The youth advisor must use their own judgement and training.`;
 }
 
 export function buildFollowupPrompt(client: ClientLike, consultation: ConsultationLike): string {
@@ -362,7 +359,5 @@ AI ADVICE GIVEN: ${consultation.ai_advice ?? 'see consultation record'}
 
 The advisor may ask follow-up questions about the advice, how to explain something to the farmer, referral logistics, or any practical agronomy / farm-management question related to this case.
 
-Respond with practical, specific advice appropriate to this community context. Keep answers concise and actionable. Reference specific variety names (TMS series, TME 419, PITA), Naira amounts, and local extension contacts where relevant. Remind the advisor to contact ADP or IITA for anything outside your advisory scope.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+Respond with practical, specific advice appropriate to this community context. Keep answers concise and actionable. Reference specific variety names (TMS series, TME 419, PITA), Naira amounts, and local extension contacts where relevant. Remind the advisor to contact ADP or IITA for anything outside your advisory scope.`;
 }

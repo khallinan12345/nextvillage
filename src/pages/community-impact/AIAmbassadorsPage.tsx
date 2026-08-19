@@ -31,8 +31,8 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { withIllustration } from '../../lib/illustrationAgent';
 import { extractIllustration } from '../../components/community-impact/illustrationParser';
-import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 import {
   Users, MessageSquare, Volume2, VolumeX, ArrowLeft, Send,
   Mic, MicOff, CheckCircle, Star, Loader2,
@@ -177,9 +177,7 @@ The student may ask: "How could I have handled that better?", "What should I hav
 - Reference specific moments from the transcript when relevant
 - Be warm but direct — the student wants to improve, not just reassurance
 - If they ask to practice a specific moment again, walk through it with them
-- Never be generic; always connect to ${persona.name}'s specific world and the actual conversation
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+- Never be generic; always connect to ${persona.name}'s specific world and the actual conversation`;
 }
 
 // ─── Personas ─────────────────────────────────────────────────────────────────
@@ -1394,7 +1392,8 @@ Respond ONLY as valid JSON:
         system: systemPrompt,
         max_tokens: 600,
       });
-      setDebriefMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() }]);
+      const illustratedReply = await withIllustration(userMsg.content, reply);
+      setDebriefMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: illustratedReply, timestamp: new Date() }]);
     } catch {
       setDebriefMessages(p => [...p, { id: crypto.randomUUID(), role: 'assistant', content: 'Technical issue — please try again.', timestamp: new Date() }]);
     } finally { setIsDebriefSending(false); }

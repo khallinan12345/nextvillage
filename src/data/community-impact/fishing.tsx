@@ -11,7 +11,6 @@
 
 import React from 'react';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
-import { ILLUSTRATION_INSTRUCTIONS } from './illustrationPrompt';
 
 export type ConsultationType =
   | 'catch-problem'
@@ -312,9 +311,7 @@ FORMAT:
 - Plain language the advisor can read aloud to the client
 ${urgencyInstructions}
 
-⚠️ DISCLAIMER: This is advisory support only. For aquaculture disease, always recommend contacting NIOMR. For oil contamination, recommend NOSDRA. The youth advisor must use their own judgement and training.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+⚠️ DISCLAIMER: This is advisory support only. For aquaculture disease, always recommend contacting NIOMR. For oil contamination, recommend NOSDRA. The youth advisor must use their own judgement and training.`;
 }
 
 export function buildFollowupPrompt(client: ClientLike, consultation: ConsultationLike): string {
@@ -332,7 +329,5 @@ AI ADVICE GIVEN: ${consultation.ai_advice ?? 'see consultation record'}
 
 The advisor may ask follow-up questions about the advice, how to explain something to the client, referral logistics, or any practical fishing/aquaculture question related to this case.
 
-Respond with practical, specific advice appropriate to this community context. Keep answers concise and actionable. Reference specific species names, Naira amounts, and local waterways where relevant. Remind the advisor to contact NIOMR, ADP, or NOSDRA for anything outside your advisory scope.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+Respond with practical, specific advice appropriate to this community context. Keep answers concise and actionable. Reference specific species names, Naira amounts, and local waterways where relevant. Remind the advisor to contact NIOMR, ADP, or NOSDRA for anything outside your advisory scope.`;
 }

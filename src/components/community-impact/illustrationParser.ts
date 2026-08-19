@@ -37,7 +37,7 @@ const clampNum = (v: unknown, min: number, max: number): number | null => {
 
 const FACE_VALUES = new Set(['happy', 'worried', 'neutral']);
 
-function validateScene(parsed: unknown): Scene | null {
+export function validateScene(parsed: unknown): Scene | null {
   if (typeof parsed !== 'object' || parsed === null) return null;
   const obj = parsed as Record<string, unknown>;
   if (!Array.isArray(obj.scene)) return null;

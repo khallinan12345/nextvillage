@@ -34,8 +34,8 @@ import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination'
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
 import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { withIllustration } from '../../lib/illustrationAgent';
 import { extractIllustration } from '../../components/community-impact/illustrationParser';
-import { ILLUSTRATION_INSTRUCTIONS } from '../../data/community-impact/illustrationPrompt';
 import {
   Briefcase, BookOpen, Users, ArrowLeft, Send, Mic, MicOff,
   Volume2, VolumeX, Save, Star, Loader2, X, ChevronRight,
@@ -376,9 +376,7 @@ FORMAT:
 - Plain language the advisor can read aloud to the entrepreneur
 ${urgencyHint}
 
-⚠️ DISCLAIMER: This is advisory support only. For legal, tax, or formal registration matters, refer to a CAC-registered agent or appropriate authority.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+⚠️ DISCLAIMER: This is advisory support only. For legal, tax, or formal registration matters, refer to a CAC-registered agent or appropriate authority.`;
 }
 
 // ─── Follow-up Chat Prompt ────────────────────────────────────────────────────
@@ -399,9 +397,7 @@ AI ADVICE GIVEN: ${consultation.ai_advice ?? 'see case record'}
 
 The advisor may ask follow-up questions about the advice, how to explain something to the entrepreneur, referral logistics (CAC, TEF, Ajo, LAPO), or any practical business question related to this case.
 
-Respond with practical, specific, actionable advice. Reference Naira amounts, local contacts, and Nigerian tools. Keep answers concise.
-
-${ILLUSTRATION_INSTRUCTIONS}`;
+Respond with practical, specific, actionable advice. Reference Naira amounts, local contacts, and Nigerian tools. Keep answers concise.`;
 }
 
 // ─── Learning Topics ──────────────────────────────────────────────────────────
@@ -1019,7 +1015,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     try {
       const systemPrompt = buildAdvicePrompt(consultationType, selectedClient, intake);
       const reply = await chatText({ page: 'EntrepreneurshipConsultantPage', messages: [{ role: 'user', content: 'Please analyse this intake and provide your business advisory recommendation.' }], system: systemPrompt, max_tokens: 1500 });
-      setAdviceResult({ urgency: detectUrgency(reply), text: reply });
+      const illustratedReply = await withIllustration('', reply);
+      setAdviceResult({ urgency: detectUrgency(reply), text: illustratedReply });
       speak(reply.slice(0, 300));
     } catch {
       setAdviceResult({ urgency: 'medium', text: 'Unable to generate advice. Check intake data and try again.' });
@@ -1072,7 +1069,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     try {
       const history = [...messages, userMsg];
       const reply = await chatText({ page: 'EntrepreneurshipConsultantPage', messages: history.map(m => ({ role: m.role, content: m.content })), system: buildFollowupPrompt(selectedClient, selectedConsultation), max_tokens: 1200 });
-      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() };
+      const illustratedReply = await withIllustration(userMsg.content, reply);
+      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedReply, timestamp: new Date() };
       const updated = [...history, aiMsg];
       setMessages(updated);
       speak(reply);
