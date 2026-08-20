@@ -154,9 +154,9 @@ const TRACKS: Track[] = [
       'Eight days from keyboard to creator. The complete camp curriculum: onboarding, characters, stories, problem-solving, and your final showcase.',
     duration: '8 days',
     totalSteps: 5,
-    tags: ['Camp', 'Creative AI'],
+    tags: ['Camp', 'Orientation'],
     available: true,
-    category: 'creative-ai',
+    category: 'onboarding',
     Icon: Palette,
   },
   {
