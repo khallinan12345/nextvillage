@@ -8,6 +8,7 @@ import { VoiceFallback } from '../../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { useBranding } from '../../lib/useBranding';
 import { isBackToBasicsMember } from '../../lib/backToBasicsScope';
+import { fetchLearnerMemory, updateLearnerMemory, findRelevantSessions, buildMemoryBlock, CandidateSession } from '../../lib/learnerMemory';
 import {
   Plus, Search, Trash2, Download, Send, Paperclip,
   ChevronLeft, ChevronRight, Edit3, Check, X,
@@ -826,6 +827,10 @@ const AIPlaygroundPage: React.FC = () => {
   const [searchQuery, setSearchQuery]             = useState('');
   const [chats, setChats]                         = useState<PlaygroundChat[]>([]);
   const [activeChatId, setActiveChatId]           = useState<string | null>(null);
+  // Learner memory: fetched once on profile load, folded into the system
+  // prompt for a chat's whole lifetime — never re-fetched per turn.
+  const [learnerMemorySummary, setLearnerMemorySummary] = useState('');
+  const [memoryBlock, setMemoryBlock]             = useState('');
   const [loadingChats, setLoadingChats]           = useState(true);
   const [editingTitleId, setEditingTitleId]       = useState<string | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState('');
@@ -887,6 +892,7 @@ const AIPlaygroundPage: React.FC = () => {
   // ── Load profile ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
+    fetchLearnerMemory(user.id).then(setLearnerMemorySummary);
     supabase
       .from('profiles')
       .select('name, ai_playground_model, organization_id, join_code_used')
@@ -1343,6 +1349,27 @@ const AIPlaygroundPage: React.FC = () => {
       }
     }
 
+    // ── Learner memory: retrieve once per new chat ────────────────────────────
+    // Cross-session relevance is only worth checking at the START of a chat
+    // (first message) — cheap metadata + one small Haiku rerank call, never
+    // repeated per turn, so it never grows this session's ongoing token cost.
+    let currentMemoryBlock = memoryBlock;
+    if (messages.length === 0) {
+      const { data: stSessions } = await supabase
+        .from('systems_think_sessions')
+        .select('id, title, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(20);
+      const candidates: CandidateSession[] = [
+        ...chats.map(c => ({ id: c.id, title: c.title, surface: 'Use Claude' as const, updatedAt: c.updated_at })),
+        ...(stSessions ?? []).map(s => ({ id: s.id, title: s.title, surface: 'Systems Think' as const, updatedAt: s.updated_at })),
+      ];
+      const relevant = await findRelevantSessions(currentInput, candidates);
+      currentMemoryBlock = buildMemoryBlock(profileName, learnerMemorySummary, relevant);
+      setMemoryBlock(currentMemoryBlock);
+    }
+
     // ── Token-aware message preparation ─────────────────────────────────────
     // 1. Expand attachments into content strings
     // 2. Estimate token count; if over MAX_CONTEXT_TOKENS, compress code blocks
@@ -1401,7 +1428,7 @@ const AIPlaygroundPage: React.FC = () => {
             '### ' + f.filename + (f.language ? ' (' + f.language + ')' : '') + '\n```' + (f.language ?? '') + '\n' + (f.content ?? '[content not loaded — user may need to re-attach]') + '\n```'
           ).join('\n\n')
         : '';
-      const activeSystemPrompt = SYSTEM_PROMPT + contextBlock;
+      const activeSystemPrompt = SYSTEM_PROMPT + (currentMemoryBlock ? '\n\n' + currentMemoryBlock : '') + contextBlock;
 
       const streamGen = streamPlayground(apiMessages, activeSystemPrompt, playgroundModel, 32000, 0.3, user?.id);
 
@@ -1566,6 +1593,18 @@ const AIPlaygroundPage: React.FC = () => {
         setChats(prev => [newChat, ...prev]);
         justCreatedChatRef.current = true; // prevent reset effect from clearing the artifact
         setActiveChatId(newChat.id);
+      }
+
+      // ── Learner memory: update every 4th user message, fire-and-forget ────────
+      // Bounds cost (not every turn) without waiting on the network — a failure
+      // here never affects the visible conversation (see learnerMemory.ts).
+      const userMsgCount = finalMessages.filter(m => m.role === 'user').length;
+      if (userMsgCount % 4 === 0) {
+        void updateLearnerMemory(
+          user.id,
+          learnerMemorySummary,
+          finalMessages.filter(m => m.role === 'user').map(m => m.content)
+        ).then(() => fetchLearnerMemory(user.id).then(setLearnerMemorySummary));
       }
     } catch (err) {
       console.error('[Playground] send error:', err);

@@ -381,9 +381,11 @@ document is rendered, not read as raw text.`,
   },
 };
 
-function buildSystemPrompt(currentArtifact) {
+function buildSystemPrompt(currentArtifact, memoryContext) {
   const artifact = (currentArtifact || '').trim();
+  const memory = (memoryContext || '').trim();
   return `${NGOZI_PERSONA}
+${memory ? `\n${memory}\n` : ''}
 
 This session also maintains ONE thinking artifact — a clean working document the
 learner can view separately from this chat, with no chat commentary in it.
@@ -465,7 +467,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'method_not_allowed' });
   }
 
-  const { userId, messages, currentArtifact } = req.body || {};
+  const { userId, messages, currentArtifact, memoryContext } = req.body || {};
   if (!userId || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ success: false, error: 'userId and messages are required' });
   }
@@ -508,7 +510,7 @@ export default async function handler(req, res) {
       // non-default `temperature` with a 400 — omit it entirely rather than
       // pass a value, matching the same check in api/chat-room.js /
       // api/chat-stream.js.
-      system: buildSystemPrompt(currentArtifact),
+      system: buildSystemPrompt(currentArtifact, memoryContext),
       messages: anthropicMessages,
       tools: [UPDATE_ARTIFACT_TOOL],
     });
