@@ -27,6 +27,9 @@ import { ResolutionModal, ResolutionSubmitData } from './ResolutionModal';
 import { EvidencePicker } from './EvidencePicker';
 import QuietButton from '../ui/QuietButton';
 import ChatSurface from '../chat/ChatSurface';
+import { MarkdownText } from './MarkdownText';
+import { withIllustration } from '../../lib/illustrationAgent';
+import { extractIllustration } from './illustrationParser';
 import {
   ArrowLeft, Send, Loader2, Plus, User,
   AlertTriangle, CheckCircle, Clock, ChevronRight, X,
@@ -72,20 +75,6 @@ interface ChallengeEvalResult {
   follow_up_instruction: string;
   next_tier_hint: string;
 }
-
-// ─── Markdown renderer ──────────────────────────────────────────────────────
-
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
-  <div className="space-y-1.5">
-    {text.split('\n').map((line, i) => {
-      if (!line.trim()) return <div key={i} className="h-1.5" />;
-      const html = line
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
-    })}
-  </div>
-);
 
 // ─── Info Tooltip ───────────────────────────────────────────────────────────
 
@@ -307,10 +296,13 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    void playPidginVoice(text.slice(0, 400), 'english', {
+    // Strip any trailing <illustration> block first — it's meant to be seen,
+    // not read aloud as raw JSON.
+    const spokenText = extractIllustration(text).text;
+    void playPidginVoice(spokenText.slice(0, 400), 'english', {
       onError: (err) => {
         console.warn(`[${config.pageName}] SpeechGen TTS failed, falling back to browser voice:`, err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser, config.pageName]);
@@ -538,7 +530,8 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
         max_tokens: 1500,
       });
       const urgency = config.detectUrgency(reply);
-      setAdviceResult({ urgency, text: reply });
+      const illustratedReply = await withIllustration('', reply);
+      setAdviceResult({ urgency, text: illustratedReply });
       speak(reply.slice(0, 300));
     } catch {
       setAdviceResult({ urgency: 'medium', text: 'Unable to generate advice. Check intake data and try again.' });
@@ -602,7 +595,8 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
         system: systemPrompt,
         max_tokens: 1200,
       });
-      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() };
+      const illustratedReply = await withIllustration(userMsg.content, reply);
+      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedReply, timestamp: new Date() };
       const updated = [...history, aiMsg];
       setMessages(updated);
       speak(reply);

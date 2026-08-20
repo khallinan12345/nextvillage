@@ -57,6 +57,9 @@ import QuietButton from '../../components/ui/QuietButton';
 import ChatSurface from '../../components/chat/ChatSurface';
 import EvaluationPanel from '../../components/evaluation/EvaluationPanel';
 import { saveEvaluation } from '../../lib/evaluations';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
+import { SceneIllustration } from '../../components/community-impact/SceneIllustration';
+import { withIllustration } from '../../lib/illustrationAgent';
 import {
   Monitor,
   Lightbulb,
@@ -182,7 +185,7 @@ const extractRubricKeyLines = (paragraph: string): { suggestion: string | null; 
 // same content the chat bubble shows (suggestion + next question for a
 // rubric turn, or the plain text otherwise), not the full detailed rubric.
 const extractChatVisibleText = (aiResponse: string): string =>
-  aiResponse.split('\n\n').map(paragraph => {
+  extractIllustration(aiResponse).text.split('\n\n').map(paragraph => {
     if (!paragraph.trim()) return '';
     if (isRubricParagraph(paragraph)) {
       const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
@@ -209,6 +212,7 @@ const MarkdownText: React.FC<{
   rubricMode?: 'compact' | 'full';
   onViewEvaluation?: (evaluationText: string) => void;
 }> = ({ text, rubricMode = 'compact', onViewEvaluation }) => {
+  const { text: cleanedText, scene } = extractIllustration(text);
   const renderParagraph = (paragraph: string, pIndex: number) => {
     const lines = paragraph.split('\n').filter(l => l.trim());
     if (!lines.length) return null;
@@ -368,7 +372,8 @@ const MarkdownText: React.FC<{
 
   return (
     <div className="leading-relaxed">
-      {text.split('\n\n').map((p, i) => renderParagraph(p, i)).filter(Boolean)}
+      {cleanedText.split('\n\n').map((p, i) => renderParagraph(p, i)).filter(Boolean)}
+      {scene && <SceneIllustration scene={scene} />}
     </div>
   );
 };
@@ -3457,10 +3462,11 @@ Provide assessment now:`;
     try {
       // Get AI response with contextual facilitation
       const aiResponse = await callOpenAI(currentInput, chatHistory, aiFacilitatorInstructions);
-      
+      const illustratedResponse = await withIllustration(currentInput, aiResponse);
+
       const aiMessage: ChatMessage = {
         role: 'assistant',
-        content: aiResponse,
+        content: illustratedResponse,
         timestamp: new Date()
       };
 

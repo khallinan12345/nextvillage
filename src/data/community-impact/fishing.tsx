@@ -219,11 +219,19 @@ export const VILLAGES = ['Oloibiri', 'Otuabagi', 'Nembe', 'Brass', 'Ogbia', 'Yen
 // row types satisfy these by having a superset of these fields, so no import
 // back into the page is needed and this file stays fully self-contained.
 
+// Matches AdvisorEntity (src/data/community-impact/domainConfig.ts) — the
+// shape AdvisorCasebookPage.tsx actually passes in (see
+// FishingConsultantPage.tsx's mapEntityFromRow: name <- client_name,
+// extra <- {activities, waterways}). Every buildXPrompt function here MUST
+// read `.name`/`.extra.*`, never `.client_name`/`.activities`/`.waterways`
+// directly — those flat fields don't exist on the real runtime object, and
+// calling .map()/.join() on the resulting undefined is exactly what was
+// silently breaking every Fishing advice/follow-up call since the July 13
+// shared-component refactor.
 interface ClientLike {
-  client_name: string;
+  name: string;
   village: string;
-  activities: ActivityType[];
-  waterways: string[];
+  extra: { activities: ActivityType[]; waterways: string[] };
 }
 
 interface ConsultationLike {
@@ -235,7 +243,7 @@ interface ConsultationLike {
 
 export function buildProbePrompt(field: IntakeField, consultType: ConsultationType, client: ClientLike, currentIntake: Record<string, string>): string {
   const ct = CONSULT_TYPES[consultType];
-  const activityList = client.activities.map(a => ACTIVITY_OPTIONS.find(o => o.value === a)?.label ?? a).join(', ') || 'fishing';
+  const activityList = client.extra.activities.map(a => ACTIVITY_OPTIONS.find(o => o.value === a)?.label ?? a).join(', ') || 'fishing';
   const filledSoFar = Object.entries(currentIntake)
     .filter(([, v]) => v?.trim())
     .map(([k, v]) => `${k}: ${v}`)
@@ -243,7 +251,7 @@ export function buildProbePrompt(field: IntakeField, consultType: ConsultationTy
 
   return `You are coaching a youth fishing advisor in Oloibiri, Bayelsa State, Nigeria. They are sitting with a client RIGHT NOW and need you to guide an in-depth interview about one specific topic.
 
-CLIENT: ${client.client_name}, ${client.village}
+CLIENT: ${client.name}, ${client.village}
 CLIENT ACTIVITIES: ${activityList}
 CONSULTATION TYPE: ${ct.emoji} ${ct.label}
 TOPIC BEING EXPLORED: "${field.label}"
@@ -269,8 +277,8 @@ Start now with your FIRST question about: "${field.label}"`;
 
 export function buildAdvicePrompt(consultType: ConsultationType, client: ClientLike, intake: Record<string, string>): string {
   const ct = CONSULT_TYPES[consultType];
-  const activityList = client.activities.map(a => ACTIVITY_OPTIONS.find(o => o.value === a)?.label ?? a).join(', ') || 'fishing';
-  const waterwayList = client.waterways.join(', ') || 'local creeks';
+  const activityList = client.extra.activities.map(a => ACTIVITY_OPTIONS.find(o => o.value === a)?.label ?? a).join(', ') || 'fishing';
+  const waterwayList = client.extra.waterways.join(', ') || 'local creeks';
   const intakeSummary = INTAKE_FIELDS[consultType]
     .map(f => `${f.label}: ${intake[f.key]?.trim() || 'not provided'}`)
     .join('\n');
@@ -286,7 +294,7 @@ export function buildAdvicePrompt(consultType: ConsultationType, client: ClientL
 ${NIGER_DELTA_FISHING_CONTEXT}
 
 CONSULTATION: ${ct.emoji} ${ct.label}
-CLIENT: ${client.client_name}, ${client.village}
+CLIENT: ${client.name}, ${client.village}
 CLIENT ACTIVITIES: ${activityList}
 WATERWAYS: ${waterwayList}
 
@@ -321,7 +329,7 @@ export function buildFollowupPrompt(client: ClientLike, consultation: Consultati
 
 ${NIGER_DELTA_FISHING_CONTEXT}
 
-CLIENT ON FILE: ${client.client_name}, ${client.village}
+CLIENT ON FILE: ${client.name}, ${client.village}
 CONSULTATION TYPE: ${ct.emoji} ${ct.label}
 URGENCY: ${uc ? uc.label : 'not assessed'}
 PROBLEM SUMMARY: ${consultation.problem_summary}

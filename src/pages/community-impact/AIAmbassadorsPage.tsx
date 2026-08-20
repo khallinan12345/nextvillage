@@ -30,6 +30,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
+import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { withIllustration } from '../../lib/illustrationAgent';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import {
   Users, MessageSquare, Volume2, VolumeX, ArrowLeft, Send,
   Mic, MicOff, CheckCircle, Star, Loader2,
@@ -774,17 +777,6 @@ const LEVEL_LABELS: Record<number, { text: string; color: string; bg: string }> 
   3: { text: 'Advanced',    color: 'text-emerald-700', bg: 'bg-emerald-100' },
 };
 
-// ─── Markdown renderer ────────────────────────────────────────────────────────
-
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
-  <div className="space-y-1.5">
-    {text.split('\n').map((line, i) => {
-      if (!line.trim()) return <div key={i} className="h-2" />;
-      const html = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
-    })}
-  </div>
-);
 
 
 // ─── Prep Coach Panel ─────────────────────────────────────────────────────────
@@ -1135,12 +1127,14 @@ const AIAmbassadorsPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    const spokenText = extractIllustration(text).text;
     setIsSpeaking(true);
-    void playPidginVoice(text.slice(0, 350), 'english', {
+    void playPidginVoice(spokenText.slice(0, 350), 'english', {
       onEnd: () => setIsSpeaking(false),
       onError: (err) => {
         console.warn('[AIAmbassadorsPage] SpeechGen TTS failed, falling back to browser voice:', err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser]);
@@ -1398,7 +1392,8 @@ Respond ONLY as valid JSON:
         system: systemPrompt,
         max_tokens: 600,
       });
-      setDebriefMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() }]);
+      const illustratedReply = await withIllustration(userMsg.content, reply);
+      setDebriefMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: illustratedReply, timestamp: new Date() }]);
     } catch {
       setDebriefMessages(p => [...p, { id: crypto.randomUUID(), role: 'assistant', content: 'Technical issue — please try again.', timestamp: new Date() }]);
     } finally { setIsDebriefSending(false); }

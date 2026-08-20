@@ -2,11 +2,12 @@
  * useVoice — Nigeria-aware text-to-speech hook
  *
  * speak() always tries SpeechGen first (/api/pidgin-tts) using the Ezinne
- * voice — regardless of isAfrica/Pidgin mode. The Clergy Pidgin clone voice
- * costs far more per call, so it's reserved for the explicit "Listen in
- * Pidgin" button (usePidginSpeech) rather than automatic narration. If the
- * SpeechGen request fails (offline, API error, low balance), speak() falls
- * back to the browser voice priority chain below so narration still works.
+ * voice — regardless of isAfrica/Pidgin mode. The pricier Clergy Pidgin
+ * clone voice (previously used for the explicit "Listen in Pidgin" button,
+ * usePidginSpeech) was dropped entirely to control SpeechGen spend — every
+ * mode now resolves to Ezinne server-side. If the SpeechGen request fails
+ * (offline, API error, low balance), speak() falls back to the browser
+ * voice priority chain below so narration still works.
  *
  * Browser voice priority chain (fallback for Africa / Nigeria users):
  *   1. en-NG  — Nigerian English (local, installed on Chromebook)
@@ -260,7 +261,7 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
     }
   }, [ttsAvailable, selectedVoice, isAfrica]);
 
-  // ── speakSpeechGen() — SpeechGen voice (Clergy Pidgin / Ezinne), falls back to browser ──
+  // ── speakSpeechGen() — SpeechGen voice (Ezinne, both modes), falls back to browser ──
   const speakSpeechGen = useCallback(async (text: string, mode: 'pidgin' | 'english'): Promise<void> => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setAudioLoading(true);
@@ -278,9 +279,8 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
   }, [speakBrowser]);
 
   // ── speak() — always tries SpeechGen (Ezinne) first, falls back to browser ─
-  // Note: always 'english' mode here — Clergy Pidgin is reserved for the
-  // explicit "Listen in Pidgin" button (usePidginSpeech), not automatic
-  // narration, since it costs far more per call.
+  // Note: always 'english' mode here — harmless now that both modes
+  // resolve to the same voice server-side, kept for clarity/future use.
   const speak = useCallback((text: string) => {
     if (!text.trim()) return;
 

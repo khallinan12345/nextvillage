@@ -33,6 +33,9 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
+import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { withIllustration } from '../../lib/illustrationAgent';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import {
   Briefcase, BookOpen, Users, ArrowLeft, Send, Mic, MicOff,
   Volume2, VolumeX, Save, Star, Loader2, X, ChevronRight,
@@ -483,17 +486,6 @@ const LEVEL_LABELS: Record<number, { text: string; color: string; bg: string }> 
 // ─── Background ───────────────────────────────────────────────────────────────
 
 
-// ─── Markdown renderer ────────────────────────────────────────────────────────
-
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
-  <div className="space-y-1.5">
-    {text.split('\n').map((line, i) => {
-      if (!line.trim()) return <div key={i} className="h-1.5" />;
-      const html = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
-    })}
-  </div>
-);
 
 // ─── Info Tooltip ─────────────────────────────────────────────────────────────
 
@@ -732,10 +724,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    void playPidginVoice(text.slice(0, 380), 'english', {
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    const spokenText = extractIllustration(text).text;
+    void playPidginVoice(spokenText.slice(0, 380), 'english', {
       onError: (err) => {
         console.warn('[EntrepreneurshipConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser]);
@@ -1021,7 +1015,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     try {
       const systemPrompt = buildAdvicePrompt(consultationType, selectedClient, intake);
       const reply = await chatText({ page: 'EntrepreneurshipConsultantPage', messages: [{ role: 'user', content: 'Please analyse this intake and provide your business advisory recommendation.' }], system: systemPrompt, max_tokens: 1500 });
-      setAdviceResult({ urgency: detectUrgency(reply), text: reply });
+      const illustratedReply = await withIllustration('', reply);
+      setAdviceResult({ urgency: detectUrgency(reply), text: illustratedReply });
       speak(reply.slice(0, 300));
     } catch {
       setAdviceResult({ urgency: 'medium', text: 'Unable to generate advice. Check intake data and try again.' });
@@ -1074,7 +1069,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     try {
       const history = [...messages, userMsg];
       const reply = await chatText({ page: 'EntrepreneurshipConsultantPage', messages: history.map(m => ({ role: m.role, content: m.content })), system: buildFollowupPrompt(selectedClient, selectedConsultation), max_tokens: 1200 });
-      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() };
+      const illustratedReply = await withIllustration(userMsg.content, reply);
+      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedReply, timestamp: new Date() };
       const updated = [...history, aiMsg];
       setMessages(updated);
       speak(reply);
