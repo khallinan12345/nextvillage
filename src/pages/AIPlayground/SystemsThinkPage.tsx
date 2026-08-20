@@ -31,6 +31,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
+import { fetchLearnerMemory, updateLearnerMemory, findRelevantSessions, buildMemoryBlock, CandidateSession } from '../../lib/learnerMemory';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -148,12 +149,26 @@ const SystemsThinkPage: React.FC = () => {
   const [headerTitleDraft, setHeaderTitleDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  // Learner memory: fetched once on mount, folded into the system prompt
+  // (server-side, via memoryContext) for the rest of the session — never
+  // re-fetched per turn, so steady-state token cost stays flat.
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [learnerMemorySummary, setLearnerMemorySummary] = useState('');
+  const [memoryBlock, setMemoryBlock] = useState('');
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeSessionIdRef = useRef<string | null>(null);
   useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle()
+      .then(({ data }) => setProfileName(data?.name ?? null));
+    fetchLearnerMemory(user.id).then(setLearnerMemorySummary);
+  }, [user?.id]);
 
   // ── Ngozi's opening welcome — an invisible kickoff turn so the model's
   // own "begin every conversation by welcoming them" instruction fires
@@ -164,10 +179,11 @@ const SystemsThinkPage: React.FC = () => {
     setError(null);
     try {
       const kickoff: ThinkMessage = { role: 'user', content: '(Starting a new Systems Think session.)', hidden: true };
+      const memoryContext = buildMemoryBlock(profileName, learnerMemorySummary, []);
       const res = await fetch('/api/systems-think', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, messages: [kickoff], currentArtifact: null }),
+        body: JSON.stringify({ userId: user.id, messages: [kickoff], currentArtifact: null, memoryContext }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) throw new Error(data?.error || 'failed');
@@ -195,7 +211,7 @@ const SystemsThinkPage: React.FC = () => {
     } finally {
       setStartingSession(false);
     }
-  }, [user?.id]);
+  }, [user?.id, profileName, learnerMemorySummary]);
 
   // ── Load past sessions; auto-open the picker if any exist, otherwise
   // start fresh straight away. ─────────────────────────────────────────────
@@ -384,11 +400,32 @@ const SystemsThinkPage: React.FC = () => {
     const updated = [...messages, userMsg];
     setMessages(updated);
 
+    // ── Learner memory: retrieve once per session, on the first real
+    // (non-hidden) user turn — cheap metadata + one small Haiku rerank
+    // call, never repeated per turn. ──────────────────────────────────────
+    const isFirstRealTurn = messages.filter(m => m.role === 'user' && !m.hidden).length === 0;
+    let currentMemoryBlock = memoryBlock;
+    if (isFirstRealTurn) {
+      const { data: pgChats } = await supabase
+        .from('ai_playground_chats')
+        .select('id, title, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(20);
+      const candidates: CandidateSession[] = [
+        ...sessions.filter(s => s.id !== activeSessionId).map(s => ({ id: s.id, title: s.title, surface: 'Systems Think' as const, updatedAt: s.updated_at })),
+        ...(pgChats ?? []).map(c => ({ id: c.id, title: c.title, surface: 'Use Claude' as const, updatedAt: c.updated_at })),
+      ];
+      const relevant = await findRelevantSessions(text, candidates);
+      currentMemoryBlock = buildMemoryBlock(profileName, learnerMemorySummary, relevant);
+      setMemoryBlock(currentMemoryBlock);
+    }
+
     try {
       const res = await fetch('/api/systems-think', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, messages: updated, currentArtifact: artifactContent || null }),
+        body: JSON.stringify({ userId: user.id, messages: updated, currentArtifact: artifactContent || null, memoryContext: currentMemoryBlock }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) throw new Error(data?.error || 'failed');
@@ -411,6 +448,16 @@ const SystemsThinkPage: React.FC = () => {
 
       await supabase.from('systems_think_sessions').update(dbUpdate).eq('id', activeSessionId);
       setSessions(prev => prev.map(s => s.id === activeSessionId ? { ...s, ...dbUpdate } as ThinkSession : s));
+
+      // ── Learner memory: update every 4th real user message, fire-and-forget.
+      const userMsgCount = withReply.filter(m => m.role === 'user' && !m.hidden).length;
+      if (userMsgCount % 4 === 0) {
+        void updateLearnerMemory(
+          user.id,
+          learnerMemorySummary,
+          withReply.filter(m => m.role === 'user' && !m.hidden).map(m => m.content)
+        ).then(() => fetchLearnerMemory(user.id).then(setLearnerMemorySummary));
+      }
     } catch {
       setError("Ngozi couldn't respond just now — please try again.");
     } finally {
