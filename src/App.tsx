@@ -107,6 +107,8 @@ const CoworkPage = lazy(() => import('./pages/CoworkPage'));
 // Tutorials
 const TutorialsPage = lazy(() => import('./pages/tutorials/TutorialsPage'));
 const FishMarketTutorialPage = lazy(() => import('./pages/tutorials/FishMarketTutorialPage'));
+import OloibiriCampGuidePage from './pages/tutorials/OloibiriCampGuidePage';
+
 const AILearningStartPage = lazy(() => import('./pages/tutorials/AILearningStartPage'));
 const SkillDevelopmentStartPage = lazy(() => import('./pages/tutorials/SkillDevelopmentStartPage'));
 const AddNewGuidePage = lazy(() => import('./pages/tutorials/AddNewGuidePage'));
@@ -332,6 +334,11 @@ export const AppContent: React.FC = () => {
         <Route path="/tutorials/healthcare-navigator" element={<HealthcareNavigatorGuidePage />} />
         <Route path="/tutorials/entrepreneurship-consultant" element={<EntrepreneurshipConsultantGuidePage />} />
         <Route path="/tutorials/fish-market" element={<FishMarketTutorialPage />} />
+                {
+          path: '/tutorials/oloibiri-camp',
+          element: <OloibiriCampGuidePage />,
+        },
+
 
         {/* Legacy Route Redirects */}
         <Route path="/ai-proficiency" element={<Navigate to="/certifications/ai-proficiency" replace />} />

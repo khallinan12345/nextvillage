@@ -147,6 +147,18 @@ const TRACKS: Track[] = [
     Icon: Fish,
   },
   {
+        {
+      id: 'oloibiri-camp',
+      category: 'Creative AI',
+      title: 'Oloibiri AI Camp',
+      description: 'Eight days from keyboard to creator. The complete camp curriculum: onboarding, characters, stories, problem-solving, and your final showcase.',
+      duration: '8 days',
+      level: 'Beginner',
+      icon: '🎨',
+      href: '/tutorials/oloibiri-camp',
+      featured: true,
+    },
+
     id: 'vibe-coding-guide',
     path: '/tutorials/vibe-coding',
     title: 'Vibe Code Something Real',
