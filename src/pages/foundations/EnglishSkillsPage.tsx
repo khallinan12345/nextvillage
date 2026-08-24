@@ -17,6 +17,9 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { saveEvaluation } from '../../lib/evaluations';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
+import { SceneIllustration } from '../../components/community-impact/SceneIllustration';
+import { withIllustration } from '../../lib/illustrationAgent';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -258,7 +261,7 @@ const evaluateSession = async (
   const stage = STAGES[stageId];
   const subcats = STAGE_RUBRICS[stageId];
   const fullHistory = chatHistory.slice(-10)
-    .map(m => `${m.role === 'user' ? 'STUDENT' : 'COACH'}: ${m.content.slice(0, 500)}`)
+    .map(m => `${m.role === 'user' ? 'STUDENT' : 'COACH'}: ${extractIllustration(m.content).text.slice(0, 500)}`)
     .join('\n\n');
 
   const encouragementInstruction = communicationLevel <= 0
@@ -344,29 +347,33 @@ Explanation: 2–3 warm sentences to the student explaining WHAT changed and WHY
 };
 
 const MessageContent: React.FC<{ content: string }> = ({ content }) => {
-  const lines = content.split('\n');
+  const { text: cleanedContent, scene } = extractIllustration(content);
+  const lines = cleanedContent.split('\n');
   return (
-    <span>
-      {lines.map((line, i) => {
-        const isCorrection = line.trimStart().startsWith('✅');
-        if (isCorrection) {
+    <>
+      <span>
+        {lines.map((line, i) => {
+          const isCorrection = line.trimStart().startsWith('✅');
+          if (isCorrection) {
+            return (
+              <React.Fragment key={i}>
+                {i > 0 && <br />}
+                <br />
+                <strong className="text-green-700 font-bold">{line}</strong>
+                <br />
+              </React.Fragment>
+            );
+          }
           return (
             <React.Fragment key={i}>
               {i > 0 && <br />}
-              <br />
-              <strong className="text-green-700 font-bold">{line}</strong>
-              <br />
+              {line}
             </React.Fragment>
           );
-        }
-        return (
-          <React.Fragment key={i}>
-            {i > 0 && <br />}
-            {line}
-          </React.Fragment>
-        );
-      })}
-    </span>
+        })}
+      </span>
+      {scene && <SceneIllustration scene={scene} />}
+    </>
   );
 };
 
@@ -700,13 +707,14 @@ const EnglishSkillsPage: React.FC = () => {
   // ── Core speak (ignores speechEnabled — used for modal/eval voice) ────
   const speakAlways = useCallback((text: string) => {
     if (!ttsUnlocked) return;
-    hookSpeak(text);
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    hookSpeak(extractIllustration(text).text);
   }, [hookSpeak, ttsUnlocked]);
 
   // ── Speak (respects speechEnabled toggle) ────────────────────────────
   const speak = useCallback((text: string) => {
     if (!speechEnabled || !ttsUnlocked) return;
-    hookSpeak(text);
+    hookSpeak(extractIllustration(text).text);
   }, [speechEnabled, hookSpeak, ttsUnlocked]);
 
   // ── Stages intro voice ────────────────────────────────────────────────
@@ -1017,7 +1025,8 @@ Respond ONLY with valid JSON:
         system: sysPrompt,
         max_tokens: 400,
       });
-      const welcomeMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: welcome, timestamp: new Date().toISOString() };
+      const illustratedWelcome = await withIllustration(t, welcome);
+      const welcomeMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedWelcome, timestamp: new Date().toISOString() };
       setMessages([welcomeMsg]);
       await persistToDashboard([welcomeMsg]);
     } catch {
@@ -1060,7 +1069,8 @@ Respond ONLY with valid JSON:
         system: sysPrompt,
         max_tokens: 400,
       });
-      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: aiText, timestamp: new Date().toISOString() };
+      const illustratedText = await withIllustration(userText, aiText);
+      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedText, timestamp: new Date().toISOString() };
       const finalMsgs = [...withUser, aiMsg];
       setMessages(finalMsgs);
       await persistToDashboard(finalMsgs, evaluation);

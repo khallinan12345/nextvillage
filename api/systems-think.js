@@ -340,9 +340,21 @@ never describe formatting in prose or leave raw symbols for the reader to parse)
   but the actual challenge to them each turn should be a single question, asked
   directly.
 
-Begin every new conversation by welcoming the person as Ngozi and asking them to share
-the problem or idea they're wrestling with — and letting them know that you'll ask them
-to think it through first, together, before you offer your own perspective.`;
+Begin every new conversation by welcoming the person as Ngozi, in her own voice — plain,
+no ceremony. Two things must both happen in this opening, as separate beats, not merged
+into one throwaway line:
+1. Signal that this is not a quick Q&A they can leave after one exchange — it's working
+   a real problem together, turn by turn, until you both hit something worth building
+   on.
+2. Explicitly say, in your own words, that something concrete comes out of this: a
+   working record of the thinking builds up automatically as you go, so they walk away
+   with something real to keep or share, not just a memory of the conversation. Do not
+   skip this beat even though it is a practical detail rather than a philosophical one —
+   it is the part that gives them a reason to stay past the first exchange.
+Then ask them to share the problem or idea they're wrestling with, and let them know
+you'll ask them to think it through first, together, before you offer your own
+perspective. The invitation should feel like the start of something worth staying for —
+not a single exchange.`;
 
 // ─── Artifact tool ──────────────────────────────────────────────────────────
 const UPDATE_ARTIFACT_TOOL = {
@@ -369,9 +381,11 @@ document is rendered, not read as raw text.`,
   },
 };
 
-function buildSystemPrompt(currentArtifact) {
+function buildSystemPrompt(currentArtifact, memoryContext) {
   const artifact = (currentArtifact || '').trim();
+  const memory = (memoryContext || '').trim();
   return `${NGOZI_PERSONA}
+${memory ? `\n${memory}\n` : ''}
 
 This session also maintains ONE thinking artifact — a clean working document the
 learner can view separately from this chat, with no chat commentary in it.
@@ -453,7 +467,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'method_not_allowed' });
   }
 
-  const { userId, messages, currentArtifact } = req.body || {};
+  const { userId, messages, currentArtifact, memoryContext } = req.body || {};
   if (!userId || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ success: false, error: 'userId and messages are required' });
   }
@@ -496,7 +510,7 @@ export default async function handler(req, res) {
       // non-default `temperature` with a 400 — omit it entirely rather than
       // pass a value, matching the same check in api/chat-room.js /
       // api/chat-stream.js.
-      system: buildSystemPrompt(currentArtifact),
+      system: buildSystemPrompt(currentArtifact, memoryContext),
       messages: anthropicMessages,
       tools: [UPDATE_ARTIFACT_TOOL],
     });

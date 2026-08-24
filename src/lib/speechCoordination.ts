@@ -71,11 +71,12 @@ export async function speakEnglish(text: string): Promise<void> {
 export type SpeechGenVoiceMode = 'pidgin' | 'english';
 
 /**
- * Plays narration through SpeechGen via /api/pidgin-tts — the Clergy Pidgin
- * clone voice for mode 'pidgin', Ezinne for mode 'english'. Returns false
- * (without throwing) on any failure, so callers can fall back to browser
- * speechSynthesis. This is the one place that talks to SpeechGen for pages
- * that don't use the useVoice/usePidginSpeech hooks.
+ * Plays narration through SpeechGen via /api/pidgin-tts — Ezinne for both
+ * 'pidgin' and 'english' mode (the pricier Clergy Pidgin clone voice was
+ * dropped to control SpeechGen cost). Returns false (without throwing) on
+ * any failure, so callers can fall back to browser speechSynthesis. This is
+ * the one place that talks to SpeechGen for pages that don't use the
+ * useVoice/usePidginSpeech hooks.
  */
 export async function playPidginVoice(
   text: string,

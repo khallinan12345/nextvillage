@@ -2,16 +2,21 @@
 //
 // Bi-Weekly Community AI Challenge Generator
 // ─────────────────────────────────────────
-// pg_cron fires this every Sunday at 20:15 UTC (see cron.job id 14) — but
-// the function only actually generates a new challenge every OTHER Sunday.
-// This is deliberate: pg_cron has no native "every 2 weeks" schedule, so
-// rather than fight its syntax (and lose the "always starts on a Monday"
-// guarantee), the function checks the most recent challenge's week_start
-// on every run and skips generation if fewer than 14 days have passed.
-// This self-corrects even if a run is missed or someone triggers it
-// manually — it reads real history instead of counting invocations.
+// No longer on a schedule — the pg_cron job that used to fire this every
+// Sunday (id 14) fired weekly against a 14-day cycle, which left
+// community_challenges with conflicting "active" rows and broke the
+// Dashboard leaderboard. It's been unscheduled (see migration
+// 20260816155639). Challenge creation is now Admin-panel-only: platform
+// admins (any org) or site leaders (Oloibiri only, see the authorization
+// check below) via the Create Challenge tab's Preview/Publish flow.
 //
-// For each active org it:
+// It still self-paces off real history rather than an invocation count —
+// the function checks the most recent challenge's week_start on every run
+// and skips generation if fewer than 14 days have passed — so an admin
+// clicking Publish early just gets a "too soon" response instead of a
+// broken short cycle.
+//
+// For each targeted org it:
 //   1. Checks whether 14 days have passed since the last challenge started
 //      — if not, skips (unless dry_run or force is set)
 //   2. Expires any stale enrollments from the previous cycle
@@ -232,6 +237,13 @@ const TIER_ROTATION: Array<'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
+// Davidson AI Futures Lab / Oloibiri's organization_id — the only org whose
+// site leaders currently have a live community-challenge program (mirrors
+// OLOIBIRI_ORG_ID in src/lib/useBranding.ts). A leader from any other org
+// has no challenge program to publish into.
+const OLOIBIRI_ORG_UUID = 'a1b2c3d4-0001-0001-0001-000000000001';
+const LEADER_ROLES = new Set(['leader', 'site_leader', 'research_lead']);
+
 Deno.serve(async (req) => {
   // Allow manual POST for testing, cron sends GET
   let body: {
@@ -251,13 +263,53 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
+  // ── Authorization ─────────────────────────────────────────────────────
+  // This mutates challenge state and spends Claude API credits, so it's
+  // not enough to hide the "Create Challenge" tab in the UI — the function
+  // itself must reject callers who aren't platform admins or org-scoped
+  // site leaders. A service-role bearer (cron / CLI ops testing, per the
+  // module docstring) skips this and gets full, unscoped access.
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
+      status: 401, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const token = authHeader.replace('Bearer ', '');
+  let forcedOrgId: string | null = null;
+  if (token !== Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const { data: profile } = await supabase
+      .from('profiles').select('role, organization_id').eq('id', user.id).single();
+    if (profile?.role === 'platform_administrator') {
+      // full access — org_id (or lack of it) from the request body stands
+    } else if (profile?.role && LEADER_ROLES.has(profile.role)) {
+      if (profile.organization_id !== OLOIBIRI_ORG_UUID) {
+        return new Response(JSON.stringify({ error: 'Your organization has no community challenge program' }), {
+          status: 403, headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      forcedOrgId = 'oloibiri'; // ignore any org_id the caller sent — scope to their own org
+    } else {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   const anthropic = new Anthropic({
     apiKey: Deno.env.get('ANTHROPIC_API_KEY')!,
   });
 
   const results: Record<string, unknown> = {};
-  const targetOrgs = body.org_id
-    ? ORG_CONFIGS.filter(o => o.id === body.org_id)
+  const effectiveOrgId = forcedOrgId ?? body.org_id;
+  const targetOrgs = effectiveOrgId
+    ? ORG_CONFIGS.filter(o => o.id === effectiveOrgId)
     : ORG_CONFIGS;
 
   for (const org of targetOrgs) {

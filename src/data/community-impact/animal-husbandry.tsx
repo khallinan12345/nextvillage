@@ -152,10 +152,18 @@ interface AnimalEntryLike {
   count: number;
 }
 
+// Matches AdvisorEntity (src/data/community-impact/domainConfig.ts) — the
+// shape AdvisorCasebookPage.tsx actually passes in (see
+// AnimalHusbandryPage.tsx's mapEntityFromRow: name <- farmer_name, extra <-
+// animals). Every buildXPrompt function here MUST read `.name`/`.extra`,
+// never `.farmer_name`/`.animals` directly — those flat fields don't exist
+// on the real runtime object, and calling .find() on the resulting
+// undefined is exactly what was silently breaking every Animal Husbandry
+// advice/follow-up call since the July 13 shared-component refactor.
 interface FarmerLike {
-  farmer_name: string;
+  name: string;
   village: string;
-  animals: AnimalEntryLike[];
+  extra: AnimalEntryLike[];
 }
 
 interface ConsultationLike {
@@ -167,7 +175,7 @@ interface ConsultationLike {
 
 export function buildProbePrompt(field: IntakeField, species: Species, farmer: FarmerLike, currentIntake: Record<string, string>): string {
   const sc = SPECIES_CONFIG[species];
-  const animalCount = farmer.animals.find(a => a.species === species)?.count ?? 'unknown';
+  const animalCount = farmer.extra.find(a => a.species === species)?.count ?? 'unknown';
   const filledSoFar = Object.entries(currentIntake)
     .filter(([, v]) => v?.trim())
     .map(([k, v]) => `${k}: ${v}`)
@@ -175,7 +183,7 @@ export function buildProbePrompt(field: IntakeField, species: Species, farmer: F
 
   return `You are coaching a youth animal-health advisor in rural Nigeria. They are sitting with a farmer RIGHT NOW and need you to guide an in-depth interview about one specific topic.
 
-FARMER: ${farmer.farmer_name}, ${farmer.village}
+FARMER: ${farmer.name}, ${farmer.village}
 SPECIES: ${sc.emoji} ${sc.label} (${animalCount} animals)
 TOPIC BEING EXPLORED: "${field.label}"
 WHY IT MATTERS: ${field.tooltip}
@@ -200,7 +208,7 @@ Start now with your FIRST question about: "${field.label}"`;
 
 export function buildDiagnosisPrompt(species: Species, farmer: FarmerLike, intake: Record<string, string>): string {
   const sc = SPECIES_CONFIG[species];
-  const animalCount = farmer.animals.find(a => a.species === species)?.count ?? 'unknown';
+  const animalCount = farmer.extra.find(a => a.species === species)?.count ?? 'unknown';
   const intakeSummary = SPECIES_INTAKE[species]
     .map(f => `${f.label}: ${intake[f.key]?.trim() || 'not provided'}`)
     .join('\n');
@@ -217,7 +225,7 @@ export function buildDiagnosisPrompt(species: Species, farmer: FarmerLike, intak
 
 ${NIGERIA_LIVESTOCK_CONTEXT}
 
-FARMER: ${farmer.farmer_name}, ${farmer.village}
+FARMER: ${farmer.name}, ${farmer.village}
 SPECIES: ${sc.emoji} ${sc.label}
 TOTAL ANIMALS: ${animalCount}
 
@@ -254,7 +262,7 @@ export function buildFollowupPrompt(farmer: FarmerLike, consultation: Consultati
 
 ${NIGERIA_LIVESTOCK_CONTEXT}
 
-FARMER: ${farmer.farmer_name}, ${farmer.village}
+FARMER: ${farmer.name}, ${farmer.village}
 SPECIES: ${sc.emoji} ${sc.label}
 URGENCY: ${uc ? uc.label : 'not assessed'}
 SYMPTOMS REPORTED: ${consultation.symptom_summary}

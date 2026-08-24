@@ -21,7 +21,7 @@ import {
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
   Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
   Palette, Image, Mic, Video as VideoIcon, Clapperboard, FileText, Gamepad2, PenLine,
-  Wheat, PawPrint, Megaphone, Stethoscope, Briefcase,
+  Wheat, PawPrint, Megaphone, Stethoscope, Briefcase, Rocket,
 } from 'lucide-react';
 
 type CategoryId =
@@ -184,6 +184,19 @@ const TRACKS: Track[] = [
     available: true,
     category: 'tech-skills',
     Icon: Gamepad2,
+  },
+  {
+    id: 'publish-website-guide',
+    path: '/tutorials/publish-website',
+    title: 'Publish Your Website: GitHub & Vercel',
+    blurb:
+      'Runs alongside the Website Builder (Vite + React) in a second tab. Add an AI chatbot if you want one — that\'s the point where you\'ll ask a facilitator for an Anthropic API key for the Claude Sonnet 5 model — then create a GitHub account, create a Vercel account linked to it, push your project straight to your repo\'s main branch, and deploy it to a real, live web address.',
+    duration: 'about 90 minutes',
+    totalSteps: 7,
+    tags: ['Web Development', 'GitHub', 'Vercel', 'AI Chatbot'],
+    available: true,
+    category: 'tech-skills',
+    Icon: Rocket,
   },
   {
     id: 'ai-learning-guide-understanding-ai',
@@ -522,6 +535,19 @@ const TRACKS: Track[] = [
     available: true,
     category: 'managing-platform',
     Icon: GitBranch,
+  },
+  {
+    id: 'create-ai-camp',
+    path: '/tutorials/create-ai-camp',
+    title: 'Create an AI Camp',
+    blurb:
+      'A focused version of "Add or Improve a Page" for one specific job: turning a curriculum plan you already have — a PDF or Word document — into a real, published, student-facing guide. Draft it with Use Claude or Gemini\'s free version, save it into the project, test it locally, then take it through review to merged. Same AI chat carries you from first draft through every revision.',
+    duration: 'about 90 minutes',
+    totalSteps: 7,
+    tags: ['GitHub', 'Claude', 'Curriculum', 'Contributing'],
+    available: true,
+    category: 'managing-platform',
+    Icon: GraduationCap,
   },
 ];
 

@@ -29,7 +29,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
+import { saveEvaluation } from '../../lib/evaluations';
 import { useBranding } from '../../lib/useBranding';
+import { generateCertificatePdf } from '../../lib/certificatePdf';
 import {
   Heart, Award, Trophy, Loader2, Download, AlertCircle,
   Volume2, VolumeX, Star, CheckCircle, ArrowRight, RefreshCw,
@@ -638,6 +640,27 @@ Return valid JSON only (no markdown, no code fences):
 
       setAssessmentScores(scores);
       await saveToDashboard(portfolio, scores);
+
+      // Dual-write to the shared evaluations table alongside the legacy
+      // healthcare_cert_evaluation column saveToDashboard just wrote — see
+      // src/lib/evaluations.ts. The legacy column stays authoritative for
+      // this page's own read path.
+      if (dashboardRowId && user?.id) {
+        saveEvaluation(user.id, {
+          dashboardId: dashboardRowId,
+          activityType: 'healthcare_navigator_certification',
+          overallScore: result.overall_score ?? 0,
+          maxScore: 3,
+          evidence: result.summary,
+          criteria: scores.map((s, i) => ({
+            key: `${s.assessment_name}-${i}`,
+            label: s.assessment_name,
+            score: s.score ?? 0,
+            evidence: s.evidence ?? undefined,
+          })),
+        }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
+
       setView('results');
     } catch (err: any) {
       setEvalError('Evaluation failed. Please check your portfolio is complete and try again.');
@@ -653,28 +676,16 @@ Return valid JSON only (no markdown, no code fences):
     if (!certName.trim() || !allProficient) return;
     setIsGenCert(true);
     try {
-      const r = await fetch('/api/generate-certificate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:          certName.trim(),
-          certification: CERT_NAME,
-          scores:        assessmentScores,
-          sessionId,
-          date:          new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
-          theme:         'rose',
-          subtitle:      'Community Impact Track',
-          description:   'Has demonstrated the ability to assess patients systematically using WHO IMCI protocols, classify urgency correctly using the RED/YELLOW/GREEN triage system, communicate clearly with caregivers, and produce complete referral notes — serving as a Community Health Navigator in Oloibiri, Bayelsa State, Nigeria.',
-        }),
+      await generateCertificatePdf({
+        recipientName: certName,
+        title: CERT_NAME,
+        description: 'Has demonstrated the ability to assess patients systematically using WHO IMCI protocols, classify urgency correctly using the RED/YELLOW/GREEN triage system, communicate clearly with caregivers, and produce complete referral notes — serving as a Community Health Navigator in Oloibiri, Bayelsa State, Nigeria.',
+        assessmentScores,
+        branding,
+        theme: 'rose',
+        idPrefix: 'HLTH',
+        filenameSuffix: 'HealthcareNavigator',
       });
-      if (!r.ok) throw new Error('Certificate generation failed');
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${certName.trim().replace(/\s+/g, '_')}_Healthcare_Navigator_Certificate.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
     } catch {
       alert('Certificate generation failed. Please try again.');
     } finally {

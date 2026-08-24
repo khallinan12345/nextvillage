@@ -15,11 +15,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from '../../components/layout/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { chatJSON } from '../../lib/chatClient';
+import { saveEvaluation } from '../../lib/evaluations';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { PidginTooltip } from '../../components/PidginTooltip';
-import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
+import { useBranding } from '../../lib/useBranding';
+import { generateCertificatePdf } from '../../lib/certificatePdf';
 import {
   Mic, Award, Trophy, XCircle, Loader2,
   Download, AlertCircle, Volume2, VolumeX,
@@ -288,6 +290,7 @@ const AIVoiceCertificationPage: React.FC = () => {
   const [sessionId,   setSessionId]   = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('My Voice Portfolio');
   const sessionIdRef = useRef<string | null>(null);
+  const dashboardRowIdRef = useRef<string | null>(null);
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
 
   // ── Portfolio ─────────────────────────────────────────────────────────
@@ -362,6 +365,8 @@ const AIVoiceCertificationPage: React.FC = () => {
       const { data: dash } = await supabase.from('dashboard').select('*')
         .eq('user_id', user.id).eq('activity', CERT_ACTIVITY).maybeSingle();
 
+      if (dash?.id) dashboardRowIdRef.current = dash.id;
+
       const evalData = dash?.voice_cert_evaluation as any;
       const scores: AssessmentScore[] = (aData || []).map(a => ({
         assessment_name: a.assessment_name,
@@ -391,12 +396,13 @@ const AIVoiceCertificationPage: React.FC = () => {
     if (sessionIdRef.current) return sessionIdRef.current;
     const sid = makeId(); sessionIdRef.current = sid; setSessionId(sid);
     if (user?.id) {
-      await supabase.from('dashboard').insert({
+      const { data: inserted } = await supabase.from('dashboard').insert({
         user_id: user.id, activity: CERT_ACTIVITY,
         category_activity: 'Certification', progress: 'started',
         voice_cert_session_id: sid, voice_script: sessionName,
         voice_cert_portfolio: [], voice_cert_evaluation: {},
-      });
+      }).select('id').single();
+      if (inserted?.id) dashboardRowIdRef.current = inserted.id;
     }
     return sid;
   }, [user?.id, sessionName]);
@@ -551,6 +557,24 @@ Respond ONLY in this JSON format:
         updated_at: new Date().toISOString(),
       }).eq('user_id', user.id).eq('voice_cert_session_id', sessionIdRef.current!);
 
+      // Dual-write to the shared evaluations table alongside the legacy
+      // voice_cert_evaluation jsonb column above — see src/lib/evaluations.ts.
+      // The legacy column stays authoritative for this page's own read path.
+      if (dashboardRowIdRef.current) {
+        saveEvaluation(user.id, {
+          dashboardId: dashboardRowIdRef.current,
+          activityType: 'ai_voice_certification',
+          overallScore: avgCalc,
+          maxScore: 3,
+          criteria: newScores.map((s, i) => ({
+            key: `${s.assessment_name}-${i}`,
+            label: s.assessment_name,
+            score: s.score ?? 0,
+            evidence: s.evidence ?? undefined,
+          })),
+        }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
+
       if (newScores.some(s => (s.score ?? 0) >= 2)) {
         try {
           const confetti = await import('canvas-confetti').catch(() => null);
@@ -570,69 +594,22 @@ Respond ONLY in this JSON format:
     if (!certName.trim()) return;
     setIsGenCert(true);
     try {
-      const jsPDFModule = await import('jspdf').catch(() => null);
-      if (!jsPDFModule) { alert('PDF generation not available.'); return; }
-      const { jsPDF } = jsPDFModule;
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const W = doc.internal.pageSize.getWidth();
-      const H = doc.internal.pageSize.getHeight();
-
-      const minScore  = Math.min(...assessmentScores.map(s => s.score ?? 0));
-      const certLevel = minScore === 3 ? 'Advanced' : minScore >= 2 ? 'Proficient' : 'Emerging';
-      const avg       = assessmentScores.reduce((s, a) => s + (a.score ?? 0), 0) / assessmentScores.length;
-
-      // Borders — emerald/teal theme for voice
-      doc.setLineWidth(3); doc.setDrawColor(16, 185, 129); doc.rect(10, 10, W - 20, H - 20);
-      doc.setLineWidth(1); doc.setDrawColor(20, 184, 166);  doc.rect(15, 15, W - 30, H - 30);
-
-      doc.setFontSize(34); doc.setFont('helvetica', 'bold'); doc.setTextColor(16, 185, 129);
-      doc.text('Certificate of Achievement', W / 2, 30, { align: 'center' });
-      doc.setFontSize(20); doc.setTextColor(20, 184, 166);
-      doc.text(`AI Voice Creation Certification — ${certLevel}`, W / 2, 43, { align: 'center' });
-      await addBrandingToPDF({ doc, pageWidth: W, pageHeight: H, footerY: 53, branding, fontSize: 13, textColor: [80, 80, 80] });
-      doc.setFontSize(13); doc.setFont('helvetica', 'normal'); doc.setTextColor(80, 80, 80);
-      doc.text('This certificate is proudly presented to', W / 2, 64, { align: 'center' });
-
-      doc.setFontSize(36); doc.setFont('helvetica', 'bold'); doc.setTextColor(20, 20, 20);
-      doc.text(certName.trim(), W / 2, 78, { align: 'center' });
-
-      doc.setFontSize(12); doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
-      doc.text('For successfully completing the AI Voice Creation Certification,', W / 2, 88, { align: 'center' });
-      doc.text('demonstrating the ability to write, direct, and produce AI-generated voice content', W / 2, 95, { align: 'center' });
-      doc.text('using script writing, vocal direction, emotion control, and iterative refinement.', W / 2, 102, { align: 'center' });
-
-      doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(16, 185, 129);
-      doc.text(`Overall Score: ${avg.toFixed(1)}/3.0 — ${certLevel} · ${succeededEntries.length} voice${succeededEntries.length !== 1 ? 's' : ''} produced`, W / 2, 112, { align: 'center' });
-
-      doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(50, 50, 50);
-      doc.text('Assessment Competencies:', 20, 122);
-
-      const cols = assessmentScores.length <= 4 ? 2 : 3;
-      const colW = (W - 40) / cols;
-      let yPos = 128; let col = 0;
-
-      assessmentScores.forEach(sc => {
-        const xPos = 20 + col * colW;
-        const levelText = sc.score === 3 ? 'Advanced' : sc.score === 2 ? 'Proficient' : sc.score === 1 ? 'Emerging' : 'No Evidence';
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(40, 40, 40);
-        doc.text(`${sc.assessment_name}: ${sc.score ?? 0}/3 — ${levelText}`, xPos, yPos);
-        if (sc.evidence) {
-          doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(80, 80, 80);
-          const lines = doc.splitTextToSize(sc.evidence, colW - 5);
-          lines.slice(0, 3).forEach((line: string, li: number) => { doc.text(line, xPos, yPos + 4 + li * 3.5); });
-        }
-        col++;
-        if (col >= cols) { col = 0; yPos += 22; }
+      await generateCertificatePdf({
+        recipientName: certName,
+        title: 'AI Voice Creation Certification',
+        description: [
+          'For successfully completing the AI Voice Creation Certification,',
+          'demonstrating the ability to write, direct, and produce AI-generated voice content',
+          'using script writing, vocal direction, emotion control, and iterative refinement.',
+        ],
+        scoreSuffix: `· ${succeededEntries.length} voice${succeededEntries.length !== 1 ? 's' : ''} produced`,
+        assessmentScores,
+        branding,
+        theme: 'emerald',
+        idPrefix: 'VOI',
+        filenameSuffix: 'VoiceCreation',
       });
-
-      const footerY = H - 22;
-      doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(130, 130, 130);
-      doc.text(`Awarded: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`, 20, footerY);
-      doc.text(`${branding.institutionName} Programme`, W / 2, footerY, { align: 'center' });
-      doc.text(`Certification ID: VOI-${makeId().toUpperCase()}`, W - 20, footerY, { align: 'right' });
-
-      doc.save(`${certName.trim().replace(/\s+/g, '-')}-VoiceCreation-Certificate.pdf`);
-    } catch (err) { console.error('Certificate error:', err); }
+    } catch (err) { console.error('Certificate error:', err); alert('PDF generation not available.'); }
     finally { setIsGenCert(false); }
   }, [certName, assessmentScores, succeededEntries.length, branding]);
 

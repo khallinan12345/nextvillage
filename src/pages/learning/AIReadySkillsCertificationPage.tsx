@@ -33,6 +33,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useVoice } from '../../hooks/useVoice';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { useBranding, addBrandingToPDF } from '../../lib/useBranding';
+import { upsertEvaluationCriterion } from '../../lib/evaluations';
 
 // ---------------------------------------------------------------------------
 // Shared prose styles for ReactMarkdown rendering
@@ -681,17 +682,19 @@ Respond ONLY in this JSON format:
         updated_at: new Date().toISOString()
       };
 
+      let dashboardRowId: string | null = existingRecord?.id ?? null;
+
       if (existingRecord) {
         if (existingRecord.progress !== 'completed' || progressStatus === 'completed') {
           updateData.progress = progressStatus;
         }
-        
+
         await supabase
           .from('dashboard')
           .update(updateData)
           .eq('id', existingRecord.id);
       } else {
-        await supabase
+        const { data: inserted } = await supabase
           .from('dashboard')
           .insert({
             user_id: user.id,
@@ -699,10 +702,28 @@ Respond ONLY in this JSON format:
             category_activity: 'Certification',
             progress: progressStatus,
             ...updateData
-          });
+          })
+          .select('id')
+          .single();
+        dashboardRowId = inserted?.id ?? null;
       }
 
       console.log('[Certifications] Saved to dashboard:', { score, progressStatus, activityName });
+
+      // Dual-write to the shared evaluations table alongside the legacy
+      // per-assessment dashboard columns above — see src/lib/evaluations.ts.
+      // Each certification's assessments are scored one at a time, so this
+      // merges just this criterion into whatever's already been scored for
+      // this dashboard row rather than overwriting the whole evaluation.
+      if (dashboardRowId) {
+        upsertEvaluationCriterion(
+          user.id,
+          dashboardRowId,
+          'ai_ready_skills_certification',
+          { key: columnBase, label: selectedAssessment.assessment_name, score, evidence },
+          3
+        ).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+      }
 
       await fetchScoresForCertification(selectedCertification);
     } catch (err) {

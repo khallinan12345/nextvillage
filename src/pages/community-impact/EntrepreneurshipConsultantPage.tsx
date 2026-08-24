@@ -26,12 +26,16 @@ import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { resolveChallengeOrgSlug } from '../../lib/communityChallengeScope';
 import { chatText, chatJSON } from '../../lib/chatClient';
+import { saveEvaluation } from '../../lib/evaluations';
 import { useAuth } from '../../hooks/useAuth';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { PidginTooltip } from '../../components/PidginTooltip';
 import { playPidginVoice, stopPidginSpeech } from '../../lib/speechCoordination';
 import { ResolutionModal, ResolutionSubmitData } from '../../components/community-impact/ResolutionModal';
 import { EvidencePicker } from '../../components/community-impact/EvidencePicker';
+import { MarkdownText } from '../../components/community-impact/MarkdownText';
+import { withIllustration } from '../../lib/illustrationAgent';
+import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import {
   Briefcase, BookOpen, Users, ArrowLeft, Send, Mic, MicOff,
   Volume2, VolumeX, Save, Star, Loader2, X, ChevronRight,
@@ -482,17 +486,6 @@ const LEVEL_LABELS: Record<number, { text: string; color: string; bg: string }> 
 // ─── Background ───────────────────────────────────────────────────────────────
 
 
-// ─── Markdown renderer ────────────────────────────────────────────────────────
-
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => (
-  <div className="space-y-1.5">
-    {text.split('\n').map((line, i) => {
-      if (!line.trim()) return <div key={i} className="h-1.5" />;
-      const html = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
-    })}
-  </div>
-);
 
 // ─── Info Tooltip ─────────────────────────────────────────────────────────────
 
@@ -731,10 +724,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
   const speak = useCallback((text: string) => {
     if (!speechOn) return;
-    void playPidginVoice(text.slice(0, 380), 'english', {
+    // Strip any trailing <illustration> block first — meant to be seen, not read aloud.
+    const spokenText = extractIllustration(text).text;
+    void playPidginVoice(spokenText.slice(0, 380), 'english', {
       onError: (err) => {
         console.warn('[EntrepreneurshipConsultantPage] SpeechGen TTS failed, falling back to browser voice:', err);
-        speakBrowser(text);
+        speakBrowser(spokenText);
       },
     });
   }, [speechOn, voiceMode, speakBrowser]);
@@ -1020,7 +1015,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     try {
       const systemPrompt = buildAdvicePrompt(consultationType, selectedClient, intake);
       const reply = await chatText({ page: 'EntrepreneurshipConsultantPage', messages: [{ role: 'user', content: 'Please analyse this intake and provide your business advisory recommendation.' }], system: systemPrompt, max_tokens: 1500 });
-      setAdviceResult({ urgency: detectUrgency(reply), text: reply });
+      const illustratedReply = await withIllustration('', reply);
+      setAdviceResult({ urgency: detectUrgency(reply), text: illustratedReply });
       speak(reply.slice(0, 300));
     } catch {
       setAdviceResult({ urgency: 'medium', text: 'Unable to generate advice. Check intake data and try again.' });
@@ -1073,7 +1069,8 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     try {
       const history = [...messages, userMsg];
       const reply = await chatText({ page: 'EntrepreneurshipConsultantPage', messages: history.map(m => ({ role: m.role, content: m.content })), system: buildFollowupPrompt(selectedClient, selectedConsultation), max_tokens: 1200 });
-      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() };
+      const illustratedReply = await withIllustration(userMsg.content, reply);
+      const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedReply, timestamp: new Date() };
       const updated = [...history, aiMsg];
       setMessages(updated);
       speak(reply);
@@ -1110,7 +1107,35 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
       progress: eval_?.can_advance ? 'completed' : 'started',
       updated_at: new Date().toISOString(),
     }).eq('id', dashboardId);
-  }, [dashboardId]);
+
+    // Dual-write to the shared evaluations table alongside the legacy
+    // english_skills_evaluation jsonb column above (this page's legacy
+    // column is misnamed — a copy-paste leftover, left as-is) — see
+    // src/lib/evaluations.ts. The legacy column stays authoritative for
+    // this page's own read path.
+    if (eval_ && user?.id) {
+      const dimLabels: Record<string, string> = {
+        diagnosis: 'Problem Diagnosis',
+        knowledge: 'Business Knowledge',
+        practical: 'Practical & Affordable',
+        action: 'Action Planning',
+        communication: 'Communication',
+      };
+      saveEvaluation(user.id, {
+        dashboardId,
+        activityType: 'entrepreneurship_consultant',
+        overallScore: eval_.overall_score ?? 0,
+        maxScore: 3,
+        evidence: eval_.encouragement,
+        criteria: Object.entries(dimLabels).map(([key, label]) => ({
+          key,
+          label,
+          score: eval_.scores?.[key] ?? 0,
+          evidence: eval_.evidence?.[key],
+        })),
+      }).catch(err => console.warn('[Evaluation] Dual-write to evaluations table failed:', err));
+    }
+  }, [dashboardId, user?.id]);
 
   const initiateSession = async () => {
     setIsSending(true);

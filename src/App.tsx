@@ -33,7 +33,6 @@ const EmailConfirmationSuccess = lazy(() => import('./pages/auth/EmailConfirmati
 const PublicLandingPage = lazy(() => import('./pages/PublicLandingPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Learning Pages
@@ -111,6 +110,7 @@ const FishMarketTutorialPage = lazy(() => import('./pages/tutorials/FishMarketTu
 const AILearningStartPage = lazy(() => import('./pages/tutorials/AILearningStartPage'));
 const SkillDevelopmentStartPage = lazy(() => import('./pages/tutorials/SkillDevelopmentStartPage'));
 const AddNewGuidePage = lazy(() => import('./pages/tutorials/AddNewGuidePage'));
+const CreateAICampGuidePage = lazy(() => import('./pages/tutorials/CreateAICampGuidePage'));
 const VibeCodingGuidePage = lazy(() => import('./pages/tutorials/VibeCodingGuidePage'));
 const SupabaseDatabaseGuidePage = lazy(() => import('./pages/tutorials/SupabaseDatabaseGuidePage'));
 const AILearningCategoryGuidePage = lazy(() => import('./pages/tutorials/AILearningCategoryGuidePage'));
@@ -118,6 +118,7 @@ const SkillDevelopmentCategoryGuidePage = lazy(() => import('./pages/tutorials/S
 const FoundationsCategoryGuidePage = lazy(() => import('./pages/tutorials/FoundationsCategoryGuidePage'));
 const CreativeAICategoryGuidePage = lazy(() => import('./pages/tutorials/CreativeAICategoryGuidePage'));
 const CreateGameGuidePage = lazy(() => import('./pages/tutorials/CreateGameGuidePage'));
+const PublishWebsiteGuidePage = lazy(() => import('./pages/tutorials/PublishWebsiteGuidePage'));
 const AIContentCreationGuidePage = lazy(() => import('./pages/tutorials/AIContentCreationGuidePage'));
 const AdvisorCasebookGuidePage = lazy(() => import('./pages/tutorials/AdvisorCasebookGuidePage'));
 const AIAmbassadorsGuidePage = lazy(() => import('./pages/tutorials/AIAmbassadorsGuidePage'));
@@ -244,7 +245,6 @@ export const AppContent: React.FC = () => {
         {/* Main App Routes */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/about" element={<AboutPage />} />
         <Route path="/profile" element={<ProfilePage />} />
 
         {/* Learning Routes */}
@@ -319,6 +319,7 @@ export const AppContent: React.FC = () => {
         <Route path="/tutorials/ai-learning-start" element={<AILearningStartPage />} />
         <Route path="/tutorials/skill-development-start" element={<SkillDevelopmentStartPage />} />
         <Route path="/tutorials/add-new-guide" element={<AddNewGuidePage />} />
+        <Route path="/tutorials/create-ai-camp" element={<CreateAICampGuidePage />} />
         <Route path="/tutorials/vibe-coding" element={<VibeCodingGuidePage />} />
         <Route path="/tutorials/supabase-database" element={<SupabaseDatabaseGuidePage />} />
         <Route path="/tutorials/ai-learning/:categoryId" element={<AILearningCategoryGuidePage />} />
@@ -326,6 +327,7 @@ export const AppContent: React.FC = () => {
         <Route path="/tutorials/foundations/:categoryId" element={<FoundationsCategoryGuidePage />} />
         <Route path="/tutorials/creative-ai/:categoryId" element={<CreativeAICategoryGuidePage />} />
         <Route path="/tutorials/create-game" element={<CreateGameGuidePage />} />
+        <Route path="/tutorials/publish-website" element={<PublishWebsiteGuidePage />} />
         <Route path="/tutorials/ai-content-creation" element={<AIContentCreationGuidePage />} />
         <Route path="/tutorials/community-impact/:categoryId" element={<AdvisorCasebookGuidePage />} />
         <Route path="/tutorials/ai-ambassadors" element={<AIAmbassadorsGuidePage />} />
