@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "npx concurrently --kill-others-on-fail \"node real-e2b-server.cjs\" \"vite\"",
+   "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "node real-e2b-server.cjs",
     "dev:frontend": "vite",
     "build": "vite build",

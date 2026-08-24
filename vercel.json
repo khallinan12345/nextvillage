@@ -22,6 +22,14 @@
     {
       "path": "/api/bluesky-digest",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/linkedin-digest",
+      "schedule": "15 7 * * *"
+    },
+    {
+      "path": "/api/x-digest",
+      "schedule": "30 7 * * *"
     }
   ]
 }

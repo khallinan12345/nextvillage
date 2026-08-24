@@ -288,43 +288,6 @@ app.post('/api/pidgin-tts', async (req, res) => {
 
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ audioUrl: result.audioUrl });
-
-    // ElevenLabs fallback (commented out — restore if reverting from SpeechGen)
-    /*
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    const voiceId = process.env.ELEVENLABS_VOICE_ID || 'nigerian_native';
-
-    if (!apiKey) {
-      return res.status(500).json({ error: 'ELEVENLABS_API_KEY is not configured on the server' });
-    }
-
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'xi-api-key': apiKey,
-      },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.65,
-          similarity_boost: 0.85,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-      console.error('[pidgin-tts] ElevenLabs response failed', response.status, errorBody);
-      return res.status(response.status).json({ error: errorBody?.error?.message || 'ElevenLabs TTS request failed' });
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).send(buffer);
-    */
   } catch (error) {
     console.error('[pidgin-tts] Error:', error);
     return res.status(500).json({ error: 'Internal server error while generating Pidgin audio' });
@@ -400,7 +363,6 @@ app.post('/api/chat', async (req, res) => {
       console.log('[/api/chat] ✅ Using REAL Groq API (key found)');
       
       try {
-        // Strongly sanitize incoming messages: OpenAI-compatible providers accept only {role, content}
         const sanitizedClientMessages = messages
           .map(msg => ({
             role: msg && msg.role,
@@ -408,14 +370,12 @@ app.post('/api/chat', async (req, res) => {
           }))
           .filter(m => m.role && m.content);
 
-        // Build message array with optional system prompt, using sanitized messages only
         const oaiMessages = [];
         if (system) {
           oaiMessages.push({ role: 'system', content: String(system) });
         }
         oaiMessages.push(...sanitizedClientMessages);
 
-        // Call Groq chat completions endpoint
         const response = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
           method: 'POST',
           headers: {
@@ -439,7 +399,6 @@ app.post('/api/chat', async (req, res) => {
           });
         }
 
-        // Return OpenAI response in same format
         return res.json(data);
 
       } catch (oaiError) {
@@ -453,10 +412,8 @@ app.post('/api/chat', async (req, res) => {
     // ── DEVELOPER MOCK MODE (no API key) ────────────────────────────────────────
     console.log('[/api/chat] 🎭 DEVELOPER MOCK MODE (no OPENAI_API_KEY found)');
     
-    // Simulate network latency
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Determine if this is a JSON evaluation request by checking the system prompt or last message
     const isEvaluation = 
       (system && (system.includes('JSON') || system.includes('tier') || system.includes('evaluation'))) ||
       (messages[messages.length - 1]?.content?.includes('JSON') || 
@@ -466,39 +423,20 @@ app.post('/api/chat', async (req, res) => {
     let mockContent = '';
 
     if (isEvaluation) {
-      // Return a realistic evaluation JSON response
       const mockEvaluation = {
         tier: 'Developing',
         tier_label: 'Tier 2: Developing',
-        summary: 'Your submission demonstrates solid understanding of the core concepts with room for deeper exploration. The architecture is sound and follows best practices in most areas.',
-        tier_reasoning: 'Your implementation shows competent use of the required technologies and patterns. The code is well-structured and your explanations are clear. To reach the next tier, consider adding more advanced patterns or optimizations.',
-        follow_up_instruction: 'Review the advanced patterns section and try implementing one optimization technique in your next submission.',
-        strengths: [
-          'Clear code structure',
-          'Good variable naming',
-          'Proper error handling in most cases'
-        ],
-        improvements: [
-          'Consider extracting repeated logic into helper functions',
-          'Add more granular comments for complex sections',
-          'Optimize database queries for performance'
-        ]
+        summary: 'Your submission demonstrates solid understanding of the core concepts with room for deeper exploration.',
+        tier_reasoning: 'Your implementation shows competent use of the required technologies and patterns.',
+        follow_up_instruction: 'Review the advanced patterns section and try implementing one optimization technique.',
+        strengths: ['Clear code structure', 'Good variable naming', 'Proper error handling'],
+        improvements: ['Consider extracting repeated logic', 'Add more granular comments']
       };
       mockContent = JSON.stringify(mockEvaluation);
     } else {
-      // Return a helpful text response for general chat
-      const lastMessage = messages[messages.length - 1]?.content || 'Hello';
-      mockContent = `Thanks for your question! I'm currently in Developer Mock Mode (no OPENAI_API_KEY configured). 
-      
-To enable real AI responses:
-1. Add OPENAI_API_KEY=sk-... to your .env file
-2. Restart this server
-3. Your requests will automatically use the real OpenAI API
-
-Mock response: Your submission looks good so far. In production mode, you'll get detailed feedback powered by OpenAI's models.`;
+      mockContent = `Thanks for your question! I'm currently in Developer Mock Mode.`;
     }
 
-    // Return OpenAI-compatible format
     res.json({
       choices: [
         {
@@ -512,45 +450,46 @@ Mock response: Your submission looks good so far. In production mode, you'll get
 
   } catch (error) {
     console.error('PROXY ROUTE ERROR:', error);
-    // Never return a raw HTML 500 page; always return structured JSON for the client
     try {
       return res.status(400).json({
         error: (error && error.message) ? error.message : String(error),
         messages: []
       });
     } catch (innerErr) {
-      // If responding fails for some reason, log both errors and send minimal JSON
       console.error('PROXY ROUTE ERROR (while sending response):', innerErr);
       res.status(400).json({ error: 'Unknown proxy error', messages: [] });
     }
   }
 });
 
+// ── SECURE CRON DIGEST ENDPOINTS FOR TESTING ──────────────────────────────
+app.get('/api/linkedin-digest', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const expectedSecret = process.env.CRON_SECRET || '2004';
+
+  if (authHeader !== `Bearer ${expectedSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing secret key' });
+  }
+
+  console.log('📌 LinkedIn digest cron job triggered successfully.');
+  return res.json({ success: true, message: 'LinkedIn digest executed successfully!' });
+});
+
+app.get('/api/x-digest', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const expectedSecret = process.env.CRON_SECRET || '2004';
+
+  if (authHeader !== `Bearer ${expectedSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing secret key' });
+  }
+
+  console.log('📌 X digest cron job triggered successfully.');
+  return res.json({ success: true, message: 'X digest executed successfully!' });
+});
+
 const PORT = 3001;
-app.listen(PORT, () => {
-  const hasE2bKey = !!process.env.E2B_API_KEY;
-  const hasOpenAiKey = !!process.env.OPENAI_API_KEY;
-  
+app.listen(PORT, '0.0.0.0', () => {
   console.log('\n🎵 Development Server Running!');
   console.log(`📍 URL: http://localhost:${PORT}`);
-  console.log(`🔑 E2B API Key: ${hasE2bKey ? '✅ Found' : '❌ Missing'}`);
-  console.log(`🤖 OpenAI API Key: ${hasOpenAiKey ? '✅ Found (REAL API)' : '❌ Missing (Mock Mode)'}`);
-  console.log('🔗 Vite will proxy /api requests to this server');
-  
-  if (hasOpenAiKey) {
-    console.log('✨ /api/chat will use REAL OpenAI API\n');
-  } else {
-    console.log('⚠️  /api/chat is in MOCK MODE (no OPENAI_API_KEY found)');
-    console.log('   To enable real OpenAI:');
-    console.log('   1. Get your API key from https://platform.openai.com');
-    console.log('   2. Add OPENAI_API_KEY=sk-... to .env');
-    console.log('   3. Restart this server\n');
-  }
-  
-  if (!hasE2bKey) {
-    console.log('⚠️  E2B_API_KEY not found (needed for /api/execute only)');
-    console.log('   1. Get your API key from https://e2b.dev');
-    console.log('   2. Add E2B_API_KEY=your_key_here to .env');
-    console.log('   3. Restart this server\n');
-  }
+  console.log('🔗 Vite will proxy /api requests to this server\n');
 });
