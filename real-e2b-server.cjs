@@ -465,8 +465,11 @@ app.post('/api/chat', async (req, res) => {
 // ── SECURE CRON DIGEST ENDPOINTS FOR TESTING ──────────────────────────────
 app.get('/api/linkedin-digest', async (req, res) => {
   const authHeader = req.headers.authorization;
-  const expectedSecret = process.env.CRON_SECRET || '2004';
+  const expectedSecret = process.env.CRON_SECRET;
 
+  if (!expectedSecret) {
+    return res.status(500).json({ error: 'CRON_SECRET is not configured' });
+  }
   if (authHeader !== `Bearer ${expectedSecret}`) {
     return res.status(401).json({ error: 'Unauthorized: Invalid or missing secret key' });
   }
@@ -477,8 +480,11 @@ app.get('/api/linkedin-digest', async (req, res) => {
 
 app.get('/api/x-digest', async (req, res) => {
   const authHeader = req.headers.authorization;
-  const expectedSecret = process.env.CRON_SECRET || '2004';
+  const expectedSecret = process.env.CRON_SECRET;
 
+  if (!expectedSecret) {
+    return res.status(500).json({ error: 'CRON_SECRET is not configured' });
+  }
   if (authHeader !== `Bearer ${expectedSecret}`) {
     return res.status(401).json({ error: 'Unauthorized: Invalid or missing secret key' });
   }

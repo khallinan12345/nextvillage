@@ -111,7 +111,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('[playground-context]', err);
     return res
       .status(500)
-      .set(CORS_HEADERS)
+      .setHeader('Access-Control-Allow-Origin', CORS_HEADERS['Access-Control-Allow-Origin'])
+      .setHeader('Access-Control-Allow-Methods', CORS_HEADERS['Access-Control-Allow-Methods'])
+      .setHeader('Access-Control-Allow-Headers', CORS_HEADERS['Access-Control-Allow-Headers'])
       .json({ error: err?.message ?? 'Server error' });
   }
 }
