@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "npx concurrently --kill-others-on-fail \"node real-e2b-server.cjs\" \"vite\"",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "node real-e2b-server.cjs",
     "dev:frontend": "vite",
     "build": "vite build",
@@ -28,6 +28,7 @@
     "dotenv": "^16.6.1",
     "e2b": "^1.7.1",
     "express": "^5.1.0",
+    "groq-sdk": "^1.5.0",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "katex": "^0.18.1",
