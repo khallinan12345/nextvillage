@@ -118,6 +118,7 @@ const SkillDevelopmentCategoryGuidePage = lazy(() => import('./pages/tutorials/S
 const FoundationsCategoryGuidePage = lazy(() => import('./pages/tutorials/FoundationsCategoryGuidePage'));
 const CreativeAICategoryGuidePage = lazy(() => import('./pages/tutorials/CreativeAICategoryGuidePage'));
 const CreateGameGuidePage = lazy(() => import('./pages/tutorials/CreateGameGuidePage'));
+const PublishWebsiteGuidePage = lazy(() => import('./pages/tutorials/PublishWebsiteGuidePage'));
 const AIContentCreationGuidePage = lazy(() => import('./pages/tutorials/AIContentCreationGuidePage'));
 const AdvisorCasebookGuidePage = lazy(() => import('./pages/tutorials/AdvisorCasebookGuidePage'));
 const AIAmbassadorsGuidePage = lazy(() => import('./pages/tutorials/AIAmbassadorsGuidePage'));
@@ -326,6 +327,7 @@ export const AppContent: React.FC = () => {
         <Route path="/tutorials/foundations/:categoryId" element={<FoundationsCategoryGuidePage />} />
         <Route path="/tutorials/creative-ai/:categoryId" element={<CreativeAICategoryGuidePage />} />
         <Route path="/tutorials/create-game" element={<CreateGameGuidePage />} />
+        <Route path="/tutorials/publish-website" element={<PublishWebsiteGuidePage />} />
         <Route path="/tutorials/ai-content-creation" element={<AIContentCreationGuidePage />} />
         <Route path="/tutorials/community-impact/:categoryId" element={<AdvisorCasebookGuidePage />} />
         <Route path="/tutorials/ai-ambassadors" element={<AIAmbassadorsGuidePage />} />
