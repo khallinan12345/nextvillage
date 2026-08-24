@@ -25,7 +25,7 @@
 //   { critique: string, feedback: string }
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { logApiCost } from '../lib/api-cost-logger';
+import { logApiCost } from '../lib/api-cost-logger.js';
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL_SONNET  = 'claude-sonnet-4-6';
