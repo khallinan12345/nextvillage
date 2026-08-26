@@ -91,15 +91,50 @@ Deno.serve(async (req) => {
     if (asmErr) throw new Error(`Assessment fetch error: ${asmErr.message}`);
     console.log(`[snapshot] Fetched ${assessments?.length ?? 0} assessment rows`);
 
-    // ── 2. Fetch dashboard activity summary per user ──────────────────────────
-    const { data: dashActivities, error: dashErr } = await supabase
-      .from("dashboard")
-      .select(`
-        user_id, category_activity, progress, certificate_pdf_url,
-        continent, country, grade_level
-      `);
+    // assess-monthly has occasionally run twice for the same user in the same
+    // month (backfills, manual re-runs) — dashboard_stats has one row per
+    // (learner, cohort_month), so keep only the most recent measured_at per
+    // (user_id, month) before building rows, or the insert below collides
+    // with itself on the unique constraint.
+    const latestByUserMonth = new Map<string, typeof assessments[number]>();
+    for (const a of assessments ?? []) {
+      const key = `${a.user_id}::${truncateToMonth(a.measured_at)}`;
+      const existing = latestByUserMonth.get(key);
+      if (!existing || a.measured_at > existing.measured_at) {
+        latestByUserMonth.set(key, a);
+      }
+    }
+    const dedupedAssessments = [...latestByUserMonth.values()];
+    console.log(`[snapshot] Deduped to ${dedupedAssessments.length} (user, month) rows`);
 
-    if (dashErr) throw new Error(`Dashboard fetch error: ${dashErr.message}`);
+    // ── 2. Fetch dashboard activity summary per user ──────────────────────────
+    // PostgREST caps unranged selects at ~1000 rows — dashboard has 30,000+,
+    // so this must be paginated or almost every user's activity/cert counts
+    // silently come back as whatever fell in the first page (effectively 0
+    // for most learners).
+    const dashActivities: {
+      user_id: string; category_activity: string | null; progress: string | null;
+      certificate_pdf_url: string | null; continent: string | null;
+      country: string | null; grade_level: number | null;
+    }[] = [];
+    {
+      const PAGE = 1000;
+      let from = 0;
+      while (true) {
+        const { data: page, error: dashErr } = await supabase
+          .from("dashboard")
+          .select(`
+            user_id, category_activity, progress, certificate_pdf_url,
+            continent, country, grade_level
+          `)
+          .range(from, from + PAGE - 1);
+        if (dashErr) throw new Error(`Dashboard fetch error: ${dashErr.message}`);
+        dashActivities.push(...(page ?? []));
+        if (!page || page.length < PAGE) break;
+        from += PAGE;
+      }
+      console.log(`[snapshot] Fetched ${dashActivities.length} dashboard rows`);
+    }
 
     // Build per-user dashboard summary
     const dashMap: Record<string, {
@@ -145,13 +180,14 @@ Deno.serve(async (req) => {
     }
 
     // ── 4. Build snapshot rows ────────────────────────────────────────────────
-    const rows = (assessments ?? []).map((a) => {
+    const rows = dedupedAssessments.map((a) => {
       const profile = profileMap[a.user_id] ?? { site: "Unknown", grade_level: null };
       const dash = dashMap[a.user_id];
       const cohortMonth = truncateToMonth(a.measured_at);
 
       return {
         snapshot_date:                     snapshotDate,
+        activity_date:                     cohortMonth,
         site:                              profile.site,
         cohort_month:                      cohortMonth,
         learner_token:                     learnerToken(a.user_id),
@@ -198,10 +234,10 @@ Deno.serve(async (req) => {
         cert_passed_count:                 a.cert_passed_count,
         cert_avg_score:                    a.cert_avg_score,
         cert_names_passed:                 a.cert_names_passed,
-        activities_started:                dash?.activities_started ?? 0,
-        activities_completed:              dash?.activities_completed ?? 0,
-        categories_active:                 dash ? Array.from(dash.categories_active) : [],
-        certifications_earned:             dash?.certifications_earned ?? 0,
+        activities_started_total:          dash?.activities_started ?? 0,
+        activities_completed_total:        dash?.activities_completed ?? 0,
+        categories_ever_active:            dash ? Array.from(dash.categories_active) : [],
+        certifications_earned_total:       dash?.certifications_earned ?? 0,
         ci_tracks_active_count:            a.ci_tracks_active_count,
         ci_certs_passed_count:             a.ci_certs_passed_count,
         k_anon_suppressed:                 false,
@@ -229,12 +265,19 @@ Deno.serve(async (req) => {
     const active = finalRows.filter(r => !r.k_anon_suppressed).length;
     console.log(`[snapshot] ${active} rows active, ${suppressed} suppressed (k<${K_ANON_MIN})`);
 
-    // ── 6. Upsert into dashboard_stats ────────────────────────────────────────
-    // Delete today's existing snapshot first (idempotent re-run)
+    // ── 6. Rebuild dashboard_stats from scratch each run ───────────────────────
+    // Every run recomputes the full set of rows from user_monthly_assessments,
+    // not just "today's" activity, and activity_date is keyed per cohort_month
+    // rather than per run — so a row left over from a previous run's
+    // cohort_month would collide with today's row on the
+    // (activity_date, learner_token, site) unique constraint. Clearing the
+    // whole table first keeps this idempotent no matter how long it's been
+    // since the last successful run. User confirmed this is safe: the source
+    // data (user_monthly_assessments) is intact and this fully regenerates it.
     await supabase
       .from("dashboard_stats")
       .delete()
-      .eq("snapshot_date", snapshotDate);
+      .not("id", "is", null);
 
     const BATCH_SIZE = 100;
     let inserted = 0;
