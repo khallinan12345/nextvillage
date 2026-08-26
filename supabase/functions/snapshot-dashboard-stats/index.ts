@@ -152,6 +152,7 @@ Deno.serve(async (req) => {
 
       return {
         snapshot_date:                     snapshotDate,
+        activity_date:                     snapshotDate,
         site:                              profile.site,
         cohort_month:                      cohortMonth,
         learner_token:                     learnerToken(a.user_id),
@@ -198,10 +199,10 @@ Deno.serve(async (req) => {
         cert_passed_count:                 a.cert_passed_count,
         cert_avg_score:                    a.cert_avg_score,
         cert_names_passed:                 a.cert_names_passed,
-        activities_started:                dash?.activities_started ?? 0,
-        activities_completed:              dash?.activities_completed ?? 0,
-        categories_active:                 dash ? Array.from(dash.categories_active) : [],
-        certifications_earned:             dash?.certifications_earned ?? 0,
+        activities_started_total:          dash?.activities_started ?? 0,
+        activities_completed_total:        dash?.activities_completed ?? 0,
+        categories_ever_active:            dash ? Array.from(dash.categories_active) : [],
+        certifications_earned_total:       dash?.certifications_earned ?? 0,
         ci_tracks_active_count:            a.ci_tracks_active_count,
         ci_certs_passed_count:             a.ci_certs_passed_count,
         k_anon_suppressed:                 false,
