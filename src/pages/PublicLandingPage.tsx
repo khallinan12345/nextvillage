@@ -1327,8 +1327,6 @@ const PublicLandingPage: React.FC = () => {
                 })()}
 
                 {/* What does this data mean? */}
-                {/* What does this data mean? */}
-                {/* What does this data mean? */}
                 <div style={{
                   marginTop: "2.5rem",
                   background: "rgba(255,255,255,0.04)",
@@ -1375,111 +1373,6 @@ const PublicLandingPage: React.FC = () => {
             )}
           </div>
         </div>
-
-
-        {/* ── Activity Stream Chart ────────────────────────────────────────── */}
-        <section style={{ background: "linear-gradient(135deg,#0c160a 0%,#162612 50%,#0c160a 100%)", padding: "3rem 2rem 4rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign:"center", marginBottom:"2rem" }}>
-              <div style={{ fontSize:"0.7rem", fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:"#fbbf24", marginBottom:"0.6rem" }}>
-                How learners spend their time
-              </div>
-              <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(1.3rem,3vw,1.9rem)", fontWeight:700, color:"#fff", margin:"0 0 0.5rem" }}>
-                Activity stream composition — Jul 2025 to May 2026
-              </h3>
-              <p style={{ color:"rgba(255,255,255,0.45)", fontSize:"0.85rem", maxWidth:620, margin:"0 auto", lineHeight:1.7 }}>
-                From AI Proficiency and Tech Skills in the early months, through community-led English Foundations in March,
-                to Math and Science launching in late April. Sep–Jan reflects the disruption and cohort consolidation period.
-                May dip = rainy season solar outage + community leader home fire.
-              </p>
-            </div>
-
-            <div style={{ display:"flex", flexWrap:"wrap", gap:"12px", marginBottom:"1.25rem", justifyContent:"center" }}>
-              {[
-                { color:"#534AB7", label:"AI proficiency & skills" },
-                { color:"#1D9E75", label:"Tech skills" },
-                { color:"#D85A30", label:"Community impact" },
-                { color:"#378ADD", label:"English" },
-                { color:"#BA7517", label:"Math" },
-                { color:"#888780", label:"Science" },
-              ].map(s => (
-                <span key={s.label} style={{ display:"flex", alignItems:"center", gap:6, fontSize:"0.75rem", color:"rgba(255,255,255,0.6)" }}>
-                  <span style={{ width:10, height:10, borderRadius:2, background:s.color, flexShrink:0 }} />
-                  {s.label}
-                </span>
-              ))}
-            </div>
-
-            {(() => {
-              const months = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'];
-              const streams = [
-                { label:'AI Proficiency & Skills', color:'#534AB7', data:[1246,1268,154,218,406,113,82,353,2074,4838,1714] },
-                { label:'Tech Skills',             color:'#1D9E75', data:[ 595, 465, 59, 82, 223, 86,62,  89, 282, 742, 217] },
-                { label:'Community Impact',        color:'#D85A30', data:[   0,   0,  0,  0,   0,  0, 0,   0,  32, 108, 101] },
-                { label:'English',                 color:'#378ADD', data:[   0,   0,  0,  0,   0,  0, 0,   0, 120, 140,  22] },
-                { label:'Math',                    color:'#BA7517', data:[   0,   0,  0,  0,   0,  0, 0,   0,   0,   0,  51] },
-                { label:'Science',                 color:'#888780', data:[   0,   0,  0,  0,   0,  0, 0,   0,   0,   0,   4] },
-              ];
-              const totals = months.map((_,i) => streams.reduce((s,st) => s + st.data[i], 0));
-              const W = 1100, H = 200, PT = 8, PB = 28;
-              const barW = W / months.length;
-              const iH = H - PT - PB;
-              return (
-                <div style={{ overflowX:"auto" }}>
-                  <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", minWidth:480, display:"block" }}>
-                    {[0,25,50,75,100].map(pct => (
-                      <line key={pct} x1={0} x2={W} y1={PT + iH*(1-pct/100)} y2={PT + iH*(1-pct/100)}
-                        stroke="rgba(255,255,255,0.06)" strokeWidth={1}/>
-                    ))}
-                    {months.map((month, mi) => {
-                      const total = totals[mi];
-                      let cumH = 0;
-                      const x = mi * barW + barW * 0.05;
-                      const bw = barW * 0.9;
-                      const isDisruption = mi >= 2 && mi <= 6;
-                      return (
-                        <g key={month}>
-                          {streams.map(st => {
-                            const pct = total > 0 ? st.data[mi] / total : 0;
-                            const bh = pct * iH;
-                            const y = PT + iH - cumH - bh;
-                            cumH += bh;
-                            if (bh < 0.5) return null;
-                            return <rect key={st.label} x={x} y={y} width={bw} height={bh} fill={st.color} opacity={isDisruption ? 0.5 : 0.88} />;
-                          })}
-                          {isDisruption && (
-                            <rect x={x} y={PT} width={bw} height={3} fill="rgba(248,113,113,0.6)" />
-                          )}
-                          <text x={x + bw/2} y={H-6} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.4)">{month}</text>
-                        </g>
-                      );
-                    })}
-                  </svg>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:"0.4rem" }}>
-                    <span style={{ fontSize:"0.68rem", color:"rgba(255,255,255,0.3)" }}>Jul 2025</span>
-                    <span style={{ fontSize:"0.68rem", color:"rgba(248,113,113,0.55)" }}>← disruption period dimmed →</span>
-                    <span style={{ fontSize:"0.68rem", color:"rgba(255,255,255,0.3)" }}>May 2026</span>
-                  </div>
-                </div>
-              );
-            })()}
-
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:"0.75rem", marginTop:"1.5rem" }}>
-              {[
-                { color:"#378ADD", month:"Mar 2026", label:"English Foundations", note:"Driven by learners who flagged peers couldn't type — community-identified gap" },
-                { color:"#BA7517", month:"Late Apr 2026", label:"Math & Science launch", note:"Math adopted 10× faster than science — revealed community preference for economic literacy" },
-                { color:"#f87171", month:"May 2026", label:"Disruption month", note:"Rainy season solar outage + community leader home fire — not a learning regression" },
-              ].map(a => (
-                <div key={a.label} style={{ background:"rgba(255,255,255,0.04)", border:`1px solid ${a.color}33`, borderRadius:10, padding:"0.85rem 1rem" }}>
-                  <div style={{ fontSize:"0.62rem", fontWeight:700, color:a.color, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:"0.25rem" }}>{a.month}</div>
-                  <div style={{ fontSize:"0.78rem", fontWeight:600, color:"#fff", marginBottom:"0.25rem" }}>{a.label}</div>
-                  <div style={{ fontSize:"0.7rem", color:"rgba(255,255,255,0.4)", lineHeight:1.55 }}>{a.note}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ── Community Impact Challenges ──────────────────────────────── */}
         {(() => {
           const DOMAINS: {
