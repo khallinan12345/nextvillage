@@ -5,12 +5,16 @@
  * Vercel cron: "0 11 * * *"
  *
  * Reports on Africa-cohort users who were active today:
- *   • Total users who logged in today (auth.users.last_sign_in_at) — not
- *     dashboard activity, since a user who only used the AI Playground or
- *     just logged in without starting a learning activity was previously
- *     invisible to this count
+ *   • "Active today" = the union of auth.users.last_sign_in_at falling
+ *     today AND any dashboard/AI Playground/Systems Think/agriculture
+ *     consultation row created or updated today. Login alone is NOT
+ *     enough: this client uses persistSession + autoRefreshToken, so a
+ *     returning user's session silently refreshes and last_sign_in_at
+ *     never updates again — most real daily activity would otherwise be
+ *     invisible. Real product usage on any of the four tables is treated
+ *     as proof of activity regardless of login recency.
  *   • Breakdown by category_activity
- *   • AI Playground users and chat counts
+ *   • AI Playground, Systems Think, and agriculture-consultation users
  *   • Certification attempt counts (all-time + today)
  *
  * Sends email to khallinan1@udayton.edu and bennywhite.davidson@renewvia.com
@@ -58,6 +62,9 @@ interface DailyMetrics {
   catOther: number;
   playgroundUsers: number;
   playgroundChatsTotal: number;
+  systemsThinkUsers: number;
+  systemsThinkSessionsTotal: number;
+  agricultureUsers: number;
   certAttemptedUsers: number;
   certAttemptedToday: number;
 }
@@ -148,9 +155,12 @@ function splitCohorts(profiles: UserProfile[]): {
 // ─── Auth Login Fetching ───────────────────────────────────────────────────────
 // profiles.updated_at is NOT a login signal in this app — it only changes when
 // a user edits their name/settings, which is rare. auth.users.last_sign_in_at
-// is maintained by Supabase Auth itself on every sign-in, independent of app
-// code, so it's the accurate source for "who showed up today." Paginated in
-// case the user base grows past what a single page returns.
+// is maintained by Supabase Auth itself, but ONLY on a genuine new sign-in —
+// with persistSession + autoRefreshToken on, a returning user's session
+// refreshes silently and this never updates again. So it's one signal among
+// several fed into activeUserSet in fetchMetrics, not the sole source of
+// truth for "who showed up today." Paginated in case the user base grows
+// past what a single page returns.
 
 async function fetchAllAuthUsers(): Promise<Map<string, string | null>> {
   const loginMap = new Map<string, string | null>();
@@ -200,6 +210,8 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
       catAiLearning: 0, catSkillsDevelopment: 0, catEnglishSkills: 0,
       catAiProficiencyCert: 0, catOther: 0,
       playgroundUsers: 0, playgroundChatsTotal: 0,
+      systemsThinkUsers: 0, systemsThinkSessionsTotal: 0,
+      agricultureUsers: 0,
       certAttemptedUsers: 0, certAttemptedToday: 0,
     };
   }
@@ -222,18 +234,6 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
   }
   const sessionRows = [...sessionMap.values()];
   const totalActivities = sessionRows.length;
-
-  // "Active" = logged in today, not "touched the dashboard table today" —
-  // see fetchAllAuthUsers for why. totalActivities/category breakdown below
-  // stay dashboard-based; that's legitimately about which activities ran,
-  // not about who counts as active.
-  const activeUserSet = new Set(
-    cohortIds.filter((id) => {
-      const lastSignIn = loginMap.get(id);
-      return !!lastSignIn && lastSignIn >= dayStartUTC && lastSignIn <= dayEndUTC;
-    })
-  );
-  const activeUsers = activeUserSet.size;
 
   // ── Category breakdown ────────────────────────────────────────────────
   const catCounts: Record<string, number> = {
@@ -273,6 +273,61 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
   const playgroundUsers = new Set(pgRowsToday.map((r) => r.user_id)).size;
   const playgroundChatsTotal = pgRowsToday.length;
 
+  // ── Systems Think ──────────────────────────────────────────────────────
+  const [stCreated, stUpdated] = await Promise.all([
+    inChunks(cohortIds, async (chunk) => {
+      const { data } = await supabase.from("systems_think_sessions").select("id, user_id").in("user_id", chunk).gte("created_at", dayStartUTC).lte("created_at", dayEndUTC);
+      return data || [];
+    }),
+    inChunks(cohortIds, async (chunk) => {
+      const { data } = await supabase.from("systems_think_sessions").select("id, user_id").in("user_id", chunk).gte("updated_at", dayStartUTC).lte("updated_at", dayEndUTC);
+      return data || [];
+    }),
+  ]);
+  const stMap = new Map<string, string>();
+  for (const row of [...stCreated,...stUpdated]) stMap.set(row.id, row.user_id);
+  const stRowsToday = [...stMap.entries()].map(([id, user_id]) => ({ id, user_id }));
+  const systemsThinkUsers = new Set(stRowsToday.map((r) => r.user_id)).size;
+  const systemsThinkSessionsTotal = stRowsToday.length;
+
+  // ── Agriculture Consultations (Community Impact) ───────────────────────
+  const [agCreated, agUpdated] = await Promise.all([
+    inChunks(cohortIds, async (chunk) => {
+      const { data } = await supabase.from("agriculture_consultations").select("id, youth_user_id").in("youth_user_id", chunk).gte("created_at", dayStartUTC).lte("created_at", dayEndUTC);
+      return data || [];
+    }),
+    inChunks(cohortIds, async (chunk) => {
+      const { data } = await supabase.from("agriculture_consultations").select("id, youth_user_id").in("youth_user_id", chunk).gte("updated_at", dayStartUTC).lte("updated_at", dayEndUTC);
+      return data || [];
+    }),
+  ]);
+  const agMap = new Map<string, string>();
+  for (const row of [...agCreated,...agUpdated]) agMap.set(row.id, row.youth_user_id);
+  const agricultureUserIds = new Set(agMap.values());
+  const agricultureUsers = agricultureUserIds.size;
+
+  // ── Active users: union of every real activity signal today ────────────
+  // auth.users.last_sign_in_at only updates on a genuine new sign-in. This
+  // client uses the default persistSession + autoRefreshToken, so a
+  // returning user's session silently refreshes and never re-triggers
+  // last_sign_in_at — most days, most real users are invisible to a
+  // login-only count. A user who touched the dashboard, AI Playground,
+  // Systems Think, or an agriculture consultation today is unambiguously
+  // active today regardless of when they last "signed in," so all four are
+  // combined here instead of relying on login alone.
+  const loginActiveIds = cohortIds.filter((id) => {
+    const lastSignIn = loginMap.get(id);
+    return !!lastSignIn && lastSignIn >= dayStartUTC && lastSignIn <= dayEndUTC;
+  });
+  const activeUserSet = new Set<string>([
+    ...loginActiveIds,
+    ...sessionRows.map((r) => r.user_id),
+    ...pgRowsToday.map((r) => r.user_id),
+    ...stRowsToday.map((r) => r.user_id),
+    ...agricultureUserIds,
+  ]);
+  const activeUsers = activeUserSet.size;
+
   // ── Certifications ─────────────────────────────────────────────────────
   const certAllTime = await inChunks(cohortIds, async (chunk) => {
     const { data } = await supabase.from("dashboard").select("user_id, created_at, updated_at").in("user_id", chunk).eq("activity", "AI Proficiency Certification").not("certification_evaluation_score", "is", null);
@@ -295,6 +350,8 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
     catAiProficiencyCert: catCounts.aiProficiencyCert,
     catOther:             catCounts.other,
     playgroundUsers, playgroundChatsTotal,
+    systemsThinkUsers, systemsThinkSessionsTotal,
+    agricultureUsers,
     certAttemptedUsers, certAttemptedToday,
   };
 }
@@ -449,13 +506,21 @@ function buildCohortPanel(m: DailyMetrics): string {
           ${m.catOther > 0 ? catRow("📁 Other", m.catOther, m.totalActivities) : ""}
         </tbody>
       </table>
-      <!-- Playground + cert row -->
+      <!-- Playground + Systems Think + Agriculture + cert row -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <div style="flex:1;background:#fffdf0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;">
+        <div style="flex:1;min-width:130px;background:#fffdf0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;">
           <div style="font-size:10px;font-weight:600;color:#92400e;margin-bottom:4px;">🎮 Playground</div>
           <div style="font-size:11px;color:#374151;">Users: <strong>${m.playgroundUsers}</strong>   Chats: <strong>${m.playgroundChatsTotal}</strong></div>
         </div>
-        <div style="flex:1;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 12px;">
+        <div style="flex:1;min-width:130px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:#3730a3;margin-bottom:4px;">🧠 Systems Think</div>
+          <div style="font-size:11px;color:#374151;">Users: <strong>${m.systemsThinkUsers}</strong>   Sessions: <strong>${m.systemsThinkSessionsTotal}</strong></div>
+        </div>
+        <div style="flex:1;min-width:130px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:#065f46;margin-bottom:4px;">🌾 Agriculture</div>
+          <div style="font-size:11px;color:#374151;">Youth active: <strong>${m.agricultureUsers}</strong></div>
+        </div>
+        <div style="flex:1;min-width:130px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 12px;">
           <div style="font-size:10px;font-weight:600;color:#4c1d95;margin-bottom:4px;">🏆 Certifications</div>
           <div style="font-size:11px;color:#374151;">Ever attempted: <strong>${m.certAttemptedUsers}</strong>   Today: <strong>${m.certAttemptedToday}</strong></div>
         </div>
@@ -665,7 +730,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ]);
 
     const logMetrics = (label: string, m: DailyMetrics) => {
-      console.log(`  [${label}] Total: ${m.totalAfricaUsers} · Active: ${m.activeUsers} · Activities: ${m.totalActivities} · Playground: ${m.playgroundUsers} · Certs: ${m.certAttemptedUsers}`);
+      console.log(`  [${label}] Total: ${m.totalAfricaUsers} · Active: ${m.activeUsers} · Activities: ${m.totalActivities} · Playground: ${m.playgroundUsers} · SystemsThink: ${m.systemsThinkUsers} · Agriculture: ${m.agricultureUsers} · Certs: ${m.certAttemptedUsers}`);
     };
     logMetrics("Oloibiri", oloibiriMetrics);
     logMetrics("Ibiade",   ibiadeMetrics);
