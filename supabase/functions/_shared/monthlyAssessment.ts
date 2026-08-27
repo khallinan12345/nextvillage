@@ -181,7 +181,10 @@ Provide JSON with scores (0-100) and evidence arrays for:
 
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
+    // Merging in Playground/Systems Think content produces much longer
+    // evidence arrays than a single structured lesson did; 1024 was cutting
+    // the JSON off mid-string on richer months, breaking JSON.parse below.
+    max_tokens: 4096,
     system: 'You are an assessment expert. Respond with valid JSON only. No preamble, no markdown.',
     messages: [{ role: 'user', content: prompt }],
   });
@@ -196,7 +199,23 @@ Provide JSON with scores (0-100) and evidence arrays for:
   }
 
   const clean = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  const result: MonthlySkillsResult = JSON.parse(clean);
+  const parsed = JSON.parse(clean);
+
+  // Insert only the known columns — spreading the model's raw JSON directly
+  // let an unexpected extra key from the model reject the whole insert with
+  // "column not found", failing assessments that otherwise parsed fine.
+  const result: MonthlySkillsResult = {
+    cognitive_score: parsed.cognitive_score,
+    cognitive_evidence: parsed.cognitive_evidence,
+    critical_thinking_score: parsed.critical_thinking_score,
+    critical_thinking_evidence: parsed.critical_thinking_evidence,
+    problem_solving_score: parsed.problem_solving_score,
+    problem_solving_evidence: parsed.problem_solving_evidence,
+    creativity_score: parsed.creativity_score,
+    creativity_evidence: parsed.creativity_evidence,
+    pue_score: parsed.pue_score,
+    pue_evidence: parsed.pue_evidence,
+  };
 
   const { error: insertError } = await supabase
     .from("user_monthly_assessments")
@@ -361,20 +380,22 @@ export async function runMonthlyAssessments(): Promise<MonthlyAssessmentRunResul
   }
 
   if (failedUserIds.length > 0) {
-    await supabase.from('system_events').insert({
-      function_name: 'monthly-assessment',
-      event_type:    'assessment_partial_failure',
-      severity:      failedUserIds.length === userIds.length ? 'error' : 'warning',
-      payload: {
-        period_start:    startDate.toISOString(),
-        period_end:      endDate.toISOString(),
-        total_users:     userIds.length,
-        successful:      successCount,
-        failed:          failedUserIds.length,
-        failed_user_ids: failedUserIds,
-      },
-      created_at: new Date().toISOString(),
-    }).catch(() => {});
+    try {
+      await supabase.from('system_events').insert({
+        function_name: 'monthly-assessment',
+        event_type:    'assessment_partial_failure',
+        severity:      failedUserIds.length === userIds.length ? 'error' : 'warning',
+        payload: {
+          period_start:    startDate.toISOString(),
+          period_end:      endDate.toISOString(),
+          total_users:     userIds.length,
+          successful:      successCount,
+          failed:          failedUserIds.length,
+          failed_user_ids: failedUserIds,
+        },
+        created_at: new Date().toISOString(),
+      });
+    } catch { /* never block the run for logging */ }
   }
 
   return {
