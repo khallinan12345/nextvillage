@@ -70,52 +70,102 @@ export async function assessMonthlySkills(
     return null;
   }
 
-  const { data: activities, error } = await supabase
-    .from("dashboard")
-    .select("chat_history, created_at")
-    .eq("user_id", userId)
-    .gte("created_at", startDate.toISOString())
-    .lte("created_at", endDate.toISOString())
-    .order("created_at", { ascending: false });
+  // Structured lessons (AI Proficiency / AI Ready Skills / tech skills) log
+  // to dashboard.chat_history. Free-form use — AI Playground and Systems
+  // Think — logs to its own tables with the same {role, content} message
+  // shape, so learners who never touch the structured pages were producing
+  // zero assessment signal even though they were actively using AI. Pull
+  // all three sources into one pool.
+  const [{ data: activities, error }, { data: playgroundChats, error: pgError }, { data: thinkSessions, error: stError }] = await Promise.all([
+    supabase
+      .from("dashboard")
+      .select("chat_history, created_at")
+      .eq("user_id", userId)
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString())
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("ai_playground_chats")
+      .select("title, messages, updated_at")
+      .eq("user_id", userId)
+      .gte("updated_at", startDate.toISOString())
+      .lte("updated_at", endDate.toISOString()),
+    supabase
+      .from("systems_think_sessions")
+      .select("title, messages, updated_at")
+      .eq("user_id", userId)
+      .gte("updated_at", startDate.toISOString())
+      .lte("updated_at", endDate.toISOString()),
+  ]);
 
   if (error) {
     throw new Error(`Error fetching dashboard activity: ${error.message}`);
   }
+  if (pgError) {
+    throw new Error(`Error fetching AI Playground activity: ${pgError.message}`);
+  }
+  if (stError) {
+    throw new Error(`Error fetching Systems Think activity: ${stError.message}`);
+  }
 
-  if (!activities || activities.length === 0) {
+  if (
+    (!activities || activities.length === 0) &&
+    (!playgroundChats || playgroundChats.length === 0) &&
+    (!thinkSessions || thinkSessions.length === 0)
+  ) {
     console.log(`No activity found for this period.`);
     return null;
   }
 
-  const userMessages = activities
+  const extractUserMessages = (messages: unknown): string[] => {
+    const parsed = typeof messages === "string" ? JSON.parse(messages) : (messages ?? []);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((message: any) => message?.role === "user" && !message?.hidden && typeof message?.content === "string")
+      .map((message: any) => message.content.trim())
+      .filter(Boolean);
+  };
+
+  const structuredLessonText = (activities ?? [])
     .flatMap((activity) => {
       try {
-        const chatHistory =
-          typeof activity.chat_history === "string"
-            ? JSON.parse(activity.chat_history)
-            : (activity.chat_history ?? []);
-
-        return Array.isArray(chatHistory) ? chatHistory : [];
+        return extractUserMessages(activity.chat_history);
       } catch {
-        console.log(
-          `Failed to parse chat_history for activity ${activity.created_at}`
-        );
+        console.log(`Failed to parse chat_history for activity ${activity.created_at}`);
         return [];
       }
     })
-    .filter((message: any) => message?.role === "user" && typeof message?.content === "string")
-    .map((message: any) => message.content.trim())
-    .filter(Boolean)
     .join("\n\n");
 
-  if (!userMessages.trim()) {
+  const freeformSections: string[] = [];
+  for (const chat of playgroundChats ?? []) {
+    const msgs = extractUserMessages(chat.messages);
+    if (msgs.length > 0) {
+      freeformSections.push(`[AI Playground — "${chat.title}"]\n${msgs.join("\n\n")}`);
+    }
+  }
+  for (const session of thinkSessions ?? []) {
+    const msgs = extractUserMessages(session.messages);
+    if (msgs.length > 0) {
+      freeformSections.push(`[Systems Think — "${session.title}"]\n${msgs.join("\n\n")}`);
+    }
+  }
+
+  const combinedText = [
+    structuredLessonText ? `[Structured lesson conversations]\n${structuredLessonText}` : "",
+    ...freeformSections,
+  ].filter(Boolean).join("\n\n---\n\n");
+
+  if (!combinedText.trim()) {
     console.log(`No user messages found.`);
     return null;
   }
 
-  const prompt = `Assess learner development based on these conversations:
+  const prompt = `Assess learner development based on these conversations. Some are from structured lessons; others are free-form AI Playground or Systems Think sessions where the learner picks their own topic:
 
-${userMessages}
+${combinedText}
+
+When scoring, weigh not just how the learner communicates but WHAT they are working on: the real-world complexity and sophistication of the topics, questions, and systems they choose to engage with. A learner reasoning through a multi-variable system, a technical architecture, an economic trade-off, or an open-ended real-world problem is stronger evidence of cognitive/critical-thinking/problem-solving ability than one who only discusses simple, single-step topics — even if the simple topics are phrased fluently. Judge each section (structured lesson vs. Playground vs. Systems Think) on its own content; do not penalize a section just because it's free-form.
 
 Provide JSON with scores (0-100) and evidence arrays for:
 - cognitive_score
@@ -193,21 +243,44 @@ export async function getAfricanUsersNeedingAssessment(
     return [];
   }
 
-  const { data: activities, error: activityError } = await supabase
-    .from("dashboard")
-    .select("user_id, created_at")
-    .in("user_id", africanUserIds)
-    .gte("created_at", startDate.toISOString())
-    .lte("created_at", endDate.toISOString());
+  // A learner who only uses AI Playground / Systems Think and never touches
+  // a structured lesson never shows up in "dashboard" activity — check all
+  // three activity sources so free-form-only users still get assessed.
+  const [{ data: activities, error: activityError }, { data: playgroundChats, error: pgError }, { data: thinkSessions, error: stError }] = await Promise.all([
+    supabase
+      .from("dashboard")
+      .select("user_id, created_at")
+      .in("user_id", africanUserIds)
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString()),
+    supabase
+      .from("ai_playground_chats")
+      .select("user_id, updated_at")
+      .in("user_id", africanUserIds)
+      .gte("updated_at", startDate.toISOString())
+      .lte("updated_at", endDate.toISOString()),
+    supabase
+      .from("systems_think_sessions")
+      .select("user_id, updated_at")
+      .in("user_id", africanUserIds)
+      .gte("updated_at", startDate.toISOString())
+      .lte("updated_at", endDate.toISOString()),
+  ]);
 
   if (activityError) {
     throw new Error(`Error fetching dashboard activity: ${activityError.message}`);
   }
+  if (pgError) {
+    throw new Error(`Error fetching AI Playground activity: ${pgError.message}`);
+  }
+  if (stError) {
+    throw new Error(`Error fetching Systems Think activity: ${stError.message}`);
+  }
 
   const activeUserIds = [
     ...new Set(
-      (activities ?? [])
-        .map((activity) => activity.user_id)
+      [...(activities ?? []), ...(playgroundChats ?? []), ...(thinkSessions ?? [])]
+        .map((row) => row.user_id)
         .filter((id): id is string => typeof id === "string" && id.length > 0)
     ),
   ];
