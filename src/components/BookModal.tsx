@@ -105,14 +105,15 @@ export const BookCard: React.FC<{ onOpen: () => void }> = ({ onOpen }) => (
             Before the Lights Come On
           </div>
           <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontWeight: 600 }}>
-            An Essay Collection · Living Document
+            A Living Document · Not Yet Finished
           </div>
         </div>
       </div>
 
       <p style={{ fontSize: "0.87rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.72, margin: "0 0 1.25rem" }}>
-        Nine essays — from Oloibiri and Dayton — written by the people who built this, lived it,
-        and are still in the middle of it. A prologue, four parts, and an epilogue that is not yet finished.
+        The stories of everyone who built this — from Oloibiri and Dayton: how it happened, who it's
+        changed, what actually worked, the mistakes along the way, and what we still hope for.
+        Written by Kevin, Bennywhite, Solomon, Silas, Confidence, and more, as it happens.
       </p>
 
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>

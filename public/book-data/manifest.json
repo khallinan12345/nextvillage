@@ -15,7 +15,20 @@
     "https://kevinhallinan.substack.com/p/great",
     "https://kevinhallinan.substack.com/p/toes-in-the-water",
     "https://kevinhallinan.substack.com/p/silas-is-not-the-exception",
-    "https://kevinhallinan.substack.com/p/we-published-the-blueprint-in-2022"
+    "https://kevinhallinan.substack.com/p/we-published-the-blueprint-in-2022",
+    "https://silasclergy.substack.com/p/when-your-student-teaches-you-something",
+    "https://silasclergy.substack.com/p/grateful-for-how-far-this-year-has",
+    "https://silasclergy.substack.com/p/from-the-timber-market-to-software-a72",
+    "https://silasclergy.substack.com/p/making-the-code-speak-my-voice-literally",
+    "https://confibaby.substack.com/p/taking-vai-beyond-oloibiri-a-journey",
+    "https://solomonmatthiassolomon.substack.com/p/assesstriagerefer-what-oloibiri-is",
+    "https://solomonmatthiassolomon.substack.com/p/beyond-vital-signs-what-119-children",
+    "https://solomonmatthiassolomon.substack.com/p/equipping-healthcare-for-greater",
+    "https://solomonmatthiassolomon.substack.com/p/fighting-malaria-through-trust-awareness",
+    "https://solomonmatthiassolomon.substack.com/p/i-knocked-on-every-door-in-oloibiri",
+    "https://solomonmatthiassolomon.substack.com/p/a-reflection-on-ai-and-community",
+    "https://solomonmatthiassolomon.substack.com/p/when-tradition-stands-between-the",
+    "https://solomonmatthiassolomon.substack.com/p/a-difficult-change-pregnant-women"
   ],
   "incorporated_notes": [
     "note-solomon-triage:2026-05-21",
@@ -23,6 +36,18 @@
     "note-five-months:2026-07-13",
     "note-silas-internship:2026-08-24",
     "note-silas-teaching:2026-08-25T15:09",
-    "note-rain-certifications:2026-08-25T22:21"
-  ]
+    "note-rain-certifications:2026-08-25T22:21",
+    "note-solomon-final-care-human:2026-05-25",
+    "note-solomon-one-life-at-a-time:2026-05-24",
+    "note-solomon-fear-vs-fever:2026-05-21"
+  ],
+  "skipped": {
+    "https://solomonmatthiassolomon.substack.com/p/smarter-systems-safer-communities": "empty stub post, title only, no body content"
+  },
+  "authors_tracked": {
+    "kevin_hallinan": "https://kevinhallinan.substack.com",
+    "silas_clergy": "https://silasclergy.substack.com",
+    "solomon_matthias_solomon": "https://solomonmatthiassolomon.substack.com",
+    "confidence_onuoha": "https://confibaby.substack.com"
+  }
 }
