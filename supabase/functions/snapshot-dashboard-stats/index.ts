@@ -161,7 +161,13 @@ Deno.serve(async (req) => {
       d.activities_started++;
       if (row.progress === "completed") d.activities_completed++;
       if (row.category_activity) d.categories_active.add(row.category_activity);
-      if (row.certificate_pdf_url) d.certifications_earned++;
+      // A cert is "earned" once its assessments clear the passing threshold
+      // (progress === 'completed'), not once a PDF happens to be downloaded —
+      // learners routinely complete a certification without ever clicking
+      // "Download Certificate", which was silently undercounting this stat.
+      if (row.category_activity === "Certification" && row.progress === "completed") {
+        d.certifications_earned++;
+      }
     }
 
     // ── 3. Fetch profiles for site (country/city) mapping ────────────────────
