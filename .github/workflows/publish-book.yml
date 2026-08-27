@@ -1,0 +1,43 @@
+name: Publish Book
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/book-data/book.json"
+
+jobs:
+  publish-to-storage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload book.json to Supabase Storage
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -e
+          STATUS=$(curl -s -o /tmp/upload-response.json -w "%{http_code}" \
+            -X POST "https://wohmsbeygxrbwogrggkq.supabase.co/storage/v1/object/book/book.json" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "x-upsert: true" \
+            -H "Content-Type: application/json" \
+            --data-binary @public/book-data/book.json)
+          echo "Upload response ($STATUS):"
+          cat /tmp/upload-response.json
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Upload failed with status $STATUS"
+            exit 1
+          fi
+
+      - name: Verify live book.json matches what was just pushed
+        run: |
+          set -e
+          LIVE_UPDATED=$(curl -s "https://wohmsbeygxrbwogrggkq.supabase.co/storage/v1/object/public/book/book.json" | python3 -c "import json,sys; print(json.load(sys.stdin)['lastUpdated'])")
+          PUSHED_UPDATED=$(python3 -c "import json; print(json.load(open('public/book-data/book.json'))['lastUpdated'])")
+          echo "Live lastUpdated: $LIVE_UPDATED"
+          echo "Pushed lastUpdated: $PUSHED_UPDATED"
+          if [ "$LIVE_UPDATED" != "$PUSHED_UPDATED" ]; then
+            echo "Mismatch — live storage does not reflect the pushed book.json"
+            exit 1
+          fi
