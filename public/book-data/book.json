@@ -1,7 +1,7 @@
 {
   "title": "Before the Lights Come On",
   "subtitle": "A Living Document \u2014 How We Made This Happen, Who It's Changed, What We're Still Learning",
-  "lastUpdated": "2026-08-27",
+  "lastUpdated": "2026-08-28",
   "parts": [
     {
       "id": "prologue",
@@ -688,6 +688,43 @@
                 "The change may still be small, but it is real. Every pregnant woman who registers for antenatal care, every child treated early for malaria, and every family that begins to trust medical guidance again is proof that transformation is happening.",
                 "Oloibiri may have once given Nigeria oil.",
                 "But now, quietly, it is raising something else young people using innovation, knowledge, and compassion to restore hope, one home at a time."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ch30-roadside-trading-to-ai",
+          "title": "From Roadside Trading to AI Systems: My Journey into the Future",
+          "byline": "By Divinegift Morris",
+          "sections": [
+            {
+              "heading": null,
+              "paragraphs": [
+                "I was a roadside trader. My life was defined by the daily grind of buying and selling. I had finished secondary school, but I was looking for a way forward\u2014something that felt like it belonged to the future.",
+                "One day, while I was at my stand, I saw a signpost: \u201cDavidson AI Future Lab.\u201d",
+                "I didn\u2019t know what AI was yet, but the name sparked something in me. I was curious, so I made inquiries. That curiosity led me to register, where I was taken under the wing of Bennywhite Davidson. That moment changed the trajectory of my life."
+              ]
+            },
+            {
+              "heading": "The Pivot: From Trading to Coding",
+              "paragraphs": [
+                "The lab wasn\u2019t just a place to learn; it was where I discovered the logic of the world. I was trained in React and Vite web development by the senior web developer, Clergy Silas, with the support of Kevin Haliman.",
+                "I went from selling on the roadside to sitting in front of a terminal, building my first real project: LeadPilot AI."
+              ]
+            },
+            {
+              "heading": "Why I\u2019m Writing This",
+              "paragraphs": [
+                "Building LeadPilot AI taught me that AI isn\u2019t just \u201cmagic.\u201d It is a system. It is code, logic, and workflow. I realized that if someone who started on the roadside could learn to build web applications and integrate AI, anyone can.",
+                "But I also realized something else: most people are overcomplicating AI. They are looking for magic, when they should be looking for workflows."
+              ]
+            },
+            {
+              "heading": "The Promise",
+              "paragraphs": [
+                "I am a developer who believes in the power of systems. On this newsletter, I\u2019m not just going to tell you about the latest AI hype. I am going to show you the actual, step-by-step workflows I use to build projects\u2014the same logic I used to build LeadPilot AI.",
+                "Whether you are a developer, a student, or someone who is just curious about the future, I\u2019m going to break down the \u201chow\u201d so you can build your own systems, too.",
+                "If you want to move from \u201cAI enthusiast\u201d to \u201cAI builder,\u201d join me. I\u2019ll send you one deep-dive workflow every week."
               ]
             }
           ]
