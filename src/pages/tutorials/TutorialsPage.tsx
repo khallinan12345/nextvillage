@@ -75,8 +75,27 @@ const TRACKS: Track[] = [
     tags: ['GitHub', 'Claude', 'Contributing'],
     available: true,
     Icon: GitBranch,
-  },
-];
+  
+},
+{
+  
+  
+      
+  
+    id: 'oloibiri-ai-camp',
+    path: '/tutorials/oloibiri-camp',
+    title: 'Oloibiri AI Camp Guide',
+    blurb:
+      'A fun, child-friendly five-day AI camp where students design robots, create characters, tell stories, build games, and finish with a showcase project.',
+    duration: 'about five days',
+    totalSteps: 5,
+    tags: ['AI Camp', 'AI Creativity', 'Ages 8–10'],
+    available: true,
+    Icon: Compass,
+ },
+]; 
+
+  
 
 const TutorialsPage: React.FC = () => {
   const navigate = useNavigate();
