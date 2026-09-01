@@ -198,7 +198,7 @@ const OloibiriAICampGuidePage: React.FC = () => {
         {/* header */}
         <div className="mb-6 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-purple-200">Oloibiri AI Camp</p>
-          <h1 className="mt-2 text-4xl font-extrabold">Eight Days, Infinite Futures 🚀</h1>
+          <h1 className="mt-2 text-4xl font-extrabold">Five Days, Infinite Futures 🚀</h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-purple-100">
             Welcome, creator! Over five days, you're going to build amazing things with AI. You'll design robots, create characters, tell stories, make games, and show the world what you made.
           </p>
