@@ -34,83 +34,78 @@ const STEPS: CampStep[] = [
   {
     id: 'day1',
     day: 'Day 1',
-    title: 'I Can Meet AI 🤖',
+    title: 'I Can Talk to AI 🤖',
     emoji: '🤖',
-    blurb: 'Discover what AI can do and create your first AI character.',
+    blurb: 'Design a robot and teach AI to draw it.',
     body: [
-      "WOW AI — 15 minutes: Start with a fun AI Playground activity that surprises you. Ask AI something funny, creative, or unexpected and see what it can say or create.",
-      "CREATIVE AI: Create a fun robot character with AI. Describe what your robot looks like, what it can do, and who it helps. Use AI to create an image of your robot and make changes until you like it.",
-      "LEARNING WITH AI: Ask AI to explain what artificial intelligence is and how it can learn from information. Ask questions and see if you can explain AI in your own words.",
-      "HANDS-ON: Draw your AI robot on paper. Label its parts and write what each part does. Your drawing should connect to the robot you created with AI.",
-      "Remember: AI is a helper. YOU are the creator and YOU decide what is good.",
+      "Today you're going to invent a robot. Think about what it looks like, what it can do, and who it helps.",
+      "Here's how it works: You describe your robot to AI. AI makes a picture. You look at it and say, 'That's close, but I want the arms to be bigger.' AI fixes it. You keep checking and fixing until it's just right.",
+      "Then you draw your robot on paper and label all its cool parts — the laser eyes, the spinning arms, whatever makes it special.",
+      "Remember: YOU are the boss. AI helps, but you decide what's good.",
     ],
-    checkpoint:
-      'You experienced a Wow AI activity, created an AI robot, learned what AI is, and made a paper drawing connected to your robot.',
+    checkpoint: 'You have a robot picture from AI and a paper drawing with labels. You changed the description at least once to make it better.',
   },
   {
     id: 'day2',
     day: 'Day 2',
     title: 'I Can Create With AI ✨',
     emoji: '✨',
-    blurb: 'Create a character, image, and simple webpage with AI.',
+    blurb: 'Make a character and build a webpage.',
     body: [
-      "WOW AI — 15 minutes: Use AI Playground to turn a simple idea into something surprising, such as a funny character, imaginative picture, or unexpected story.",
-      "CREATIVE AI: Create your own character with AI. Give the character a name, appearance, personality, and special ability. Use the relevant creative AI or webpage tool to bring your character to life.",
-      "LEARNING WITH AI: Use AI to practice English by describing your character. Ask AI to help you improve your sentences, learn new words, and make your character description more interesting.",
-      "HANDS-ON: Make a character card on paper. Draw your character, write the name and special ability, and include some of the new words you learned.",
-      "Remember: You can ask AI for ideas, but your imagination makes the character yours.",
+      "Today you're creating a character — someone totally new that you invented.",
+      "First, draw them on paper. Give them a name, decide what they look like, what their superpower is, and what they love most.",
+      "Then you tell AI about your character: 'Her name is Luna. She has silver hair and can talk to animals. She loves starlight.' AI helps you turn that into a real webpage that shows your character.",
+      "You check it. If something's wrong, you fix it. If the colors are weird or the name is spelled funny, you tell AI and it fixes it.",
+      "By the end, you have a real webpage on the internet that shows off your character.",
     ],
-    checkpoint:
-      'You completed a Wow AI activity, created a character with AI, practiced English, and made a hands-on character card.',
+    checkpoint: 'You have a paper character card and a live webpage that shows your character. You made at least one change to make it better.',
   },
   {
     id: 'day3',
     day: 'Day 3',
     title: 'I Can Tell Stories With AI 🎬',
     emoji: '🎬',
-    blurb: 'Use AI to create a story and bring it to life.',
+    blurb: 'Write a story and make it into a movie.',
     body: [
-      "WOW AI — 15 minutes: Give AI a surprising story prompt and see what kind of story it creates. Try changing one part of the prompt and see how the story changes.",
-      "CREATIVE AI: Create a short story with AI. Your story should have a beginning, a problem, a solution, and an ending. Then use the relevant creative AI tool to create images, a storyboard, or a short video for your story.",
-      "LEARNING WITH AI: Use AI to learn about story structure, characters, setting, and descriptive words. Ask AI to help you make one part of your story stronger.",
-      "HANDS-ON: Draw a four-part storyboard on paper showing the beginning, problem, solution, and ending. Compare your storyboard with the story you created using AI.",
-      "Remember: AI can help tell the story, but YOU are the director.",
+      "Today you're a storyteller. You're going to write a story and turn it into a real video.",
+      "Your story needs four parts: a beginning (where we are), a problem (what goes wrong), a solution (how we fix it), and an ending (what happens next).",
+      "Example: 'Luna finds a lost baby dragon. The dragon is scared. Luna sings to calm it down. The dragon becomes her friend.'",
+      "Draw your story as a storyboard — like a comic book with four boxes, one for each part.",
+      "Then AI helps you make a real video or movie with your story. You watch it, check if it matches your idea, and fix anything that's wrong.",
+      "You're the director — you decide if the story is told the right way.",
     ],
-    checkpoint:
-      'You completed a Wow AI activity, created a story with AI, learned about storytelling, and made a four-part paper storyboard.',
+    checkpoint: 'You have a storyboard drawing and a video or movie that tells your story. You watched it and made sure it matches what you wanted.',
   },
   {
     id: 'day4',
     day: 'Day 4',
     title: 'I Can Solve Problems With AI 🎮',
     emoji: '🎮',
-    blurb: 'Use AI to solve a problem and design a game.',
+    blurb: 'Design a game and test it.',
     body: [
-      "WOW AI — 15 minutes: Give AI a fun challenge and see how quickly it can suggest different solutions. Try asking for a solution you would never have thought of yourself.",
-      "CREATIVE AI: Design a simple game with AI. Decide the goal, rules, characters, and challenges. Use the relevant game-building tool or page to turn your idea into something playable.",
-      "LEARNING WITH AI: Use AI to learn about problem-solving, logic, and simple Math. Ask AI to give you a fun problem or challenge and work through the answer step by step.",
-      "HANDS-ON: Draw your game on paper or create a simple paper prototype. Let a friend test it and ask what could make the game more fun or easier to understand.",
-      "Remember: Good creators test their ideas, find problems, and make them better.",
+      "Today you're a game designer. You're going to make a game, test it, and make it better.",
+      "First, decide: What's the goal? (Win by collecting stars? Reach the end? Beat the timer?) What are the rules? What makes it hard? How do you win?",
+      "Draw your game on paper first. Test it with friends. Ask them: 'Is this fun? Is it too easy? Too hard? What would make it better?'",
+      "Then AI helps you build it on the computer. You play it. You notice what doesn't work — maybe it's too easy, or the rules are confusing.",
+      "You tell AI what to change. AI fixes it. You play again. You keep testing and fixing until it's fun.",
+      "At the end, everyone votes on their favorite game. That's how you know if your idea worked.",
     ],
-    checkpoint:
-      'You completed a Wow AI activity, created and tested a game idea, practiced problem-solving or Math, and made a hands-on game prototype.',
+    checkpoint: 'You have a paper game design, a playable game on the computer, and you tested it at least twice. You made at least one change based on testing.',
   },
   {
     id: 'day5',
     day: 'Day 5',
-    title: 'I Am an AI Business Creator 🌟',
+    title: 'I Am an AI Creator 🌟',
     emoji: '🌟',
-    blurb: 'Design a simple business and present your idea.',
+    blurb: 'Pick your favorite and finish it.',
     body: [
-      "WOW AI — 15 minutes: Ask AI to invent a surprising business idea for kids. See what it creates, then decide whether you would improve the idea or create something completely different.",
-      "CREATIVE AI: Design your own simple business with AI. Choose a business name, create a logo or image, describe your product or service, and use the relevant creative AI tool to make a simple advertisement or webpage.",
-      "LEARNING WITH AI: Use AI to learn basic business ideas such as customers, products, prices, and advertising. Ask AI questions and decide what makes your business useful to people.",
-      "HANDS-ON: Create a paper business poster. Draw your logo, write your business name, show your product or service, and write why people should choose your business.",
-      "Then present your business to the camp. Explain what you created, what AI helped you with, and what decisions you made yourself.",
-      "Remember: AI can help you build your idea, but YOU are the entrepreneur and creator.",
+      "Today is your choice. You pick one thing you made this week — a robot, a character, a story, a movie, or a game — and you make it perfect.",
+      "You finish it. You test it. You fix anything that's not quite right. You make it something you're really proud of.",
+      "Then you make a showcase card that tells the story: What did I make? Why did I pick it? What did AI help me do? What did I change or fix? What would I do next?",
+      "At the end, you show your creation to someone who matters to you — your family, a friend, or the whole camp. You tell them your story.",
+      "You're not just showing what AI made. You're showing what YOU created, what YOU decided, and what YOU learned.",
     ],
-    checkpoint:
-      'You completed a Wow AI activity, designed a simple business with AI, learned basic business ideas, created a paper business poster, and presented your idea.',
+    checkpoint: "You have a finished creation, a showcase card, and you've practiced explaining it to someone.",
   },
 ];
 
@@ -126,7 +121,7 @@ const OloibiriAICampGuidePage: React.FC = () => {
   const [loaded, setLoaded] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const lsKey = `tutorial:${TRACK}:v2`;
+  const lsKey = `tutorial:${TRACK}`;
 
   useEffect(() => {
     try {
