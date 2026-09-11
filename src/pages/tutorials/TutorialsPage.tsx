@@ -17,7 +17,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
-  Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch,
+  Fish, ArrowRight, Clock, Lock, Compass, Puzzle, GitBranch, Sparkles,
   Search, ChevronDown, ChevronUp, BookOpen, Code2, Users, Settings, X, Wand2, Database,
   Brain, Edit, Eye, Shield, Monitor, Lightbulb, MessageSquare, GraduationCap, Calculator, Atom,
   Palette, Image, Mic, Video as VideoIcon, Clapperboard, FileText, Gamepad2, PenLine,
@@ -107,6 +107,19 @@ interface Track {
 }
 
 const TRACKS: Track[] = [
+  {
+    id: 'ai-discovery-camp',
+    path: '/tutorials/ai-discovery-camp',
+    title: 'AI Discovery Camp',
+    blurb:
+      'Five days of creating with AI, for campers just getting started — build a robot, a character, a story, and a game with AI, one day at a time, and ask AI to make each one better before moving on.',
+    duration: 'five days',
+    totalSteps: 5,
+    tags: ['Camp', 'AI Image Creation', 'Use Claude', 'Create Game'],
+    available: true,
+    category: 'onboarding',
+    Icon: Sparkles,
+  },
   {
     id: 'ai-learning-start',
     path: '/tutorials/ai-learning-start',
