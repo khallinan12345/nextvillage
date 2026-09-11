@@ -15,6 +15,11 @@
 //   Both are fire-and-forget and never block the stream or response.
 //
 // TRIAGE PATCH: errors now logged to Supabase system_events + email alert.
+//
+// Safety floor + moderation/leader-escalation live in api/_lib/safetyGuardrails.js
+// — shared with api/chat.js so both AI text endpoints get the same baseline.
+// Pure `fetch`-based, no Node-only APIs, so it works unmodified in this Edge runtime.
+import { appendSafetyFloor, checkAndEscalate } from './_lib/safetyGuardrails.js';
 
 export const config = { runtime: 'edge' };
 
@@ -461,9 +466,19 @@ export default async function handler(req) {
     });
   }
 
-  const systemPayload = system
-    ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
-    : undefined;
+  // Fire-and-forget: classify the latest user message and email the
+  // student's community leader(s) if it's flagged. Never awaited — must
+  // not add latency to, or ever block, the actual stream.
+  checkAndEscalate({
+    messages, userId: user_id, page: 'AIPlaygroundPage',
+    supabaseUrl: SUPABASE_URL, supabaseKey: SUPABASE_KEY, resendKey: RESEND_KEY,
+    logEvent,
+  });
+
+  // appendSafetyFloor always returns a non-empty string (SAFETY_FLOOR itself
+  // if the caller sent none), so systemPayload is never undefined here —
+  // every stream request carries at least the safety floor.
+  const systemPayload = [{ type: 'text', text: appendSafetyFloor(system), cache_control: { type: 'ephemeral' } }];
 
   // ── Rolling compression ────────────────────────────────────────────────────
   // If the conversation is long, compress old messages before sending to Anthropic.

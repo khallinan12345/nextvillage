@@ -1,5 +1,10 @@
 // api/chat.js - Vercel serverless function with model routing + prompt caching + multi-provider fallback
 //
+// Safety floor + moderation/leader-escalation live in api/_lib/safetyGuardrails.js
+// — shared with api/chat-stream.js so both AI text endpoints get the same
+// baseline regardless of which page's system prompt (or lack of one) called them.
+import { appendSafetyFloor, checkAndEscalate } from './_lib/safetyGuardrails.js';
+//
 // ROUTING LOGIC:
 //   page = 'AILearningPage' | 'EnglishSkillsPage' |
 //          'SkillsDevelopmentPage' | consultant pages
@@ -1137,7 +1142,16 @@ export default async function handler(req, res) {
     // Strip any lone surrogates before this content reaches provider request
     // bodies — see sanitizeContent/stripLoneSurrogates above.
     const messages = rawMessages.map(m => ({ ...m, content: sanitizeContent(m.content) }));
-    const system   = stripLoneSurrogates(rawSystem);
+    const system   = appendSafetyFloor(stripLoneSurrogates(rawSystem));
+
+    // Fire-and-forget: classify the latest user message and email the
+    // student's community leader(s) if it's flagged. Never awaited — must
+    // not add latency to, or ever block, the actual chat response.
+    checkAndEscalate({
+      messages, userId, page,
+      supabaseUrl: TRIAGE_SUPABASE_URL, supabaseKey: TRIAGE_SUPABASE_KEY, resendKey: TRIAGE_RESEND_KEY,
+      logEvent,
+    });
 
     // Pick up any model_config changes (cached 5 min; falls back to defaults on failure)
     await refreshModels();
