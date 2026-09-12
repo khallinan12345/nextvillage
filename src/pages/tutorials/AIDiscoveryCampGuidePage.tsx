@@ -546,12 +546,7 @@ const AIDiscoveryCampGuidePage: React.FC = () => {
       .then(() => setSyncing(false), () => setSyncing(false));
   }, [lsKey, userId]);
 
-  const firstIncompleteIndex = useCallback((): number => {
-    const idx = STEPS.findIndex(s => !done.has(s.id));
-    return idx === -1 ? STEPS.length : idx;
-  }, [done]);
-
-  const isUnlocked = (index: number) => index <= firstIncompleteIndex();
+  const isUnlocked = (_index: number) => true;
 
   const markDone = (stepId: string) => {
     const next = new Set(done);
