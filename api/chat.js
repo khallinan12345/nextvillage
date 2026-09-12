@@ -74,6 +74,23 @@ const FREE_TIER_PAGES = new Set([
   'PidginTranslationModule',
 ]);
 
+// Pages where the conversation is fundamentally about a real community
+// member's situation (a farmer's crop, a patient's symptoms, a customer's
+// business) rather than the student's own — see piiScrubbing.js's tier
+// doc comment. These get the relaxed 'community_helper' scrub tier: other
+// people's names and neighborhood/estate/county-level location detail stay,
+// since local specificity is the point; everything else (phone numbers,
+// emails, exact street addresses, the student's own last name) is still
+// removed. Includes each consultant/navigator's certification variant —
+// same kind of real-person description happens during evaluation too.
+const COMMUNITY_HELPER_PAGES = new Set([
+  'AgricultureConsultantPage', 'AgricultureConsultantCertificationPage',
+  'FishingConsultantPage',     'FishingConsultantCertificationPage',
+  'HealthcareNavigatorPage',   'HealthcareNavigatorCertificationPage',
+  'EntrepreneurshipConsultantPage', 'EntrepreneurshipConsultantCertificationPage',
+  'AIAmbassadorsPage',         'AIAmbassadorsCertificationPage',
+]);
+
 // Pages that use claude-sonnet-5 for coding tasks, free-tier for non-coding
 // tasks. All six route coding calls to Sonnet 5 — Haiku was hitting
 // quality/error ceilings as student projects grew more elaborate.
@@ -1148,6 +1165,10 @@ export default async function handler(req, res) {
     // Fire-and-forget: classify the latest (pre-scrub) user message and
     // email the student's community leader(s) if it's flagged. Never
     // awaited — must not add latency to, or ever block, the actual response.
+    // Ordering invariant, deliberate not accidental (see piiScrubbing.js's
+    // module doc comment): moderate the RAW message before it's scrubbed.
+    // A harm_to_others or self_harm flag needs to reach the community
+    // leader with the actual words the student wrote, not "[name removed]".
     checkAndEscalate({
       messages, userId, page,
       supabaseUrl: TRIAGE_SUPABASE_URL, supabaseKey: TRIAGE_SUPABASE_KEY, resendKey: TRIAGE_RESEND_KEY,
@@ -1158,9 +1179,10 @@ export default async function handler(req, res) {
     // be awaited: the scrubbed messages, not the raw ones, are what every
     // downstream model call below actually sends. See piiScrubbing.js for
     // why every user message is re-scrubbed on every request rather than
-    // just the newest one.
+    // just the newest one, and for what 'tier' changes.
+    const scrubTier = COMMUNITY_HELPER_PAGES.has(page) ? 'community_helper' : 'strict';
     const firstName = await fetchFirstName(userId, TRIAGE_SUPABASE_URL, TRIAGE_SUPABASE_KEY);
-    messages = await scrubMessagesPII(messages, firstName);
+    messages = await scrubMessagesPII(messages, firstName, scrubTier, (evt) => logEvent({ function_name: 'chat', user_id: userId, ...evt }));
 
     // Pick up any model_config changes (cached 5 min; falls back to defaults on failure)
     await refreshModels();
