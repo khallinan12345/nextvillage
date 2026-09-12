@@ -794,6 +794,9 @@ const ProbePanel: React.FC<ProbePanelProps> = ({
 
       {/* Input — text-base prevents iOS auto-zoom */}
       <div className="border-t px-3 py-3 rounded-b-2xl">
+        <p className="mb-2 text-xs text-gray-500">
+          Describe symptoms in your own words. Please don't type other people's real names here — say "my patient's mother" or "the neighbour who brought her in" instead. Text you never type is never exposed.
+        </p>
         <div className="flex gap-2">
           <input
             value={input}
@@ -1253,8 +1256,15 @@ const HealthcareNavigatorPage: React.FC = () => {
       const updated = [...history, aiMsg];
       setMessages(updated);
       speak(reply);
-      // Persist updated conversation to the assessment record
-      await supabase.from('health_assessments').update({ conversation_history: updated }).eq('id', selectedAssessment.id);
+      // Deliberately not persisted: this follow-up thread lives in memory
+      // for the current session only. The raw turn was previously written
+      // to health_assessments.conversation_history verbatim — a stored
+      // health-adjacent transcript that can include real third-party names
+      // is exactly the kind of thing PII scrubbing (api/_lib/piiScrubbing.js)
+      // exists to keep out of a model call, and it makes no more sense to
+      // keep sitting in the database afterward. The safeguarding path
+      // (safetyGuardrails.js's leader-alert email) already keeps raw text
+      // in the one place a human genuinely needs it.
     } catch { setMessages(p => [...p, { id: crypto.randomUUID(), role: 'assistant', content: 'Technical issue — please try again.', timestamp: new Date() }]); }
     finally { setIsSending(false); setTimeout(() => inputRef.current?.focus(), 100); }
   }, [inputText, isSending, messages, selectedPatient, selectedAssessment, speak]);
@@ -1378,11 +1388,16 @@ const HealthcareNavigatorPage: React.FC = () => {
       const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: reply, timestamp: new Date() };
       const finalMsgs = [...updated, aiMsg];
       setPriorFollowupMessages(finalMsgs);
-      // Save follow-up notes appended to the same assessment row
+      // Save follow-up notes appended to the same assessment row. Deliberately
+      // NOT also writing conversation_history here — the structured
+      // follow_up_notes field is the clinical record this feature exists to
+      // keep; a second, raw, full-fidelity copy of the same dialogue sitting
+      // in conversation_history adds exposure without adding anything a
+      // navigator needs (see the identical note on sendMessage() above).
       const newNoteBlock = `---FOLLOWUP---\n${new Date().toISOString()}\n${finalMsgs.map(m => `${m.role === 'assistant' ? 'AI' : 'Navigator'}: ${m.content.slice(0, 400)}`).join('\n')}`;
       const updatedNotes = ((selectedAssessment.follow_up_notes || '') + '\n' + newNoteBlock).trim();
       await supabase.from('health_assessments')
-        .update({ follow_up_notes: updatedNotes, conversation_history: finalMsgs })
+        .update({ follow_up_notes: updatedNotes })
         .eq('id', selectedAssessment.id);
     } catch {
       setPriorFollowupMessages(p => [...p, { id: crypto.randomUUID(), role: 'assistant', content: 'Technical issue — please try again.', timestamp: new Date() }]);
@@ -2058,6 +2073,7 @@ const HealthcareNavigatorPage: React.FC = () => {
             <textarea value={assessment.chiefComplaint} onChange={e => setField('chiefComplaint', e.target.value)} rows={2}
               placeholder="Main reason for this visit — what the patient/caregiver says in their own words…"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-base resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <p className="mt-1.5 text-xs text-gray-500">Use the patient's name field above for the record — in this box, describe people as "the mother," "a sibling," etc. rather than by name.</p>
           </div>
 
           {/* Vitals */}
