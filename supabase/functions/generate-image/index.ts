@@ -8,6 +8,15 @@
 //   REPLICATE_API_TOKEN       — your Replicate API token
 //   SUPABASE_URL              — injected automatically
 //   SUPABASE_SERVICE_ROLE_KEY — injected automatically
+//   ANTHROPIC_API_KEY         — already configured for other Deno functions
+//                               (evaluate-challenge-submission, etc.) — used
+//                               here to classify the prompt before generating
+//   RESEND_API_KEY            — new: for the community-leader safety alert
+//   SAFETY_ALERT_FALLBACK_EMAIL — new: comma-separated address(es) that
+//     always get a copy of a safety alert, in addition to any leader(s)
+//     resolved for the student's organization. This is a *separate* secrets
+//     store from the Vercel env vars of the same name used by
+//     api/_lib/safetyGuardrails.js — set it here too, independently.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -18,6 +27,130 @@ const REPLICATE_API = 'https://api.replicate.com/v1/models/black-forest-labs/flu
 // learner and never stored as part of their prompt (image_generations.prompt
 // stays exactly what they typed, for display/reuse).
 const SAFETY_SUFFIX = 'No violence, blood, gore, weapons, or graphic injury. Family-friendly, appropriate for children.';
+
+// ── Prompt moderation + community-leader escalation ────────────────────────
+//
+// SAFETY_SUFFIX above only steers the *model's* output toward being
+// non-graphic — it says nothing about a prompt that's simply racist, sexist,
+// or otherwise harmful even if the resulting image wouldn't be violent. This
+// classifies the learner's own typed prompt (mirrors api/_lib/safetyGuardrails.js
+// on the Vercel side, reimplemented here since Deno Edge Functions and Vercel
+// functions are separate deploy targets that can't share a module) and, if
+// flagged, blocks generation and emails the student's community leader(s)
+// instead of silently producing (or silently refusing) the image.
+
+type SafetyCategory = 'none' | 'self_harm' | 'harm_to_others' | 'hate_or_discriminatory';
+
+const MODERATION_SYSTEM_PROMPT = `You are a strict safety classifier for image prompts written by students on an educational platform. Read the student's image description and reply with exactly one word, nothing else — no punctuation, no explanation:
+
+none — the prompt is fine.
+self_harm — depicts or references self-harm, suicide, or personal crisis.
+harm_to_others — depicts or references violence, threats, or harm toward a specific person or group.
+hate_or_discriminatory — racist, sexist, or otherwise demeans/discriminates against a person or group.
+
+If unsure, or the prompt is borderline, reply none — this classifier only escalates clear cases.`;
+
+async function moderatePrompt(text: string): Promise<SafetyCategory> {
+  const trimmed = text.trim();
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (trimmed.length < 3 || !apiKey) return 'none'; // fail open — backup layer, not the only one
+  try {
+    const upstream = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type':      'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 10,
+        temperature: 0,
+        system: MODERATION_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: trimmed.slice(0, 500) }],
+      }),
+    });
+    if (!upstream.ok) return 'none';
+    const data = await upstream.json();
+    const raw = ((data?.content ?? []).find((b: { type: string }) => b?.type === 'text')?.text ?? '').trim().toLowerCase();
+    const categories: SafetyCategory[] = ['self_harm', 'harm_to_others', 'hate_or_discriminatory'];
+    return categories.find(c => raw.includes(c)) ?? 'none';
+  } catch {
+    return 'none'; // never let a classifier failure block a legitimate image
+  }
+}
+
+const SAFETY_FALLBACK_EMAILS = (Deno.env.get('SAFETY_ALERT_FALLBACK_EMAIL') ?? '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+const CATEGORY_LABELS: Record<SafetyCategory, string> = {
+  none:                   'none',
+  self_harm:              'Possible self-harm / distress',
+  harm_to_others:         'Possible threat or harm toward someone else',
+  hate_or_discriminatory: 'Racist, sexist, or discriminatory content',
+};
+
+// Resolve the student's community leader(s) the same way api/_lib/safetyGuardrails.js
+// does on the Vercel side: profiles.organization_id -> profiles where role='leader'
+// in that organization. Uses the already-authenticated service-role `supabase`
+// client rather than a second raw REST call.
+async function notifyLeadersOfSafetyFlag(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  category: SafetyCategory,
+  prompt: string,
+) {
+  const leaderEmails = new Set(SAFETY_FALLBACK_EMAILS);
+  let student: { name: string | null; email: string | null; city: string | null } | null = null;
+
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, email, city, organization_id')
+      .eq('id', userId)
+      .maybeSingle();
+    student = profile ?? null;
+
+    if (profile?.organization_id) {
+      const { data: leaders } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('organization_id', profile.organization_id)
+        .eq('role', 'leader');
+      (leaders ?? []).forEach((l: { email: string | null }) => l?.email && leaderEmails.add(l.email));
+    }
+  } catch { /* fall back to SAFETY_FALLBACK_EMAILS only */ }
+
+  await logEvent(supabase, {
+    event_type: `safety_flag_${category}`,
+    severity:   'critical',
+    details:    { prompt, student_email: student?.email ?? null, student_name: student?.name ?? null, city: student?.city ?? null },
+  });
+
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (!leaderEmails.size || !resendKey) return;
+
+  const categoryLabel = CATEGORY_LABELS[category];
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendKey}` },
+      body: JSON.stringify({
+        from:    'safety@nextvillage.community',
+        to:      [...leaderEmails],
+        subject: `[Safety Flag] ${categoryLabel} — ${student?.name || student?.email || 'a student'}`,
+        html: `<h2>${categoryLabel}</h2>
+<p><strong>Student:</strong> ${student?.name ?? 'unknown'} (${student?.email ?? 'no email on file'})</p>
+<p><strong>City/community:</strong> ${student?.city ?? 'unknown'}</p>
+<p><strong>Page:</strong> AI Image Creation</p>
+<p><strong>When:</strong> ${new Date().toISOString()}</p>
+<p><strong>What was requested</strong> (an image prompt, automatically flagged by an AI classifier and blocked — please review directly with the student before assuming intent):</p>
+<blockquote style="border-left:3px solid #ccc;padding-left:12px;color:#333;">${prompt.replace(/</g, '&lt;').slice(0, 1000)}</blockquote>
+<p>The image was not generated. This is an automated flag — please follow up with the student.</p>`,
+      }),
+    });
+  } catch { /* never block the response for an alert email */ }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin':  '*',
@@ -80,6 +213,21 @@ Deno.serve(async (req: Request) => {
     const safeAspectRatio = ['1:1', '16:9', '9:16', '4:3', '3:4'].includes(aspect_ratio)
       ? aspect_ratio : '16:9';
     const safeSteps       = Math.min(Math.max(steps ?? 4, 1), 8);
+
+    // ── Moderate the prompt before generating anything ─────────────────────
+    // Unlike the chat guardrails (which flag-and-alert without blocking, so
+    // the model's own caring response still reaches the student), an image
+    // prompt has no equivalent "helpful" response to fall back on — a flagged
+    // prompt is refused outright, not generated. The leader alert still
+    // fires either way.
+    const flaggedCategory = await moderatePrompt(safePrompt);
+    if (flaggedCategory !== 'none') {
+      notifyLeadersOfSafetyFlag(supabase, user.id, flaggedCategory, safePrompt).catch(() => {});
+      return new Response(
+        JSON.stringify({ error: "Let's try a different idea for your picture — ask a facilitator if you're not sure why this one didn't work." }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
 
     // ── Insert job row ────────────────────────────────────────────────────
     const { data: jobRow, error: insertError } = await supabase
