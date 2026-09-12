@@ -98,17 +98,28 @@ const SAFETY_FALLBACK_EMAILS = (Deno.env.get('SAFETY_ALERT_FALLBACK_EMAIL') ?? '
 // "reuse prompt" (that's a display of their own text to themselves, not a
 // call to an AI model, so the scrub requirement doesn't apply to it).
 
-const IMG_EMAIL_RE  = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
-const IMG_PHONE_RE  = /(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g;
-const IMG_HANDLE_RE = /(?<![\w@])@[A-Za-z0-9_]{2,}/g;
-const IMG_STREET_RE = /\b\d{1,6}\s+([A-Z][a-z]+\s){1,3}(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl)\.?\b/g;
+const IMG_EMAIL_RE      = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+const IMG_HANDLE_RE     = /(?<![\w@])@[A-Za-z0-9_]{2,}/g;
+const IMG_US_STREET_RE  = /\b\d{1,6}\s+([A-Z][a-z]+\s){1,3}(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl|Estate)\.?\b/g;
+const IMG_LOCAL_ADDR_RE = /\b(?:P\.?O\.?\s*Box\s*\d+|Plot\s+\d+[A-Za-z]?|House\s+(?:No\.?|Number)\s*\d+)\b/gi;
+// Any run of digits and phone-punctuation whose digit count falls in a
+// plausible phone-number range (7-15), regardless of grouping — catches
+// 3-3-4 (US), 4-3-3 (common in Kenya: 0712 345 678), and ungrouped
+// (0712345678, +254712345678, 08031234567 — Nigeria). The previous rigid
+// 3-3-4-only shape let every one of those through unscrubbed. See
+// api/_lib/piiScrubbing.js's identical fix for the full rationale.
+const IMG_PHONE_CANDIDATE_RE = /\+?\(?\d[\d\s().-]{5,14}\d\)?/g;
 
 function regexScrubPrompt(text: string): string {
   return text
     .replace(IMG_EMAIL_RE, '[email removed]')
-    .replace(IMG_PHONE_RE, '[phone number removed]')
     .replace(IMG_HANDLE_RE, '[handle removed]')
-    .replace(IMG_STREET_RE, '[address removed]');
+    .replace(IMG_US_STREET_RE, '[address removed]')
+    .replace(IMG_LOCAL_ADDR_RE, '[address removed]')
+    .replace(IMG_PHONE_CANDIDATE_RE, (match) => {
+      const digits = match.replace(/\D/g, '');
+      return (digits.length >= 7 && digits.length <= 15) ? '[number removed]' : match;
+    });
 }
 
 async function fetchFirstName(supabase: ReturnType<typeof createClient>, userId: string): Promise<string | null> {
@@ -122,7 +133,11 @@ async function fetchFirstName(supabase: ReturnType<typeof createClient>, userId:
   }
 }
 
-async function scrubPromptPII(text: string, firstName: string | null): Promise<string> {
+async function scrubPromptPII(
+  supabase: ReturnType<typeof createClient>,
+  text: string,
+  firstName: string | null,
+): Promise<string> {
   const regexScrubbed = regexScrubPrompt(text);
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey || !regexScrubbed.trim()) return regexScrubbed;
@@ -152,11 +167,19 @@ Replace anything removed with a short neutral placeholder like [name removed], [
         messages: [{ role: 'user', content: regexScrubbed.slice(0, 2000) }],
       }),
     });
-    if (!upstream.ok) return regexScrubbed;
+    if (!upstream.ok) {
+      await logEvent(supabase, { event_type: 'pii_scrub_upstream_error', severity: 'warning', details: { status: upstream.status } });
+      return regexScrubbed;
+    }
     const data = await upstream.json();
     const rewritten = (data?.content ?? []).find((b: { type: string }) => b?.type === 'text')?.text;
-    return (rewritten && rewritten.trim()) ? rewritten.trim() : regexScrubbed;
-  } catch {
+    if (!rewritten || !rewritten.trim()) {
+      await logEvent(supabase, { event_type: 'pii_scrub_empty_response', severity: 'warning', details: { stop_reason: data?.stop_reason ?? null } });
+      return regexScrubbed;
+    }
+    return rewritten.trim();
+  } catch (err) {
+    await logEvent(supabase, { event_type: 'pii_scrub_exception', severity: 'warning', details: { error: String(err) } });
     return regexScrubbed; // never fall back further than the regex pass
   }
 }
@@ -293,11 +316,15 @@ Deno.serve(async (req: Request) => {
     const safeSteps       = Math.min(Math.max(steps ?? 4, 1), 8);
 
     // ── Moderate the prompt before generating anything ─────────────────────
-    // Unlike the chat guardrails (which flag-and-alert without blocking, so
-    // the model's own caring response still reaches the student), an image
-    // prompt has no equivalent "helpful" response to fall back on — a flagged
-    // prompt is refused outright, not generated. The leader alert still
-    // fires either way.
+    // Ordering invariant, deliberate not accidental (mirrors
+    // api/_lib/piiScrubbing.js's identical note): moderate the RAW prompt,
+    // before any scrubbing — a harm_to_others or self_harm flag needs to
+    // reach the community leader with the actual words the student wrote,
+    // not "[name removed]". Unlike the chat guardrails (which flag-and-alert
+    // without blocking, so the model's own caring response still reaches the
+    // student), an image prompt has no equivalent "helpful" response to fall
+    // back on — a flagged prompt is refused outright, not generated. The
+    // leader alert still fires either way.
     const flaggedCategory = await moderatePrompt(safePrompt);
     if (flaggedCategory !== 'none') {
       notifyLeadersOfSafetyFlag(supabase, user.id, flaggedCategory, safePrompt).catch(() => {});
@@ -310,8 +337,8 @@ Deno.serve(async (req: Request) => {
     // ── Scrub personal info before this ever reaches the image model ──────
     // The original safePrompt is still what's stored below and shown back
     // to the student — only what's sent to Replicate uses the scrubbed text.
-    const firstName    = await fetchFirstName(supabase, user.id);
-    const scrubbedPrompt = await scrubPromptPII(safePrompt, firstName);
+    const firstName      = await fetchFirstName(supabase, user.id);
+    const scrubbedPrompt = await scrubPromptPII(supabase, safePrompt, firstName);
 
     // ── Insert job row ────────────────────────────────────────────────────
     const { data: jobRow, error: insertError } = await supabase

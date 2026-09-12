@@ -470,6 +470,10 @@ export default async function handler(req) {
   // Fire-and-forget: classify the latest (pre-scrub) user message and email
   // the student's community leader(s) if it's flagged. Never awaited — must
   // not add latency to, or ever block, the actual stream.
+  // Ordering invariant, deliberate not accidental (see piiScrubbing.js's
+  // module doc comment): moderate the RAW message before it's scrubbed. A
+  // harm_to_others or self_harm flag needs to reach the community leader
+  // with the actual words the student wrote, not "[name removed]".
   checkAndEscalate({
     messages: rawMessages, userId: user_id, page: 'AIPlaygroundPage',
     supabaseUrl: SUPABASE_URL, supabaseKey: SUPABASE_KEY, resendKey: RESEND_KEY,
@@ -478,9 +482,11 @@ export default async function handler(req) {
 
   // Blocking privacy gate — must happen before compression too: compression
   // summarizes old messages via its own Haiku call below, which would leak
-  // raw PII to that call if this ran after it instead of before.
+  // raw PII to that call if this ran after it instead of before. Always
+  // 'strict' tier — this endpoint is AIPlaygroundPage only, never one of
+  // the community-helper consultant pages (those go through api/chat.js).
   const firstName = await fetchFirstName(user_id, SUPABASE_URL, SUPABASE_KEY);
-  const messages  = await scrubMessagesPII(rawMessages, firstName);
+  const messages  = await scrubMessagesPII(rawMessages, firstName, 'strict', (evt) => logEvent({ function_name: 'chat-stream', user_id, cohort, ...evt }));
 
   // appendSafetyFloor always returns a non-empty string (SAFETY_FLOOR itself
   // if the caller sent none), so systemPayload is never undefined here —
