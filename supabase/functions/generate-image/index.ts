@@ -83,6 +83,84 @@ async function moderatePrompt(text: string): Promise<SafetyCategory> {
 const SAFETY_FALLBACK_EMAILS = (Deno.env.get('SAFETY_ALERT_FALLBACK_EMAIL') ?? '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
+// ── PII scrubbing (mirrors api/_lib/piiScrubbing.js on the Vercel side) ─────
+//
+// Removes personal information from the learner's own typed prompt before
+// it's sent to the image model — the learner's own first name is the only
+// personal detail allowed through. Two layers: a regex pass (emails, phone
+// numbers, handles, street addresses — zero cost, always runs) then an LLM
+// rewrite pass for names/schools/locations the regex can't catch. On any
+// failure this falls back no further than the regex-scrubbed text — never
+// back to the original raw prompt.
+//
+// Only what's sent to Replicate is scrubbed — the original prompt is still
+// what's stored in image_generations and shown back to the student for
+// "reuse prompt" (that's a display of their own text to themselves, not a
+// call to an AI model, so the scrub requirement doesn't apply to it).
+
+const IMG_EMAIL_RE  = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+const IMG_PHONE_RE  = /(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g;
+const IMG_HANDLE_RE = /(?<![\w@])@[A-Za-z0-9_]{2,}/g;
+const IMG_STREET_RE = /\b\d{1,6}\s+([A-Z][a-z]+\s){1,3}(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl)\.?\b/g;
+
+function regexScrubPrompt(text: string): string {
+  return text
+    .replace(IMG_EMAIL_RE, '[email removed]')
+    .replace(IMG_PHONE_RE, '[phone number removed]')
+    .replace(IMG_HANDLE_RE, '[handle removed]')
+    .replace(IMG_STREET_RE, '[address removed]');
+}
+
+async function fetchFirstName(supabase: ReturnType<typeof createClient>, userId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase.from('profiles').select('name').eq('id', userId).maybeSingle();
+    const name = (data as { name?: string } | null)?.name;
+    if (!name) return null;
+    return name.trim().split(/\s+/)[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+async function scrubPromptPII(text: string, firstName: string | null): Promise<string> {
+  const regexScrubbed = regexScrubPrompt(text);
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!apiKey || !regexScrubbed.trim()) return regexScrubbed;
+
+  const system = `You rewrite an image description written by a student, to remove personal information before it reaches an image-generation model. Rewrite it, keeping the visual description intent exactly as written, EXCEPT:
+
+- Remove any last name / family name. ${firstName ? `The student's own first name is "${firstName}" — you may keep that one word if it appears.` : 'Remove any first name too, since none is confirmed for this student.'}
+- Remove any other person's name.
+- Remove school names, exact addresses, towns/neighborhoods, and other specific location details.
+- Some personal info may already be replaced with [placeholders] — leave those as-is.
+
+Replace anything removed with a short neutral placeholder like [name removed], [school removed] — keep the description usable for generating an image. Reply with ONLY the rewritten description, nothing else — no preamble, no quotes.`;
+
+  try {
+    const upstream = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type':      'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        temperature: 0,
+        system,
+        messages: [{ role: 'user', content: regexScrubbed.slice(0, 2000) }],
+      }),
+    });
+    if (!upstream.ok) return regexScrubbed;
+    const data = await upstream.json();
+    const rewritten = (data?.content ?? []).find((b: { type: string }) => b?.type === 'text')?.text;
+    return (rewritten && rewritten.trim()) ? rewritten.trim() : regexScrubbed;
+  } catch {
+    return regexScrubbed; // never fall back further than the regex pass
+  }
+}
+
 const CATEGORY_LABELS: Record<SafetyCategory, string> = {
   none:                   'none',
   self_harm:              'Possible self-harm / distress',
@@ -229,6 +307,12 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // ── Scrub personal info before this ever reaches the image model ──────
+    // The original safePrompt is still what's stored below and shown back
+    // to the student — only what's sent to Replicate uses the scrubbed text.
+    const firstName    = await fetchFirstName(supabase, user.id);
+    const scrubbedPrompt = await scrubPromptPII(safePrompt, firstName);
+
     // ── Insert job row ────────────────────────────────────────────────────
     const { data: jobRow, error: insertError } = await supabase
       .from('image_generations')
@@ -271,7 +355,7 @@ Deno.serve(async (req: Request) => {
       }),
       body: JSON.stringify({
         input: {
-          prompt:       `${safePrompt}. ${SAFETY_SUFFIX}`,
+          prompt:       `${scrubbedPrompt}. ${SAFETY_SUFFIX}`,
           aspect_ratio: safeAspectRatio,
           num_outputs:  1,
           num_inference_steps: safeSteps,

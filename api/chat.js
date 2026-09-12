@@ -4,6 +4,7 @@
 // — shared with api/chat-stream.js so both AI text endpoints get the same
 // baseline regardless of which page's system prompt (or lack of one) called them.
 import { appendSafetyFloor, checkAndEscalate } from './_lib/safetyGuardrails.js';
+import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 //
 // ROUTING LOGIC:
 //   page = 'AILearningPage' | 'EnglishSkillsPage' |
@@ -1141,17 +1142,25 @@ export default async function handler(req, res) {
 
     // Strip any lone surrogates before this content reaches provider request
     // bodies — see sanitizeContent/stripLoneSurrogates above.
-    const messages = rawMessages.map(m => ({ ...m, content: sanitizeContent(m.content) }));
+    let messages   = rawMessages.map(m => ({ ...m, content: sanitizeContent(m.content) }));
     const system   = appendSafetyFloor(stripLoneSurrogates(rawSystem));
 
-    // Fire-and-forget: classify the latest user message and email the
-    // student's community leader(s) if it's flagged. Never awaited — must
-    // not add latency to, or ever block, the actual chat response.
+    // Fire-and-forget: classify the latest (pre-scrub) user message and
+    // email the student's community leader(s) if it's flagged. Never
+    // awaited — must not add latency to, or ever block, the actual response.
     checkAndEscalate({
       messages, userId, page,
       supabaseUrl: TRIAGE_SUPABASE_URL, supabaseKey: TRIAGE_SUPABASE_KEY, resendKey: TRIAGE_RESEND_KEY,
       logEvent,
     });
+
+    // Blocking privacy gate — unlike the moderation check above, this MUST
+    // be awaited: the scrubbed messages, not the raw ones, are what every
+    // downstream model call below actually sends. See piiScrubbing.js for
+    // why every user message is re-scrubbed on every request rather than
+    // just the newest one.
+    const firstName = await fetchFirstName(userId, TRIAGE_SUPABASE_URL, TRIAGE_SUPABASE_KEY);
+    messages = await scrubMessagesPII(messages, firstName);
 
     // Pick up any model_config changes (cached 5 min; falls back to defaults on failure)
     await refreshModels();
