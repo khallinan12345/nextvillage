@@ -68,10 +68,13 @@ const FREE_TIER_PAGES = new Set([
   'SkillsDevelopmentPage',
   'AgricultureConsultantPage',
   'FishingConsultantPage',
-  'HealthcareNavigatorPage',
   'EntrepreneurshipConsultantPage',
   'AIAmbassadorsPage',
   'PidginTranslationModule',
+  // HealthcareNavigatorPage deliberately excluded: health-adjacent
+  // conversation text should only ever reach Anthropic, not the free-tier
+  // fallback chain (Groq/Gemini/Cloudflare/OpenRouter/Mistral/DeepSeek) —
+  // it falls through to the default Anthropic Haiku route below instead.
 ]);
 
 // Pages where the conversation is fundamentally about a real community

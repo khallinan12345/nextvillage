@@ -102,24 +102,33 @@ const IMG_EMAIL_RE      = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 const IMG_HANDLE_RE     = /(?<![\w@])@[A-Za-z0-9_]{2,}/g;
 const IMG_US_STREET_RE  = /\b\d{1,6}\s+([A-Z][a-z]+\s){1,3}(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl|Estate)\.?\b/g;
 const IMG_LOCAL_ADDR_RE = /\b(?:P\.?O\.?\s*Box\s*\d+|Plot\s+\d+[A-Za-z]?|House\s+(?:No\.?|Number)\s*\d+)\b/gi;
-// Any run of digits and phone-punctuation whose digit count falls in a
-// plausible phone-number range (7-15), regardless of grouping — catches
-// 3-3-4 (US), 4-3-3 (common in Kenya: 0712 345 678), and ungrouped
-// (0712345678, +254712345678, 08031234567 — Nigeria). The previous rigid
-// 3-3-4-only shape let every one of those through unscrubbed. See
-// api/_lib/piiScrubbing.js's identical fix for the full rationale.
-const IMG_PHONE_CANDIDATE_RE = /\+?\(?\d[\d\s().-]{5,14}\d\)?/g;
+// Phone numbers, in any common grouping — see api/_lib/piiScrubbing.js's
+// identical regex for the full rationale. Two shapes, both digit-count
+// bounded (7-15) as a final sanity check:
+//   - FORMATTED: at least two separators among the digits — genuinely
+//     phone-shaped, and specifically NOT a plain decimal (one separator).
+//   - BARE: no separators, but starts with "+" or a single leading "0" —
+//     the trunk-prefix/international convention real phone numbers use.
+// A bare number with neither (a math/science answer, an ID) is left alone.
+const IMG_FORMATTED_PHONE_RE = /\+?\(?\d{1,4}\)?(?:[\s.-]\(?\d{1,4}\)?){2,}/g;
+const IMG_BARE_PHONE_RE      = /(?:\+\d{9,14}|0\d{8,12})\b/g;
+
+function scrubImagePhoneCandidates(text: string, re: RegExp): string {
+  return text.replace(re, (match) => {
+    const digits = match.replace(/\D/g, '');
+    return (digits.length >= 7 && digits.length <= 15) ? '[number removed]' : match;
+  });
+}
 
 function regexScrubPrompt(text: string): string {
-  return text
+  let out = text
     .replace(IMG_EMAIL_RE, '[email removed]')
     .replace(IMG_HANDLE_RE, '[handle removed]')
     .replace(IMG_US_STREET_RE, '[address removed]')
-    .replace(IMG_LOCAL_ADDR_RE, '[address removed]')
-    .replace(IMG_PHONE_CANDIDATE_RE, (match) => {
-      const digits = match.replace(/\D/g, '');
-      return (digits.length >= 7 && digits.length <= 15) ? '[number removed]' : match;
-    });
+    .replace(IMG_LOCAL_ADDR_RE, '[address removed]');
+  out = scrubImagePhoneCandidates(out, IMG_FORMATTED_PHONE_RE);
+  out = scrubImagePhoneCandidates(out, IMG_BARE_PHONE_RE);
+  return out;
 }
 
 async function fetchFirstName(supabase: ReturnType<typeof createClient>, userId: string): Promise<string | null> {
@@ -145,11 +154,11 @@ async function scrubPromptPII(
   const system = `You rewrite an image description written by a student, to remove personal information before it reaches an image-generation model. Rewrite it, keeping the visual description intent exactly as written, EXCEPT:
 
 - Remove any last name / family name. ${firstName ? `The student's own first name is "${firstName}" — you may keep that one word if it appears.` : 'Remove any first name too, since none is confirmed for this student.'}
-- Remove any other person's name.
+- Replace any other person's name with their relationship if the text states or implies one ("my brother", "my friend", "my teacher") — never leave a real name in, and never invent a relationship the text doesn't support (use "someone I know" if none is given). If the relationship is already stated right next to the name (e.g. "my brother Emeka"), just drop the name rather than repeating the relationship word twice.
 - Remove school names, exact addresses, towns/neighborhoods, and other specific location details.
 - Some personal info may already be replaced with [placeholders] — leave those as-is.
 
-Replace anything removed with a short neutral placeholder like [name removed], [school removed] — keep the description usable for generating an image. Reply with ONLY the rewritten description, nothing else — no preamble, no quotes.`;
+Replace anything removed with a short neutral placeholder like [name removed], [school removed] where no relationship applies — keep the description usable for generating an image. Reply with ONLY the rewritten description, nothing else — no preamble, no quotes.`;
 
   try {
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
