@@ -150,6 +150,8 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   // ── Educational goals, assets, data protection, tools (optional) ─────────
   const [educationalGoals, setEducationalGoals]       = useState('');
   const [communityAssets, setCommunityAssets]         = useState('');
+  const [orgOfferings, setOrgOfferings]               = useState('');
+  const [orgWishlist, setOrgWishlist]                 = useState('');
   const [dataRetentionPreference, setDataRetentionPreference] = useState('');
   const [enabledTools, setEnabledTools]               = useState<string[]>([...ALL_TOOLS]);
 
@@ -378,6 +380,8 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         if (communityHopes.trim())            orgUpdates.community_hopes       = communityHopes.trim();
         if (educationalGoals.trim())          orgUpdates.educational_goals     = educationalGoals.trim();
         if (communityAssets.trim())           orgUpdates.community_assets      = communityAssets.trim();
+        if (orgOfferings.trim())              orgUpdates.org_offerings         = orgOfferings.trim();
+        if (orgWishlist.trim())               orgUpdates.org_wishlist          = orgWishlist.trim();
         if (dataRetentionPreference)          orgUpdates.data_retention_preference = dataRetentionPreference;
         if (enabledTools.length)              orgUpdates.enabled_tools         = enabledTools;
         if (Object.keys(orgUpdates).length) {
@@ -1031,6 +1035,24 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                         rows={2}
                         className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
                         placeholder="e.g. Prepare learners for exams, build AI skills for local jobs, launch youth-led businesses…" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        🤝 What could your organization offer other communities on the platform?
+                      </label>
+                      <textarea value={orgOfferings} onChange={e => setOrgOfferings(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
+                        placeholder="e.g. Financial literacy curriculum, social-emotional learning expertise, mentorship for new sites…" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        💡 What do you wish nextVillage had more of?
+                      </label>
+                      <textarea value={orgWishlist} onChange={e => setOrgWishlist(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
+                        placeholder="e.g. Social-emotional learning content, a specific subject area, a tool your learners need…" />
                     </div>
                   </div>
 
