@@ -67,6 +67,8 @@ interface OrgInfo {
   community_hopes?: string | null;
   community_assets?: string | null;
   educational_goals?: string | null;
+  org_offerings?: string | null;
+  org_wishlist?: string | null;
   data_retention_preference?: string | null;
   enabled_tools?: string[] | null;
 }
@@ -205,6 +207,8 @@ const ProfilePage: React.FC = () => {
     community_livelihood: '',
     community_challenges: '',
     community_hopes: '',
+    org_offerings: '',
+    org_wishlist: '',
     data_retention_preference: '',
     enabled_tools: [] as string[],
   });
@@ -407,7 +411,7 @@ const ProfilePage: React.FC = () => {
       if (profileData.organization_id) {
         const { data: orgData } = await supabase
           .from('organizations')
-          .select('id, name, join_code, join_codes, continent, country, city, description, community_livelihood, community_challenges, community_hopes, community_assets, educational_goals, data_retention_preference, enabled_tools')
+          .select('id, name, join_code, join_codes, continent, country, city, description, community_livelihood, community_challenges, community_hopes, community_assets, educational_goals, org_offerings, org_wishlist, data_retention_preference, enabled_tools')
           .eq('id', profileData.organization_id)
           .single();
         if (orgData) {
@@ -432,6 +436,8 @@ const ProfilePage: React.FC = () => {
             community_livelihood:      orgData.community_livelihood ?? '',
             community_challenges:      orgData.community_challenges ?? '',
             community_hopes:           orgData.community_hopes ?? '',
+            org_offerings:             orgData.org_offerings ?? '',
+            org_wishlist:              orgData.org_wishlist ?? '',
             data_retention_preference: orgData.data_retention_preference ?? '',
             enabled_tools:             orgData.enabled_tools ?? [],
           });
@@ -631,6 +637,8 @@ const ProfilePage: React.FC = () => {
           community_livelihood:      orgFormData.community_livelihood.trim() || null,
           community_challenges:      orgFormData.community_challenges.trim() || null,
           community_hopes:           orgFormData.community_hopes.trim() || null,
+          org_offerings:             orgFormData.org_offerings.trim() || null,
+          org_wishlist:              orgFormData.org_wishlist.trim() || null,
           data_retention_preference: orgFormData.data_retention_preference || null,
           enabled_tools:             orgFormData.enabled_tools,
           updated_at:                new Date().toISOString(),
@@ -1360,6 +1368,8 @@ const ProfilePage: React.FC = () => {
                                 { label: '🌾 Community livelihood', value: orgInfo.community_livelihood },
                                 { label: '⚡ Community challenges', value: orgInfo.community_challenges },
                                 { label: '🌟 Community hopes',      value: orgInfo.community_hopes },
+                                { label: '🤝 What we could offer other communities', value: orgInfo.org_offerings },
+                                { label: '💡 What we wish nextVillage had more of',  value: orgInfo.org_wishlist },
                               ].map(row => (
                                 <div key={row.label}>
                                   <p className="text-xs font-medium text-gray-500">{row.label}</p>
@@ -1412,6 +1422,18 @@ const ProfilePage: React.FC = () => {
                                 <label className="block text-xs font-medium text-gray-600 mb-1">🌟 What are your community's hopes for the future?</label>
                                 <textarea rows={2} value={orgFormData.community_hopes}
                                   onChange={e => setOrgFormData(p => ({ ...p, community_hopes: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">🤝 What could your organization offer other communities?</label>
+                                <textarea rows={2} value={orgFormData.org_offerings}
+                                  onChange={e => setOrgFormData(p => ({ ...p, org_offerings: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">💡 What do you wish nextVillage had more of?</label>
+                                <textarea rows={2} value={orgFormData.org_wishlist}
+                                  onChange={e => setOrgFormData(p => ({ ...p, org_wishlist: e.target.value }))}
                                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
                               </div>
                               <div>
