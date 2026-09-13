@@ -2476,6 +2476,10 @@ const PublicLandingPage: React.FC = () => {
                 display: "flex", flexWrap: "wrap", justifyContent: "center",
                 gap: "0.6rem 1.6rem", marginTop: "1.75rem",
               }}>
+                <a href="https://claude.ai/code/artifact/8894b95d-6999-4b07-9a44-996a91122af1" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
+                  <BookOpen size={14} /> From Sign-Up to First Activity <ExternalLink size={12} />
+                </a>
                 <a href="/docs/Community-Onboarding-Guide.html" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
                   <BookOpen size={14} /> Community Onboarding Guide <ExternalLink size={12} />
