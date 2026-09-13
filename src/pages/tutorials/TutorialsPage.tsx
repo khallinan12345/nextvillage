@@ -156,12 +156,12 @@ const TRACKS: Track[] = [
   {
     id: 'seed-to-multiplier',
     path: '/tutorials/seed-to-multiplier',
-    title: 'Seed to Multiplier: The Vibe Coding Path',
+    title: 'The Core Path',
     blurb:
-      'A single ordered curriculum, not a free-choice catalog: AI Foundations, then AI-Ready Skills, then Vibe Coding, then Web Development, then a Full-Stack capstone. Each step stays locked until you pass the certification exam for the step before it.',
+      'The curriculum every learner follows after onboarding — one ordered path, not a free-choice catalog: AI Foundations, then AI-Ready Skills, then Vibe Coding, then Web Development, then a Full-Stack capstone. Each step stays locked until you pass the certification exam for the step before it.',
     duration: 'about 10 weeks',
     totalSteps: 5,
-    tags: ['Certifications', 'Vibe Coding', 'Structured Path'],
+    tags: ['Certifications', 'Structured Path'],
     available: true,
     category: 'curriculum',
     Icon: Map,

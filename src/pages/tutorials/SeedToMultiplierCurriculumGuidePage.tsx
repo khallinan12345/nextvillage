@@ -1,9 +1,11 @@
 // src/pages/tutorials/SeedToMultiplierCurriculumGuidePage.tsx
+// Displayed to learners as "The Core Path".
 //
 // The platform's first structured Curriculum: a single ordered path from
 // AI Foundations through a Full-Stack capstone, based on the "Seed to
 // Multiplier" program-strategy document (Track A: publish the path before
-// building the engineering behind it — see /docs for the source plan).
+// building the engineering behind it — see /docs for the source plan). This
+// is the curriculum every learner is meant to follow right after onboarding.
 //
 // Unlike the AI Learning / Skill Development "Start Here" tracks (which gate
 // on individual activity scores), each step here is gated on an actual
@@ -164,11 +166,11 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
         {/* header */}
         <div className="mb-6 rounded-2xl bg-gradient-to-br from-emerald-950 to-emerald-800 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">Curriculum</p>
-          <h1 className="mt-1 text-3xl font-extrabold">Seed to Multiplier: The Vibe Coding Path</h1>
+          <h1 className="mt-1 text-3xl font-extrabold">The Core Path</h1>
           <p className="mt-1 max-w-xl text-sm text-emerald-100">
-            One ordered path, five certification exams. Pass each one — score Proficient or better —
-            to unlock the next step. No exam, no advancement: this is the structured schedule the
-            free-choice catalog didn't give you.
+            This is the path every learner follows after onboarding — one ordered curriculum, five
+            certification exams. Pass each one — score Proficient or better — to unlock the next step.
+            No exam, no advancement.
           </p>
 
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm text-emerald-50">
