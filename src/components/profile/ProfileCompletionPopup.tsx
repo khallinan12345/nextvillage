@@ -399,6 +399,15 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         }).catch(err => {
           console.warn('[ProfileCompletionPopup] Module generation request failed to start:', err);
         });
+
+        // ── Notify the platform admins of the new signup (fire-and-forget) ────
+        fetch('/api/notify-org-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ organization_id: orgData.id }),
+        }).catch(err => {
+          console.warn('[ProfileCompletionPopup] Admin signup notification failed to send:', err);
+        });
       }
 
       // ── LEARNER with code: link to org ─────────────────────────────────────

@@ -2470,7 +2470,7 @@ const PublicLandingPage: React.FC = () => {
               </p>
               <a href="mailto:bennywhite.davidson@renewvia.com?subject=New Community Interest — vAI Platform"
                 className="pub-btn btn-amber" style={{ fontSize: "1rem", padding: "0.82rem 1.9rem" }}>
-                Contact Us to Get Started <ArrowRight size={15} />
+                Contact Us to Learn More <ArrowRight size={15} />
               </a>
               <div style={{
                 display: "flex", flexWrap: "wrap", justifyContent: "center",
