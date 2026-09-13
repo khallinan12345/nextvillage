@@ -2478,7 +2478,7 @@ const PublicLandingPage: React.FC = () => {
               }}>
                 <a href="/docs/Onboarding-First-Steps.html" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
-                  <BookOpen size={14} /> From Sign-Up to First Activity <ExternalLink size={12} />
+                  <BookOpen size={14} /> From Sign-Up to First Steps <ExternalLink size={12} />
                 </a>
                 <a href="/docs/Community-Onboarding-Guide.html" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>

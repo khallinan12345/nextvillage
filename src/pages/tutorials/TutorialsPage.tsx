@@ -117,7 +117,7 @@ const TRACKS: Track[] = [
   {
     id: 'ai-discovery-camp',
     path: '/tutorials/ai-discovery-camp',
-    title: 'AI Discovery Camp',
+    title: 'AI Discovery',
     blurb:
       'Five days of creating with AI, for campers just getting started — build a robot, a character, a story, and a game with AI, one day at a time, and ask AI to make each one better before moving on.',
     duration: 'five days',
