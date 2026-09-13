@@ -2484,6 +2484,10 @@ const PublicLandingPage: React.FC = () => {
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
                   <BookOpen size={14} /> Questions Communities Ask <ExternalLink size={12} />
                 </a>
+                <a href="/docs/Data-Protection-Summary.html" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
+                  <BookOpen size={14} /> Data Protection Summary <ExternalLink size={12} />
+                </a>
               </div>
             </div>
           </div>
