@@ -752,27 +752,28 @@ function buildSkillsMockActivities(): DashboardActivity[] {
   return mockActivities;
 }
 
-// Dayton (Back to Basics Youth Education) Skills catalog — unlike the
-// Nigeria/Oloibiri mock catalog above (hand-authored, solar-themed titles
-// with no real learning_modules row behind them), this pulls the real
-// Dayton-tailored rows generated for city_town='Dayton' so that starting a
-// session loads the actual localized title/description/facilitator+
-// assessment instructions via fetchActivityDetails(learning_module_id)
-// instead of falling back to generic text. The catalog `id` still gets a
-// 'mock-' prefix so the existing isMockActivity guards (which skip writing
-// to the real `dashboard` table for browse-only catalog entries) still apply.
-async function fetchDaytonSkillsActivities(): Promise<DashboardActivity[]> {
+// An organization's own Skills catalog — unlike the generic hand-authored
+// mock catalog below (solar-themed titles with no real learning_modules row
+// behind them, used only when an organization has no localized content of
+// its own yet), this pulls the real rows generated and tagged for this
+// specific organization_id so that starting a session loads the actual
+// localized title/description/facilitator+assessment instructions via
+// fetchActivityDetails(learning_module_id) instead of falling back to
+// generic text. The catalog `id` still gets a 'mock-' prefix so the existing
+// isMockActivity guards (which skip writing to the real `dashboard` table
+// for browse-only catalog entries) still apply.
+async function fetchOrgSkillsActivities(organizationId: string): Promise<DashboardActivity[]> {
   const { data, error } = await supabase
     .from('learning_modules')
     .select('learning_module_id, title, description, sub_category, learning_or_certification, updated_at')
     .eq('category', 'Skills')
-    .eq('city_town', 'Dayton')
+    .eq('organization_id', organizationId)
     .eq('public', 1)
     .neq('sub_category', 'Vibe Coding')
     .order('sub_category', { ascending: true });
 
   if (error) {
-    console.error('[Skills Activities] Error fetching Dayton modules:', error);
+    console.error('[Skills Activities] Error fetching organization modules:', error);
     return [];
   }
 
@@ -1372,6 +1373,7 @@ const AIReadySkillsPage: React.FC = () => {
   const [userGradeLevel, setUserGradeLevel] = useState<number | null>(null);
   const [userContinent, setUserContinent] = useState<string | null>(null);
   const [userCity, setUserCity] = useState<string | null>(null);
+  const [userOrganizationId, setUserOrganizationId] = useState<string | null>(null);
   const [personalityBaseline, setPersonalityBaseline] = useState<PersonalityBaseline>({
     communicationStrategy: null,
     learningStrategy: null
@@ -1603,7 +1605,7 @@ const AIReadySkillsPage: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('grade_level, continent, city, country')
+        .select('grade_level, continent, city, country, organization_id')
         .eq('id', userId)
         .single();
 
@@ -1614,6 +1616,7 @@ const AIReadySkillsPage: React.FC = () => {
         continent: data?.continent || null,
         city: data?.city || null,
         country: data?.country || null,
+        organizationId: data?.organization_id || null,
       };
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -1622,6 +1625,7 @@ const AIReadySkillsPage: React.FC = () => {
         continent: null,
         city: null,
         country: null,
+        organizationId: null,
       };
     }
   };
@@ -1730,20 +1734,21 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
   };
 
   // Load dashboard activities
-  const loadDashboardActivities = async (city?: string | null) => {
+  const loadDashboardActivities = async (city?: string | null, organizationId?: string | null) => {
     if (!user?.id) return;
 
     try {
       setLoading(true);
 
-      // Resolve which city_town to show: Ibiade users see Ibiade modules, Dayton
-      // (Back to Basics Youth Education) users see Dayton modules, everyone else sees Oloibiri
+      // Legacy fallback for accounts predating organization_id tagging —
+      // Ibiade/Dayton/Oloibiri are now backfilled with organization_id, so
+      // this only matters for an account with neither set.
       const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
       console.log('[Skills Activities] Querying with JOIN to learning_modules');
       console.log('[Skills Activities] User ID:', user.id);
-      console.log('[Skills Activities] Filtering by city_town:', cityTown);
-      
+      console.log('[Skills Activities] Filtering by organization_id:', organizationId, 'fallback city_town:', cityTown);
+
       // Join with learning_modules to get the actual category
       const { data: dashboardData, error } = await supabase
         .from('dashboard')
@@ -1754,7 +1759,8 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
             sub_category,
             learning_or_certification,
             public,
-            city_town
+            city_town,
+            organization_id
           )
         `)
         .eq('user_id', user.id)
@@ -1767,15 +1773,13 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
         throw error;
       }
 
-      // Filter for Skills category, correct city_town, excluding Vibe Coding
+      // Filter for Skills category, this learner's own organization (or
+      // legacy city_town for accounts with no organization_id), excluding Vibe Coding
       const skillsActivities = (dashboardData?.filter(activity => {
         const module = activity.learning_modules;
-        return (
-          module &&
-          module.category === 'Skills' &&
-          module.sub_category !== 'Vibe Coding' &&
-          (module.city_town === cityTown || module.city_town == null)
-        );
+        if (!module || module.category !== 'Skills' || module.sub_category === 'Vibe Coding') return false;
+        if (organizationId) return module.organization_id === organizationId || module.organization_id == null;
+        return module.city_town === cityTown || module.city_town == null;
       }) || []).map(activity => ({
         ...activity,
         isPublic: activity.learning_modules?.public === 1 ||
@@ -1785,15 +1789,11 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
       console.log('[Skills Activities] Loaded', dashboardData?.length || 0, 'total activities');
       console.log('[Skills Activities] Filtered to', skillsActivities.length, 'Skills activities');
 
-      // Dayton (Back to Basics) learners get the real, Dayton-tailored catalog
-      // generated for their city; everyone else keeps the existing mock catalog.
-      if (cityTown === 'Dayton') {
-        const daytonActivities = await fetchDaytonSkillsActivities();
-        setAllSkillsActivities(daytonActivities.length > 0 ? daytonActivities : buildSkillsMockActivities());
-      } else {
-        // Force full mock activity list regardless of DB results
-        setAllSkillsActivities(buildSkillsMockActivities());
-      }
+      // Learners whose organization has its own localized Skills catalog get
+      // it; everyone else (an org still generating content, or a legacy
+      // account) keeps the existing generic mock catalog.
+      const orgActivities = organizationId ? await fetchOrgSkillsActivities(organizationId) : [];
+      setAllSkillsActivities(orgActivities.length > 0 ? orgActivities : buildSkillsMockActivities());
     } catch (err) {
       console.error('[Skills Activities] Error loading:', err);
 
@@ -1806,20 +1806,21 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
   // Refresh dashboard
   const refreshDashboard = async () => {
     setRefreshing(true);
-    await loadDashboardActivities(userCity);
+    await loadDashboardActivities(userCity, userOrganizationId);
     setRefreshing(false);
   };
 
-  // Initial load — fetch profile first so city_town filter is applied immediately
+  // Initial load — fetch profile first so organization filter is applied immediately
   useEffect(() => {
     if (user?.id) {
       fetchUserProfile(user.id).then(profile => {
         setUserGradeLevel(profile.gradeLevel);
         setUserContinent(profile.continent);
         setUserCity(profile.city);
+        setUserOrganizationId(profile.organizationId);
         if (profile.country === 'Nigeria') setVoiceMode('pidgin');
         else setVoiceMode('english');
-        return loadDashboardActivities(profile.city);
+        return loadDashboardActivities(profile.city, profile.organizationId);
       });
       fetchPersonalityBaseline(user.id);
     }
@@ -3789,7 +3790,7 @@ Provide assessment now:`;
       // 3. Reset form and reload
       setShowCreateActivity(false);
       setCreateForm({ title: '', description: '', location: '', constraints: '', stakeholders: '', entrepreneurialContext: '', category: 'vibe-coding' });
-      await loadDashboardActivities(userCity);
+      await loadDashboardActivities(userCity, userOrganizationId);
 
       // 4. Launch the new activity directly
       const newActivity: DashboardActivity = {

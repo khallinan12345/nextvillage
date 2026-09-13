@@ -7,16 +7,18 @@
 // Communication — five activities each, locked in order.
 //
 // Unlike AI Learning's curated titles (which are generic and get the same
-// title cloned per city), Skills content is hand-localized per city with
-// entirely different titles from one city to the next — there's no shared
-// title list to hardcode. So instead of a fixed `suggestions: string[]`,
-// this page fetches the signed-in student's city_town's own `learning_modules`
-// catalog for `category = 'Skills'`, groups by sub_category, and takes the
-// first five per skill (alphabetical, for a stable order) as the suggested
-// activities. A skill with no rows in the student's city is treated as
-// automatically complete — nothing to block on — so it doesn't dead-end the
-// sequence, same non-blocking philosophy as an individual unavailable title
-// on the AI Learning track.
+// title cloned per organization), Skills content is hand-localized per
+// organization with entirely different titles from one to the next — there's
+// no shared title list to hardcode. So instead of a fixed `suggestions:
+// string[]`, this page fetches the signed-in student's own organization's
+// `learning_modules` catalog for `category = 'Skills'`, groups by
+// sub_category, and takes the first five per skill (alphabetical, for a
+// stable order) as the suggested activities. A skill with no rows in the
+// student's organization is treated as automatically complete — nothing to
+// block on — so it doesn't dead-end the sequence, same non-blocking
+// philosophy as an individual unavailable title on the AI Learning track.
+// Falls back to the legacy city_town match for any account with no
+// organization_id set.
 //
 // Progression is gated by real proficiency, not self-reporting: activity N+1
 // in a skill stays locked until activity N has been scored Proficient or
@@ -113,25 +115,28 @@ const SkillDevelopmentStartPage: React.FC = () => {
   // learning_module_id -> certification_evaluation_score
   const [scoreMap, setScoreMap] = useState<Record<string, number | null>>({});
 
-  /* ── resolve this student's city, then load each skill's first five activities and this student's scores on them ── */
+  /* ── resolve this student's organization, then load each skill's first five activities and this student's scores on them ── */
 
   useEffect(() => {
     if (!userId) { setLoaded(true); return; }
     let cancelled = false;
     (async () => {
-      const { data: profile } = await supabase.from('profiles').select('city').eq('id', userId).single();
+      const { data: profile } = await supabase.from('profiles').select('city, organization_id').eq('id', userId).single();
+      const organizationId = profile?.organization_id ?? null;
+      // Legacy fallback for accounts predating organization_id tagging.
       const city = profile?.city ?? null;
       const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
-      const { data: modules } = await supabase
+      let query = supabase
         .from('learning_modules')
         .select('learning_module_id, title, sub_category')
         .eq('category', 'Skills')
-        .eq('city_town', cityTown)
         .eq('public', 1)
         .in('sub_category', SKILLS.map(s => s.subCategory))
         .order('sub_category', { ascending: true })
         .order('title', { ascending: true });
+      query = organizationId ? query.eq('organization_id', organizationId) : query.eq('city_town', cityTown);
+      const { data: modules } = await query;
       if (cancelled) return;
 
       const bySkill: Record<string, SkillActivity[]> = {};
