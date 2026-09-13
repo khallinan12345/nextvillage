@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>From Sign-Up to First Activity</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --surface:#FFFFFF;
+    --ink:#1B2420;
+    --ink-soft:#516058;
+    --ink-faint:#8B978F;
+    --green:#1F5C4A;
+    --green-deep:#123328;
+    --green-bright:#2E8067;
+    --sage:#A9C7BC;
+    --sage-pale:#E9F1ED;
+    --amber:#B4681F;
+    --amber-pale:#FBF0E1;
+    --line:#DEE5E0;
+    --line-strong:#BFCEC6;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Public Sans', -apple-system, 'Segoe UI', sans-serif;
+    --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0E1713;
+      --surface:#152019;
+      --ink:#E7EFEA;
+      --ink-soft:#A9BBB2;
+      --ink-faint:#6E8078;
+      --green:#57C9A7;
+      --green-deep:#8FE0C6;
+      --green-bright:#4BC49E;
+      --sage:#3C5C50;
+      --sage-pale:#17251E;
+      --amber:#E0A25C;
+      --amber-pale:#2A2013;
+      --line:#243830;
+      --line-strong:#33493F;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1713;
+    --surface:#152019;
+    --ink:#E7EFEA;
+    --ink-soft:#A9BBB2;
+    --ink-faint:#6E8078;
+    --green:#57C9A7;
+    --green-deep:#8FE0C6;
+    --green-bright:#4BC49E;
+    --sage:#3C5C50;
+    --sage-pale:#17251E;
+    --amber:#E0A25C;
+    --amber-pale:#2A2013;
+    --line:#243830;
+    --line-strong:#33493F;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.65;
+  }
+  h1,h2,h3{
+    font-family:var(--serif);
+    color:var(--ink);
+    text-wrap:balance;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  a{ color:var(--green-deep); }
+  p{ margin:0 0 1em; max-width:60ch; }
+
+  /* ===== shell ===== */
+  .page{ max-width:900px; margin:0 auto; padding:0 clamp(20px,4vw,40px) 6rem; }
+
+  /* ===== masthead ===== */
+  .masthead{
+    padding:clamp(2.6rem,6vw,4.4rem) 0 2.6rem;
+    border-bottom:1px solid var(--line);
+    margin-bottom:3rem;
+  }
+  .kicker{
+    display:inline-flex; align-items:center; gap:.5em;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--green-deep); background:var(--sage-pale);
+    padding:.35em .8em; border-radius:999px; margin-bottom:1.4rem;
+  }
+  h1.title{
+    font-size:clamp(2rem,5vw,3rem);
+    line-height:1.08;
+    max-width:17ch;
+    margin-bottom:.8rem;
+  }
+  .subtitle{
+    font-size:clamp(1.02rem,1.6vw,1.18rem);
+    color:var(--ink-soft);
+    max-width:56ch;
+    margin-bottom:1.6rem;
+  }
+  .audience{
+    font-size:.86rem;
+    color:var(--ink-faint);
+    padding-top:1.1rem;
+    border-top:1px solid var(--line);
+    max-width:56ch;
+  }
+  .audience strong{ color:var(--ink-soft); font-weight:600; }
+
+  /* ===== flow ===== */
+  .flow{
+    position:relative;
+    padding-left:clamp(2.6rem,6vw,3.6rem);
+  }
+  .flow::before{
+    content:"";
+    position:absolute;
+    left:clamp(1.15rem,3.1vw,1.55rem);
+    top:.4rem;
+    bottom:.4rem;
+    width:2px;
+    background:linear-gradient(to bottom, var(--green), var(--line) 92%, transparent);
+  }
+  .step{
+    position:relative;
+    padding-bottom:3.1rem;
+  }
+  .step:last-child{ padding-bottom:0; }
+  .step-num{
+    position:absolute;
+    left:clamp(-2.6rem,-6vw,-3.6rem);
+    top:0;
+    width:clamp(2.3rem,6.2vw,3.1rem);
+    height:clamp(2.3rem,6.2vw,3.1rem);
+    border-radius:50%;
+    background:var(--surface);
+    border:2px solid var(--green);
+    color:var(--green-deep);
+    font-family:var(--mono); font-weight:600; font-size:.98rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .step.optional .step-num{ border-color:var(--line-strong); color:var(--ink-faint); }
+  .step-head{ display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap; margin-bottom:.4rem; }
+  .step h2{ font-size:clamp(1.2rem,2.4vw,1.5rem); }
+  .step-tag{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-faint); background:var(--sage-pale); padding:.2em .6em; border-radius:5px;
+  }
+  .step.optional .step-tag{ background:transparent; border:1px solid var(--line-strong); }
+  .step-body{ color:var(--ink-soft); }
+  .step-body p:last-child{ margin-bottom:0; }
+
+  .fieldgrid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:.6rem; margin:1rem 0 0;
+  }
+  .field{
+    background:var(--surface); border:1px solid var(--line); border-radius:9px;
+    padding:.75rem .9rem;
+  }
+  .field .k{ font-family:var(--mono); font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:.25rem; }
+  .field .v{ font-size:.87rem; color:var(--ink); }
+  .field.required{ border-color:var(--green); border-width:1.5px; }
+  .field.required .k{ color:var(--green-deep); }
+
+  .toollist{ display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.9rem; }
+  .tool{
+    font-family:var(--mono); font-size:.76rem;
+    background:var(--sage-pale); color:var(--green-deep);
+    border:1px solid var(--line); border-radius:999px; padding:.35em .85em;
+  }
+
+  .codecard{
+    margin-top:1rem;
+    background:var(--surface); border:2px solid var(--green);
+    border-radius:12px; padding:1.1rem 1.3rem;
+    display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap;
+  }
+  .codecard .sample{
+    font-family:var(--mono); font-weight:600; font-size:1.9rem; letter-spacing:.12em;
+    color:var(--green-deep);
+  }
+  .codecard .note{ font-size:.85rem; color:var(--ink-soft); max-width:34ch; margin:0; }
+
+  .callout{
+    margin-top:1rem;
+    background:var(--amber-pale); border-left:3px solid var(--amber);
+    border-radius:0 10px 10px 0; padding:1rem 1.2rem;
+  }
+  .callout .callout-label{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--amber); display:block; margin-bottom:.4rem;
+  }
+  .callout p{ margin:0; color:var(--ink); font-size:.93rem; }
+  .callout a{ font-weight:600; }
+
+  .checklist{ list-style:none; margin:1rem 0 0; padding:0; display:flex; flex-direction:column; gap:.55rem; }
+  .checklist li{
+    display:flex; gap:.6rem; align-items:flex-start;
+    font-size:.9rem; color:var(--ink-soft);
+  }
+  .checklist li::before{
+    content:"";
+    flex:none; width:.85rem; height:.85rem; margin-top:.2rem;
+    border:1.5px solid var(--green); border-radius:3px;
+  }
+
+  /* ===== footer ===== */
+  footer{
+    margin-top:4rem; padding-top:1.6rem; border-top:1px solid var(--line);
+    font-size:.82rem; color:var(--ink-faint);
+  }
+
+  @media (max-width:640px){
+    .flow{ padding-left:2.6rem; }
+    .step-num{ left:-2.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <span class="kicker">nextVillage.community · Platform Walkthrough</span>
+    <h1 class="title">From Sign-Up to First Activity</h1>
+    <p class="subtitle">What a new site leader actually walks through — from creating an account to the moment their first learner opens the AI Discovery Camp.</p>
+    <p class="audience"><strong>Who this is for:</strong> a community leader, teacher, or organization considering nextVillage — a plain walk-through of the signup flow and the first steps after it, before you commit any time to it.</p>
+  </header>
+
+  <div class="flow">
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-head"><h2>Create an account</h2></div>
+      <div class="step-body">
+        <p>An email address and password, or Google/GitHub sign-in. Nothing about your community is asked yet — this step is just proving you're a real person.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-head"><h2>Choose your role</h2></div>
+      <div class="step-body">
+        <p><strong>Teacher / Educator</strong>, then <strong>Register My Organization</strong> — this makes you the primary leader of a new site. (A second adult helping you run the lab instead chooses <em>Join as Co-Facilitator</em> with your join code — see step 6.)</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-head"><h2>Name your site &amp; describe your community</h2></div>
+      <div class="step-body">
+        <p>The essentials, plus questions that make your learners' lessons feel written for their actual town rather than a generic curriculum:</p>
+        <div class="fieldgrid">
+          <div class="field required"><div class="k">Required</div><div class="v">Organization name</div></div>
+          <div class="field required"><div class="k">Required</div><div class="v">Continent &amp; country</div></div>
+          <div class="field required"><div class="k">Required</div><div class="v">Learner age range</div></div>
+          <div class="field"><div class="k">Optional</div><div class="v">Brief description</div></div>
+          <div class="field"><div class="k">Optional</div><div class="v">Educational goals</div></div>
+          <div class="field"><div class="k">Optional</div><div class="v">Community livelihood</div></div>
+          <div class="field"><div class="k">Optional</div><div class="v">Community assets — farming, fishing, businesses</div></div>
+          <div class="field"><div class="k">Optional</div><div class="v">Community challenges</div></div>
+          <div class="field"><div class="k">Optional</div><div class="v">Community hopes</div></div>
+          <div class="field"><div class="k">Optional</div><div class="v">Organization logo</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step optional">
+      <div class="step-num">4</div>
+      <div class="step-head"><h2>Say how long we should keep learner data</h2><span class="step-tag">optional</span></div>
+      <div class="step-body">
+        <p>90 days, a year, the length of your program, until you ask us to delete it, or simply "not sure yet." Nothing here is locked in — it's a starting position for a conversation, not a binding setting.</p>
+      </div>
+    </div>
+
+    <div class="step optional">
+      <div class="step-num">5</div>
+      <div class="step-head"><h2>Pick the tools your learners will use</h2><span class="step-tag">optional — all on by default</span></div>
+      <div class="step-body">
+        <p>Every tool is enabled unless you turn one off. We recommend leaving all five on for a first cohort, and revisiting the choice with your learners and co-facilitators once you've seen how each one is actually used.</p>
+        <div class="toollist">
+          <span class="tool">Foundations — English / Math / Science</span>
+          <span class="tool">AI Proficiency</span>
+          <span class="tool">Tech Skills</span>
+          <span class="tool">Creative AI</span>
+          <span class="tool">Community Impact AI</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-head"><h2>Receive your join code</h2></div>
+      <div class="step-body">
+        <p>The platform generates a unique 6-character code the moment your organization is created. Every learner and co-facilitator enters it at signup to link to your site, your location, and your community's localized lessons.</p>
+        <div class="codecard">
+          <span class="sample">DAV001</span>
+          <p class="note">A sample code, shown the size and shape yours will be. Yours appears once, at signup, and afterward lives on your Profile page — where you can also generate more.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-head"><h2>Bring your learners in</h2></div>
+      <div class="step-body">
+        <p>Share the code before anyone signs up. Each learner then chooses <strong>Student / Learner</strong> and enters it.</p>
+        <ul class="checklist">
+          <li>Ideally, each learner signs up with their own email address — it keeps their account, progress, and any password reset theirs alone.</li>
+          <li>A learner without an email of their own can still sign up; talk through what that means for account recovery before they start.</li>
+          <li>You can always find your code — and generate new ones for a new cohort — on your Profile page.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-head"><h2>Start with the AI Discovery Camp</h2></div>
+      <div class="step-body">
+        <p>Whatever else your site plans to use, every new learner's very first activity should be the <strong>AI Discovery Camp</strong> — a short, guided on-ramp before Foundations, Tech Skills, or any of the community-impact tools.</p>
+        <div class="callout">
+          <span class="callout-label">Recommended first activity</span>
+          <p>It's the one activity every learner does in common, whatever tools your site chooses later. <a href="/tutorials/ai-discovery-camp" target="_blank" rel="noopener noreferrer">Open the AI Discovery Camp Guide →</a></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>nextVillage · AI'ing &amp; Vibing (vAI) — a plain walk-through of the signup flow, for community leaders deciding whether to bring the platform to their site.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>
