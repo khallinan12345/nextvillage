@@ -84,6 +84,30 @@ const NIGERIA_STATE_CITY_MAP: Record<string, string> = {
   'Bayelsa': 'Oloibiri',
 };
 
+const ALL_TOOLS = [
+  'foundations',
+  'ai_proficiency',
+  'tech_skills',
+  'creative_ai',
+  'community_impact_ai',
+] as const;
+
+const TOOL_OPTIONS: { value: string; label: string; desc: string }[] = [
+  { value: 'foundations',           label: 'Foundations (English/Math/Science)', desc: 'Core subject tutoring' },
+  { value: 'ai_proficiency',        label: 'AI Proficiency',                     desc: 'How to use AI responsibly and well' },
+  { value: 'tech_skills',           label: 'Tech Skills',                        desc: 'Coding and technical pathways' },
+  { value: 'creative_ai',           label: 'Creative AI',                        desc: 'AI-assisted creative projects' },
+  { value: 'community_impact_ai',   label: 'Community Impact AI',                desc: 'Real-world community challenges' },
+];
+
+const DATA_RETENTION_OPTIONS: { value: string; label: string }[] = [
+  { value: '90_days',        label: '90 days' },
+  { value: '1_year',         label: '1 year' },
+  { value: 'program_length', label: 'Length of program participation' },
+  { value: 'until_requested', label: 'Until a deletion request is made' },
+  { value: 'not_sure',       label: "Not sure yet — let's discuss" },
+];
+
 const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId, email, onComplete }) => {
   const [role, setRole] = useState<'student' | 'site_leader'>('student');
 
@@ -122,6 +146,12 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   const [communityLivelihood, setCommunityLivelihood] = useState('');
   const [communityChallenges, setCommunityChallenges] = useState('');
   const [communityHopes, setCommunityHopes]       = useState('');
+
+  // ── Educational goals, assets, data protection, tools (optional) ─────────
+  const [educationalGoals, setEducationalGoals]       = useState('');
+  const [communityAssets, setCommunityAssets]         = useState('');
+  const [dataRetentionPreference, setDataRetentionPreference] = useState('');
+  const [enabledTools, setEnabledTools]               = useState<string[]>([...ALL_TOOLS]);
 
   // ── Join code modal state ─────────────────────────────────────────────────
   const [newOrgJoinCode, setNewOrgJoinCode] = useState<string | null>(null);
@@ -346,6 +376,10 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         if (communityLivelihood.trim())       orgUpdates.community_livelihood  = communityLivelihood.trim();
         if (communityChallenges.trim())       orgUpdates.community_challenges  = communityChallenges.trim();
         if (communityHopes.trim())            orgUpdates.community_hopes       = communityHopes.trim();
+        if (educationalGoals.trim())          orgUpdates.educational_goals     = educationalGoals.trim();
+        if (communityAssets.trim())           orgUpdates.community_assets      = communityAssets.trim();
+        if (dataRetentionPreference)          orgUpdates.data_retention_preference = dataRetentionPreference;
+        if (enabledTools.length)              orgUpdates.enabled_tools         = enabledTools;
         if (Object.keys(orgUpdates).length) {
           await supabase.from('organizations').update(orgUpdates).eq('id', orgData.id);
         }
@@ -538,11 +572,11 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
     );
   }
 
-  // ── Join code modal ────────────────────────────────────────────────────────
+  // ── Join code + next steps ─────────────────────────────────────────────────
   if (newOrgJoinCode && newOrgName) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center max-h-[95vh] overflow-y-auto">
           <div className="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-5">
             <Building2 className="w-8 h-8 text-indigo-600" />
           </div>
@@ -566,12 +600,48 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                 : <><Copy className="w-4 h-4" /> Copy Code</>}
             </button>
           </div>
-          <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2 mb-6">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">How to use it</p>
-            <p className="text-sm text-gray-700">📢 Share this code with your learners <span className="font-semibold">before</span> they sign up.</p>
-            <p className="text-sm text-gray-700">📝 During signup, they enter this code to join <span className="font-semibold">{newOrgName}</span>.</p>
-            <p className="text-sm text-gray-700">🔑 You can always find this code on your <span className="font-semibold">Profile page</span>.</p>
+
+          <div className="bg-gray-50 rounded-xl p-4 text-left space-y-3 mb-4">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Next steps</p>
+            <div className="flex gap-2">
+              <span className="text-lg leading-none">1️⃣</span>
+              <p className="text-sm text-gray-700">
+                Share this code with your learners <span className="font-semibold">before</span> they sign up.
+                It works best if each learner signs up with their <span className="font-semibold">own email address</span> —
+                that keeps their account, progress, and any password reset theirs alone.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-lg leading-none">2️⃣</span>
+              <p className="text-sm text-gray-700">
+                During signup, they choose <span className="font-semibold">Student / Learner</span> and enter this
+                code to join <span className="font-semibold">{newOrgName}</span>.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-lg leading-none">🔑</span>
+              <p className="text-sm text-gray-700">
+                You can always find this code, and generate new ones, from your <span className="font-semibold">Profile page</span>.
+              </p>
+            </div>
           </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left space-y-1.5 mb-6">
+            <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">Recommended first activity</p>
+            <p className="text-sm text-gray-700">
+              🚀 Have every new learner start with the <span className="font-semibold">AI Discovery Camp</span> —
+              it's the best on-ramp before anything else on the platform.
+            </p>
+            <a
+              href="/tutorials/ai-discovery-camp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 underline"
+            >
+              View the AI Discovery Camp Guide →
+            </a>
+          </div>
+
           <button
             onClick={onComplete}
             className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors text-base"
@@ -911,6 +981,64 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                         rows={2}
                         className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
                         placeholder="e.g. AI-powered income opportunities, better healthcare access, youth empowerment…" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        🏗️ What assets does your community have? (farming, fishing, businesses, etc.)
+                      </label>
+                      <textarea value={communityAssets} onChange={e => setCommunityAssets(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
+                        placeholder="e.g. Fertile farmland, a fishing fleet, an active market, local tradespeople…" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        🎯 What are your site's educational goals?
+                      </label>
+                      <textarea value={educationalGoals} onChange={e => setEducationalGoals(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
+                        placeholder="e.g. Prepare learners for exams, build AI skills for local jobs, launch youth-led businesses…" />
+                    </div>
+                  </div>
+
+                  {/* ── Data Protection ────────────────────────────────────── */}
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-semibold text-indigo-700">
+                      Data Protection <span className="font-normal text-gray-400">(optional — you can decide this later)</span>
+                    </p>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        How long should we retain your learners' data?
+                      </label>
+                      <select value={dataRetentionPreference} onChange={e => setDataRetentionPreference(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-xs">
+                        <option value="">Not decided yet</option>
+                        {DATA_RETENTION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* ── Tools ───────────────────────────────────────────────── */}
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-semibold text-indigo-700">
+                      Which tools would you like your learners to use?
+                      <span className="font-normal text-gray-400 ml-1">(optional — all are enabled by default)</span>
+                    </p>
+                    <div className="space-y-1.5">
+                      {TOOL_OPTIONS.map(opt => (
+                        <label key={opt.value} className="flex items-start gap-2 cursor-pointer">
+                          <input type="checkbox"
+                            checked={enabledTools.includes(opt.value)}
+                            onChange={e => setEnabledTools(prev =>
+                              e.target.checked ? [...prev, opt.value] : prev.filter(v => v !== opt.value))}
+                            className="mt-0.5" />
+                          <span className="text-xs">
+                            <span className="font-medium text-gray-800">{opt.label}</span>
+                            <span className="text-gray-400"> — {opt.desc}</span>
+                          </span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
