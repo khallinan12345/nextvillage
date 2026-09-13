@@ -19,12 +19,14 @@
 // (see AILearningPage.tsx (learning/)'s ?activity=/?create= handling).
 //
 // Scores come from `dashboard.certification_evaluation_score`, keyed by
-// learning_module_id — and that id is different per city_town (Oloibiri /
-// Dayton / Ibiade both have their own row for the same activity title). So
-// on load this resolves the signed-in student's city, looks up the matching
-// learning_modules rows for our curated titles, then fetches this student's
-// dashboard scores for exactly those rows. A title with no row in the
-// student's city is treated as unavailable — it doesn't block the sequence.
+// learning_module_id — and that id is different per organization (each
+// organization has its own row, if any, for the same activity title). So
+// on load this resolves the signed-in student's organization_id, looks up
+// the matching learning_modules rows for our curated titles within that
+// organization, then fetches this student's dashboard scores for exactly
+// those rows. A title with no row in the student's organization is treated
+// as unavailable — it doesn't block the sequence. Falls back to the legacy
+// city_town match for any account with no organization_id set.
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -138,23 +140,27 @@ const AILearningStartPage: React.FC = () => {
   // learning_module_id -> certification_evaluation_score
   const [scoreMap, setScoreMap] = useState<Record<string, number | null>>({});
 
-  /* ── resolve this student's city, then their score on each suggested activity ── */
+  /* ── resolve this student's organization, then their score on each suggested activity ── */
 
   useEffect(() => {
     if (!userId) { setLoaded(true); return; }
     let cancelled = false;
     (async () => {
-      const { data: profile } = await supabase.from('profiles').select('city').eq('id', userId).single();
+      const { data: profile } = await supabase.from('profiles').select('city, organization_id').eq('id', userId).single();
+      const organizationId = profile?.organization_id ?? null;
+      // Legacy fallback for accounts predating organization_id tagging —
+      // should be rare now that the three original communities are backfilled.
       const city = profile?.city ?? null;
       const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
       const allTitles = CATEGORIES.flatMap(c => c.suggestions);
-      const { data: modules } = await supabase
+      let query = supabase
         .from('learning_modules')
         .select('learning_module_id, title, sub_category')
         .eq('category', 'AI Proficiency')
-        .eq('city_town', cityTown)
         .in('title', allTitles);
+      query = organizationId ? query.eq('organization_id', organizationId) : query.eq('city_town', cityTown);
+      const { data: modules } = await query;
       if (cancelled) return;
 
       const mMap: Record<string, string> = {};
