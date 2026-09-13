@@ -1,0 +1,622 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Data Protection Summary</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#F5F7F6;
+    --surface:#FFFFFF;
+    --surface-2:#EAF0EE;
+    --surface-3:#DEEAE7;
+    --ink:#132725;
+    --ink-muted:#4E6663;
+    --ink-faint:#7B928E;
+    --line:#D6E3E0;
+    --line-strong:#B9CDC9;
+    --accent:#0E6E7C;
+    --accent-deep:#0A4A54;
+    --accent-tint:#E1F1F1;
+    --status-confirmed-fg:#1F6B3B;
+    --status-confirmed-bg:#E3F3E7;
+    --status-gap-fg:#9A4B08;
+    --status-gap-bg:#FBECDD;
+    --status-recommend-fg:#4A3B80;
+    --status-recommend-bg:#EBE7F7;
+    --shadow: 0 1px 2px rgba(19,39,37,0.06), 0 8px 24px -12px rgba(19,39,37,0.18);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0B1918;
+      --surface:#10201E;
+      --surface-2:#14302C;
+      --surface-3:#193A34;
+      --ink:#E7F2F0;
+      --ink-muted:#A9C1BD;
+      --ink-faint:#75908C;
+      --line:#234441;
+      --line-strong:#2F5C57;
+      --accent:#54D9CA;
+      --accent-deep:#8FEADF;
+      --accent-tint:#173634;
+      --status-confirmed-fg:#7BD99A;
+      --status-confirmed-bg:#163227;
+      --status-gap-fg:#F2B168;
+      --status-gap-bg:#3A2712;
+      --status-recommend-fg:#C3B4F2;
+      --status-recommend-bg:#2B2447;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B1918;
+    --surface:#10201E;
+    --surface-2:#14302C;
+    --surface-3:#193A34;
+    --ink:#E7F2F0;
+    --ink-muted:#A9C1BD;
+    --ink-faint:#75908C;
+    --line:#234441;
+    --line-strong:#2F5C57;
+    --accent:#54D9CA;
+    --accent-deep:#8FEADF;
+    --accent-tint:#173634;
+    --status-confirmed-fg:#7BD99A;
+    --status-confirmed-bg:#163227;
+    --status-gap-fg:#F2B168;
+    --status-gap-bg:#3A2712;
+    --status-recommend-fg:#C3B4F2;
+    --status-recommend-bg:#2B2447;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, 'Times New Roman', serif;
+    color:var(--ink);
+    text-wrap:balance;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  a{ color:var(--accent-deep); text-decoration-color:var(--line-strong); text-underline-offset:2px; }
+  a:hover{ text-decoration-color:currentColor; }
+  a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace; font-variant-numeric:tabular-nums; }
+
+  /* ===== Shell ===== */
+  .page{ max-width:1180px; margin:0 auto; padding:0 clamp(20px,4vw,56px) 96px; }
+
+  /* ===== Cover ===== */
+  .cover{
+    padding:clamp(40px,7vw,84px) 0 40px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:36px;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:.5em;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px; letter-spacing:.10em; text-transform:uppercase;
+    color:var(--accent-deep);
+    background:var(--accent-tint);
+    padding:5px 11px; border-radius:999px;
+    margin-bottom:22px;
+  }
+  h1.title{
+    font-size:clamp(34px,5vw,54px);
+    line-height:1.06;
+    max-width:16ch;
+    margin:0 0 14px;
+  }
+  .subtitle{
+    font-size:clamp(16px,2vw,19px);
+    color:var(--ink-muted);
+    max-width:56ch;
+    margin:0 0 30px;
+  }
+  .cover-meta{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:22px 32px;
+    max-width:760px;
+    padding-top:26px;
+    border-top:1px solid var(--line);
+  }
+  .cover-meta dt{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-faint); margin-bottom:5px;
+  }
+  .cover-meta dd{ margin:0; font-size:15px; color:var(--ink); }
+
+  /* ===== Layout: nav + content ===== */
+  .layout{ display:grid; grid-template-columns:220px minmax(0,1fr); gap:56px; align-items:start; }
+  @media (max-width:880px){ .layout{ grid-template-columns:1fr; } }
+
+  nav.toc{
+    position:sticky; top:24px;
+    display:flex; flex-direction:column; gap:2px;
+    font-size:13.5px;
+    padding-bottom:24px;
+  }
+  nav.toc .toc-label{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--ink-faint); margin-bottom:10px;
+  }
+  nav.toc a{
+    color:var(--ink-muted); text-decoration:none;
+    padding:6px 0 6px 12px; border-left:2px solid transparent;
+  }
+  nav.toc a:hover{ color:var(--ink); border-left-color:var(--line-strong); }
+  nav.toc a .num{ font-family:'IBM Plex Mono',monospace; color:var(--ink-faint); margin-right:8px; }
+  @media (max-width:880px){
+    nav.toc{ position:static; flex-direction:row; flex-wrap:wrap; gap:8px 4px; border-bottom:1px solid var(--line); }
+    nav.toc a{ border-left:none; border:1px solid var(--line); border-radius:999px; padding:5px 12px; font-size:12.5px; }
+  }
+
+  main{ min-width:0; max-width:760px; }
+
+  /* ===== At a glance ===== */
+  .glance{
+    display:grid; gap:10px;
+    margin:0 0 48px;
+  }
+  .glance-row{
+    display:grid;
+    grid-template-columns:150px 108px 1fr;
+    gap:16px;
+    align-items:start;
+    padding:14px 16px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+  @media (max-width:640px){ .glance-row{ grid-template-columns:1fr; gap:8px; } }
+  .glance-row .label{ font-weight:600; font-size:14.5px; padding-top:2px; }
+  .glance-row .desc{ color:var(--ink-muted); font-size:14.5px; }
+  .glance-row .desc a{ font-size:13px; }
+
+  /* ===== Status pill ===== */
+  .status{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px;
+    white-space:nowrap; width:fit-content;
+  }
+  .status::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .status.confirmed{ color:var(--status-confirmed-fg); background:var(--status-confirmed-bg); }
+  .status.gap{ color:var(--status-gap-fg); background:var(--status-gap-bg); }
+  .status.recommend{ color:var(--status-recommend-fg); background:var(--status-recommend-bg); }
+
+  /* ===== Sections ===== */
+  section.doc-section{ padding-top:8px; margin-bottom:56px; scroll-margin-top:20px; }
+  .sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:6px; }
+  .sec-num{
+    font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--accent-deep);
+    background:var(--accent-tint); border-radius:6px; padding:2px 8px;
+  }
+  h2{ font-size:clamp(22px,2.6vw,27px); margin:0; }
+  .sec-standing{ font-size:14px; color:var(--ink-muted); max-width:64ch; margin:10px 0 22px; }
+
+  p{ margin:0 0 16px; max-width:66ch; }
+  ul,ol{ margin:0 0 16px; padding-left:1.3em; max-width:64ch; }
+  li{ margin-bottom:7px; }
+  li::marker{ color:var(--ink-faint); }
+  strong{ color:var(--ink); }
+
+  h3{ font-size:16.5px; margin:26px 0 10px; }
+
+  .callout{
+    background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:0 10px 10px 0; padding:16px 20px; margin:20px 0; box-shadow:var(--shadow);
+  }
+  .callout .callout-label{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent-deep); margin-bottom:8px; display:block;
+  }
+  .callout p:last-child{ margin-bottom:0; }
+
+  .callout.updated{ border-left-color:var(--status-confirmed-fg); }
+  .callout.updated .callout-label{ color:var(--status-confirmed-fg); }
+
+  table{ width:100%; border-collapse:collapse; margin:14px 0 22px; font-size:14.5px; }
+  .table-wrap{ overflow-x:auto; margin:14px 0 22px; }
+  .table-wrap table{ margin:0; min-width:520px; }
+  th{ text-align:left; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); padding:8px 14px 8px 0; border-bottom:1px solid var(--line-strong); }
+  td{ padding:11px 14px 11px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td{ border-bottom:none; }
+
+  .actionlist{ display:flex; flex-direction:column; gap:10px; margin:18px 0 22px; }
+  .action{
+    display:grid; grid-template-columns:28px 1fr auto; gap:14px; align-items:start;
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:13px 16px;
+  }
+  @media (max-width:560px){ .action{ grid-template-columns:28px 1fr; } .action .status{ grid-column:2; } }
+  .action .idx{ font-family:'IBM Plex Mono',monospace; color:var(--ink-faint); font-size:13px; padding-top:2px; }
+  .action .body p{ margin:0; font-size:14.5px; }
+  .action .body .why{ color:var(--ink-muted); font-size:13.5px; margin-top:4px; }
+  .action.done{ opacity:.72; }
+  .action.done .body p:first-child{ text-decoration:line-through; text-decoration-color:var(--line-strong); }
+
+  code{
+    font-family:'IBM Plex Mono',monospace; font-size:.9em;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:4px; padding:.1em .4em;
+  }
+
+  .cite{ font-size:12.5px; color:var(--ink-faint); }
+
+  dl.def{ display:grid; grid-template-columns:auto 1fr; gap:6px 18px; font-size:14.5px; margin:10px 0 22px; }
+  dl.def dt{ font-weight:600; color:var(--ink); }
+  dl.def dd{ margin:0; color:var(--ink-muted); }
+
+  hr.rule{ border:none; border-top:1px solid var(--line); margin:40px 0; }
+
+  footer{
+    margin-top:60px; padding-top:28px; border-top:1px solid var(--line);
+    font-size:13px; color:var(--ink-faint);
+  }
+  footer p{ max-width:none; }
+  footer a{ color:var(--ink-muted); }
+
+  @media (prefers-reduced-motion: reduce){ *{ scroll-behavior:auto !important; } }
+  html{ scroll-behavior:smooth; }
+</style>
+
+<div class="page">
+
+  <div class="cover">
+    <span class="eyebrow">Data protection · prepared for partner review</span>
+    <h1 class="title">Data Protection Summary</h1>
+    <p class="subtitle">How nextVillage (“AI’ing &amp; Vibing”) hosts, retains, deletes, scrubs, and moves learner data — read against Kenya’s Data Protection Act, 2019, for Maji Mazuri and future partner communities.</p>
+    <dl class="cover-meta">
+      <div><dt>Platform</dt><dd>nextVillage — AI’ing &amp; Vibing (vAI)</dd></div>
+      <div><dt>Prepared for</dt><dd>Maji Mazuri · internal compliance · onboarding communities</dd></div>
+      <div><dt>Governing law</dt><dd>Kenya Data Protection Act, No. 24 of 2019</dd></div>
+      <div><dt>Date</dt><dd>12 September 2026 <span style="color:var(--ink-faint)">(rev. 3 — §08–§09 verified against code)</span></dd></div>
+    </dl>
+  </div>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Table of contents">
+      <span class="toc-label">Contents</span>
+      <a href="#glance"><span class="num">00</span>At a glance</a>
+      <a href="#scope"><span class="num">01</span>Scope &amp; roles</a>
+      <a href="#collect"><span class="num">02</span>What we collect</a>
+      <a href="#hosting"><span class="num">03</span>Where it’s hosted</a>
+      <a href="#retention"><span class="num">04</span>Retention</a>
+      <a href="#deletion"><span class="num">05</span>Deletion requests</a>
+      <a href="#crossborder"><span class="num">06</span>Cross-border transfer</a>
+      <a href="#ai"><span class="num">07</span>AI &amp; learner inputs</a>
+      <a href="#scrubbing"><span class="num">08</span>PII scrubbing</a>
+      <a href="#guardrails"><span class="num">09</span>Safety guardrails</a>
+      <a href="#children"><span class="num">10</span>Children’s data</a>
+      <a href="#security"><span class="num">11</span>Security controls</a>
+      <a href="#registration"><span class="num">12</span>ODPC registration</a>
+      <a href="#actions"><span class="num">13</span>Open items</a>
+      <a href="#appendix"><span class="num">14</span>Appendix &amp; sources</a>
+    </nav>
+
+    <main>
+
+      <section class="doc-section" id="glance">
+        <div class="sec-head"><span class="sec-num">00</span><h2>At a glance</h2></div>
+        <p class="sec-standing">The honest headline: nextVillage runs on a normal, well-secured SaaS stack, now with a real scrub-before-send layer and a safety escalation path in front of it — but none of it was assembled with Kenya’s DPA in mind yet, and the AI-routing picture is more mixed than the last revision assumed. Nothing here is a violation in progress; several things are open items a launch with Maji Mazuri should close first.</p>
+
+        <div class="glance">
+          <div class="glance-row">
+            <div class="label">Hosting</div>
+            <div><span class="status gap">Cross-border</span></div>
+            <div class="desc">Database, auth, and storage run on Supabase (AWS, United States); the app and its serverless functions run on Vercel, no region pinned. <a href="#hosting">§03</a></div>
+          </div>
+          <div class="glance-row">
+            <div class="label">Retention</div>
+            <div><span class="status gap">Undefined</span></div>
+            <div class="desc">No retention schedule or automatic purge exists — records persist indefinitely by default. <a href="#retention">§04</a></div>
+          </div>
+          <div class="glance-row">
+            <div class="label">Deletion requests</div>
+            <div><span class="status gap">Manual only</span></div>
+            <div class="desc">No self-serve or documented process; an admin removes a record by hand if asked. <a href="#deletion">§05</a></div>
+          </div>
+          <div class="glance-row">
+            <div class="label">Cross-border transfer</div>
+            <div><span class="status gap">Unaddressed</span></div>
+            <div class="desc">Learner data routinely leaves Kenya under DPA §§48–49; no consent notice or safeguard documentation is in place yet. <a href="#crossborder">§06</a></div>
+          </div>
+          <div class="glance-row">
+            <div class="label">AI processing</div>
+            <div><span class="status gap">Mixed — confirmed</span></div>
+            <div class="desc">Anthropic’s own terms are solid, but several pages route through a free-tier fallback chain (Groq, Cerebras, Cloudflare, OpenRouter, Mistral, DeepSeek) before Anthropic — those vendors’ terms aren’t vetted here yet. <a href="#ai">§07</a></div>
+          </div>
+          <div class="glance-row">
+            <div class="label">PII scrubbing</div>
+            <div><span class="status confirmed">New — live</span></div>
+            <div class="desc">Every learner message is scrubbed of names, phone numbers, addresses, and school/location detail before any model sees it, regardless of which of the above providers ultimately answers. <a href="#scrubbing">§08</a></div>
+          </div>
+          <div class="glance-row">
+            <div class="label">Safety monitoring</div>
+            <div><span class="status confirmed">New — live</span></div>
+            <div class="desc">A separate classifier flags self-harm, threats, and hate speech and emails the learner’s community leader — pending one env var per environment before it’s fully wired. <a href="#guardrails">§09</a></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section" id="scope">
+        <div class="sec-head"><span class="sec-num">01</span><h2>Scope &amp; roles</h2></div>
+        <p>This summary covers personal data collected through nextVillage’s learning platform — accounts, learning activity, AI chat/tutoring content, assessment results, and community-impact research data — for learners in partner communities such as Maji Mazuri. It maps that data against Kenya’s <strong>Data Protection Act, 2019</strong> (“the Act”) and its General Regulations, 2021.</p>
+        <p>Under the Act, roles split roughly as follows:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Party</th><th>Likely role</th><th>What they hold</th></tr></thead>
+            <tbody>
+              <tr><td>nextVillage (platform operator)</td><td>Data controller</td><td>Decides what’s collected and why; accountable for the choices below.</td></tr>
+              <tr><td>Maji Mazuri &amp; partner communities</td><td>Joint controller (for their members)</td><td>Issues the join code that enrolls their learners; best positioned to obtain guardian consent — see §10.</td></tr>
+              <tr><td>Supabase, Inc.</td><td>Data processor</td><td>Postgres database, authentication, file storage, edge functions.</td></tr>
+              <tr><td>Vercel Inc.</td><td>Data processor</td><td>Application hosting, serverless API functions, cron jobs.</td></tr>
+              <tr><td>Anthropic, PBC</td><td>Data processor (sub-processor)</td><td>Processes learner text sent to Claude for chat, tutoring, assessment, PII scrubbing, and safety classification.</td></tr>
+              <tr><td>Groq, Cerebras, Cloudflare, OpenRouter, Mistral, DeepSeek</td><td>Data processors (sub-processors)</td><td>Free-tier AI fallback chain for a defined set of pages — see §07. Terms not yet vetted for this document.</td></tr>
+              <tr><td>Resend</td><td>Data processor (sub-processor)</td><td>Transactional and authentication email, including the new safety-flag alerts in §09.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Nothing here is a legal opinion — treat the “likely role” column as a starting point for a Kenyan advocate or the Office of the Data Protection Commissioner (ODPC) to confirm, particularly the controller/joint-controller split with each partner community.</p>
+      </section>
+
+      <section class="doc-section" id="collect">
+        <div class="sec-head"><span class="sec-num">02</span><h2>What we collect</h2></div>
+        <dl class="def">
+          <dt>Account &amp; identity</dt><dd>Name, email or phone, join code / organization affiliation, role (learner, facilitator, admin).</dd>
+          <dt>Learning activity</dt><dd>Module progress, certifications earned, community-impact challenge submissions.</dd>
+          <dt>AI conversation content</dt><dd>Prompts and messages a learner sends to the platform’s AI tutor/chat features, and the model’s responses — scrubbed of third-party PII before it reaches a model; see §08.</dd>
+          <dt>Assessment &amp; research data</dt><dd>Personality/proficiency assessment results (baseline and monthly); longitudinal research data explored by youth researchers under k-anonymization (minimum group size 5).</dd>
+          <dt>Facilitator/admin dashboard data</dt><dd>Aggregated outcome data used for grant reporting.</dd>
+          <dt>Safety event logs</dt><dd>When a message is flagged self-harm, a threat, or hate speech, the flag category and an excerpt are logged and emailed to a community leader — see §09.</dd>
+        </dl>
+      </section>
+
+      <section class="doc-section" id="hosting">
+        <div class="sec-head"><span class="sec-num">03</span><h2>Where it’s hosted</h2></div>
+        <p class="sec-standing"><span class="status gap">Verify exact region</span> Confirm the precise AWS region in the Supabase dashboard (Project Settings → General) — this document uses “United States” pending that check.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Layer</th><th>Provider</th><th>Location</th></tr></thead>
+            <tbody>
+              <tr><td>Database (Postgres), Auth, Storage, Edge Functions</td><td>Supabase, on AWS</td><td>United States region</td></tr>
+              <tr><td>Application &amp; serverless API functions</td><td>Vercel</td><td>No region pinned in <code>vercel.json</code> — defaults to Vercel’s US region</td></tr>
+              <tr><td>AI inference on learner text (default path)</td><td>Anthropic (Claude API)</td><td>United States</td></tr>
+              <tr><td>AI inference, free-tier fallback (defined pages only — §07)</td><td>Groq, Cerebras, Cloudflare, OpenRouter, Mistral, DeepSeek</td><td>Not confirmed in this review</td></tr>
+              <tr><td>Email delivery, incl. safety-flag alerts</td><td>Resend</td><td>Not confirmed in this review</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>All these processors sit outside Kenya. That’s the fact driving §06 below — it isn’t unusual (most East African organizations run on the same handful of global clouds), but the Act asks it to be handled deliberately rather than by default.</p>
+      </section>
+
+      <section class="doc-section" id="retention">
+        <div class="sec-head"><span class="sec-num">04</span><h2>Retention</h2></div>
+        <p class="sec-standing"><span class="status gap">Gap</span> No retention schedule exists today. Records — accounts, chat history, assessment results — are kept indefinitely unless someone manually deletes them.</p>
+        <p>The Act’s data-protection principles (commonly summarized from the Act’s Part IV) require that personal data be kept “no longer than necessary” for the purpose it was collected for. A defined schedule is what turns “we could delete this” into “we do delete this.” A reasonable starting point:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Suggested retention</th><th>Then</th></tr></thead>
+            <tbody>
+              <tr><td>Active learner account</td><td>While the learner is active with a partner community</td><td>Flag for review after 12 months of inactivity</td></tr>
+              <tr><td>AI chat/tutoring transcripts</td><td>90 days, or the life of the learning module</td><td>Delete or aggregate into non-identifying progress metrics</td></tr>
+              <tr><td>Assessment results</td><td>Duration of program participation + 1 grant cycle</td><td>Anonymize for longitudinal research (k ≥ 5, already practiced)</td></tr>
+              <tr><td>Inactive/withdrawn accounts</td><td>90 days after withdrawal or a deletion request</td><td>Hard delete</td></tr>
+              <tr><td>Safety-flag logs (system_events)</td><td>Not yet defined — see §09</td><td>Should follow a separate, longer safeguarding schedule; needs its own decision, not the default above</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>These are starting figures for internal review, not settled policy — Maji Mazuri and any partner community should have a say in numbers that affect their members.</p>
+      </section>
+
+      <section class="doc-section" id="deletion">
+        <div class="sec-head"><span class="sec-num">05</span><h2>Deletion requests</h2></div>
+        <p class="sec-standing"><span class="status gap">Manual only</span> There is no deletion request channel, form, or self-serve control yet. Today, an administrator removes a learner’s record directly in Supabase if asked — nothing is written down about how, or how fast.</p>
+        <p>What a documented process should specify:</p>
+        <ul>
+          <li><strong>How to ask.</strong> One clear channel (an email address or in-app request) rather than word-of-mouth to a facilitator.</li>
+          <li><strong>Who can ask.</strong> The learner themselves, or a parent/guardian on behalf of a minor — see §10.</li>
+          <li><strong>Turnaround.</strong> A stated target (30 days is a common, defensible benchmark; the Act does not fix a number, but ODPC expects a controller to act “without undue delay”).</li>
+          <li><strong>What actually gets deleted.</strong> The Supabase row(s) via Row-Level-Security-scoped deletes, associated Storage objects, and — for any AI conversation content — nothing further to chase, since Anthropic’s own 30-day auto-purge already retires it (see §07).</li>
+          <li><strong>What can’t be deleted immediately.</strong> Anonymized research data already folded into a k≥5 cohort, and a safety-flag record still open with a community leader, should be named as exceptions up front rather than discovered later.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section" id="crossborder">
+        <div class="sec-head"><span class="sec-num">06</span><h2>Cross-border transfer</h2></div>
+        <p class="sec-standing"><span class="status gap">Unaddressed today</span> Every message a Kenyan learner sends leaves Kenya — to Supabase and Anthropic in the US, through Vercel’s US-region functions, and for some pages, on to a second US-based provider. That’s ordinary for a SaaS product; the Act just requires a lawful basis for it.</p>
+        <p>Sections 48–49 of the Act permit a cross-border transfer on one of four bases: an <strong>adequacy</strong> finding for the destination country, <strong>appropriate safeguards</strong> (such as standard contractual clauses in the vendor’s data processing agreement), <strong>necessity</strong> for performing a contract with the data subject, or the data subject’s <strong>consent</strong> combined with confirmation that safeguards are in place. None of these has been formally documented for nextVillage yet — and now that §07 confirms more than one vendor is actually in the path, the safeguards question applies to each of them, not just Anthropic.</p>
+
+        <div class="callout">
+          <span class="callout-label">On moving hosting to Africa</span>
+          <p>Worth checking directly: <strong>Supabase does not currently offer an African hosting region.</strong> AWS itself has a Cape Town region (<code>af-south-1</code>), but Supabase briefly supported it during an early alpha and discontinued it — it isn’t offered to new or existing projects today. So “move Supabase to Africa” isn’t on the table as things stand.</p>
+          <p>Given that, the pragmatic path is <strong>not</strong> to chase regional hosting — it’s to make the existing US hosting lawful: execute data processing agreements with Supabase, Vercel, Anthropic, and (per §07) each free-tier fallback provider actually in the path, and add a plain-language consent notice at signup telling learners and guardians that their data is processed outside Kenya and under what protections. That’s a paperwork lift, not an infrastructure migration.</p>
+          <p>Reserve true data residency — self-hosting Postgres in <code>af-south-1</code> or with a Kenyan provider — for if a funder or the ODPC later makes it a hard requirement; it’s a materially larger engineering project than this platform needs today.</p>
+        </div>
+      </section>
+
+      <section class="doc-section" id="ai">
+        <div class="sec-head"><span class="sec-num">07</span><h2>AI providers &amp; learner inputs</h2></div>
+        <p class="sec-standing"><span class="status confirmed">Anthropic’s own terms are solid</span> — <span class="status gap">but the code audit this document called for is now done, and the answer needs action</span></p>
+
+        <h3>Claude (Anthropic) — the confirmed processor for the default path</h3>
+        <p>nextVillage’s learner-facing chat, tutoring, and assessment features call Claude models (<code>claude-sonnet-5</code>, <code>claude-sonnet-4-6</code>, <code>claude-haiku-4-5</code>) through the standard Claude API — Anthropic’s commercial terms, not a Zero-Data-Retention or “Covered Model” arrangement. Under those terms:</p>
+        <ul>
+          <li>Prompts and outputs are <strong>automatically deleted within 30 days</strong> of receipt or generation.</li>
+          <li>Retained data is <strong>never used to train Anthropic’s models</strong> without nextVillage’s express permission.</li>
+          <li>The exception: content flagged by Anthropic’s automated trust-and-safety systems, or subject to a legal hold, may be retained up to 2 years.</li>
+          <li>Zero Data Retention (no storage at all, even briefly) is available on request from Anthropic’s sales team if nextVillage wants to remove even the 30-day window for learner conversations.</li>
+        </ul>
+
+        <h3>The rest of the story — a real fallback chain, confirmed in code</h3>
+        <p>The previous revision of this document flagged an open question: does any learner-facing path fall through to one of the other providers configured in the codebase? Reading <code>api/chat.js</code> directly answers it: <strong>yes, for a defined set of pages.</strong> Requests from <code>AILearningPage</code>, <code>EnglishSkillsPage</code>, <code>MathSkillsPage</code>, <code>ScienceSkillsPage</code>, <code>SkillsDevelopmentPage</code>, <code>AgricultureConsultantPage</code>, <code>FishingConsultantPage</code>, <code>EntrepreneurshipConsultantPage</code>, <code>AIAmbassadorsPage</code>, and <code>PidginTranslationModule</code> route through a cost-driven fallback chain — <strong>Groq → Cerebras → Cloudflare Workers AI → OpenRouter (free tier) → Mistral → DeepSeek → Anthropic Haiku</strong> as the final, paid fallback — before a request ever reaches Anthropic. All coding-task pages, certification/evaluation pages, and (as of this revision) <code>HealthcareNavigatorPage</code> specifically route to Anthropic directly, no fallback chain involved.</p>
+        <div class="callout">
+          <span class="callout-label">Deliberate exception</span>
+          <p><code>HealthcareNavigatorPage</code> was pulled out of the free-tier chain in this revision, specifically because health-adjacent conversation content is the most sensitive category this platform handles — it now always routes to Anthropic, never the fallback providers below. Confirmed directly in code (<code>api/chat.js</code>, <code>FREE_TIER_PAGES</code> exclusion with an explicit comment to that effect).</p>
+        </div>
+        <p>None of Groq’s, Cerebras’s, Cloudflare’s, OpenRouter’s, Mistral’s, or DeepSeek’s data-retention or training terms have been reviewed for this document — each is a separate sub-processor relationship the Act’s cross-border and safeguards requirements (§06) apply to independently. This is the single biggest change this revision makes to the AI picture: what was an open question is now a confirmed finding, and a new one (§13, item 02).</p>
+      </section>
+
+      <section class="doc-section" id="scrubbing">
+        <div class="sec-head"><span class="sec-num">08</span><h2>PII scrubbing <span class="status confirmed" style="margin-left:8px;">New</span></h2></div>
+        <p class="sec-standing">Added this revision, in direct response to a request that no personal information beyond a learner’s own first name reach an AI model. Live on <code>/api/chat</code>, <code>/api/chat-stream</code> (the AI Playground’s streaming path), and the AI Image Creation function.</p>
+
+        <h3>What’s allowed through, and what isn’t</h3>
+        <p>The learner’s own first name is the only personal detail passed through unchanged. Everything else is either removed outright or converted to a relationship term before the message reaches any model:</p>
+        <dl class="def">
+          <dt>Other people’s names</dt><dd>Converted to the relationship the text states or implies — “my brother,” “my neighbour,” “my patient” — never left in as a name, and never invented where the text gives none (“someone I know”).</dd>
+          <dt>Phone numbers, emails, handles</dt><dd>Removed by a deterministic pattern match, in any common format (not just US grouping — Kenyan and Nigerian formats are explicitly covered).</dd>
+          <dt>Addresses &amp; locations</dt><dd>Governed by a scrub “tier” — see below.</dd>
+          <dt>School names, exact ages/birthdates</dt><dd>Removed in every case.</dd>
+        </dl>
+
+        <h3>Two layers</h3>
+        <p>A pattern match (regex) catches phone numbers, emails, and handles first — free, deterministic, and it runs regardless of whether the AI call that follows succeeds. A second pass sends the (already pattern-scrubbed) text to a Claude Haiku call that extracts a short list of “replace this exact phrase with that one” instructions, which this codebase applies itself — the model never rewrites a message in full, so its output stays small and bounded no matter how long the conversation has grown.</p>
+
+        <h3>Location tiers</h3>
+        <p>Blanket location scrubbing would break the pages where local specificity is the point — a health navigator that can’t know a learner is in Mathare can’t point at a clinic in Mathare. So the scrub runs in one of two modes depending on which page sent the request:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tier</th><th>Applies to</th><th>Location handling</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">strict</span> (default)</td><td>AI Playground, Create Game, AI Image Creation, everywhere else</td><td>Nothing more specific than a broad place name (a city, county, region) — a school or exact address is removed</td></tr>
+              <tr><td><span class="mono">community_helper</span></td><td>Agriculture, Fishing, Healthcare Navigator, Entrepreneurship Consultant, AI Ambassadors — and their certification variants</td><td>Neighborhood/estate-level detail is kept; a full street address, school name, or P.O. Box is still removed</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>In both tiers, other people’s names are converted to a relationship regardless — the tier only ever changes how much location detail survives.</p>
+
+        <div class="callout">
+          <span class="callout-label">The precise guarantee — read this carefully</span>
+          <p>The extraction pass necessarily sends the (already pattern-scrubbed) text to Anthropic, to find what still needs removing — recognizing a name, or inferring “my brother” from context, is itself a language task a pattern match can’t do. So the accurate claim is <strong>“everyone except Anthropic sees only scrubbed text” — not “personal information never leaves the platform.”</strong> Concretely: raw (pattern-scrubbed, pre-name-extraction) learner text touches Anthropic briefly for the extraction call itself; the <em>scrubbed</em> result is what continues on to whichever model actually answers the learner — Anthropic directly, or one of §07’s fallback providers for the pages that route there. Anthropic’s own 30-day, no-training terms (§07) apply to that extraction call the same as any other Anthropic call.</p>
+        </div>
+
+        <h3>Known gaps</h3>
+        <ul>
+          <li><strong>Not yet cached across turns.</strong> Every request re-scrubs the entire conversation history, including messages already scrubbed on a prior turn — safe (re-scrubbing scrubbed text is a no-op) but not free. A cross-request cache keyed to a stable conversation ID would cut this further; not built yet.</li>
+          <li><strong>Regex address matching is a floor, not a solution.</strong> It reliably catches P.O. Box / Plot / House-No. patterns and US-style street suffixes; an address with neither shape depends entirely on the second pass.</li>
+          <li><strong>Coverage is scoped to the three functions named above.</strong> A handful of other Supabase Edge Functions that also call Anthropic directly for evaluation/scoring purposes (challenge submissions, weekly-challenge generation) were not touched in this revision and do not yet have this scrub layer in front of them — confirmed by a direct search of <code>supabase/functions/</code>: none of them import or reference the scrubbing logic. See §13, item 03.</li>
+          <li><strong>The image-creation scrubber is a separate, mirrored copy, not a shared import.</strong> <code>supabase/functions/generate-image/index.ts</code> reimplements the same regex + extraction logic rather than calling <code>api/_lib/piiScrubbing.js</code> — the two can drift out of sync as either is updated, since a fix applied to one side doesn’t automatically reach the other.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section" id="guardrails">
+        <div class="sec-head"><span class="sec-num">09</span><h2>Safety guardrails &amp; escalation <span class="status confirmed" style="margin-left:8px;">New</span></h2></div>
+        <p class="sec-standing">Added this revision, as a direct safeguarding response: a provision for a learner using the AI inappropriately toward themselves or someone else. This is a genuinely new capability, not a policy restated — it’s worth describing to Maji Mazuri directly as part of onboarding, since it changes what a partner community can expect the platform to do on their behalf.</p>
+
+        <h3>How it works</h3>
+        <p>Independently of the AI’s own reply, every message is classified by a separate Claude Haiku call into one of four categories: <span class="mono">none</span>, <span class="mono">self_harm</span>, <span class="mono">harm_to_others</span>, or <span class="mono">hate_or_discriminatory</span>. This classifier reads the learner’s original, unscrubbed message — deliberately: a flag reading “I’m going to hurt [name removed]” would be close to useless to the person meant to act on it.</p>
+        <ul>
+          <li><strong>In chat</strong> (AI Playground, Create Game): a flag doesn’t block or change the AI’s own response — the model’s own trained, caring reply still reaches the learner in the moment. The flag instead fires a background alert.</li>
+          <li><strong>In AI Image Creation</strong>: a flagged prompt is refused outright — no image is generated — since an image request has no equivalent “helpful” fallback response the way a chat turn does.</li>
+        </ul>
+
+        <h3>Who gets told, and what they see</h3>
+        <p>A flag emails the learner’s community leader(s) — resolved from the learner’s organization record, the same relationship the platform already uses to identify who runs a partner community — plus a fixed fallback address configured per environment, so a lookup failure never drops the alert silently. The email names the flagged category, the page, and a quoted excerpt of what was actually written; it also writes an internal log entry for an audit trail. It is explicitly labeled as unreviewed and automated — “please follow up with the student” — not a finding of fact.</p>
+
+        <div class="callout">
+          <span class="callout-label">What this changes for partner communities</span>
+          <p>This is the mechanism that answers a question Maji Mazuri or any partner should reasonably ask before onboarding: <em>what happens if a young person says something alarming to the AI?</em> The honest current answer is “a designated adult at your organization is emailed, automatically, usually within seconds” — worth stating plainly rather than leaving implicit, and worth confirming who that designated adult actually is for each partner before launch.</p>
+        </div>
+
+        <h3>Known gaps</h3>
+        <ul>
+          <li><strong>Confirmed still not done:</strong> a direct check of both environments’ secrets shows <code>SAFETY_ALERT_FALLBACK_EMAIL</code> is set on <em>neither</em> Vercel nor Supabase, and it is also absent from <code>.env.local.example</code>. In its current state, a flag for a learner whose organization has no leader profile on file goes to no one at all — the code’s own fallback logic returns early with nothing sent when both the leader list and the fallback list are empty.</li>
+          <li><strong>Supabase’s copy of this alerting can’t send email at all today.</strong> <code>RESEND_API_KEY</code> exists in Vercel’s environment but is not present in the Supabase project’s secrets — so the mirrored safety-flag logic inside <code>generate-image</code> (§08) has no way to actually deliver an alert even once an organization leader is found.</li>
+          <li><strong>Unverified against a live message.</strong> Every part of this has been reviewed and unit-tested against simulated responses; none of it has yet been exercised against a real Anthropic call with genuine flagged content. Worth a deliberate test pass before relying on it operationally.</li>
+          <li><strong>No retention decision for the safety-event log itself</strong> — see the new row in §04.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section" id="children">
+        <div class="sec-head"><span class="sec-num">10</span><h2>Children’s data &amp; consent</h2></div>
+        <p class="sec-standing"><span class="status gap">Not yet demonstrated</span> The join-code signup ties a learner to an organization; it doesn’t, by itself, capture guardian consent.</p>
+        <p>Section 33 of the Act requires that personal data relating to a child (anyone under 18) be processed only with the consent of a parent or guardian, and in a manner that protects and advances the child’s best interests. Because nextVillage is built for young people in rural communities, this is likely the single highest-priority gap in this review.</p>
+        <p>The most workable fix given the existing model: fold guardian consent into the community’s own onboarding — Maji Mazuri (or any partner organization) collects it once as part of enrolling a group of learners and issuing join codes, rather than nextVillage trying to verify individual guardians at signup. That consent record, and what it covers, should be something nextVillage can point to on request.</p>
+        <p>§08 and §09 are relevant here, not a substitute: PII scrubbing and safety escalation are genuine, concrete protections worth naming in whatever a guardian is asked to consent to — but neither one is itself a consent mechanism, and neither closes this gap on its own.</p>
+      </section>
+
+      <section class="doc-section" id="security">
+        <div class="sec-head"><span class="sec-num">11</span><h2>Security controls already in place</h2></div>
+        <p class="sec-standing"><span class="status confirmed">Solid foundation</span></p>
+        <ul>
+          <li><strong>Encryption in transit and at rest</strong> — standard on Supabase-managed Postgres and Vercel-hosted traffic (TLS).</li>
+          <li><strong>Row-Level Security (RLS)</strong> on Supabase tables — access is scoped per user/organization at the database layer, not left to application code alone.</li>
+          <li><strong>No secrets committed to source</strong> — API keys and service-role credentials live in Vercel/Supabase environment variables; <code>.env.local</code> is git-ignored.</li>
+          <li><strong>Join-code scoping</strong> — learners are bound to their organization at signup, limiting cross-community data exposure by construction.</li>
+          <li><strong>PII scrubbing before any model call</strong> — new this revision; see §08.</li>
+          <li><strong>Independent safety classification and leader escalation</strong> — new this revision; see §09.</li>
+          <li><strong>Health-adjacent conversation routed to a single, contractually-reviewed provider only</strong> — <code>HealthcareNavigatorPage</code> no longer participates in the free-tier fallback chain; see §07.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section" id="registration">
+        <div class="sec-head"><span class="sec-num">12</span><h2>ODPC registration</h2></div>
+        <p class="sec-standing"><span class="status gap">Unconfirmed</span></p>
+        <p>Kenya requires certain data controllers and processors to register with the Office of the Data Protection Commissioner under the Data Protection (Registration of Data Controllers and Data Processors) Regulations, 2021. Registration duty can turn on factors beyond simple revenue thresholds — including processing children’s data at scale — so this is worth a direct check with a Kenyan advocate or the ODPC registration portal before launch, rather than assuming either way.</p>
+      </section>
+
+      <section class="doc-section" id="actions">
+        <div class="sec-head"><span class="sec-num">13</span><h2>Open items, in priority order</h2></div>
+        <div class="actionlist">
+          <div class="action"><span class="idx">01</span><div class="body"><p>Capture guardian consent through partner-community onboarding.</p><p class="why">Closes the Section 33 gap — the single highest-priority item, and now the one thing §08/§09 make more concrete to explain to a guardian.</p></div><span class="status gap">Gap</span></div>
+          <div class="action"><span class="idx">02</span><div class="body"><p>Vet data-retention/training terms for Groq, Gemini, Cloudflare Workers AI, OpenRouter, Mistral, and DeepSeek, and execute agreements alongside Supabase/Vercel/Anthropic.</p><p class="why">§07’s code audit turned a suspicion into a confirmed finding — these providers are genuinely in the path for several pages, each under its own untested terms.</p></div><span class="status gap">Gap</span></div>
+          <div class="action"><span class="idx">03</span><div class="body"><p>Extend PII scrubbing (or a documented exception) to the remaining Supabase Edge Functions that call Anthropic directly — challenge submission/evaluation and weekly-challenge generation.</p><p class="why">§08’s scrub layer covers the three main learner-facing chat/image functions; these were out of scope for that change and should be closed deliberately, not by omission.</p></div><span class="status gap">Gap</span></div>
+          <div class="action"><span class="idx">04</span><div class="body"><p>Set <code>SAFETY_ALERT_FALLBACK_EMAIL</code> on both Vercel and Supabase, add <code>RESEND_API_KEY</code> to Supabase secrets, and run one deliberate test with real flagged content.</p><p class="why">Confirmed by direct inspection: neither env var is set today, so a flag for an org with no leader on file, or any safety flag from the image-creation function, currently reaches nobody.</p></div><span class="status gap">Gap</span></div>
+          <div class="action"><span class="idx">05</span><div class="body"><p>Add a cross-border transfer notice at signup.</p><p class="why">Establishes the consent basis the Act requires for transfers already happening — now to a longer list of destinations per §07.</p></div><span class="status gap">Gap</span></div>
+          <div class="action"><span class="idx">06</span><div class="body"><p>Publish a deletion-request channel with a stated turnaround.</p><p class="why">Turns today’s ad-hoc admin delete into something a learner or guardian can actually invoke.</p></div><span class="status gap">Gap</span></div>
+          <div class="action"><span class="idx">07</span><div class="body"><p>Adopt and implement the retention schedule in §04, including a decision for safety-event logs.</p><p class="why">Without it, “no longer than necessary” has no operational meaning.</p></div><span class="status recommend">Recommended</span></div>
+          <div class="action"><span class="idx">08</span><div class="body"><p>Confirm ODPC registration status with local counsel.</p><p class="why">A scale/children’s-data threshold may apply regardless of nextVillage’s size.</p></div><span class="status recommend">Recommended</span></div>
+          <div class="action"><span class="idx">09</span><div class="body"><p>Confirm the exact Supabase AWS region in the project dashboard.</p><p class="why">This document currently states “United States” without the specific region.</p></div><span class="status recommend">Recommended</span></div>
+          <div class="action done"><span class="idx">✓</span><div class="body"><p>Audit non-Anthropic AI provider code paths for learner-facing reach.</p><p class="why">Done this revision (§07) — superseded by item 02 above, which is the resulting action.</p></div><span class="status confirmed">Closed</span></div>
+          <div class="action done"><span class="idx">✓</span><div class="body"><p>Verify §08/§09 claims directly against the code, not just prior review notes.</p><p class="why">Done this revision — confirmed accurate on the whole, with two corrections folded in above: the sixth fallback provider is Cerebras, not Gemini, and the image-creation function runs its own separately-maintained copy of the scrub logic rather than sharing it.</p></div><span class="status confirmed">Closed</span></div>
+        </div>
+      </section>
+
+      <section class="doc-section" id="appendix">
+        <div class="sec-head"><span class="sec-num">14</span><h2>Appendix &amp; sources</h2></div>
+        <h3>Glossary</h3>
+        <dl class="def">
+          <dt>Data controller</dt><dd>Decides why and how personal data is processed; carries primary accountability under the Act.</dd>
+          <dt>Data processor</dt><dd>Processes data on a controller’s behalf and instructions (e.g. Supabase, Anthropic).</dd>
+          <dt>ODPC</dt><dd>Office of the Data Protection Commissioner — Kenya’s data protection regulator.</dd>
+          <dt>ZDR</dt><dd>Zero Data Retention — an Anthropic arrangement where API content is never stored at rest, available on request.</dd>
+          <dt>k-anonymization</dt><dd>Grouping records so each combination of traits covers at least <em>k</em> people, preventing re-identification of any one learner.</dd>
+          <dt>PII scrubbing</dt><dd>The §08 process that removes or converts personal information in a learner’s message before it reaches any AI model.</dd>
+          <dt>Scrub tier</dt><dd>Which of two rule sets (<span class="mono">strict</span> / <span class="mono">community_helper</span>) governs how much location detail survives scrubbing — see §08.</dd>
+          <dt>Safety flag</dt><dd>A classification (self-harm, harm to others, or hate/discriminatory content) raised by the §09 classifier, distinct from and in addition to the AI model’s own response.</dd>
+        </dl>
+        <h3>Sources consulted</h3>
+        <p class="cite">
+          Data Protection Act, No. 24 of 2019 (Laws of Kenya) ·
+          <a href="https://cms.law/en/ken/news-information/transfer-of-personal-data-outside-kenya">CMS Law — Transfer of Personal Data Outside Kenya</a> ·
+          <a href="https://www.kictanet.or.ke/what-does-the-data-protection-act-say-about-cross-border-data-transfers/">KICTANet — Cross-Border Data Transfers</a> ·
+          <a href="https://www.odpc.go.ke/wp-content/uploads/2025/11/ODPC-%E2%80%93-Guidance-Note-for-Processing-Childrens-Data.pdf">ODPC — Guidance Note for Processing Children’s Data (2025)</a> ·
+          <a href="https://platform.claude.com/docs/en/manage-claude/api-and-data-retention">Anthropic — API and Data Retention</a> ·
+          <a href="https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data">Anthropic Privacy Center — Commercial Data Retention</a> ·
+          <a href="https://supabase.com/docs/guides/platform/regions">Supabase — Available Regions</a> ·
+          nextVillage source: <code>api/chat.js</code>, <code>api/chat-stream.js</code>, <code>api/_lib/piiScrubbing.js</code>, <code>api/_lib/safetyGuardrails.js</code>, <code>supabase/functions/generate-image/index.ts</code>, <code>supabase/functions/</code> (searched for Anthropic calls and scrub-layer coverage), Vercel and Supabase environment/secrets configuration (reviewed 12 September 2026, re-verified directly against code and live env config same day)
+        </p>
+        <hr class="rule">
+        <p style="max-width:none; color:var(--ink-muted); font-size:14px;">This is a working compliance summary, not legal advice. Items marked <span class="status gap" style="vertical-align:middle;">Gap</span> describe the platform’s actual current state, honestly; closing them before onboarding a new partner community is the point of writing this down.</p>
+      </section>
+
+      <footer>
+        <p>nextVillage · AI’ing &amp; Vibing (vAI) — data protection summary · prepared 11 September 2026, revised 12 September 2026 (rev. 3, code-verified)</p>
+      </footer>
+
+    </main>
+  </div>
+</div>
+
+</body></html>
