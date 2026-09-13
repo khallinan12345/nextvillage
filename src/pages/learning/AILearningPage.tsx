@@ -846,6 +846,7 @@ const AILearningPage: React.FC = () => {
   const [userGradeLevel, setUserGradeLevel] = useState<number | null>(null);
   const [userContinent, setUserContinent] = useState<string | null>(null);
   const [userCity, setUserCity] = useState<string | null>(null);
+  const [userOrganizationId, setUserOrganizationId] = useState<string | null>(null);
   const [communicationStrategy, setCommunicationStrategy] = useState<any>(null);
   const [learningStrategy, setLearningStrategy] = useState<any>(null);
   const [communicationLevel, setCommunicationLevel] = useState<number>(1);
@@ -1097,7 +1098,7 @@ const AILearningPage: React.FC = () => {
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('grade_level, continent, city, country')
+        .select('grade_level, continent, city, country, organization_id')
         .eq('id', userId)
         .single();
   
@@ -1139,16 +1140,18 @@ const AILearningPage: React.FC = () => {
         gradeLevel: profileData?.grade_level || null,
         continent: profileData?.continent || null,
         city: profileData?.city || null,
+        organizationId: profileData?.organization_id || null,
         communicationStrategy: baselineData?.communication_strategy || null,
         learningStrategy: baselineData?.learning_strategy || null,
         communicationLevel: baselineData?.communication_level ?? 1,
       };
     } catch (err) {
       console.error('[AI Profile] Error fetching user profile:', err);
-      return { 
-        gradeLevel: null, 
+      return {
+        gradeLevel: null,
         continent: null,
         city: null,
+        organizationId: null,
         communicationStrategy: null,
         learningStrategy: null,
         communicationLevel: 1,
@@ -1358,25 +1361,45 @@ go deeper immediately — do not praise and move on.`;
 };
 
   // Fetch all dashboard activities with category = 'AI Learning'
-  const fetchAllAIActivities = async (city?: string | null) => {
+  const fetchAllAIActivities = async (city?: string | null, organizationId?: string | null) => {
     if (!user?.id) return;
-  
-    try {
-      // Resolve which city_town to show: Ibiade users see Ibiade modules, Dayton
-      // (Back to Basics Youth Education) users see Dayton modules, everyone else sees Oloibiri
-      const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
 
-      // 1. Fetch all relevant learning modules filtered by city_town
-      const { data, error } = await supabase
-        .from('learning_modules')
-        .select('*')
-        .eq('category', 'AI Proficiency')
-        .eq('learning_or_certification', 'learning')
-        .eq('city_town', cityTown)
-        .or(`public.eq.1,user_id.eq.${user.id}`)
-        .order('sub_category', { ascending: true });
-  
-      if (error) throw error;
+    try {
+      // Prefer this learner's own organization's localized modules — each org
+      // (even ones sharing a city) gets modules tagged to it specifically.
+      // Falls back to the legacy city_town scheme for orgs with no modules
+      // of their own yet (e.g. generation still running, or a pre-existing
+      // org from before organization_id tagging existed).
+      let data: any[] | null = null;
+      if (organizationId) {
+        const { data: orgModules, error: orgError } = await supabase
+          .from('learning_modules')
+          .select('*')
+          .eq('category', 'AI Proficiency')
+          .eq('learning_or_certification', 'learning')
+          .eq('organization_id', organizationId)
+          .or(`public.eq.1,user_id.eq.${user.id}`)
+          .order('sub_category', { ascending: true });
+        if (orgError) throw orgError;
+        data = orgModules;
+      }
+
+      if (!data || data.length === 0) {
+        // Resolve which city_town to show: Ibiade users see Ibiade modules, Dayton
+        // (Back to Basics Youth Education) users see Dayton modules, everyone else sees Oloibiri
+        const cityTown = city === 'Ibiade' ? 'Ibiade' : city === 'Dayton' ? 'Dayton' : 'Oloibiri';
+
+        const { data: cityModules, error } = await supabase
+          .from('learning_modules')
+          .select('*')
+          .eq('category', 'AI Proficiency')
+          .eq('learning_or_certification', 'learning')
+          .eq('city_town', cityTown)
+          .or(`public.eq.1,user_id.eq.${user.id}`)
+          .order('sub_category', { ascending: true });
+        if (error) throw error;
+        data = cityModules;
+      }
       
       // 2. Fetch this user's dashboard rows for those modules (progress + all scores)
       const moduleIds = (data || []).map(m => m.learning_module_id);
@@ -3000,7 +3023,7 @@ Respond ONLY with valid JSON:
       });
 
       if (refreshError) throw refreshError;
-      await fetchAllAIActivities(userCity);
+      await fetchAllAIActivities(userCity, userOrganizationId);
     } catch (error) {
       console.error('Error refreshing dashboard:', error);
     } finally {
@@ -3098,7 +3121,7 @@ Respond ONLY with valid JSON:
       };
       setShowCreateActivity(false);
       setCreateForm({ title: '', description: '', location: '', constraints: '', stakeholders: '', entrepreneurialContext: '', category: 'A' });
-      await fetchAllAIActivities(userCity);
+      await fetchAllAIActivities(userCity, userOrganizationId);
       await handleActivitySelect(newActivity);
     } catch (err) {
       console.error('[Create Activity] Error:', err);
@@ -3117,13 +3140,14 @@ Respond ONLY with valid JSON:
         setUserGradeLevel(profile.gradeLevel);
         setUserContinent(profile.continent);
         setUserCity(profile.city);
+        setUserOrganizationId(profile.organizationId);
         // Default Nigerian voice for Africa users; British for everyone else
         if (profile.country === 'Nigeria') setVoiceMode('pidgin');
         else setVoiceMode('english');
         if (profile.communicationStrategy) setCommunicationStrategy(profile.communicationStrategy);
         if (profile.learningStrategy)       setLearningStrategy(profile.learningStrategy);
         setCommunicationLevel(profile.communicationLevel ?? 1);
-        return fetchAllAIActivities(profile.city);
+        return fetchAllAIActivities(profile.city, profile.organizationId);
       }).finally(() => setLoading(false));
     }
   }, [user?.id]);

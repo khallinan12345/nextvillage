@@ -1,7 +1,16 @@
 // api/generate-community-profile.ts
 // Vercel Serverless Function
 // Usage: POST /api/generate-community-profile
-// Body: { city_town, state, country }
+// Body: { organization_id }
+//
+// Fired automatically right after a new organization is created (see
+// ProfileCompletionPopup.tsx) — fire-and-forget, not awaited by the signup UI.
+// Pulls the org's own location and community-context answers (livelihood,
+// challenges, hopes, assets, educational goals), researches the town for
+// additional grounding, then replicates Oloibiri's module structure with
+// content localized to this specific organization. Every inserted row is
+// tagged with organization_id, not just city/state/country, so two
+// organizations sharing a town never share content.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
@@ -25,9 +34,20 @@ const anthropic = new Anthropic({ apiKey: anthropicApiKey });
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface RequestBody {
-  city_town: string;
-  state: string;
-  country: string;
+  organization_id: string;
+}
+
+interface OrgContext {
+  id: string;
+  name: string;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  community_livelihood: string | null;
+  community_challenges: string | null;
+  community_hopes: string | null;
+  community_assets: string | null;
+  educational_goals: string | null;
 }
 
 interface CategoryGroup {
@@ -126,13 +146,42 @@ function parseModulesJSON(raw: string): unknown {
   }
 }
 
+// ─── Step 0: Fetch the organization's own signup answers ──────────────────
+
+async function fetchOrganization(organization_id: string): Promise<OrgContext> {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('id, name, city, state, country, community_livelihood, community_challenges, community_hopes, community_assets, educational_goals')
+    .eq('id', organization_id)
+    .single();
+
+  if (error) throw new Error(`Failed to fetch organization: ${error.message}`);
+  if (!data.city?.trim() || !data.country?.trim()) {
+    throw new Error('Organization is missing city or country — cannot localize modules.');
+  }
+  return data as OrgContext;
+}
+
+function formatOrgAnswers(org: OrgContext): string {
+  const lines: string[] = [];
+  if (org.community_livelihood) lines.push(`- Livelihood: ${org.community_livelihood}`);
+  if (org.community_challenges) lines.push(`- Challenges: ${org.community_challenges}`);
+  if (org.community_hopes)      lines.push(`- Hopes: ${org.community_hopes}`);
+  if (org.community_assets)     lines.push(`- Assets: ${org.community_assets}`);
+  if (org.educational_goals)    lines.push(`- Educational goals for this site: ${org.educational_goals}`);
+  return lines.length ? lines.join('\n') : '(The site leader did not fill these in at signup — rely on web research alone.)';
+}
+
 // ─── Step 1: Research community profile with web search ───────────────────
 
 async function researchCommunity(
   city_town: string,
   state: string,
-  country: string
+  country: string,
+  org: OrgContext
 ): Promise<string> {
+  const orgAnswers = formatOrgAnswers(org);
+
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-5',
     max_tokens: 4000,
@@ -141,7 +190,11 @@ async function researchCommunity(
     messages: [
       {
         role: 'user',
-        content: `Research and write a comprehensive community profile for **${city_town}, ${state}, ${country}**.
+        content: `Research and write a comprehensive community profile for **${city_town}, ${state}, ${country}**, the home of an organization called "${org.name}" that is about to bring AI-literacy education to its learners.
+
+The organization's own leader answered these questions at signup — treat these as ground truth about THIS specific community, and use web research to add depth and detail around them, not to override them where they conflict with generic information about the wider area:
+
+${orgAnswers}
 
 Cover ALL of the following sections in detail:
 
@@ -378,6 +431,7 @@ async function generateModules(
 
 async function insertModules(
   modules: GeneratedModule[],
+  organization_id: string,
   city_town: string,
   state: string,
   country: string
@@ -398,6 +452,7 @@ async function insertModules(
     ai_assessment_instructions: m.ai_assessment_instructions ?? null,
     learning_or_certification: m.learning_or_certification ?? 'learning',
     assessment_category: m.assessment_category ?? null,
+    organization_id,
     city_town,
     state,
     country,
@@ -437,12 +492,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized.' });
   }
 
-  const { city_town, state, country } = (req.body ?? {}) as RequestBody;
+  const { organization_id } = (req.body ?? {}) as RequestBody;
 
-  if (!city_town?.trim() || !state?.trim() || !country?.trim()) {
+  if (!organization_id?.trim()) {
     return res.status(400).json({
-      error: 'Missing required fields.',
-      required: ['city_town', 'state', 'country'],
+      error: 'Missing required field.',
+      required: ['organization_id'],
     });
   }
 
@@ -450,16 +505,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const startTime = Date.now();
 
   try {
-    log.push(`▶ Starting profile generation for ${city_town}, ${state}, ${country}`);
+    // 0. Fetch the organization's own answers
+    log.push(`▶ Fetching organization ${organization_id}`);
+    const org = await fetchOrganization(organization_id.trim());
+    const city_town = org.city!.trim();
+    const state = (org.state ?? '').trim();
+    const country = org.country!.trim();
+    log.push(`✅ ${org.name} — ${city_town}, ${state || '—'}, ${country}`);
+
+    // Skip if this org already has its own localized modules (idempotent —
+    // safe to call more than once, e.g. a retry, without duplicating rows).
+    const { count: existingCount } = await supabase
+      .from('learning_modules')
+      .select('learning_module_id', { count: 'exact', head: true })
+      .eq('organization_id', organization_id.trim());
+    if (existingCount && existingCount > 0) {
+      log.push(`⏭ Organization already has ${existingCount} localized modules — skipping.`);
+      return res.status(200).json({ success: true, skipped: true, existing_count: existingCount, log });
+    }
 
     // 1. Research
     log.push('🔍 Researching community with web search...');
-    const profile = await researchCommunity(city_town.trim(), state.trim(), country.trim());
+    const profile = await researchCommunity(city_town, state, country, org);
     log.push(`✅ Profile generated (${profile.length} chars)`);
 
     // 2. Upload
     log.push('📤 Uploading profile to Supabase storage...');
-    const profilePath = await uploadProfile(city_town.trim(), state.trim(), country.trim(), profile);
+    const profilePath = await uploadProfile(city_town, state, country, profile);
     log.push(`✅ Uploaded to: ${profilePath}`);
 
     // 3. Fetch structure
@@ -472,12 +544,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 4. Generate modules
     log.push('🤖 Generating contextually aligned modules...');
-    const generated = await generateModules(city_town.trim(), state.trim(), country.trim(), profile, groups);
+    const generated = await generateModules(city_town, state, country, profile, groups);
     log.push(`✅ Generated ${generated.length} modules`);
 
     // 5. Insert
     log.push('💾 Inserting modules into learning_modules...');
-    const inserted = await insertModules(generated, city_town.trim(), state.trim(), country.trim());
+    const inserted = await insertModules(generated, organization_id.trim(), city_town, state, country);
     log.push(`✅ Inserted ${inserted.length} rows`);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -485,7 +557,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       success: true,
-      community: { city_town: city_town.trim(), state: state.trim(), country: country.trim() },
+      organization: { id: organization_id.trim(), name: org.name, city_town, state, country },
       profile_storage_path: profilePath,
       groups_processed: groups.size,
       modules_generated: generated.length,

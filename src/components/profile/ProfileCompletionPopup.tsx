@@ -383,6 +383,18 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         if (Object.keys(orgUpdates).length) {
           await supabase.from('organizations').update(orgUpdates).eq('id', orgData.id);
         }
+
+        // ── Kick off localized module generation (fire-and-forget) ───────────
+        // Not awaited — this can take minutes (web research + multiple Claude
+        // calls). Signup completes immediately; modules land in the background
+        // and are tagged to this organization_id, not just its city.
+        fetch('/api/generate-community-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ organization_id: orgData.id }),
+        }).catch(err => {
+          console.warn('[ProfileCompletionPopup] Module generation request failed to start:', err);
+        });
       }
 
       // ── LEARNER with code: link to org ─────────────────────────────────────
@@ -622,6 +634,13 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
               <span className="text-lg leading-none">🔑</span>
               <p className="text-sm text-gray-700">
                 You can always find this code, and generate new ones, from your <span className="font-semibold">Profile page</span>.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-lg leading-none">🌍</span>
+              <p className="text-sm text-gray-700">
+                We're preparing lessons written specifically for your community in the background — this can take a few minutes,
+                so it's fine to invite learners in right away.
               </p>
             </div>
           </div>

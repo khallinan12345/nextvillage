@@ -718,12 +718,13 @@ Respond ONLY in this JSON format:
       // Fetch user profile for grade level and continent
       const { data: profile } = await supabase
         .from('profiles')
-        .select('grade_level, continent')
+        .select('grade_level, continent, organization_id')
         .eq('id', user.id)
         .single();
 
       const userGradeLevel: number | null = profile?.grade_level ?? null;
       const userContinent = profile?.continent || 'North America';
+      const userOrganizationId: string | null = profile?.organization_id ?? null;
 
       // Map assessment names to learning module categories/sub-categories
       const categoryMap: Record<string, { category: string; sub_category: string }> = {
@@ -752,12 +753,17 @@ Respond ONLY in this JSON format:
           .gte('grade_level', Math.max(1, userGradeLevel - 2)); // Allow up to 2 grades below
       }
 
-      // Prefer modules from user's continent but don't require it
+      // Prefer this learner's own organization's localized modules, then
+      // modules from their continent, then anything matching the category.
+      const orgModules = userOrganizationId
+        ? (await query.eq('organization_id', userOrganizationId)).data
+        : null;
       const { data: continentModules } = await query.eq('continent', userContinent);
       const { data: allModules } = await query;
 
-      // Prioritize continent-specific modules, fall back to any continent
-      const modules = continentModules && continentModules.length > 0 ? continentModules : allModules;
+      const modules = orgModules && orgModules.length > 0
+        ? orgModules
+        : continentModules && continentModules.length > 0 ? continentModules : allModules;
 
       // Filter by sub-category if possible, otherwise just use category match
       const filteredModules = modules?.filter(m => 
