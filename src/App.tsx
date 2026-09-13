@@ -108,6 +108,7 @@ const CoworkPage = lazy(() => import('./pages/CoworkPage'));
 const TutorialsPage = lazy(() => import('./pages/tutorials/TutorialsPage'));
 const FishMarketTutorialPage = lazy(() => import('./pages/tutorials/FishMarketTutorialPage'));
 const AIDiscoveryCampGuidePage = lazy(() => import('./pages/tutorials/AIDiscoveryCampGuidePage'));
+const SeedToMultiplierCurriculumGuidePage = lazy(() => import('./pages/tutorials/SeedToMultiplierCurriculumGuidePage'));
 const AILearningStartPage = lazy(() => import('./pages/tutorials/AILearningStartPage'));
 const SkillDevelopmentStartPage = lazy(() => import('./pages/tutorials/SkillDevelopmentStartPage'));
 const AddNewGuidePage = lazy(() => import('./pages/tutorials/AddNewGuidePage'));
@@ -318,6 +319,7 @@ export const AppContent: React.FC = () => {
         {/* Tutorials */}
         <Route path="/tutorials" element={<TutorialsPage />} />
         <Route path="/tutorials/ai-discovery-camp" element={<AIDiscoveryCampGuidePage />} />
+        <Route path="/tutorials/seed-to-multiplier" element={<SeedToMultiplierCurriculumGuidePage />} />
         <Route path="/tutorials/ai-learning-start" element={<AILearningStartPage />} />
         <Route path="/tutorials/skill-development-start" element={<SkillDevelopmentStartPage />} />
         <Route path="/tutorials/add-new-guide" element={<AddNewGuidePage />} />
