@@ -575,7 +575,7 @@ const AIDiscoveryCampGuidePage: React.FC = () => {
         {/* header */}
         <div className="mb-6 rounded-2xl bg-gradient-to-br from-purple-900 to-indigo-800 p-6 text-white">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-cyan-300">
-            <Sparkles className="h-3.5 w-3.5" /> AI Discovery Camp
+            <Sparkles className="h-3.5 w-3.5" /> AI Discovery
           </p>
           <h1 className="mt-1 text-3xl font-extrabold">Five Days of Creating With AI</h1>
           <p className="mt-1 max-w-xl text-sm text-slate-200">
@@ -661,7 +661,7 @@ const AIDiscoveryCampGuidePage: React.FC = () => {
 
         {doneCount === TOTAL_STEPS && (
           <div className="mt-2 rounded-2xl border border-green-200 bg-green-50 p-5 text-center">
-            <p className="font-bold text-green-800">You finished AI Discovery Camp — great work!</p>
+            <p className="font-bold text-green-800">You finished AI Discovery — great work!</p>
             <p className="mt-1 text-sm text-green-700">
               Keep exploring — go back to any day's pages any time to keep improving your robot, character, story, or game.
             </p>

@@ -648,7 +648,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left space-y-1.5 mb-6">
             <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">Recommended first activity</p>
             <p className="text-sm text-gray-700">
-              🚀 Have every new learner start with the <span className="font-semibold">AI Discovery Camp</span> —
+              🚀 Have every new learner start with <span className="font-semibold">AI Discovery</span> —
               it's the best on-ramp before anything else on the platform.
             </p>
             <a
@@ -657,7 +657,20 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 underline"
             >
-              View the AI Discovery Camp Guide →
+              View the AI Discovery Guide →
+            </a>
+            <p className="text-sm text-gray-700 pt-1">
+              From there, learners move into <span className="font-semibold">Core Curriculum → Core Path</span> —
+              AI-facilitated learning and training gated by certification, in order: AI Proficiency, then AI Ready
+              Skills, then Tech Skills.
+            </p>
+            <a
+              href="/tutorials/seed-to-multiplier"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 underline"
+            >
+              View the Core Path Guide →
             </a>
           </div>
 
