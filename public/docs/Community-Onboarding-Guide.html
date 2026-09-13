@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome to AI'ing &amp; Vibing — nextVillage.community</title>
+<meta name="description" content="A starting guide for new community site leaders: getting set up on the platform, building the lab, earning community trust, recruiting learners, and running the lab week to week.">
+<style>
+  :root{
+    --green:#1F5C4A;
+    --green-deep:#143B30;
+    --sage:#A9C7BC;
+    --sage-pale:#EEF4F1;
+    --ink:#22272A;
+    --ink-soft:#5A6268;
+    --rule:#DFE4E1;
+    --paper:#FFFFFF;
+    --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:18px;
+    line-height:1.65;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    background:var(--green);
+    color:#fff;
+    padding:2.8rem 1.5rem 2.4rem;
+  }
+  .masthead .inner{max-width:1080px;margin:0 auto}
+  .kicker{
+    font-family:var(--sans);
+    font-size:.82rem;
+    letter-spacing:.02em;
+    color:var(--sage);
+    margin:0 0 .6rem;
+  }
+  .masthead h1{
+    font-size:clamp(1.85rem,4.4vw,2.9rem);
+    line-height:1.12;
+    font-weight:600;
+    margin:0 0 .7rem;
+    max-width:19ch;
+  }
+  .standfirst{
+    margin:0;
+    max-width:56ch;
+    color:#DCE8E3;
+    font-size:1.05rem;
+  }
+  .byline{
+    font-family:var(--sans);
+    font-size:.85rem;
+    color:var(--sage);
+    margin:1.6rem 0 0;
+    padding-top:1rem;
+    border-top:1px solid rgba(169,199,188,.35);
+    max-width:60ch;
+  }
+
+  /* ---------- layout ---------- */
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 1.5rem 5rem;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:2.5rem;
+  }
+  @media (min-width:940px){
+    .wrap{grid-template-columns:15rem 1fr;gap:3.5rem;align-items:start}
+  }
+
+  /* ---------- contents ---------- */
+  nav.toc{
+    font-family:var(--sans);
+    font-size:.9rem;
+    padding-top:2.5rem;
+  }
+  @media (min-width:940px){
+    nav.toc{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding-bottom:2rem}
+  }
+  nav.toc h2{
+    font-size:.8rem;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin:0 0 .7rem;
+  }
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:toc}
+  nav.toc li{counter-increment:toc;margin:0 0 .1rem}
+  nav.toc a{
+    display:block;
+    padding:.3rem 0 .3rem .6rem;
+    border-left:2px solid var(--rule);
+    color:var(--ink-soft);
+    text-decoration:none;
+    line-height:1.35;
+  }
+  nav.toc a::before{content:counter(toc) ".  ";color:var(--sage)}
+  nav.toc a:hover,nav.toc a:focus-visible{color:var(--green);border-left-color:var(--sage)}
+  nav.toc a.here{color:var(--green-deep);border-left-color:var(--green);font-weight:600}
+
+  /* ---------- article ---------- */
+  article{padding-top:2.5rem;max-width:40rem}
+  article p{margin:0 0 1.1rem}
+  article > p:first-of-type{font-size:1.06rem}
+
+  h2.sec{
+    font-family:var(--sans);
+    font-size:1.4rem;
+    font-weight:600;
+    color:var(--green-deep);
+    line-height:1.25;
+    margin:3.2rem 0 1.1rem;
+    padding-top:1.4rem;
+    border-top:1px solid var(--rule);
+  }
+  #start h2.sec:first-child{border-top:none}
+  h3{
+    font-family:var(--sans);
+    font-size:1.02rem;
+    font-weight:600;
+    color:var(--ink);
+    margin:1.9rem 0 .6rem;
+  }
+
+  ul,ol.steps,ol.check{margin:0 0 1.2rem;padding-left:1.3rem}
+  li{margin:0 0 .5rem}
+  ol.steps li::marker{color:var(--green);font-family:var(--sans);font-size:.9rem}
+
+  ul.check{list-style:none;padding-left:0}
+  ul.check li{
+    position:relative;
+    padding-left:1.7rem;
+  }
+  ul.check li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:.2rem;
+    width:1.05rem;
+    height:1.05rem;
+    border:1.5px solid var(--sage);
+    border-radius:3px;
+  }
+
+  strong{font-weight:600}
+  .lede-term{font-weight:600;color:var(--green-deep)}
+
+  .note{
+    background:var(--sage-pale);
+    border:1px solid var(--sage);
+    border-radius:3px;
+    padding:1.1rem 1.2rem;
+    font-size:.96rem;
+    margin:0 0 1.4rem;
+  }
+  .note p{margin:0 0 .6rem}
+  .note p:last-child{margin-bottom:0}
+  .note h3{margin-top:0}
+
+  .todo{
+    background:#FBF3E7;
+    border:1px solid #E4C79B;
+    border-radius:3px;
+    padding:1.1rem 1.2rem;
+    font-size:.94rem;
+    font-family:var(--sans);
+    font-style:italic;
+    color:#6B4E23;
+    margin:0 0 1.4rem;
+  }
+  .todo p{margin:0}
+
+  .sign{
+    margin-top:3.5rem;
+    padding-top:1.5rem;
+    border-top:1px solid var(--rule);
+    font-size:.9rem;
+    font-family:var(--sans);
+    color:var(--ink-soft);
+  }
+  a{color:var(--green)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+  @media print{
+    .masthead{background:#fff;color:#000;padding:0 0 1rem;border-bottom:2px solid #1F5C4A}
+    .masthead h1,.standfirst,.byline{color:#000}
+    .kicker{color:#1F5C4A}
+    nav.toc{display:none}
+    .wrap{display:block;padding:0}
+    article{max-width:none;padding-top:1rem}
+    h2.sec{page-break-after:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="inner">
+    <p class="kicker">nextVillage.community · Davidson AI Innovation Center (vAI)</p>
+    <h1>Welcome to AI'ing &amp; Vibing</h1>
+    <p class="standfirst">A starting guide for new community site leaders — everything you need to bring your community online, build your lab, earn the trust of your neighbours, and give your young people the tools to lead their own future.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <nav class="toc" aria-label="Contents">
+    <h2>On this page</h2>
+    <ol>
+      <li><a href="#what">What you're building</a></li>
+      <li><a href="#setup">Getting your community set up</a></li>
+      <li><a href="#localized">How your community gets localized</a></li>
+      <li><a href="#lab">Building the lab</a></li>
+      <li><a href="#trust">Earning community trust</a></li>
+      <li><a href="#recruit">Recruiting learners</a></li>
+      <li><a href="#mentor">The mentor system</a></li>
+      <li><a href="#weekly">Running the lab: week to week</a></li>
+      <li><a href="#leadership">What good leadership looks like</a></li>
+      <li><a href="#checklist">Quick-reference checklist</a></li>
+    </ol>
+  </nav>
+
+  <article id="start">
+
+    <h2 class="sec" id="what">1. What You're Building</h2>
+
+    <p>AI'ing &amp; Vibing is a learning platform, but the platform is not the point. The point is what a young person in your community can become with the right tools in their hands: someone who can help a neighbour access healthcare information, help a farmer diagnose a crop disease, help a trader grow their business, or start something of their own. The lab you build is a room. What happens in that room — the trust you earn, the young people you bring in, the mentorship you give — is the actual work.</p>
+
+    <p>This guide walks through four things: getting your community set up on the platform, building the physical lab, earning the community support that makes the lab matter, and running it week to week the way an experienced leader does.</p>
+
+    <h2 class="sec" id="setup">2. Getting Your Community Set Up</h2>
+
+    <h3>Step 1 — You register as the site leader</h3>
+    <p>Sign up at the platform with your own email and password. When asked who you are, choose <span class="lede-term">Teacher / Educator</span>, then <span class="lede-term">Register My Organization</span> — this makes you the primary leader for your community.</p>
+
+    <p>You'll be asked for:</p>
+    <ul>
+      <li>Your organization's name (often named for the lab itself, or the community)</li>
+      <li>A short description of what you do</li>
+      <li>Your continent, country, state/province, and city/town/village</li>
+      <li>The age range and gender mix of the learners you'll be bringing in</li>
+      <li>Optionally, a logo</li>
+      <li><strong>Community context</strong> — three short answers: how people in your community make their livelihood, what challenges your community faces, and what your community hopes for. Take real time on these — they matter more than they look. See Section 3.</li>
+    </ul>
+
+    <h3>Step 2 — You get a join code</h3>
+    <p>Once you submit, the platform generates a unique 6-character code (for example, <code>DAV001</code>). This is the single most important piece of paper you'll carry for the first few weeks. Every learner and co-facilitator you bring in enters this code when they sign up, which automatically links them to your organization, your location, and your community's localized content.</p>
+
+    <div class="note">
+      <p>Write the code somewhere permanent, and expect to say it out loud dozens of times in your first month — on doorsteps, after church or mosque services, in conversations with parents who haven't yet said yes.</p>
+    </div>
+
+    <h3>Step 3 — Learners and co-facilitators join</h3>
+    <p>When a young person signs up, they choose <span class="lede-term">Student / Learner</span> and enter your join code. If you have another adult helping run the lab, they sign up as <span class="lede-term">Teacher / Educator</span> and choose <span class="lede-term">Join as Co-Facilitator</span> with the same code — they'll be scoped to your organization without being able to create a second, competing one.</p>
+
+    <h2 class="sec" id="localized">3. How Your Community Gets Localized</h2>
+
+    <p>This is what makes the platform actually useful rather than generic: the three community-context answers you gave in Step 1, combined with the platform's own research into your specific city or town — its main livelihoods, its real challenges, the effects of climate change on farming and water where you are, its assets, and its unmet needs — get used to write new lesson content and community-impact challenges specific to your place, not a copy of what another community got.</p>
+
+    <p>Every new community's learning modules are matched in structure to Oloibiri's — the same number of lessons across the same subjects and skill categories — but the actual content is generated fresh, grounded in what's true about your community specifically. Two communities on the same platform can be working through completely different real-world examples in the same week, because the underlying content was written for each of them individually.</p>
+
+    <div class="note">
+      <p>This step is run once, early, by the platform's technical team (not something you do yourself) — but the quality of what comes out of it depends directly on the honesty and specificity of the community-context answers you gave at signup. Vague answers produce vague lessons.</p>
+    </div>
+
+    <h2 class="sec" id="lab">4. Building the Lab</h2>
+
+    <p>The lab is a physical room where learners come to work. It does not need to be large or new — several successful labs are a single repurposed room. It does need:</p>
+
+    <ul>
+      <li><strong>Devices.</strong> Laptops or tablets that can run a modern web browser. Shared devices are fine — most labs run more learners than devices, on a rotation.</li>
+      <li><strong>Internet access.</strong> Reliable enough for text and images at minimum; video works better with more bandwidth. If connectivity is inconsistent in your area, plan your weekly schedule around when it's most reliable, and know in advance what a learner can still do offline (several activities, like the Healthcare Navigator's offline clinical assessment tool, are built to work without a live connection).</li>
+      <li><strong>Power.</strong> This is often the real constraint, not the internet. If grid power is unreliable, a solar setup or battery bank sized to your device count and lab hours is worth the upfront investment — an interrupted charging routine is one of the most common reasons a lab's hours shrink over time. Plan this like you would size any other piece of off-grid equipment: know your device count, your daily hours of use, and your actual (not rated) available charging window.</li>
+      <li><strong>A safe, supervised space.</strong> Especially given the age range of most learners, the room should be one where an adult is present, entrances are visible, and parents feel comfortable having their children spend time there.</li>
+    </ul>
+
+    <div class="todo">
+      <p>[Kevin — add specifics here on typical lab setup costs, recommended device specs/vendors, and any solar/power sizing guidance you've developed from experience. This section should reflect what's actually worked, not general assumptions.]</p>
+    </div>
+
+    <h2 class="sec" id="trust">5. Earning Community Trust</h2>
+
+    <p>A lab with devices and no community backing will sit empty. Before — or alongside — setting up the physical space, the work is building relationships with the people whose approval actually matters locally:</p>
+
+    <ul>
+      <li><strong>Traditional and local government leadership.</strong> A visit and a clear, honest explanation of what the program is (free, AI-facilitated learning tied to real community benefit, not a foreign extraction of data or attention) goes a long way toward turning suspicion into support.</li>
+      <li><strong>Religious leaders.</strong> Priests, pastors, imams, and other faith leaders are often the most trusted voices in a community, especially with parents. Meeting with them early, explaining the program, and — where appropriate — asking for even a brief mention after a service, is frequently the single highest-leverage conversation a new site leader has.</li>
+      <li><strong>School leadership, if you're not embedded in a school already.</strong> Teachers and headmasters are natural allies and can help you reach families directly.</li>
+    </ul>
+
+    <div class="note">
+      <p>The message that tends to work is simple and concrete: <em>this is free, it's for your children, it teaches real skills, and here's a specific example of what a young person here could do with it</em> — pointing at the actual community-impact challenges (helping a neighbour access healthcare information, helping a farmer diagnose a crop problem, helping a local trader) rather than describing "AI" in the abstract.</p>
+    </div>
+
+    <h2 class="sec" id="recruit">6. Recruiting Learners</h2>
+
+    <p>Once you have community backing, the actual recruitment is often door to door — walking the streets and lanes of your community, introducing yourself to parents, and explaining the program directly. A few things that make this go better:</p>
+
+    <ul>
+      <li>Bring the join code and be ready to show, not just describe — a phone or tablet with the platform open, showing a real activity, is more persuasive than any explanation.</li>
+      <li>Address the two questions every parent actually has, even if unspoken: <em>is this safe for my child</em>, and <em>what's actually in it for them</em>. Answer both directly.</li>
+      <li>Start with a small, visible group of early learners — their enthusiasm, and what they can show their own parents and neighbours after a few weeks, becomes your best recruiting tool for the next round of doors.</li>
+      <li>The platform's own weekly challenges are built around this same instinct — asking learners to go out and "bring someone" into the work (a sick animal's keeper, a struggling trader, a family with a health question). Recruiting more learners is the same muscle, exercised by you first.</li>
+    </ul>
+
+    <h2 class="sec" id="mentor">7. The Mentor System</h2>
+
+    <p>NextVillage's strategy for bringing up new communities is not to leave a new site leader to figure everything out alone — it's to pair each new community with a mentor from an established one, someone who has already been through the specific problems of the first few months: the door that didn't open, the device that broke, the week attendance dropped and came back.</p>
+
+    <p>If you're a new site leader, ask who your assigned mentor is, and use them — a fifteen-minute conversation with someone who's solved your exact problem before is worth hours of guessing. If you're an experienced leader being asked to mentor a new community, the same principle that got your own lab running (specific, honest, on-the-ground advice, not general encouragement) is what makes a mentorship actually useful.</p>
+
+    <div class="todo">
+      <p>[Kevin — this section should describe how a new leader is actually matched with a mentor in practice, and what the expectation is for how often they connect. The platform has fields to record a mentor's name for each organization, but they aren't populated yet — worth deciding the actual process before communities start relying on it.]</p>
+    </div>
+
+    <h2 class="sec" id="weekly">8. Running the Lab: What's Expected Week to Week</h2>
+
+    <ul class="check">
+      <li>A new community-impact challenge goes live roughly every one to two weeks — know what it is, and be ready to explain it to your learners in plain terms.</li>
+      <li>Check in on which learners are active and which have gone quiet — a learner who stops showing up is easier to bring back after one missed week than after five.</li>
+      <li>Review submitted community-impact work (the "return questions" learners answer after going out into the community) — this is where you see whether the work is actually landing, not just being completed.</li>
+      <li>Keep devices charged and the space open on a schedule learners and parents can rely on — consistency is what turns a novelty into a habit.</li>
+      <li>Once a month, a personality/proficiency assessment runs automatically for learners with enough activity — no action needed from you, but it's worth knowing it's happening in the background.</li>
+      <li>Keep recruiting. The first cohort is rarely the last — plan for the lab to keep growing, not just stabilize.</li>
+    </ul>
+
+    <h2 class="sec" id="leadership">9. What Good Leadership Looks Like</h2>
+
+    <p>Oloibiri, in Bayelsa State, Nigeria, is the platform's original and most established community — and Bennywhite Davidson's work there, running the lab and working directly with young people, is the standard new leaders should look to. What makes that kind of leadership work isn't a secret formula; it's showing up consistently, knowing every learner by name, and treating the lab as a place with real standards and real care, not just a room with computers in it.</p>
+
+    <div class="todo">
+      <p>[Kevin — this section is the most important one to get right, and it's the one I don't have the standing to write for you. What specifically does Bennywhite do that makes the Oloibiri lab work? How does he handle a learner who's struggling, or losing interest? How does he structure a session? What does he do differently now than when he started? A few real, specific stories here will do more for a new leader than any general leadership advice — including everything else in this document.]</p>
+    </div>
+
+    <h2 class="sec" id="checklist">10. Quick-Reference Checklist</h2>
+
+    <ul class="check">
+      <li>Register as site leader, receive join code</li>
+      <li>Complete community-context answers thoughtfully (Section 3)</li>
+      <li>Identify and secure a lab space</li>
+      <li>Confirm devices, internet, and power plan (Section 4)</li>
+      <li>Meet with traditional/local government leadership</li>
+      <li>Meet with religious leaders in the community</li>
+      <li>Connect with your assigned mentor</li>
+      <li>Begin door-to-door recruitment with a small first cohort</li>
+      <li>Open the lab on a consistent, predictable schedule</li>
+      <li>Share the join code with your first co-facilitator, if any</li>
+    </ul>
+
+    <div class="sign">
+      <p>Draft prepared for review — Sections 4, 7, and 9 are marked for Kevin's direct input, since they depend on real operating experience this document can't invent. Everything else reflects how the platform is actually built and how the signup/join-code system actually works.</p>
+    </div>
+
+  </article>
+</div>
+
+<script>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+    var sections = Object.keys(map).map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    if (!('IntersectionObserver' in window) || !sections.length) return;
+
+    var visible = new Set();
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { visible.add(e.target.id); } else { visible.delete(e.target.id); }
+      });
+      var current = sections.filter(function (s) { return visible.has(s.id); })[0];
+      if (!current) return;
+      links.forEach(function (a) { a.classList.remove('here'); });
+      map[current.id].classList.add('here');
+    }, { rootMargin: '0px 0px -70% 0px' });
+
+    sections.forEach(function (s) { obs.observe(s); });
+  })();
+</script>
+
+</body>
+</html>

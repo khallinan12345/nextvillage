@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Questions Communities Ask — nextVillage.community</title>
+<meta name="description" content="How nextVillage.community works, what it costs, how learners are protected, and what a new community needs to start. Answers to the questions partner organizations ask before bringing AI to their young people.">
+<style>
+  :root{
+    --green:#1F5C4A;
+    --green-deep:#143B30;
+    --sage:#A9C7BC;
+    --sage-pale:#EEF4F1;
+    --ink:#22272A;
+    --ink-soft:#5A6268;
+    --rule:#DFE4E1;
+    --paper:#FFFFFF;
+    --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:18px;
+    line-height:1.65;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    background:var(--green);
+    color:#fff;
+    padding:2.8rem 1.5rem 2.4rem;
+  }
+  .masthead .inner{max-width:1080px;margin:0 auto}
+  .kicker{
+    font-family:var(--sans);
+    font-size:.82rem;
+    letter-spacing:.02em;
+    color:var(--sage);
+    margin:0 0 .6rem;
+  }
+  .masthead h1{
+    font-size:clamp(1.85rem,4.4vw,2.9rem);
+    line-height:1.12;
+    font-weight:600;
+    margin:0 0 .7rem;
+    max-width:19ch;
+  }
+  .standfirst{
+    margin:0;
+    max-width:56ch;
+    color:#DCE8E3;
+    font-size:1.05rem;
+  }
+  .byline{
+    font-family:var(--sans);
+    font-size:.85rem;
+    color:var(--sage);
+    margin:1.6rem 0 0;
+    padding-top:1rem;
+    border-top:1px solid rgba(169,199,188,.35);
+    max-width:60ch;
+  }
+
+  /* ---------- layout ---------- */
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 1.5rem 5rem;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:2.5rem;
+  }
+  @media (min-width:940px){
+    .wrap{grid-template-columns:15rem 1fr;gap:3.5rem;align-items:start}
+  }
+
+  /* ---------- contents ---------- */
+  nav.toc{
+    font-family:var(--sans);
+    font-size:.9rem;
+    padding-top:2.5rem;
+  }
+  @media (min-width:940px){
+    nav.toc{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding-bottom:2rem}
+  }
+  nav.toc h2{
+    font-size:.8rem;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin:0 0 .7rem;
+  }
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:toc}
+  nav.toc li{counter-increment:toc;margin:0 0 .1rem}
+  nav.toc a{
+    display:block;
+    padding:.3rem 0 .3rem .6rem;
+    border-left:2px solid var(--rule);
+    color:var(--ink-soft);
+    text-decoration:none;
+    line-height:1.35;
+  }
+  nav.toc a::before{content:counter(toc) ".  ";color:var(--sage)}
+  nav.toc a:hover,nav.toc a:focus-visible{color:var(--green);border-left-color:var(--sage)}
+  nav.toc a.here{color:var(--green-deep);border-left-color:var(--green);font-weight:600}
+  nav.toc a.plain::before{content:none}
+
+  /* ---------- article ---------- */
+  article{padding-top:2.5rem;max-width:40rem}
+  article p{margin:0 0 1.1rem}
+  article > p:first-of-type{font-size:1.06rem}
+
+  h2.sec{
+    font-family:var(--sans);
+    font-size:1.4rem;
+    font-weight:600;
+    color:var(--green-deep);
+    line-height:1.25;
+    margin:3.2rem 0 1.1rem;
+    padding-top:1.4rem;
+    border-top:1px solid var(--rule);
+  }
+  #start h2.sec:first-child{border-top:none}
+  h3{
+    font-family:var(--sans);
+    font-size:1.02rem;
+    font-weight:600;
+    color:var(--ink);
+    margin:1.9rem 0 .6rem;
+  }
+
+  .q{
+    border-left:3px solid var(--sage);
+    padding:.15rem 0 .15rem 1.05rem;
+    margin:1.8rem 0 1.1rem;
+    color:var(--ink-soft);
+    font-size:1.02rem;
+  }
+  .q p{margin:0 0 .4rem}
+  .q p:last-child{margin-bottom:0}
+
+  ul,ol.steps{margin:0 0 1.2rem;padding-left:1.3rem}
+  li{margin:0 0 .5rem}
+  ol.steps li::marker{color:var(--green);font-family:var(--sans);font-size:.9rem}
+
+  strong{font-weight:600}
+  .lede-term{font-weight:600;color:var(--green-deep)}
+
+  var{
+    font-style:normal;
+    font-family:var(--sans);
+    font-size:.92em;
+    background:var(--sage-pale);
+    border-bottom:1px solid var(--sage);
+    padding:.05em .3em;
+    border-radius:2px;
+    color:var(--green-deep);
+  }
+
+  .note{
+    background:var(--sage-pale);
+    border:1px solid var(--sage);
+    border-radius:3px;
+    padding:1.1rem 1.2rem;
+    font-size:.96rem;
+    margin:0 0 1.4rem;
+  }
+  .note p{margin:0 0 .6rem}
+  .note p:last-child{margin-bottom:0}
+  .note h3{margin-top:0}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--sans);
+    font-size:.93rem;
+    margin:0 0 1.4rem;
+  }
+  th,td{
+    text-align:left;
+    padding:.6rem .7rem .6rem 0;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+  th{color:var(--green-deep);font-weight:600}
+
+  .sign{
+    margin-top:3.5rem;
+    padding-top:1.5rem;
+    border-top:1px solid var(--rule);
+    font-size:.97rem;
+  }
+  .sign .name{font-weight:600;display:block}
+  .sign .role{color:var(--ink-soft);display:block;margin-bottom:.9rem;font-size:.92rem}
+  a{color:var(--green)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+  @media print{
+    .masthead{background:#fff;color:#000;padding:0 0 1rem;border-bottom:2px solid #1F5C4A}
+    .masthead h1,.standfirst,.byline{color:#000}
+    .kicker{color:#1F5C4A}
+    nav.toc{display:none}
+    .wrap{display:block;padding:0}
+    article{max-width:none;padding-top:1rem}
+    h2.sec{page-break-after:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="inner">
+    <p class="kicker">nextVillage.community · Davidson AI Innovation Center (vAI)</p>
+    <h1>Questions communities ask before they start</h1>
+    <p class="standfirst">Every organization that considers bringing nextVillage to its young people asks a version of the same questions: how it helps with school, what it costs, who will lead it, how children are protected. Here are our answers, written once so any community can read them.</p>
+    <p class="byline">Prepared by Prof. Kevin Hallinan and Bennywhite Davidson. The answers draw on what we have learned running the lab in Oloibiri, Bayelsa State, Nigeria since July 2025. Where a detail depends on your country or organization, we have marked it and left it open for the conversation.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <nav class="toc" aria-label="Contents">
+    <h2>On this page</h2>
+    <ol>
+      <li><a href="#why">Why nextVillage exists</a></li>
+      <li><a href="#chatbot">How it differs from a chatbot</a></li>
+      <li><a href="#school">School, examinations, and after school</a></li>
+      <li><a href="#ages">Ages and younger learners</a></li>
+      <li><a href="#setup">Setting up your community</a></li>
+      <li><a href="#costs">What it costs</a></li>
+      <li><a href="#people">The people who make it work</a></li>
+      <li><a href="#data">Data, safeguards, and verification</a></li>
+      <li><a href="#infrastructure">Power, internet, and devices</a></li>
+      <li><a href="#pathways">Where a first cohort starts</a></li>
+      <li><a href="#partnership">Partnership and agreements</a></li>
+      <li><a href="#questions">What we need to ask you</a></li>
+      <li><a href="#confirm">What we will confirm in writing</a></li>
+    </ol>
+  </nav>
+
+  <article id="start">
+
+    <h2 class="sec" id="why">1. Why nextVillage exists</h2>
+
+    <div class="q">
+      <p>What problem was nextVillage created to solve?</p>
+    </div>
+
+    <p>Young people in underserved communities are fully capable. What is thin or missing are the pathways that turn capability into opportunity: strong schools, mentors, professional networks, paid work.</p>
+
+    <p>AI has suddenly put expert-level guidance within reach of anyone with a device. Used carelessly, it becomes a shortcut that does a young person's thinking for them. Used well, it becomes a patient tutor and collaborator that builds their thinking.</p>
+
+    <p>nextVillage exists to make the second outcome the likely one: young people who use AI to grow their own judgment and skill, who apply those skills to real problems in their own communities, and who then teach others.</p>
+
+    <p>We began in Oloibiri, Nigeria in July 2025 with four computers and about thirty young people. Today the Davidson AI Innovation Center has fourteen computers, 140 young people use the lab, and some of them now hold paid technology work. Nothing about that depended on Oloibiri being special. It depended on a mentor who showed up and a platform that asked the learners to do the thinking.</p>
+
+    <h2 class="sec" id="chatbot">2. How it differs from a chatbot</h2>
+
+    <div class="q">
+      <p>How is this different from just giving young people ChatGPT?</p>
+    </div>
+
+    <p>Inside the platform is a utility called <span class="lede-term">Use Claude</span>. It works much like a general AI assistant, with one important difference. When a learner asks it to research a subject, it gives an answer and then asks the learner questions that push further: What evidence supports this? How might this look different in your community? What would you check before relying on it? The learner leaves with information and with a path for more thinking.</p>
+
+    <p>The rest of the platform follows the same principle. A general chatbot is designed to deliver answers. nextVillage is designed so that the learner does the work:</p>
+
+    <ul>
+      <li>Learning tasks open in sequence, only after a learner demonstrates understanding of the step before.</li>
+      <li>The AI coaches and questions rather than handing over finished work, and it adjusts to the learner, so someone with basic communication skills receives simpler responses.</li>
+      <li>Community-impact challenges cannot be closed until the learner documents what actually happened, the story behind it, and the value it created.</li>
+    </ul>
+
+    <p>General chatbots are powerful tools. nextVillage is a learning environment that teaches young people to use tools like them well.</p>
+
+    <h2 class="sec" id="school">3. School, examinations, and after school</h2>
+
+    <div class="q">
+      <p>Our children are in school and must sit national examinations. How does an AI programme support what they are learning, and will it prepare them for those exams?</p>
+    </div>
+
+    <h3>What exists today</h3>
+    <p>The platform includes Foundations courses in English, Mathematics, and Science, from remedial level through secondary school. They follow a constructivist approach: learners get AI help to construct their own understanding, not answers to copy.</p>
+
+    <h3>Alignment with your national curriculum</h3>
+    <p>Foundations can be aligned to the <var>[national curriculum]</var> subject by subject and topic by topic. We believe this is relatively straightforward, and the same work makes alignment with other national curricula easier. The result is something every family wants and few can afford: a personal tutor for every subject and topic a child studies in school. We would want your teachers to help map the alignment, because they know the curriculum from the inside.</p>
+
+    <h3>Examination preparation</h3>
+    <p>The platform can also prepare learners for examinations, using the approach we already use for our certifications. Learners sit certification exams without any AI assistance. When they finish, they receive a checklist of specific things to improve, with links to the exact topics on the platform where they can work on them. The same model can be built around <var>[your examination formats]</var>, so practice exams lead directly to targeted study.</p>
+
+    <h3>Beyond the classroom</h3>
+    <p>Supporting schoolwork matters. But nextVillage is equally about preparing young people for the modern world and the work in it. AI proficiency is no longer optional. Learned well, AI may be the greatest force for equity the world has seen, because it puts world-class guidance in the hands of young people who have never had access to it. And the platform is about more than individual advancement: it develops young people who use AI to help their communities, not only themselves.</p>
+
+    <h2 class="sec" id="ages">4. Ages and younger learners</h2>
+
+    <div class="q">
+      <p>Can our youngest pupils take part?</p>
+    </div>
+
+    <p>The platform is designed for learners aged 10 and up, and we have tested it successfully with learners as young as 8. The AI responds to each learner at their level, so a younger learner receives simpler, more accessible responses.</p>
+
+    <p>This is consistent with UNESCO's guidance on generative AI in education, which reserves independent use of general AI tools for learners aged 13 and older while supporting AI use by younger learners under educator supervision and within age-appropriate learning design. That is how we work: learners use a platform built for learning, in a lab setting, with a mentor present.</p>
+
+    <p>For pupils younger than 8, we suggest starting with mentor-led group activities rather than individual accounts, and we are glad to design those with you.</p>
+
+    <h2 class="sec" id="setup">5. Setting up your community</h2>
+
+    <div class="q">
+      <p>How are accounts created for our pupils and youth?</p>
+    </div>
+
+    <p>No one needs to open an account with an AI company. Everything happens inside nextVillage.community.</p>
+
+    <ol class="steps">
+      <li><strong>A leader registers.</strong> Someone from <var>[your organization]</var> signs up as the leader and provides information about your learners and community.</li>
+      <li><strong>The leader receives a join code.</strong> After signing in, the leader is given a code unique to your organization.</li>
+      <li><strong>Learners join.</strong> Learners sign up with the join code, ideally using a real email address of their own.</li>
+      <li><strong>The platform becomes yours.</strong> On joining, learners get a version of the platform tailored to your community. Learning activities in AI Proficiency, AI Ready Skills, and other areas update automatically to reflect it, and learners see headlines and news relevant to where they live.</li>
+      <li><strong>The leader guides and monitors.</strong> The leader sees the progress of your learners, and only your learners, in an administrative dashboard, and can post community challenges that only your learners see.</li>
+    </ol>
+
+    <p>We can also tailor the platform's appearance and logos to <var>[your organization]</var>, so learners experience it as their own programme.</p>
+
+    <h2 class="sec" id="costs">6. What it costs</h2>
+
+    <div class="q">
+      <p>Will we have to pay for the platform or for AI subscriptions? If so, how much, and what does it cover?</p>
+    </div>
+
+    <p>There is no subscription fee for the platform. Our aim is to bring it to new communities at as little cost as possible, so that what has worked in Oloibiri can be replicated rather than admired.</p>
+
+    <p>There is a real cost for AI usage, and we want to be transparent about it. We have worked hard to keep it low: the platform routes requests through a chain of free-tier AI services before it uses any paid service.</p>
+
+    <table>
+      <tr><th scope="row">What Oloibiri costs</th><td>About US$3 per day, roughly US$90 per month, for 140 young people on 14 computers.</td></tr>
+      <tr><th scope="row">What drives the cost</th><td>The number of learners and how actively they use the platform. A cohort of 20–30 learners would be expected to cost considerably less.</td></tr>
+      <tr><th scope="row">Who pays</th><td>Prof. Hallinan personally covers AI costs in Oloibiri. He is not able to cover them in other communities, so they fall to your organization, to joint fundraising, or to a combination. We are glad to pursue funding together.</td></tr>
+      <tr><th scope="row">Largest early costs</th><td>Computers and internet access. A community that already has both starts with a real advantage.</td></tr>
+    </table>
+
+    <h2 class="sec" id="people">7. The people who make it work</h2>
+
+    <p>This is the section we would ask you to read most carefully. Our experience is unambiguous: the mentor determines success more than any technology does. During eleven months in Oloibiri, engaged learning dropped to near zero whenever the lab leader was away.</p>
+
+    <h3>A lead mentor from your organization</h3>
+    <p>We recommend assigning one staff member as lead mentor: someone who supports learners, encourages them, and keeps them motivated. In Oloibiri, Prof. Hallinan provides a stipend for the lab's leader, and we encourage you to provide one for your lead mentor as well.</p>
+
+    <h3>A mentor for your mentor</h3>
+    <p>We can offer the support of a young adult in our network who has been mentored by Prof. Hallinan and is now prepared to develop mentors and young people in technology skills. At the start, this person mentors only your lead mentor, for about five hours per week and never more. A stipend for this service is very helpful. The arrangement should be needed for no more than a year, because by then your organization has its own in-house mentor with the same capability.</p>
+
+    <h3>Then, the next village</h3>
+    <p>Once you have built that capacity, you can help mentor another community. That is the idea behind the name. The lab in Oloibiri is not trying to own anything; its purpose is to help each community build its own capability and pass it on.</p>
+
+    <h3>Ambassadors and the multiplier effect</h3>
+    <p>Learners who become peer teachers, and eventually mentors for other communities, are how this work spreads without depending on outsiders. We encourage every partner to name a small group of ambassadors early, before they feel ready.</p>
+
+    <h2 class="sec" id="data">8. Data, safeguards, and verification</h2>
+
+    <div class="q">
+      <p>What safeguards are in place for vulnerable learners, how is their data handled, and how do you teach them to question what AI tells them?</p>
+    </div>
+
+    <h3>Protecting learner data</h3>
+    <ul>
+      <li><strong>Secure access.</strong> Learners sign in through the OAuth secure sign-in standard, and platform data is encrypted.</li>
+      <li><strong>Strict separation.</strong> Database-level security rules ensure each learner sees only their own information, and each community leader sees only their own community's learners.</li>
+      <li><strong>Restricted administration.</strong> Direct access to the database is limited to the platform manager, currently Prof. Hallinan and soon a trained young adult in Oloibiri.</li>
+      <li><strong>Community ownership.</strong> A founding principle of our work is that community data belongs to the community.</li>
+    </ul>
+
+    <h3>Safe AI behavior</h3>
+    <p>Every AI request the platform makes carries built-in guidelines. Harmful or hateful content is not permitted, and the AI models themselves include their own safety protections. Your lead mentor remains the first point of support for any learner concern.</p>
+
+    <h3>Verification and measurement</h3>
+    <p>All learning and skill development is measured with an AI measurement instrument that evaluates learner work against published rubrics. Those rubrics follow current best practice; for AI proficiency, for example, they draw on UNESCO's AI competency standards for students. Certifications are taken without AI assistance, so a certificate reflects what the learner can actually do.</p>
+
+    <p>Verification is taught, not assumed. Learners are assessed on their ability to check AI output, recognize bias, and notice when AI is wrong. The Use Claude utility prompts them to dig deeper rather than accept a first answer, and community challenges test ideas against reality.</p>
+
+    <h3>Consent and research ethics</h3>
+    <p>In Oloibiri we use parent consent forms for the anonymized use of learner data, following the practices of US Institutional Review Boards for research involving people. That data matters: it is how we learn what works and how to bring the model responsibly to the next village. We propose the same approach with you, adapted to <var>[your country's data protection law]</var>, including its requirements for processing children's data, and we will provide a written data-protection summary answering your specific questions.</p>
+
+    <h2 class="sec" id="infrastructure">9. Power, internet, and devices</h2>
+
+    <div class="q">
+      <p>What does a community need in place before it can run this?</p>
+    </div>
+
+    <p>Reliable power and a reliable internet connection are both essential, and we have learned this the hard way. The Oloibiri lab runs on solar battery systems, and the rainy season does reduce use. Even so, in August, in the middle of the rainy season, use stayed at about 60% of its peak.</p>
+
+    <p>For a facility that already has computers and internet, a modest solar and battery backup system, in the range of US$1,200, goes a long way toward extending learning hours and protecting sessions from outages.</p>
+
+    <p>One further lesson worth stating plainly: although nextVillage works on a smartphone, nearly all of the young people who come to the Oloibiri lab are very poor and do not own one. We would expect something similar elsewhere, which makes shared access to your computers central to the design of the programme rather than a detail of it.</p>
+
+    <h2 class="sec" id="pathways">10. Where a first cohort starts</h2>
+
+    <div class="q">
+      <p>Which parts of the platform should a new community begin with?</p>
+    </div>
+
+    <p>Partners are usually drawn first to Tech Skills, AI Creative Studio, and Community Impact AI, and those are an excellent focus. We would add one thing: <span class="lede-term">AI Proficiency should come first</span>. Before building with AI, learners need to understand what AI is, how it can be wrong, and how to use it ethically and responsibly. That foundation makes everything after it safer and more effective.</p>
+
+    <p>We also agree with narrowing the pathways for a first cohort rather than opening everything at once. The platform supports this directly: a Curriculum section in the navigation provides step-by-step guides that learners work through in order, alongside a dedicated onboarding curriculum for new learners.</p>
+
+    <p>Selection of participants should rest with your organization. You know your young people; we do not.</p>
+
+    <div class="note">
+      <h3>A pilot shape that has worked</h3>
+      <p>A first cohort of 20–30 learners over three to six months, led by one staff mentor, starting with AI Proficiency and moving into one applied pathway, with success indicators agreed in advance. Smaller and longer beats larger and shorter.</p>
+    </div>
+
+    <h2 class="sec" id="partnership">11. Partnership and agreements</h2>
+
+    <div class="q">
+      <p>Should we sign a memorandum of understanding, and what would it cover?</p>
+    </div>
+
+    <p>We are open to an MOU, and vAI would sign on behalf of the platform. We would value hearing what you hope the MOU will accomplish, so that it serves a clear purpose rather than existing for its own sake. Typically it documents roles, mentor arrangements, cost responsibilities, and data-protection commitments.</p>
+
+    <h2 class="sec" id="questions">12. What we need to ask you</h2>
+
+    <p>These are the questions we bring to every new partner. Answering them is most of the work of designing a pilot together.</p>
+
+    <ol class="steps">
+      <li>Which staff member would serve as lead mentor, and can you provide a stipend for that role?</li>
+      <li>Can you support a stipend for a vAI mentor-of-mentors, at no more than five hours per week for up to one year?</li>
+      <li>How would you prefer to cover AI usage costs: your own budget, joint fundraising, or a combination?</li>
+      <li>What ages would the first cohort include, and how many learners?</li>
+      <li>How many computers are available, during what hours, and how reliable are power and internet? Is a solar and battery backup of about US$1,200 feasible?</li>
+      <li>Do most intended learners have their own email addresses? If not, how would you like to handle sign-up?</li>
+      <li>Would you like Foundations aligned to your national curriculum, and can your teachers help map subjects and topics? Which examinations matter most?</li>
+      <li>What safeguarding and consent procedures do you already use, and how should they combine with ours?</li>
+      <li>What would you want an MOU to accomplish?</li>
+      <li>What success indicators would you like the pilot to measure?</li>
+    </ol>
+
+    <h2 class="sec" id="confirm">13. What we will confirm in writing</h2>
+
+    <p>For each new community, vAI provides the following before a pilot begins.</p>
+
+    <ol class="steps">
+      <li>A data-protection summary covering where data is hosted, how long it is retained, how deletion requests are handled, cross-border transfer, and how AI service providers handle learner inputs, aligned with <var>[your country's data protection law]</var>.</li>
+      <li>An estimated AI usage cost for your cohort size.</li>
+      <li>The scope and timeline for any curriculum alignment and examination preparation you want.</li>
+      <li>The identity and background of the proposed mentor-of-mentors, and a proposed stipend.</li>
+      <li>Details of how your organization's branding appears on the platform.</li>
+    </ol>
+
+    <div class="note">
+      <h3>The next step</h3>
+      <p>An exploratory meeting, where our teams meet one another, walk through the platform together, and work through the questions above. Write to us and we will arrange it.</p>
+    </div>
+
+    <div class="sign">
+      <p>With warm regards,</p>
+      <p>
+        <span class="name">Prof. Kevin Hallinan</span>
+        <span class="role">Co-founder, Davidson AI Innovation Center (vAI) · Emeritus Professor, University of Dayton</span>
+        <span class="name">Bennywhite Davidson</span>
+        <span class="role">Founding Director, Davidson AI Innovation Center (vAI), Oloibiri, Nigeria</span>
+      </p>
+    </div>
+
+  </article>
+</div>
+
+<script>
+  // Highlight the section currently in view in the contents list.
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+    var sections = Object.keys(map).map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    if (!('IntersectionObserver' in window) || !sections.length) return;
+
+    var visible = new Set();
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { visible.add(e.target.id); } else { visible.delete(e.target.id); }
+      });
+      var current = sections.filter(function (s) { return visible.has(s.id); })[0];
+      if (!current) return;
+      links.forEach(function (a) { a.classList.remove('here'); });
+      map[current.id].classList.add('here');
+    }, { rootMargin: '0px 0px -70% 0px' });
+
+    sections.forEach(function (s) { obs.observe(s); });
+  })();
+</script>
+
+</body>
+</html>
