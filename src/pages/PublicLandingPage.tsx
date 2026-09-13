@@ -2472,6 +2472,19 @@ const PublicLandingPage: React.FC = () => {
                 className="pub-btn btn-amber" style={{ fontSize: "1rem", padding: "0.82rem 1.9rem" }}>
                 Contact Us to Get Started <ArrowRight size={15} />
               </a>
+              <div style={{
+                display: "flex", flexWrap: "wrap", justifyContent: "center",
+                gap: "0.6rem 1.6rem", marginTop: "1.75rem",
+              }}>
+                <a href="/docs/Community-Onboarding-Guide.html" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
+                  <BookOpen size={14} /> Community Onboarding Guide <ExternalLink size={12} />
+                </a>
+                <a href="/docs/Community-Onboarding-questions.html" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
+                  <BookOpen size={14} /> Questions Communities Ask <ExternalLink size={12} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
