@@ -741,12 +741,13 @@ Respond ONLY in this JSON format:
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('grade_level, continent')
+        .select('grade_level, continent, organization_id')
         .eq('id', user.id)
         .single();
 
       const userGradeLevel = profile?.grade_level ?? null;
       const userContinent = profile?.continent || 'North America';
+      const userOrganizationId = profile?.organization_id ?? null;
 
       const categoryMap: Record<string, Record<string, { category: string; sub_category: string }>> = {
         'Critical Thinking': {
@@ -787,10 +788,10 @@ Respond ONLY in this JSON format:
       const mapping = categoryMap[certificationName]?.[assessmentName];
       if (!mapping) {
         const fallbackMapping = { category: 'Skills', sub_category: certificationName };
-        return await queryLearningModules(fallbackMapping, userGradeLevel, userContinent, assessmentName);
+        return await queryLearningModules(fallbackMapping, userGradeLevel, userContinent, userOrganizationId, assessmentName);
       }
 
-      return await queryLearningModules(mapping, userGradeLevel, userContinent, assessmentName);
+      return await queryLearningModules(mapping, userGradeLevel, userContinent, userOrganizationId, assessmentName);
     } catch (err) {
       console.error('Error fetching learning modules:', err);
       return [];
@@ -801,6 +802,7 @@ Respond ONLY in this JSON format:
     mapping: { category: string; sub_category: string },
     gradeLevel: number | null,
     continent: string,
+    organizationId: string | null,
     assessmentName: string
   ): Promise<LearningModule[]> => {
     let query = supabase
@@ -818,10 +820,17 @@ Respond ONLY in this JSON format:
         .gte('grade_level', Math.max(1, gradeLevel - 2));
     }
 
+    // Prefer this learner's own organization's localized modules; fall back
+    // to continent-wide, then to anything matching the category at all.
+    const orgModules = organizationId
+      ? (await query.eq('organization_id', organizationId)).data
+      : null;
     const { data: continentModules } = await query.eq('continent', continent);
     const { data: allModules } = await query;
 
-    const modules = continentModules && continentModules.length > 0 ? continentModules : allModules;
+    const modules = orgModules && orgModules.length > 0
+      ? orgModules
+      : continentModules && continentModules.length > 0 ? continentModules : allModules;
 
     const filteredModules = modules?.filter(m => 
       m.sub_category?.includes(mapping.sub_category) || 
