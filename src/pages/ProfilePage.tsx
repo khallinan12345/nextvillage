@@ -62,7 +62,30 @@ interface OrgInfo {
   city: string | null;
   description: string | null;
   learner_count?: number;
+  community_livelihood?: string | null;
+  community_challenges?: string | null;
+  community_hopes?: string | null;
+  community_assets?: string | null;
+  educational_goals?: string | null;
+  data_retention_preference?: string | null;
+  enabled_tools?: string[] | null;
 }
+
+const TOOL_OPTIONS: { value: string; label: string }[] = [
+  { value: 'foundations',         label: 'Foundations (English/Math/Science)' },
+  { value: 'ai_proficiency',      label: 'AI Proficiency' },
+  { value: 'tech_skills',         label: 'Tech Skills' },
+  { value: 'creative_ai',         label: 'Creative AI' },
+  { value: 'community_impact_ai', label: 'Community Impact AI' },
+];
+
+const DATA_RETENTION_OPTIONS: { value: string; label: string }[] = [
+  { value: '90_days',         label: '90 days' },
+  { value: '1_year',          label: '1 year' },
+  { value: 'program_length',  label: 'Length of program participation' },
+  { value: 'until_requested', label: 'Until a deletion request is made' },
+  { value: 'not_sure',        label: "Not sure yet — let's discuss" },
+];
 
 interface SkillProgress {
   skill: string;
@@ -171,6 +194,20 @@ const ProfilePage: React.FC = () => {
   const [cityChoice, setCityChoice] = useState(''); // tracks dropdown selection for smart city field
   const [schoolChoice, setSchoolChoice] = useState(''); // tracks dropdown selection for smart school field
   const [success, setSuccess] = useState<string | null>(null);
+
+  // ── Community profile edit panel (primary leaders only) ───────────────────
+  const [editingOrg, setEditingOrg] = useState(false);
+  const [savingOrg, setSavingOrg] = useState(false);
+  const [orgError, setOrgError] = useState<string | null>(null);
+  const [orgFormData, setOrgFormData] = useState({
+    educational_goals: '',
+    community_assets: '',
+    community_livelihood: '',
+    community_challenges: '',
+    community_hopes: '',
+    data_retention_preference: '',
+    enabled_tools: [] as string[],
+  });
   
   // Form state - updated to include all profile fields
   const [formData, setFormData] = useState({
@@ -370,7 +407,7 @@ const ProfilePage: React.FC = () => {
       if (profileData.organization_id) {
         const { data: orgData } = await supabase
           .from('organizations')
-          .select('id, name, join_code, join_codes, continent, country, city, description')
+          .select('id, name, join_code, join_codes, continent, country, city, description, community_livelihood, community_challenges, community_hopes, community_assets, educational_goals, data_retention_preference, enabled_tools')
           .eq('id', profileData.organization_id)
           .single();
         if (orgData) {
@@ -389,6 +426,15 @@ const ProfilePage: React.FC = () => {
           });
 
           setOrgInfo({ ...orgData, join_codes: codes, learner_count: learnerCount ?? 0 });
+          setOrgFormData({
+            educational_goals:         orgData.educational_goals ?? '',
+            community_assets:          orgData.community_assets ?? '',
+            community_livelihood:      orgData.community_livelihood ?? '',
+            community_challenges:      orgData.community_challenges ?? '',
+            community_hopes:           orgData.community_hopes ?? '',
+            data_retention_preference: orgData.data_retention_preference ?? '',
+            enabled_tools:             orgData.enabled_tools ?? [],
+          });
 
           // For leaders — fetch the student list scoped by their role
           if (['site_leader', 'platform_administrator', 'research_lead'].includes(profileData.role)) {
@@ -571,6 +617,36 @@ const ProfilePage: React.FC = () => {
       setGeneratingCode(false);
     }
   }, [authUser, orgInfo]);
+
+  const handleSaveOrgProfile = useCallback(async () => {
+    if (!orgInfo) return;
+    setSavingOrg(true);
+    setOrgError(null);
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          educational_goals:         orgFormData.educational_goals.trim() || null,
+          community_assets:          orgFormData.community_assets.trim() || null,
+          community_livelihood:      orgFormData.community_livelihood.trim() || null,
+          community_challenges:      orgFormData.community_challenges.trim() || null,
+          community_hopes:           orgFormData.community_hopes.trim() || null,
+          data_retention_preference: orgFormData.data_retention_preference || null,
+          enabled_tools:             orgFormData.enabled_tools,
+          updated_at:                new Date().toISOString(),
+        })
+        .eq('id', orgInfo.id);
+      if (error) throw error;
+      setOrgInfo(prev => prev ? { ...prev, ...orgFormData } : prev);
+      setEditingOrg(false);
+      setSuccess('Community profile updated');
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err: any) {
+      setOrgError(err.message || 'Could not save community profile');
+    } finally {
+      setSavingOrg(false);
+    }
+  }, [orgInfo, orgFormData]);
 
   const handleCancelEdit = useCallback(() => {
     setEditing(false);
@@ -1254,6 +1330,135 @@ const ProfilePage: React.FC = () => {
                           <div className="text-sm text-gray-600 pt-1 border-t border-indigo-100">
                             <span className="font-semibold">{orgInfo.learner_count ?? 0}</span> learners enrolled
                           </div>
+                        </div>
+                      )}
+
+                      {/* Community profile — primary leader only, editable any time */}
+                      {profile?.is_primary_leader && (
+                        <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Community Profile</p>
+                            {!editingOrg && (
+                              <button
+                                onClick={() => setEditingOrg(true)}
+                                className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                              >
+                                <Edit3 className="h-3 w-3" /> Edit
+                              </button>
+                            )}
+                          </div>
+
+                          {orgError && (
+                            <div className="p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800">{orgError}</div>
+                          )}
+
+                          {!editingOrg ? (
+                            <div className="space-y-3 text-sm text-gray-600">
+                              {[
+                                { label: '🎯 Educational goals',   value: orgInfo.educational_goals },
+                                { label: '🏗️ Community assets',    value: orgInfo.community_assets },
+                                { label: '🌾 Community livelihood', value: orgInfo.community_livelihood },
+                                { label: '⚡ Community challenges', value: orgInfo.community_challenges },
+                                { label: '🌟 Community hopes',      value: orgInfo.community_hopes },
+                              ].map(row => (
+                                <div key={row.label}>
+                                  <p className="text-xs font-medium text-gray-500">{row.label}</p>
+                                  <p className="text-sm">{row.value || <span className="text-gray-300 italic">Not set yet</span>}</p>
+                                </div>
+                              ))}
+                              <div>
+                                <p className="text-xs font-medium text-gray-500">🔒 Data retention preference</p>
+                                <p className="text-sm">
+                                  {DATA_RETENTION_OPTIONS.find(o => o.value === orgInfo.data_retention_preference)?.label
+                                    || <span className="text-gray-300 italic">Not set yet</span>}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium text-gray-500">🧰 Tools enabled for learners</p>
+                                <p className="text-sm">
+                                  {orgInfo.enabled_tools && orgInfo.enabled_tools.length > 0
+                                    ? orgInfo.enabled_tools.map(t => TOOL_OPTIONS.find(o => o.value === t)?.label || t).join(', ')
+                                    : <span className="text-gray-300 italic">All tools enabled by default</span>}
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">🎯 Educational goals</label>
+                                <textarea rows={2} value={orgFormData.educational_goals}
+                                  onChange={e => setOrgFormData(p => ({ ...p, educational_goals: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">🏗️ Community assets (farming, fishing, businesses, etc.)</label>
+                                <textarea rows={2} value={orgFormData.community_assets}
+                                  onChange={e => setOrgFormData(p => ({ ...p, community_assets: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">🌾 How does your community make its livelihood?</label>
+                                <textarea rows={2} value={orgFormData.community_livelihood}
+                                  onChange={e => setOrgFormData(p => ({ ...p, community_livelihood: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">⚡ What challenges does your community face?</label>
+                                <textarea rows={2} value={orgFormData.community_challenges}
+                                  onChange={e => setOrgFormData(p => ({ ...p, community_challenges: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">🌟 What are your community's hopes for the future?</label>
+                                <textarea rows={2} value={orgFormData.community_hopes}
+                                  onChange={e => setOrgFormData(p => ({ ...p, community_hopes: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">🔒 How long should we retain your learners' data?</label>
+                                <select value={orgFormData.data_retention_preference}
+                                  onChange={e => setOrgFormData(p => ({ ...p, data_retention_preference: e.target.value }))}
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-sm">
+                                  <option value="">Not decided yet</option>
+                                  {DATA_RETENTION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-2">🧰 Which tools should your learners use?</label>
+                                <div className="space-y-1.5">
+                                  {TOOL_OPTIONS.map(opt => (
+                                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                                      <input type="checkbox"
+                                        checked={orgFormData.enabled_tools.includes(opt.value)}
+                                        onChange={e => setOrgFormData(p => ({
+                                          ...p,
+                                          enabled_tools: e.target.checked
+                                            ? [...p.enabled_tools, opt.value]
+                                            : p.enabled_tools.filter(v => v !== opt.value),
+                                        }))}
+                                      />
+                                      <span className="text-sm text-gray-700">{opt.label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 pt-1">
+                                <button
+                                  onClick={handleSaveOrgProfile}
+                                  disabled={savingOrg}
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg transition-colors"
+                                >
+                                  <Save className="h-3.5 w-3.5" /> {savingOrg ? 'Saving…' : 'Save'}
+                                </button>
+                                <button
+                                  onClick={() => { setEditingOrg(false); setOrgError(null); }}
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors"
+                                >
+                                  <X className="h-3.5 w-3.5" /> Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
