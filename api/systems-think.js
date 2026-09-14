@@ -510,6 +510,10 @@ export default async function handler(req, res) {
       // non-default `temperature` with a 400 — omit it entirely rather than
       // pass a value, matching the same check in api/chat-room.js /
       // api/chat-stream.js.
+      // Explicit high effort: this page leans on multi-layered Socratic
+      // reasoning (deciding when to question vs. offer a perspective), the
+      // one case that earns full depth among the pages tuned down elsewhere.
+      output_config: { effort: 'high' },
       system: buildSystemPrompt(currentArtifact, memoryContext),
       messages: anthropicMessages,
       tools: [UPDATE_ARTIFACT_TOOL],

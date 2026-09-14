@@ -114,6 +114,35 @@ const SONNET5_PAGES = new Set([
   'SystemsThinkPage',
 ]);
 
+// Per-page reasoning effort — a good model at low effort has held up well
+// for Oloibiri's learners in practice, so lighter-weight tutoring/practice
+// pages default down from the implicit "high" (omitting effort) to "low" or
+// "medium", while a page that leans on multi-step reasoning (SystemsThinkPage)
+// stays at "high". Anything not listed here falls back to "medium" — a real
+// reduction from the previous implicit "high" default, applied everywhere
+// that doesn't need the extra depth. Never applies to Haiku 4.5 — see
+// modelSupportsEffort() — Haiku rejects the effort parameter outright, so a
+// page pinned to Haiku (e.g. certification pages) is already running as
+// cheap as this lever can make it and gets no output_config.effort at all.
+const PAGE_EFFORT = {
+  AILearningPage:      'low',
+  AIReadySkillsPage:   'low',
+  EnglishSkillsPage:   'low',
+  MathSkillsPage:      'low',
+  ScienceSkillsPage:   'low',
+  SystemsThinkPage:    'high',
+};
+
+function getEffortForPage(page) {
+  return PAGE_EFFORT[page] || 'medium';
+}
+
+// output_config.effort errors on Haiku 4.5 — only send it to models that
+// actually support it (Sonnet 5 and the Sonnet/Opus 4.6+ family).
+function modelSupportsEffort(model) {
+  return !/^claude-haiku/.test(model);
+}
+
 // Certification pages — always Haiku; structured JSON eval must be reliable
 const CERT_PAGES = new Set([
   'AIReadySkillsPage',
@@ -502,7 +531,7 @@ function splitCacheableSystem(system) {
   return system ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }] : undefined;
 }
 
-async function callAnthropic(model, messages, system, max_tokens, temperature) {
+async function callAnthropic(model, messages, system, max_tokens, temperature, page = '') {
   const systemPayload = splitCacheableSystem(system);
 
   const cachedMessages = applyCacheToLastAssistant(messages);
@@ -511,6 +540,7 @@ async function callAnthropic(model, messages, system, max_tokens, temperature) {
     model,
     max_tokens,
     ...(modelAllowsCustomTemperature(model) ? { temperature } : {}),
+    ...(modelSupportsEffort(model) ? { output_config: { effort: getEffortForPage(page) } } : {}),
     messages: cachedMessages,
     ...(systemPayload ? { system: systemPayload } : {}),
   };
@@ -569,10 +599,10 @@ const TRANSIENT_ANTHROPIC_STATUSES = new Set([500, 502, 503, 504, 529]);
 // has no fallback chain like the groq-routed free tier does, so a single
 // transient 529 fails the request for every user hitting that page. Retry
 // a couple of times with backoff before giving up.
-async function callAnthropicWithRetry(model, messages, system, max_tokens, temperature, attempts = 3) {
+async function callAnthropicWithRetry(model, messages, system, max_tokens, temperature, page = '', attempts = 3) {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      return await callAnthropic(model, messages, system, max_tokens, temperature);
+      return await callAnthropic(model, messages, system, max_tokens, temperature, page);
     } catch (error) {
       if (attempt === attempts || !TRANSIENT_ANTHROPIC_STATUSES.has(error?.status)) throw error;
       const delayMs = 500 * 3 ** (attempt - 1); // 500ms, 1500ms
@@ -917,7 +947,7 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
       name:     'anthropic',
       model:    MODELS.anthropic_haiku,
       keyEnv:   'ANTHROPIC_API_KEY',
-      fn:       () => callAnthropic(MODELS.anthropic_haiku, messages, system, max_tokens, temperature),
+      fn:       () => callAnthropic(MODELS.anthropic_haiku, messages, system, max_tokens, temperature, page),
     },
   ];
 
@@ -1001,7 +1031,7 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
 
 // ── Streaming Anthropic call (for AIPlaygroundPage) ───────────────────────────
 
-async function callAnthropicStreaming(model, messages, system, max_tokens, temperature, res) {
+async function callAnthropicStreaming(model, messages, system, max_tokens, temperature, res, page = '') {
   const systemPayload = splitCacheableSystem(system);
 
   const cachedMessages = applyCacheToLastAssistant(messages);
@@ -1018,6 +1048,7 @@ async function callAnthropicStreaming(model, messages, system, max_tokens, tempe
       model,
       max_tokens,
       ...(modelAllowsCustomTemperature(model) ? { temperature } : {}),
+      ...(modelSupportsEffort(model) ? { output_config: { effort: getEffortForPage(page) } } : {}),
       messages: cachedMessages,
       stream: true,
       ...(systemPayload ? { system: systemPayload } : {}),
@@ -1221,7 +1252,7 @@ export default async function handler(req, res) {
         res.setHeader('Content-Type', 'application/json');
         return res.status(400).json({ error: 'Anthropic API key not configured' });
       }
-      const usage = await callAnthropicStreaming(model, messages, system, max_tokens, temperature, res);
+      const usage = await callAnthropicStreaming(model, messages, system, max_tokens, temperature, res, page);
       logCost({
         page, provider: 'anthropic', model,
         inputTokens:       usage.inputTokens,
@@ -1265,7 +1296,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Anthropic API key not configured' });
     }
 
-    const result = await callAnthropicWithRetry(model, messages, system, max_tokens, temperature);
+    const result = await callAnthropicWithRetry(model, messages, system, max_tokens, temperature, page);
     logCost({
       page, provider: 'anthropic', model,
       inputTokens:       result.usage?.prompt_tokens     ?? 0,
