@@ -19,7 +19,7 @@
 // Safety floor + moderation/leader-escalation live in api/_lib/safetyGuardrails.js
 // — shared with api/chat.js so both AI text endpoints get the same baseline.
 // Pure `fetch`-based, no Node-only APIs, so it works unmodified in this Edge runtime.
-import { appendSafetyFloor, checkAndEscalate } from './_lib/safetyGuardrails.js';
+import { checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 
 export const config = { runtime: 'edge' };
@@ -488,10 +488,17 @@ export default async function handler(req) {
   const firstName = await fetchFirstName(user_id, SUPABASE_URL, SUPABASE_KEY);
   const messages  = await scrubMessagesPII(rawMessages, firstName, 'strict', (evt) => logEvent({ function_name: 'chat-stream', user_id, cohort, ...evt }));
 
-  // appendSafetyFloor always returns a non-empty string (SAFETY_FLOOR itself
-  // if the caller sent none), so systemPayload is never undefined here —
-  // every stream request carries at least the safety floor.
-  const systemPayload = [{ type: 'text', text: appendSafetyFloor(system), cache_control: { type: 'ephemeral' } }];
+  // Two separate blocks, not one concatenated string: SAFETY_FLOOR is
+  // identical on every single request platform-wide, so it's the only part
+  // marked for caching. The page's own system text is per-page and often
+  // per-learner (grade level, communication strategy, session count) — folding
+  // it into the same cached block as before meant nearly every request had a
+  // unique combined string, so the cache almost never hit. Splitting them
+  // lets the stable SAFETY_FLOOR prefix cache even though the tail can't.
+  const systemPayload = [
+    { type: 'text', text: SAFETY_FLOOR, cache_control: { type: 'ephemeral' } },
+    ...(system ? [{ type: 'text', text: system }] : []),
+  ];
 
   // ── Rolling compression ────────────────────────────────────────────────────
   // If the conversation is long, compress old messages before sending to Anthropic.
