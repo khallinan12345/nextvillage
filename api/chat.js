@@ -3,7 +3,7 @@
 // Safety floor + moderation/leader-escalation live in api/_lib/safetyGuardrails.js
 // — shared with api/chat-stream.js so both AI text endpoints get the same
 // baseline regardless of which page's system prompt (or lack of one) called them.
-import { appendSafetyFloor, checkAndEscalate } from './_lib/safetyGuardrails.js';
+import { appendSafetyFloor, checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 //
 // ROUTING LOGIC:
@@ -477,10 +477,33 @@ function modelAllowsCustomTemperature(model) {
   return !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
 }
 
+// `system` here is always appendSafetyFloor()'d — built once at the top of
+// the request and shared with every non-Anthropic provider in the fallback
+// chain, which each take one plain string. For Anthropic specifically, we
+// want SAFETY_FLOOR cached on its own: it's byte-identical on every request
+// platform-wide, but the rest of `system` (page instructions, and often
+// per-learner personalization — grade level, communication strategy, session
+// count) differs on nearly every call. Caching the whole concatenated string
+// as one block meant that difference busted the entire cached prefix almost
+// every time. Splitting SAFETY_FLOOR back out (it's always the suffix —
+// see appendSafetyFloor()) lets the stable prefix cache even though the
+// per-request tail can't.
+function splitCacheableSystem(system) {
+  const suffix = `\n\n${SAFETY_FLOOR}`;
+  if (system && system.endsWith(suffix)) {
+    const pageSystem = system.slice(0, -suffix.length);
+    return [
+      { type: 'text', text: SAFETY_FLOOR, cache_control: { type: 'ephemeral' } },
+      { type: 'text', text: pageSystem },
+    ];
+  }
+  // system === SAFETY_FLOOR alone (no page system), or an unexpected shape —
+  // fall back to caching it as a single block rather than guessing further.
+  return system ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }] : undefined;
+}
+
 async function callAnthropic(model, messages, system, max_tokens, temperature) {
-  const systemPayload = system
-    ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
-    : undefined;
+  const systemPayload = splitCacheableSystem(system);
 
   const cachedMessages = applyCacheToLastAssistant(messages);
 
@@ -979,9 +1002,7 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
 // ── Streaming Anthropic call (for AIPlaygroundPage) ───────────────────────────
 
 async function callAnthropicStreaming(model, messages, system, max_tokens, temperature, res) {
-  const systemPayload = system
-    ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
-    : undefined;
+  const systemPayload = splitCacheableSystem(system);
 
   const cachedMessages = applyCacheToLastAssistant(messages);
 
