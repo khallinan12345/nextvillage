@@ -29,7 +29,7 @@ interface GenerateRequest {
 }
 
 const ANTHROPIC_API_URL  = 'https://api.anthropic.com/v1/messages';
-const MODEL_SONNET       = 'claude-sonnet-4-6';
+const MODEL_SONNET       = 'claude-sonnet-5';
 const MODEL_HAIKU        = 'claude-haiku-4-5-20251001'; // critique only
 
 // Token prices per million (update if Anthropic changes rates)

@@ -6,7 +6,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+const ANTHROPIC_MODEL = 'claude-sonnet-5';
 
 interface SubTaskSeed { teaching: string; question: string; }
 interface TaskSeed { focus: string; steps: [SubTaskSeed, SubTaskSeed, SubTaskSeed]; }
@@ -288,7 +288,6 @@ Write the full instruction with teaching commentary for all 3 steps. Make it spe
       body: JSON.stringify({
         model:       ANTHROPIC_MODEL,
         max_tokens:  1200,
-        temperature: 0.35,
         system,
         messages: [{ role: 'user', content: user }],
       }),

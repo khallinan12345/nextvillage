@@ -12,7 +12,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+const ANTHROPIC_MODEL = 'claude-sonnet-5';
 
 // ─── Cost logger (fire-and-forget, mirrors chat.js pattern) ──────────────────
 function logCost(inputTokens: number, outputTokens: number, cacheHitTokens = 0, cacheWriteTokens = 0) {
@@ -23,10 +23,10 @@ function logCost(inputTokens: number, outputTokens: number, cacheHitTokens = 0, 
   const MTok = 1_000_000;
   const standardInput = Math.max(0, inputTokens - cacheHitTokens - cacheWriteTokens);
   const estimatedCost =
-    (standardInput    / MTok) * 3.00  +
-    (cacheWriteTokens / MTok) * 3.75  +
-    (cacheHitTokens   / MTok) * 0.30  +
-    (outputTokens     / MTok) * 15.00;
+    (standardInput    / MTok) * 2.00  +
+    (cacheWriteTokens / MTok) * 2.50  +
+    (cacheHitTokens   / MTok) * 0.20  +
+    (outputTokens     / MTok) * 10.00;
 
   fetch(`${supabaseUrl}/rest/v1/api_cost_log`, {
     method: 'POST',
@@ -161,7 +161,7 @@ function buildFallback(taskId: string, taskLabel: string) {
   };
 }
 
-async function callAnthropic(system: string, user: string, maxTokens: number, temperature: number) {
+async function callAnthropic(system: string, user: string, maxTokens: number) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not configured');
 
@@ -175,7 +175,6 @@ async function callAnthropic(system: string, user: string, maxTokens: number, te
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
       max_tokens: maxTokens,
-      temperature,
       system,
       messages: [{ role: 'user', content: user }],
     }),
@@ -243,7 +242,7 @@ Their response:
 Evaluate their response.`;
 
   try {
-    const cleaned = await callAnthropic(system, user, 250, 0.3);
+    const cleaned = await callAnthropic(system, user, 250);
     let result: any;
     try {
       result = JSON.parse(cleaned);
@@ -320,7 +319,7 @@ ${seedText ? `Seed content to adapt and personalise:\n\n${seedText}` : ''}
 Write the full instruction with teaching commentary for both steps.`;
 
   try {
-    const cleaned = await callAnthropic(system, user, 900, 0.35);
+    const cleaned = await callAnthropic(system, user, 900);
     let result: any;
     try {
       result = JSON.parse(cleaned);

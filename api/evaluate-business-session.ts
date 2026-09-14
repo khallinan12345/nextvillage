@@ -6,7 +6,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+const ANTHROPIC_MODEL = 'claude-sonnet-5';
 
 function logCost(inputTokens: number, outputTokens: number, cacheHitTokens = 0, cacheWriteTokens = 0) {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -16,10 +16,10 @@ function logCost(inputTokens: number, outputTokens: number, cacheHitTokens = 0, 
   const MTok = 1_000_000;
   const standardInput = Math.max(0, inputTokens - cacheHitTokens - cacheWriteTokens);
   const estimatedCost =
-    (standardInput    / MTok) * 3.00  +
-    (cacheWriteTokens / MTok) * 3.75  +
-    (cacheHitTokens   / MTok) * 0.30  +
-    (outputTokens     / MTok) * 15.00;
+    (standardInput    / MTok) * 2.00  +
+    (cacheWriteTokens / MTok) * 2.50  +
+    (cacheHitTokens   / MTok) * 0.20  +
+    (outputTokens     / MTok) * 10.00;
 
   fetch(`${supabaseUrl}/rest/v1/api_cost_log`, {
     method: 'POST',
@@ -140,7 +140,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         model:       ANTHROPIC_MODEL,
         max_tokens:  2500,
-        temperature: 0.4,
         system:      EVALUATION_SYSTEM,
         messages:    [{ role: 'user', content: userContext }],
       }),
