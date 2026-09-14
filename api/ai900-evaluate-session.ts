@@ -5,7 +5,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL             = 'claude-sonnet-4-6';
+const MODEL             = 'claude-sonnet-5';
 
 // ─── Cost logger (fire-and-forget) ───────────────────────────────────────────
 function logCost(action: string, inputTokens: number, outputTokens: number) {
@@ -13,7 +13,7 @@ function logCost(action: string, inputTokens: number, outputTokens: number) {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseKey || (!inputTokens && !outputTokens)) return;
   const MTok = 1_000_000;
-  const estimatedCost = (inputTokens / MTok) * 3.00 + (outputTokens / MTok) * 15.00;
+  const estimatedCost = (inputTokens / MTok) * 2.00 + (outputTokens / MTok) * 10.00;
   fetch(`${supabaseUrl}/rest/v1/api_cost_log`, {
     method: 'POST',
     headers: {

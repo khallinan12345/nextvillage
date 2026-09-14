@@ -54,7 +54,7 @@ const MAX_DIGEST_POSTS = 30;
 const DRAFT_TOP_N = 10;
 
 // Fallback if model_config lookup is unavailable
-const DEFAULT_SONNET = "claude-sonnet-4-6";
+const DEFAULT_SONNET = "claude-sonnet-5";
 
 const SUBSTACK_URL = "https://substack.com/@kevinpatrickhallinan";
 

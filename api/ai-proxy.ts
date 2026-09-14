@@ -23,10 +23,10 @@ function logCost(page: string, model: string, usage: { input_tokens?: number; ou
   if (!inputTokens && !outputTokens) return;
   const MTok = 1_000_000;
   const prices: Record<string, { input: number; output: number }> = {
-    'claude-sonnet-4-6':         { input: 3.00, output: 15.00 },
+    'claude-sonnet-5':           { input: 2.00, output: 10.00 },
     'claude-haiku-4-5-20251001': { input: 1.00, output:  5.00 },
   };
-  const p = prices[model] ?? prices['claude-sonnet-4-6'];
+  const p = prices[model] ?? prices['claude-sonnet-5'];
   const estimatedCost = (inputTokens / MTok) * p.input + (outputTokens / MTok) * p.output;
   fetch(`${supabaseUrl}/rest/v1/api_cost_log`, {
     method: 'POST',
@@ -70,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'messages array is required' });
     }
 
-    const resolvedModel = model || 'claude-sonnet-4-6';
+    const resolvedModel = model || 'claude-sonnet-5';
     const payload: Record<string, any> = {
       model: resolvedModel,
       max_tokens: max_tokens || 1000,

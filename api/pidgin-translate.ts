@@ -82,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } else {
     providerUrl = ANTHROPIC_API_URL;
     providerApiKey = anthropicKey!;
-    providerModel = 'claude-sonnet-4-6';
+    providerModel = 'claude-sonnet-5';
     requestBody = {
       model: providerModel,
       max_tokens: 300,

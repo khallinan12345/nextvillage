@@ -232,7 +232,7 @@ async function refreshModels() {
 // ── Pricing table (per million tokens, USD) ───────────────────────────────────
 
 const PRICING = {
-  'claude-sonnet-5':             { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
+  'claude-sonnet-5':             { input: 2.00,  output: 10.00, cacheWrite: 2.50,  cacheRead: 0.20  },
   'claude-sonnet-4-6':           { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
   'claude-haiku-4-5-20251001':   { input: 1.00,  output: 5.00,  cacheWrite: 1.25,  cacheRead: 0.10  },
   'llama-3.3-70b-versatile':     { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
