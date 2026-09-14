@@ -9,7 +9,7 @@ import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 // ROUTING LOGIC:
 //   page = 'AILearningPage' | 'EnglishSkillsPage' |
 //          'SkillsDevelopmentPage' | consultant pages
-//     → Groq (primary) → Gemini → Cloudflare → OpenRouter → Mistral → DeepSeek → Anthropic Haiku (final)
+//     → Groq (primary) → Cerebras → Cloudflare → OpenRouter → Mistral → Anthropic Haiku (final)
 //
 //   page = 'VibeCodingPage' | 'WebDevelopmentPage' |
 //          'FullStackDevelopmentPage' | 'AIWorkflowDevPage' |
@@ -20,7 +20,7 @@ import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 //           all six hybrid pages route coding tasks here; Haiku was hitting
 //           quality/error ceilings as projects grew more elaborate)
 //     → taskType !== 'coding'  (evaluation, planning, help popup, critique, task instructions, Q&A)
-//         → Groq (primary) → Gemini → Cloudflare → OpenRouter → Mistral → DeepSeek → Anthropic Haiku (final)
+//         → Groq (primary) → Cerebras → Cloudflare → OpenRouter → Mistral → Anthropic Haiku (final)
 //         NOTE: This now applies to WebDevelopmentPage too — evaluation, help, and
 //         task-instruction calls from WebDevelopmentPage all go through the free-tier
 //         chain with Haiku as the final fallback, not Haiku as the primary.
@@ -44,8 +44,10 @@ import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 //   If taskType is omitted on a coding page, it defaults to 'coding' (uses Haiku).
 //
 // FALLBACK CHAIN (for free-tier-routed pages):
-//   Groq → Cerebras → Cloudflare Workers AI → OpenRouter (free) → Mistral → DeepSeek V3 → Anthropic Haiku
+//   Groq → Cerebras → Cloudflare Workers AI → OpenRouter (free) → Mistral → Anthropic Haiku
 //   NOTE: Gemini removed — free tier quota permanently exhausted (limit: 0)
+//   NOTE: DeepSeek removed — its pricing is no longer meaningfully cheaper
+//   than Anthropic Haiku, so it no longer earns a hop before the real thing.
 //
 // PROMPT CACHING: applied automatically on all Anthropic calls.
 //   The system prompt is marked with cache_control so repeated calls within
@@ -73,8 +75,8 @@ const FREE_TIER_PAGES = new Set([
   'PidginTranslationModule',
   // HealthcareNavigatorPage deliberately excluded: health-adjacent
   // conversation text should only ever reach Anthropic, not the free-tier
-  // fallback chain (Groq/Gemini/Cloudflare/OpenRouter/Mistral/DeepSeek) —
-  // it falls through to the default Anthropic Haiku route below instead.
+  // fallback chain — see SONNET5_PAGES below, where it routes straight to
+  // Sonnet 5 rather than through the default Haiku route.
 ]);
 
 // Pages where the conversation is fundamentally about a real community
@@ -106,12 +108,16 @@ const HYBRID_CODING_PAGES = new Set([
   'WebsiteBuilderPage',
 ]);
 
-// Pages that always route straight to Sonnet 5 — not coding, but the
-// reasoning quality bar is high enough (multi-layered Socratic dialogue,
-// judging when to shift from questioning to offering a perspective) that
-// the free-tier chain / Haiku default isn't reliable enough.
+// Pages that always route straight to Sonnet 5, never the free-tier chain.
+//   SystemsThinkPage: not coding, but the reasoning quality bar is high
+//     enough (multi-layered Socratic dialogue, judging when to shift from
+//     questioning to offering a perspective) that Haiku isn't reliable enough.
+//   HealthcareNavigatorPage: health-adjacent conversation should only ever
+//     reach Anthropic's own contractually-reviewed terms, never a free-tier
+//     provider — and Sonnet 5 for now, per explicit product decision.
 const SONNET5_PAGES = new Set([
   'SystemsThinkPage',
+  'HealthcareNavigatorPage',
 ]);
 
 // Per-page reasoning effort — a good model at low effort has held up well
@@ -178,7 +184,6 @@ const DEFAULT_MODELS = {
   anthropic_sonnet5: 'claude-sonnet-5',
   groq:             'openai/gpt-oss-120b',      // was llama-3.3-70b-versatile (deprecated Jun 17 2026)
   cerebras:         'gpt-oss-120b',             // same weights — dual-homed, no output drift on failover
-  deepseek:         'deepseek-chat',            // DeepSeek V3 — assessment pipeline + final paid fallback before Haiku
   gemini:           'gemini-2.0-flash',
   cloudflare:       '@cf/meta/llama-3.3-70b-instruct-fp8-fast', // still live, now the odd one out
   openrouter:       'nvidia/nemotron-3-ultra-550b-a55b:free',   // was llama-3.3-70b:free (delisted)
@@ -237,7 +242,6 @@ const PRICING = {
   'meta-llama/llama-3.3-70b-instruct:free': { input: 0.00, output: 0.00, cacheWrite: 0.00, cacheRead: 0.00 },
   'mistral-small-latest':        { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
   'gpt-oss-120b':                { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  }, // Cerebras free tier
-  'deepseek-chat':               { input: 0.28,  output: 0.42,  cacheWrite: 0.00,  cacheRead: 0.028 }, // V3.2 — ~71% cheaper than Haiku
 };
 
 function estimateCost(model, inputTokens, outputTokens, cacheHitTokens = 0, cacheWriteTokens = 0) {
@@ -800,54 +804,6 @@ async function callMistral(model, messages, system, max_tokens, temperature) {
   return { ...data, _route: { provider: 'mistral', model } };
 }
 
-// ── DeepSeek call (OpenAI-compatible) ────────────────────────────────────────
-// Used as the assessment pipeline model and the final paid fallback
-// before Anthropic Haiku. Error code 402 = insufficient balance (free credits exhausted).
-
-async function callDeepSeek(model, messages, system, max_tokens, temperature) {
-  const dsMessages = [
-    ...(system ? [{ role: 'system', content: system }] : []),
-    ...messages,
-  ];
-
-  const upstream = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-      'Content-Type':  'application/json',
-    },
-    body: JSON.stringify({ model, messages: dsMessages, max_tokens, temperature }),
-  });
-
-  const data = await upstream.json();
-
-  if (!upstream.ok) {
-    const err = new Error(data.error?.message || 'DeepSeek API error');
-    err.status = upstream.status;
-    // 402 = account balance exhausted — triggers fallback to Haiku
-    throw err;
-  }
-
-  const text = data?.choices?.[0]?.message?.content ?? '';
-  return {
-    id:     data.id || `deepseek-${Date.now()}`,
-    object: 'chat.completion',
-    model,
-    choices: [{
-      index:         0,
-      message:       { role: 'assistant', content: text },
-      finish_reason: data.choices?.[0]?.finish_reason ?? 'stop',
-    }],
-    usage: {
-      prompt_tokens:     data.usage?.prompt_tokens     ?? 0,
-      completion_tokens: data.usage?.completion_tokens ?? 0,
-      total_tokens:      data.usage?.total_tokens      ?? 0,
-      cache_read_input_tokens: data.usage?.prompt_cache_hit_tokens ?? 0,
-    },
-    _route: { provider: 'deepseek', model },
-  };
-}
-
 // ── Cerebras call (OpenAI-compatible, wafer-scale inference) ─────────────────
 // gpt-oss-120b — OpenAI open-weight model on Cerebras, free tier, no credit card required.
 // Free tier: 30 RPM, 1M tokens/day, no credit card required.
@@ -936,12 +892,6 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
       model:    MODELS.mistral,
       keyEnv:   'MISTRAL_API_KEY',
       fn:       () => callMistral(MODELS.mistral, messages, system, max_tokens, temperature),
-    },
-    {
-      name:     'deepseek',
-      model:    MODELS.deepseek,
-      keyEnv:   'DEEPSEEK_API_KEY',
-      fn:       () => callDeepSeek(MODELS.deepseek, messages, system, max_tokens, temperature),
     },
     {
       name:     'anthropic',
@@ -1158,7 +1108,6 @@ export default async function handler(req, res) {
         'cloudflare/llama-3.3-70b-fp8 (free fallback)',
         'openrouter/llama-3.3-70b:free (free fallback)',
         'mistral/small (free fallback)',
-        'deepseek/deepseek-chat (paid fallback, ~71% cheaper than Haiku)',
         'anthropic/haiku (final paid fallback + most coding tasks)',
         'anthropic/sonnet-5 (Create Game + Website Builder coding tasks)',
       ],

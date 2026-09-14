@@ -13,9 +13,15 @@
 // caller — it resolves the calling user's effective organization (mirroring
 // get_my_effective_profile() in the DB) and checks it matches the room's
 // organization_id.
+//
+// FREE TIER: tries the free-tier chain (api/_lib/freeTierChain.js — Groq →
+// Cerebras → Cloudflare → OpenRouter → Mistral) before Anthropic, but only
+// for turns that don't look like they're asking to write/extend the shared
+// book (see mightUpdateBook()) — the update_book tool call is Anthropic-only.
 
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
+import { tryFreeTierChain } from './_lib/freeTierChain.js';
 
 // Back to Basics Youth Education stays exempt from the token quota below —
 // keep in sync with src/lib/backToBasicsScope.ts.
@@ -50,23 +56,38 @@ function estimateCost(model, inputTokens, outputTokens) {
   return (inputTokens / 1_000_000) * p.input + (outputTokens / 1_000_000) * p.output;
 }
 
-async function logCost({ model, inputTokens, outputTokens, userId }) {
+async function logCost({ model, inputTokens, outputTokens, userId, provider = 'anthropic' }) {
   if (!inputTokens && !outputTokens) return;
   try {
     await supabase.from('api_cost_log').insert({
       page:               'PlaygroundTogetherPage',
-      provider:           'anthropic',
+      provider,
       model,
       action:             'generate',
       input_tokens:       inputTokens,
       output_tokens:      outputTokens,
       cache_hit_tokens:   0,
       cache_write_tokens: 0,
-      estimated_cost_usd: estimateCost(model, inputTokens, outputTokens),
+      // Free-tier providers cost nothing; only the PRICES table (Anthropic
+      // models) produces a non-zero estimate.
+      estimated_cost_usd: provider === 'anthropic' ? estimateCost(model, inputTokens, outputTokens) : 0,
       user_id:            userId ?? null,
       logged_at:          new Date().toISOString(),
     });
   } catch { /* logging must never fail the request */ }
+}
+
+// ── Free-tier eligibility heuristic ─────────────────────────────────────────
+// The book-writing tool call (update_book) is Anthropic-only — no per-
+// provider tool-call parsing exists here yet — so a turn only tries free
+// tier first when it's unlikely to be asking for a book update. Errs toward
+// "might update the book": a false positive just costs an Anthropic call
+// this endpoint would have made anyway; a false negative silently drops a
+// book edit, which is the worse failure.
+const BOOK_INTENT_RE = /\b(write|continue|add(?:s|ed)? to|expand|extend|edit|rewrite|revise|draft|chapter|story|book|paragraph)\b/i;
+
+function mightUpdateBook(text) {
+  return BOOK_INTENT_RE.test(text || '');
 }
 
 export default async function handler(req, res) {
@@ -196,8 +217,54 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, message: null });
     }
 
-    const model = room.model || 'claude-sonnet-5';
     const orgName = room.organizations?.name || 'this organization';
+
+    // ── Try free tier first for turns unlikely to touch the book ──────────
+    // (see mightUpdateBook() above — no per-provider tool-call parsing
+    // exists here, so any turn that might want update_book always goes to
+    // Anthropic instead.) On success, skip the Anthropic call entirely.
+    let freeTierReply = null;
+    const latestUserText = anthropicMessages[anthropicMessages.length - 1].content;
+    if (!mightUpdateBook(latestUserText)) {
+      try {
+        const freeTierSystemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at ${orgName}. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Respond to whoever sent the most recent message — don't address some other named participant instead just because they spoke earlier or more often. Keep replies focused and not overly long — this is a live group conversation, not a report.`;
+        const { result, actualProvider, actualModel } = await tryFreeTierChain(
+          anthropicMessages, freeTierSystemPrompt, 800, 0.7, { page: 'PlaygroundTogetherPage' }
+        );
+        const text = result?.choices?.[0]?.message?.content?.trim();
+        if (text) freeTierReply = { text, provider: actualProvider, model: actualModel, usage: result.usage };
+      } catch (err) {
+        console.warn('[chat-room] Free-tier chain exhausted, falling back to Anthropic:', err?.message);
+      }
+    }
+
+    if (freeTierReply) {
+      const { data, error: insertErr } = await supabase
+        .from('together_messages')
+        .insert({
+          room_id,
+          sender_id:   null,
+          sender_name: 'Claude',
+          role:        'assistant',
+          content:     freeTierReply.text,
+        })
+        .select('id, content, created_at')
+        .single();
+      if (insertErr) throw insertErr;
+
+      logCost({
+        provider:     freeTierReply.provider,
+        model:        freeTierReply.model,
+        inputTokens:  freeTierReply.usage?.prompt_tokens,
+        outputTokens: freeTierReply.usage?.completion_tokens,
+        userId:       user_id,
+      });
+
+      return res.status(200).json({ success: true, message: data });
+    }
+
+    // ── Free tier skipped or exhausted — Anthropic, with the book tool ────
+    const model = room.model || 'claude-sonnet-5';
     const currentBook = (room.book_content || '').trim();
     const systemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at ${orgName}. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Contribute naturally to whatever the group is building (for example, a community story) — build on what's already been said, don't repeat yourself, and prioritize direction from a leader. Keep replies focused and not overly long — this is a live group conversation, not a report.
 
