@@ -43,6 +43,13 @@ function modelAllowsCustomTemperature(model) {
   return !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
 }
 
+// output_config.effort errors on Haiku 4.5 — only send it to models that
+// support it. "low" is the platform-wide default on every Sonnet 5 route
+// (per an observed cost uptick) — see api/chat.js's PAGE_EFFORT comment.
+function modelSupportsEffort(model) {
+  return !/^claude-haiku/.test(model);
+}
+
 // ─── Cost logging (fire-and-forget) ───────────────────────────────────────
 const PRICES = {
   'claude-sonnet-5':            { input: 2.0, output: 10.0 }, // intro pricing through 2026-08-31
@@ -300,6 +307,7 @@ When your reply adds new text to, edits, expands, lengthens, or continues the bo
       system: systemPrompt,
       messages: anthropicMessages,
       tools: [UPDATE_BOOK_TOOL],
+      ...(modelSupportsEffort(model) ? { output_config: { effort: 'low' } } : {}),
     };
     if (modelAllowsCustomTemperature(model)) {
       createParams.temperature = 0.7;

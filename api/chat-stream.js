@@ -577,8 +577,8 @@ export default async function handler(req) {
   // `temperature` with a 400 — only send it for models that still accept it.
   const modelAllowsCustomTemperature = !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
   // output_config.effort errors on Haiku 4.5 — only send it to models that
-  // support it. AIPlaygroundPage isn't one of the pages with its own
-  // assigned effort level, so it gets the general "medium" default.
+  // support it. "low" is the platform-wide default on every Sonnet 5 route
+  // (per an observed cost uptick) — see api/chat.js's PAGE_EFFORT comment.
   const modelSupportsEffort = !/^claude-haiku/.test(model);
 
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
@@ -593,7 +593,7 @@ export default async function handler(req) {
       model,
       max_tokens,
       ...(modelAllowsCustomTemperature ? { temperature } : {}),
-      ...(modelSupportsEffort ? { output_config: { effort: 'medium' } } : {}),
+      ...(modelSupportsEffort ? { output_config: { effort: 'low' } } : {}),
       stream: true,
       messages: cachedMessagesForApi,
       ...(systemPayload ? { system: systemPayload } : {}),
