@@ -121,26 +121,20 @@ const SONNET5_PAGES = new Set([
 ]);
 
 // Per-page reasoning effort — a good model at low effort has held up well
-// for Oloibiri's learners in practice, so lighter-weight tutoring/practice
-// pages default down from the implicit "high" (omitting effort) to "low" or
-// "medium", while a page that leans on multi-step reasoning (SystemsThinkPage)
-// stays at "high". Anything not listed here falls back to "medium" — a real
-// reduction from the previous implicit "high" default, applied everywhere
-// that doesn't need the extra depth. Never applies to Haiku 4.5 — see
-// modelSupportsEffort() — Haiku rejects the effort parameter outright, so a
-// page pinned to Haiku (e.g. certification pages) is already running as
-// cheap as this lever can make it and gets no output_config.effort at all.
+// for Oloibiri's learners in practice, so "low" is now the platform-wide
+// default on every Sonnet 5 route (per an observed cost uptick), with
+// SystemsThinkPage kept at "high" as the one deliberate exception — its
+// multi-layered Socratic reasoning is the one place the extra depth earns
+// its cost. Never applies to Haiku 4.5 — see modelSupportsEffort() — Haiku
+// rejects the effort parameter outright, so a page pinned to Haiku (e.g.
+// certification pages) is already running as cheap as this lever can make
+// it and gets no output_config.effort at all.
 const PAGE_EFFORT = {
-  AILearningPage:      'low',
-  AIReadySkillsPage:   'low',
-  EnglishSkillsPage:   'low',
-  MathSkillsPage:      'low',
-  ScienceSkillsPage:   'low',
-  SystemsThinkPage:    'high',
+  SystemsThinkPage: 'high',
 };
 
 function getEffortForPage(page) {
-  return PAGE_EFFORT[page] || 'medium';
+  return PAGE_EFFORT[page] || 'low';
 }
 
 // output_config.effort errors on Haiku 4.5 — only send it to models that
