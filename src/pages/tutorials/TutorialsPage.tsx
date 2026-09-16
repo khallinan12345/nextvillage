@@ -154,6 +154,19 @@ const TRACKS: Track[] = [
     Icon: Puzzle,
   },
   {
+    id: 'research-reports-meetings',
+    path: '/tutorials/research-reports-meetings',
+    title: 'Maji Mazuri Onboarding Activity',
+    blurb:
+      'One real topic, carried through five steps: research and brainstorm it in Use Claude, write it up in AI Content Creation, prepare your meeting strategy, and have Claude build the slide deck — all in the same chat.',
+    duration: 'about an hour',
+    totalSteps: 5,
+    tags: ['Use Claude', 'AI Content Creation', 'Meeting Prep', 'Research'],
+    available: true,
+    category: 'onboarding',
+    Icon: Lightbulb,
+  },
+  {
     id: 'seed-to-multiplier',
     path: '/tutorials/seed-to-multiplier',
     title: 'The Core Path',
