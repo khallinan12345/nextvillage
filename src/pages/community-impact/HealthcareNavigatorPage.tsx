@@ -1187,11 +1187,18 @@ const HealthcareNavigatorPage: React.FC = () => {
     setAssessment(prev => ({ ...prev, [key]: value }));
 
   // ─── Detect triage from AI text ───────────────────────────────────────────
+  // Reads the classification off the "TRIAGE CLASSIFICATION" line the prompt
+  // asks for, not a blind whole-text scan — a bare `includes('RED')` over the
+  // full write-up false-positives on mentions like "red eyes" or the prompt's
+  // own "classify RED regardless of..." instruction being echoed back, even
+  // when the actual classification was GREEN or YELLOW.
   const detectTriage = (text: string): TriageLevel => {
-    const upper = text.toUpperCase();
-    if (upper.includes('RED')) return 'red';
-    if (upper.includes('YELLOW')) return 'yellow';
-    if (upper.includes('GREEN')) return 'green';
+    const headingMatch = text.match(/TRIAGE CLASSIFICATION[^A-Za-z]*(RED|YELLOW|GREEN)/i);
+    const keyword = headingMatch?.[1]?.toUpperCase()
+      ?? text.slice(0, 300).toUpperCase().match(/\b(RED|YELLOW|GREEN)\b/)?.[1];
+    if (keyword === 'RED') return 'red';
+    if (keyword === 'YELLOW') return 'yellow';
+    if (keyword === 'GREEN') return 'green';
     return 'yellow'; // default to caution
   };
 
