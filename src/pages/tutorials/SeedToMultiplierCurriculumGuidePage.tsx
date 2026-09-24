@@ -15,6 +15,16 @@
 // Proficient (>= 2 out of a 3-point rubric), the same threshold used
 // platform-wide. No new schema, no new certification mechanism — this reuses
 // the five certification exams that already exist, in a fixed order.
+//
+// Revised per Divinegift Morris's curriculum audit (Sept 2026): certification
+// was reading as a bare pass/fail gate with the "learn" and "practice" steps
+// invisible to the learner. Each phase now surfaces the practice page that
+// already exists for it (learning modules / tech-skills workshop) BEFORE the
+// certification link, and names the specific bridge risk between phases
+// (esp. Vibe Coding → Web Development, the sharpest jump in the path) so the
+// learner knows what to expect rather than hitting it cold. This is a
+// content/framing change only — it reuses existing practice pages, it does
+// not add new interactive lessons or sandboxes.
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +32,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import {
-  Award, Check, ChevronDown, ChevronRight, GraduationCap, Loader2, Lock, Map, Sparkles,
+  Award, BookOpen, Check, ChevronDown, ChevronRight, GraduationCap, Lightbulb, Loader2, Lock, Map, Sparkles,
 } from 'lucide-react';
 
 const TRACK = 'seed-to-multiplier-curriculum';
@@ -33,8 +43,13 @@ interface Phase {
   title: string;
   weeks: string;
   hook: string;
+  learn: string;          // what this phase teaches
+  build: string;          // the project the learner produces before certifying
+  practicePath: string;   // existing "learn/practice" page for this phase
+  practiceLabel: string;
   certPath: string;
   certLabel: string;
+  bridgeNote?: string;    // shown for a phase where the jump from the previous one is the sharpest
 }
 
 const PHASES: Phase[] = [
@@ -44,6 +59,10 @@ const PHASES: Phase[] = [
     title: 'AI Foundations',
     weeks: 'Weeks 1–2',
     hook: 'What AI actually is, how to prompt it well, and where it goes wrong — the AI Proficiency certification.',
+    learn: 'AI literacy, ethics, bias, and verification — how AI systems actually work and where they fail.',
+    build: 'A community-grounded AI use case: apply what you learned to a real problem from your own area.',
+    practicePath: '/learning/ai',
+    practiceLabel: 'Practice: AI Learning modules',
     certPath: '/certifications/ai-proficiency',
     certLabel: 'Take the AI Proficiency Certification',
   },
@@ -53,6 +72,10 @@ const PHASES: Phase[] = [
     title: 'AI-Ready Skills',
     weeks: 'Weeks 3–4',
     hook: 'Critical thinking, creativity, communication, problem-solving, and digital fluency with AI as a working partner.',
+    learn: 'AI-assisted workflows, automation, and content generation — going from a single prompt to a repeatable process.',
+    build: 'A working AI workflow: give AI a task, refine the prompt, add constraints, and check the output until the process is repeatable.',
+    practicePath: '/learning/skills',
+    practiceLabel: 'Practice: Skills Development modules',
     certPath: '/certifications/ai-ready-skills',
     certLabel: 'Take the AI Ready Skills Certification',
   },
@@ -62,6 +85,10 @@ const PHASES: Phase[] = [
     title: 'Vibe Coding',
     weeks: 'Weeks 5–7',
     hook: 'Design → Generate → Test → Refine — building real software with AI as a coding partner, not a shortcut.',
+    learn: 'Natural-language, prompt-driven app building: component styling, AI code generation, iterative prompting, conversational debugging, and deployment.',
+    build: 'A functional AI-built prototype — and, before certifying, enough of a look at the code AI generated (structure, logic, common error messages) that you can investigate when something breaks, not just re-prompt and hope.',
+    practicePath: '/tech-skills/vibe-coding',
+    practiceLabel: 'Practice: Vibe Coding workshop',
     certPath: '/certifications/vibe-coding',
     certLabel: 'Take the Vibe Coding Certification',
   },
@@ -71,8 +98,14 @@ const PHASES: Phase[] = [
     title: 'Web Development',
     weeks: 'Weeks 8–9',
     hook: 'A real React + Supabase site, built and evaluated against professional rubric criteria.',
+    learn: 'HTML, CSS, JavaScript, React, routing, Tailwind, state, props, events, and responsive design — reading and editing real frontend code.',
+    build: 'A multi-page frontend you understand line by line, not just describe to an AI.',
+    practicePath: '/tech-skills/web-development',
+    practiceLabel: 'Practice: Web Development workshop',
     certPath: '/certifications/web-dev-certification',
     certLabel: 'Take the Web Development Certification',
+    bridgeNote:
+      "This is the sharpest jump in the path. In Vibe Coding you could say \"build me this feature\"; here you're asked \"why does this function work?\" The best bridge is your own Vibe-Coded project — open the code it generated and ask what each piece (a <div>, a component, a function, a click handler) is actually doing before you're asked to write it yourself.",
   },
   {
     id: 'capstone',
@@ -80,8 +113,14 @@ const PHASES: Phase[] = [
     title: 'Full-Stack Capstone — the Exam Gate',
     weeks: 'Week 10',
     hook: 'A complete full-stack build, evaluated closed-book — the gate into Builder on the Community Impact tier ladder.',
+    learn: 'Backend integration, database schemas, Supabase/SQL, APIs, authentication, environment variables, client-server communication, CRUD, and deployment — layered on top of everything before it.',
+    build: 'A full-stack application, connected end to end: database → read → create → update/delete → authentication → user-specific permissions → security → deployment.',
+    practicePath: '/tech-skills/full-stack-development',
+    practiceLabel: 'Practice: Full-Stack Development workshop',
     certPath: '/certifications/full-stack-certification',
     certLabel: 'Take the Full-Stack Certification',
+    bridgeNote:
+      'Several hard layers arrive at once here — frontend, database, API, auth, security, deployment — so an error can come from any of them. Database permissions (RLS) and authentication are the most common sticking points. Work through the practice workshop stage by stage rather than attempting the whole stack at once.',
   },
 ];
 
@@ -169,8 +208,9 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
           <h1 className="mt-1 text-3xl font-extrabold">The Core Path</h1>
           <p className="mt-1 max-w-xl text-sm text-emerald-100">
             This is the path every learner follows after onboarding — one ordered curriculum, five
-            certification exams. Pass each one — score Proficient or better — to unlock the next step.
-            No exam, no advancement.
+            phases. Each phase: learn the concepts, practice with real activities, build something,
+            then certify — score Proficient or better to unlock the next phase. The certification exams
+            are still the gate; they're just no longer the first thing you see.
           </p>
 
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm text-emerald-50">
@@ -230,6 +270,24 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
                 <div className="border-t border-gray-100 px-5 pb-5 pt-4">
                   <p className="mb-4 text-sm text-gray-600">{phase.hook}</p>
 
+                  <dl className="mb-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <dt className="text-xs font-bold uppercase tracking-wide text-gray-400">Learn</dt>
+                      <dd className="mt-1 text-sm text-gray-700">{phase.learn}</dd>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <dt className="text-xs font-bold uppercase tracking-wide text-gray-400">Build, before you certify</dt>
+                      <dd className="mt-1 text-sm text-gray-700">{phase.build}</dd>
+                    </div>
+                  </dl>
+
+                  {phase.bridgeNote && (
+                    <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                      <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                      <p className="text-sm text-amber-900">{phase.bridgeNote}</p>
+                    </div>
+                  )}
+
                   {isPassed ? (
                     <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
                       <span className="font-semibold">Certification passed.</span>{' '}
@@ -238,12 +296,20 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
                         : `On to ${PHASES[idx + 1].title}.`}
                     </div>
                   ) : (
-                    <button
-                      onClick={() => navigate(phase.certPath)}
-                      className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-800"
-                    >
-                      <GraduationCap className="h-4 w-4" /> {phase.certLabel}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => navigate(phase.practicePath)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-emerald-700 px-4 py-2.5 text-sm font-bold text-emerald-700 transition-colors hover:bg-emerald-50"
+                      >
+                        <BookOpen className="h-4 w-4" /> {phase.practiceLabel}
+                      </button>
+                      <button
+                        onClick={() => navigate(phase.certPath)}
+                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-800"
+                      >
+                        <GraduationCap className="h-4 w-4" /> {phase.certLabel}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -259,6 +325,19 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
             programs' <span className="font-semibold">Builder</span> tier plays on the Seed → Scout → Bridge
             → Builder → Multiplier ladder. This path doesn't invent a second badge system; it climbs the one
             that already exists.
+          </p>
+        </div>
+
+        {/* curriculum-audit note */}
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-5">
+          <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold text-gray-900">Learn → Practice → Build → Certify, not Assess → Pass/Fail.</span>{' '}
+            Each phase above now leads with what you'll learn and build, with a link to that phase's
+            practice modules before the certification exam — not the exam on its own. The sharpest jump
+            in the path is Vibe Coding into Web Development, so that phase calls out the bridge directly:
+            use your own Vibe-Coded project as the way in to reading real code, rather than starting from
+            a blank page.
           </p>
         </div>
       </div>
