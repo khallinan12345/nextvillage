@@ -69,6 +69,7 @@ const Navbar: React.FC = () => {
       dropdown: [
         { name: 'AI Learning', path: '/learning/ai' },
         { name: 'Skills Development', path: '/learning/skills' },
+        { name: 'Financial Literacy', path: '/learning/financial-literacy' },
       ],
     },
     {
@@ -122,6 +123,7 @@ const Navbar: React.FC = () => {
       dropdown: [
         { name: 'AI Proficiency', path: '/certifications/ai-proficiency' },
         { name: 'AI Ready Skills', path: '/certifications/ai-ready-skills' },
+        { name: 'Financial Literacy', path: '/certifications/financial-literacy' },
         { name: 'Vibe Coding', path: '/certifications/vibe-coding' },
         { name: 'Web Dev Certification', path: '/certifications/web-dev-certification' },
         { name: 'Full-Stack Certification', path: '/certifications/full-stack-certification' },
