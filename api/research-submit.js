@@ -63,7 +63,7 @@ Followed by 3–5 sentences summarizing the key reasoning and any conditions the
 Format your response as clean prose under each heading. Do not use bullet points. Do not hedge excessively. The board needs clear signal.`;
 
   const msg = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-5',
     max_tokens: 2000,
     messages: [{ role: 'user', content: prompt }],
   });
