@@ -20,7 +20,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // ── Pricing (per million tokens) ─────────────────────────────────────────────
 const PRICES: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-6':         { input: 3.0,  output: 15.0 },
-  'claude-haiku-4-5-20251001': { input: 1.0,  output:  5.0 },
+  'claude-haiku-4-5': { input: 1.0,  output:  5.0 },
   default:                     { input: 1.0,  output:  5.0 }, // assume Haiku if unknown
 };
 
@@ -99,7 +99,7 @@ Deno.serve(async (_req) => {
       const messages: ChatMessage[] = Array.isArray(chat.messages) ? chat.messages : [];
       if (messages.length === 0) { skipped++; continue; }
 
-      const model = chat.model ?? 'claude-haiku-4-5-20251001';
+      const model = chat.model ?? 'claude-haiku-4-5';
 
       // Only count messages from the last hour
       const recentMessages = messages.filter(m => {

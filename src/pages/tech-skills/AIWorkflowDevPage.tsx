@@ -599,7 +599,7 @@ const TestWorkflowPanel: React.FC<{ apiKey: string; projectFiles: ProjectFile[] 
               <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Model</label>
               <select value={model} onChange={e => setModel(e.target.value)}
                 className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200 outline-none">
-                <option value="claude-haiku-4-5-20251001">Claude Haiku (fast, cheap)</option>
+                <option value="claude-haiku-4-5">Claude Haiku (fast, cheap)</option>
                 <option value="claude-sonnet-4-6">Claude Sonnet (smarter)</option>
               </select>
             </div>

@@ -33,7 +33,7 @@ import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 //     → Anthropic claude-sonnet-5 always (no free-tier fallback)
 //
 //   all other pages / no page supplied
-//     → Anthropic claude-haiku-4-5-20251001 (default)
+//     → Anthropic claude-haiku-4-5 (default)
 //
 // TASK TYPE (for coding pages):
 //   The frontend should send taskType = 'coding' | 'non-coding' in the request body.
@@ -173,7 +173,7 @@ const CERT_PAGES = new Set([
 //   );
 
 const DEFAULT_MODELS = {
-  anthropic_haiku:   'claude-haiku-4-5-20251001',
+  anthropic_haiku:   'claude-haiku-4-5',
   anthropic_sonnet:  'claude-sonnet-4-6',
   anthropic_sonnet5: 'claude-sonnet-5',
   groq:             'openai/gpt-oss-120b',      // was llama-3.3-70b-versatile (deprecated Jun 17 2026)
@@ -228,7 +228,7 @@ async function refreshModels() {
 const PRICING = {
   'claude-sonnet-5':             { input: 2.00,  output: 10.00, cacheWrite: 2.50,  cacheRead: 0.20  },
   'claude-sonnet-4-6':           { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
-  'claude-haiku-4-5-20251001':   { input: 1.00,  output: 5.00,  cacheWrite: 1.25,  cacheRead: 0.10  },
+  'claude-haiku-4-5':   { input: 1.00,  output: 5.00,  cacheWrite: 1.25,  cacheRead: 0.10  },
   'llama-3.3-70b-versatile':     { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
   'gemini-2.0-flash':            { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
   '@cf/meta/llama-3.3-70b-instruct-fp8-fast': { input: 0.00, output: 0.00, cacheWrite: 0.00, cacheRead: 0.00 },

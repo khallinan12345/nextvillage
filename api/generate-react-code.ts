@@ -29,7 +29,7 @@ import { logApiCost } from '../lib/api-cost-logger.js';
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL_SONNET  = 'claude-sonnet-5';
-const MODEL_HAIKU   = 'claude-haiku-4-5-20251001'; // critique only
+const MODEL_HAIKU   = 'claude-haiku-4-5'; // critique only
 
 // claude-sonnet-5 rejects a non-default `temperature` with a 400 — only
 // send it for models that still accept it (Haiku does).

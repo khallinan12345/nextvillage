@@ -21,7 +21,7 @@
 
 // Kept in sync with DEFAULT_MODELS in api/chat.js — update both together.
 const DEFAULT_MODELS = {
-  anthropic_haiku:   'claude-haiku-4-5-20251001',
+  anthropic_haiku:   'claude-haiku-4-5',
   anthropic_sonnet:  'claude-sonnet-4-6',
   anthropic_sonnet5: 'claude-sonnet-5',
   groq:              'openai/gpt-oss-120b',

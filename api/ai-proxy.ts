@@ -24,7 +24,7 @@ function logCost(page: string, model: string, usage: { input_tokens?: number; ou
   const MTok = 1_000_000;
   const prices: Record<string, { input: number; output: number }> = {
     'claude-sonnet-5':           { input: 2.00, output: 10.00 },
-    'claude-haiku-4-5-20251001': { input: 1.00, output:  5.00 },
+    'claude-haiku-4-5': { input: 1.00, output:  5.00 },
   };
   const p = prices[model] ?? prices['claude-sonnet-5'];
   const estimatedCost = (inputTokens / MTok) * p.input + (outputTokens / MTok) * p.output;
