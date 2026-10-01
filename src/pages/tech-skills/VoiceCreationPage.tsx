@@ -241,7 +241,7 @@ const VoiceCreationPage: React.FC = () => {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice,   setSelectedVoice]   = useState<SpeechSynthesisVoice | null>(null);
   const [voiceMode,       setVoiceMode]       = useState<'english' | 'pidgin'>('english');
-  const [voiceEnabled,    setVoiceEnabled]    = useState(true);
+  const [voiceEnabled,    setVoiceEnabled]    = useState(false);
   const [isSpeaking,      setIsSpeaking]      = useState(false);
 
   // ── English improvement ───────────────────────────────────────────────────
@@ -358,8 +358,8 @@ const VoiceCreationPage: React.FC = () => {
     window.speechSynthesis.speak(u);
   }, [selectedVoice, voiceMode]);
 
+  // Only called from explicit "Listen" buttons now — never auto-fired.
   const speakText = useCallback((text: string) => {
-    if (!voiceEnabled) return;
     setIsSpeaking(true);
     void playPidginVoice(text.replace(/\*\*/g, '').slice(0, 500), 'english', {
       onEnd: () => setIsSpeaking(false),
@@ -368,7 +368,7 @@ const VoiceCreationPage: React.FC = () => {
         speakBrowser(text);
       },
     });
-  }, [voiceEnabled, voiceMode, speakBrowser]);
+  }, [voiceMode, speakBrowser]);
 
   const stopSpeaking = () => { window.speechSynthesis.cancel(); stopPidginSpeech(); setIsSpeaking(false); };
 
@@ -408,10 +408,6 @@ const VoiceCreationPage: React.FC = () => {
     };
     setActiveJob(tempJob);
 
-    speakText(lvl <= 1
-      ? 'Making your voice. Please wait a few seconds.'
-      : 'Generating your voice. This usually takes 3 to 5 seconds.');
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('Not authenticated');
@@ -443,7 +439,6 @@ const VoiceCreationPage: React.FC = () => {
             setActiveJob(prev => prev ? { ...prev, status: 'succeeded', audio_url: pollData.audioUrl } : null);
             setWeeklyCount(c => c + 1);
             setIsGenerating(false);
-            speakText(lvl <= 1 ? '🎉 Your voice is ready! Press play to listen.' : 'Your voice has been generated.');
             loadHistory();
           } else if (pollData.status === 'failed') {
             clearInterval(pollRef.current!);
@@ -519,7 +514,6 @@ const VoiceCreationPage: React.FC = () => {
       }
 
       setSavedUrl(permanentUrl);
-      speakText(lvl <= 1 ? 'Your voice is saved!' : 'Audio saved to your account successfully.');
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Save failed. Please try again.');
     } finally { setIsSaving(false); }
@@ -549,7 +543,6 @@ const VoiceCreationPage: React.FC = () => {
         updated_at:        new Date().toISOString(),
       });
       setDashSaved(true);
-      speakText(lvl <= 1 ? 'Your session is saved!' : 'Session saved to your dashboard.');
     } catch (err) {
       console.error('Dashboard save error:', err);
     } finally { setIsSavingDash(false); }
@@ -568,7 +561,6 @@ const VoiceCreationPage: React.FC = () => {
       });
       if (improved.trim()) {
         setScript(improved.trim());
-        speakText(lvl <= 1 ? 'I improved your English. Please read it and check.' : 'Your script has been improved. Review the changes.');
       }
     } catch (err) { console.error('Improve error:', err); }
     finally { setIsImproving(false); }
@@ -605,7 +597,6 @@ const VoiceCreationPage: React.FC = () => {
         max_tokens: 500, temperature: 0.5,
       });
       setCritiqueText(critique);
-      speakText(lvl <= 1 ? 'Here is my feedback on your script.' : 'Here is your script critique.');
     } catch { setCritiqueText('Sorry, I could not critique your script right now. Please try again.'); }
     finally { setIsCritiquing(false); }
   };
@@ -617,7 +608,6 @@ const VoiceCreationPage: React.FC = () => {
       ? "Let's build your voice script together. First — who is this voice for? Is it a character, a person, a narrator, or someone else? Describe who will be speaking."
       : "Let's build your voice script step by step. First — who is the voice? Describe the speaker: their name, role, or character. For example: a teacher, a news presenter, a story narrator, a fictional character, or a community leader.";
     setStepMessages([{ role: 'coach', text: opening }]);
-    speakText(opening);
   };
 
   const handleStepSend = async () => {
@@ -636,7 +626,6 @@ const VoiceCreationPage: React.FC = () => {
         max_tokens: 200, temperature: 0.5,
       });
       setStepMessages(prev => [...prev, { role: 'coach', text: reply }]);
-      speakText(reply);
     } catch {
       const fallback = 'Sorry, I had a small problem. Can you try again?';
       setStepMessages(prev => [...prev, { role: 'coach', text: fallback }]);
@@ -837,7 +826,15 @@ const VoiceCreationPage: React.FC = () => {
                 {critiqueStep === 'full' && (
                   isCritiquing
                     ? <div className="flex items-center gap-3 text-slate-400 text-sm"><div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /> {lvl <= 1 ? 'Checking your script…' : 'Analysing your script…'}</div>
-                    : <div className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{critiqueText}</div>
+                    : critiqueText && (
+                      <div className="space-y-2">
+                        <button onClick={() => isSpeaking ? stopSpeaking() : speakText(critiqueText)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300 hover:text-emerald-200">
+                          {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />} {isSpeaking ? 'Stop' : 'Listen'}
+                        </button>
+                        <div className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{critiqueText}</div>
+                      </div>
+                    )
                 )}
                 {critiqueStep === 'step' && (
                   <div className="space-y-3">
@@ -845,7 +842,15 @@ const VoiceCreationPage: React.FC = () => {
                       {stepMessages.map((m, i) => (
                         <div key={i} className={classNames('rounded-lg px-3 py-2 text-sm',
                           m.role === 'coach' ? 'bg-teal-900/40 border border-teal-500/30 text-teal-100' : 'bg-slate-700/60 text-slate-200 ml-6')}>
-                          {m.role === 'coach' && <span className="text-xs text-teal-400 font-semibold block mb-0.5">Coach</span>}
+                          {m.role === 'coach' && (
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="text-xs text-teal-400 font-semibold">Coach</span>
+                              <button onClick={() => isSpeaking ? stopSpeaking() : speakText(m.text)}
+                                className="flex items-center gap-1 text-[10px] font-semibold text-teal-300 hover:text-teal-200">
+                                {isSpeaking ? <VolumeX size={12} /> : <Volume2 size={12} />} {isSpeaking ? 'Stop' : 'Listen'}
+                              </button>
+                            </div>
+                          )}
                           {m.text}
                         </div>
                       ))}
