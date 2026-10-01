@@ -54,10 +54,14 @@ interface DailyMetrics {
   city: string;
   totalAfricaUsers: number;
   activeUsers: number;
+  signedInToday: number;
   totalActivities: number;
   catAiLearning: number;
   catSkillsDevelopment: number;
-  catEnglishSkills: number;
+  catFoundations: number;
+  catCommunityImpact: number;
+  catMediaGeneration: number;
+  catSpecializedTracks: number;
   catAiProficiencyCert: number;
   catOther: number;
   playgroundUsers: number;
@@ -206,8 +210,9 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
   if (!cohortIds.length) {
     return {
       logDate, city, totalAfricaUsers: 0,
-      activeUsers: 0, totalActivities: 0,
-      catAiLearning: 0, catSkillsDevelopment: 0, catEnglishSkills: 0,
+      activeUsers: 0, signedInToday: 0, totalActivities: 0,
+      catAiLearning: 0, catSkillsDevelopment: 0, catFoundations: 0,
+      catCommunityImpact: 0, catMediaGeneration: 0, catSpecializedTracks: 0,
       catAiProficiencyCert: 0, catOther: 0,
       playgroundUsers: 0, playgroundChatsTotal: 0,
       systemsThinkUsers: 0, systemsThinkSessionsTotal: 0,
@@ -236,21 +241,39 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
   const totalActivities = sessionRows.length;
 
   // ── Category breakdown ────────────────────────────────────────────────
+  // Buckets mirror the five site areas (Learning, Community-Impact, Tech-
+  // Skills, Foundations, AI Playground handled separately below) so every
+  // activity.category_activity / activity.activity value the app writes
+  // lands somewhere other than "Other":
+  //   AI Learning            — AILearningPage ('AI Learning')
+  //   Skills Development     — AIReadySkillsPage ('Skills Development' / 'Skills' / vibe)
+  //   Foundations            — English/Math/Science Skills ('english_skills','math_skills','science_skills')
+  //   Community Impact       — community-impact/* pages ('Community Impact')
+  //   Media Generation       — tech-skills Image/Video/Voice Generation pages
+  //   Specialized Tracks     — Financial Literacy, Solar Engineering & Installation
+  //   AI Proficiency Cert    — any 'Certification' row
   const catCounts: Record<string, number> = {
-    aiLearning: 0, skillsDevelopment: 0,
-    englishSkills: 0, aiProficiencyCert: 0, other: 0,
+    aiLearning: 0, skillsDevelopment: 0, foundations: 0,
+    communityImpact: 0, mediaGeneration: 0, specializedTracks: 0,
+    aiProficiencyCert: 0, other: 0,
   };
   for (const row of sessionRows) {
     const cat = (row.category_activity || "").toLowerCase();
     const act = (row.activity || "").toLowerCase();
-    if (cat.includes("ai learning") || (cat.includes("ai proficiency") && !act.includes("certification"))) {
-      catCounts.aiLearning++;
-    } else if (cat.includes("skills development") || cat.includes("vibe")) {
-      catCounts.skillsDevelopment++;
-    } else if (act.includes("english_skills") || cat.includes("english")) {
-      catCounts.englishSkills++;
-    } else if (act.includes("ai proficiency certification") || cat.includes("certification")) {
+    if (act.includes("certification") || cat.includes("certification")) {
       catCounts.aiProficiencyCert++;
+    } else if (cat.includes("ai learning") || cat.includes("ai proficiency")) {
+      catCounts.aiLearning++;
+    } else if (cat.includes("skills development") || cat === "skills" || cat.includes("vibe")) {
+      catCounts.skillsDevelopment++;
+    } else if (act.includes("english_skills") || act.includes("math_skills") || act.includes("science_skills")) {
+      catCounts.foundations++;
+    } else if (cat.includes("community impact")) {
+      catCounts.communityImpact++;
+    } else if (cat.includes("image generation") || cat.includes("video generation") || cat.includes("voice generation")) {
+      catCounts.mediaGeneration++;
+    } else if (cat.includes("financial literacy") || cat.includes("solar engineering")) {
+      catCounts.specializedTracks++;
     } else {
       catCounts.other++;
     }
@@ -327,6 +350,7 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
     ...agricultureUserIds,
   ]);
   const activeUsers = activeUserSet.size;
+  const signedInToday = new Set(loginActiveIds).size;
 
   // ── Certifications ─────────────────────────────────────────────────────
   const certAllTime = await inChunks(cohortIds, async (chunk) => {
@@ -343,10 +367,13 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
 
   return {
     logDate, city, totalAfricaUsers,
-    activeUsers, totalActivities,
+    activeUsers, signedInToday, totalActivities,
     catAiLearning:        catCounts.aiLearning,
     catSkillsDevelopment: catCounts.skillsDevelopment,
-    catEnglishSkills:     catCounts.englishSkills,
+    catFoundations:       catCounts.foundations,
+    catCommunityImpact:   catCounts.communityImpact,
+    catMediaGeneration:   catCounts.mediaGeneration,
+    catSpecializedTracks: catCounts.specializedTracks,
     catAiProficiencyCert: catCounts.aiProficiencyCert,
     catOther:             catCounts.other,
     playgroundUsers, playgroundChatsTotal,
@@ -360,7 +387,7 @@ async function fetchMetrics(logDate: string, cohortIds: string[], city: string, 
 
 const PRICING_PER_MTOK: Record<string, { input: number; output: number }> = {
   "claude-sonnet-4-6":         { input: 3.00,  output: 15.00 },
-  "claude-haiku-4-5-20251001": { input: 1.00,  output: 5.00  },
+  "claude-haiku-4-5": { input: 1.00,  output: 5.00  },
   "llama-3.3-70b-versatile":   { input: 0.00,  output: 0.00  },
 };
 
@@ -468,6 +495,10 @@ function buildCohortPanel(m: DailyMetrics): string {
           <div style="font-size:20px;font-weight:800;color:${accentColor};">${m.activeUsers}</div>
           <div style="font-size:8px;color:${accentColor};font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Active Today</div>
         </div>
+        <div style="flex:1;min-width:90px;background:#ede9fe;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:800;color:#5b21b6;">${m.signedInToday}</div>
+          <div style="font-size:8px;color:#5b21b6;font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Signed In Today</div>
+        </div>
         <div style="flex:1;min-width:90px;background:#dbeafe;border-radius:8px;padding:10px;text-align:center;">
           <div style="font-size:20px;font-weight:800;color:#1e40af;">${participationPct}%</div>
           <div style="font-size:8px;color:#1e40af;font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Participation</div>
@@ -501,7 +532,10 @@ function buildCohortPanel(m: DailyMetrics): string {
         <tbody>
           ${catRow("🤖 AI Learning",         m.catAiLearning,        m.totalActivities)}
           ${catRow("⚡ Skills Development",   m.catSkillsDevelopment, m.totalActivities)}
-          ${catRow("🌍 English Skills",       m.catEnglishSkills,     m.totalActivities)}
+          ${catRow("📚 Foundations",          m.catFoundations,       m.totalActivities)}
+          ${catRow("🤝 Community Impact",     m.catCommunityImpact,   m.totalActivities)}
+          ${catRow("🎨 Media Generation",     m.catMediaGeneration,   m.totalActivities)}
+          ${catRow("🔧 Specialized Tracks",   m.catSpecializedTracks, m.totalActivities)}
           ${catRow("🏆 AI Proficiency Cert",  m.catAiProficiencyCert, m.totalActivities)}
           ${m.catOther > 0 ? catRow("📁 Other", m.catOther, m.totalActivities) : ""}
         </tbody>
@@ -744,9 +778,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         city:                    m.city,
         logged_at:               new Date().toISOString(),
         active_users:            m.activeUsers,
+        signed_in_today:         m.signedInToday,
         cat_ai_learning:         m.catAiLearning,
         cat_skills_development:  m.catSkillsDevelopment,
-        cat_english_skills:      m.catEnglishSkills,
+        cat_foundations:         m.catFoundations,
+        cat_community_impact:    m.catCommunityImpact,
+        cat_media_generation:    m.catMediaGeneration,
+        cat_specialized_tracks:  m.catSpecializedTracks,
         cat_ai_proficiency_cert: m.catAiProficiencyCert,
         cat_other:               m.catOther,
         playground_users:        m.playgroundUsers,
@@ -808,11 +846,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       totalCohort: allProfiles.length,
       oloibiri: {
         activeUsers: oloibiriMetrics.activeUsers,
+        signedInToday: oloibiriMetrics.signedInToday,
         totalActivities: oloibiriMetrics.totalActivities,
         totalLearners: oloibiriMetrics.totalAfricaUsers,
       },
       ibiade: {
         activeUsers: ibiadeMetrics.activeUsers,
+        signedInToday: ibiadeMetrics.signedInToday,
         totalActivities: ibiadeMetrics.totalActivities,
         totalLearners: ibiadeMetrics.totalAfricaUsers,
       },

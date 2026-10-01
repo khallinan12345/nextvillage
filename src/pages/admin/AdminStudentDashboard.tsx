@@ -177,7 +177,7 @@ const getProviderColor = (provider: string) =>
 
 const PRICING: Record<string, { input: number; output: number; label: string }> = {
   'claude-sonnet-4-6':         { input: 3.00,  output: 15.00, label: 'Sonnet 4.6' },
-  'claude-haiku-4-5-20251001': { input: 1.00,  output: 5.00,  label: 'Haiku 4.5' },
+  'claude-haiku-4-5': { input: 1.00,  output: 5.00,  label: 'Haiku 4.5' },
   'llama-3.3-70b-versatile':   { input: 0.00,  output: 0.00,  label: 'Groq Llama 70B' },
   'gemini-2.0-flash':          { input: 0.00,  output: 0.00,  label: 'Gemini 2.0 Flash' },
   'llama-3.3-70b':             { input: 0.00,  output: 0.00,  label: 'Cerebras Llama 70B' },

@@ -63,7 +63,7 @@ async function moderatePrompt(text: string): Promise<SafetyCategory> {
         'Content-Type':      'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-haiku-4-5',
         max_tokens: 10,
         temperature: 0,
         system: MODERATION_SYSTEM_PROMPT,
@@ -169,7 +169,7 @@ Replace anything removed with a short neutral placeholder like [name removed], [
         'Content-Type':      'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-haiku-4-5',
         max_tokens: 500,
         temperature: 0,
         system,

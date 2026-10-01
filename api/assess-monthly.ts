@@ -138,7 +138,7 @@ async function callClaudeHaiku(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-4-5",
       max_tokens: maxTokens,
       temperature: 0.2,
       system: systemPrompt,
@@ -156,7 +156,7 @@ async function callClaudeHaiku(
   // Log cost — tagged as monthly_assessment
   logApiCost({
     source:  "monthly_assessment",
-    model:   "claude-haiku-4-5-20251001",
+    model:   "claude-haiku-4-5",
     action:  "assess_haiku",
     usage:   data.usage,
     user_id: userId ?? null,

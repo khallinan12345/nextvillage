@@ -758,7 +758,7 @@ async function* chatPlaygroundFree(
 }
 
 const MODEL_OPTIONS = [
-  { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku' },
+  { value: 'claude-haiku-4-5', label: 'Claude Haiku' },
   { value: 'claude-sonnet-5',           label: 'Claude Sonnet 5' },
   { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6' },
 ];
@@ -774,7 +774,7 @@ const getModelDisplayName = (modelId: string): string => {
 };
 
 // Back to Basics Youth Education gets Sonnet 5 as their default model.
-const PLATFORM_DEFAULT_MODEL  = 'claude-haiku-4-5-20251001';
+const PLATFORM_DEFAULT_MODEL  = 'claude-haiku-4-5';
 
 // ── System prompt ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are a personal AI assistant for anyone using this platform. This is an open playground — help with anything ethical: coding, writing, research, math, science, business, creative projects, poetry, personal questions, technical problems, or just exploring ideas. There are no topic restrictions beyond safety.
@@ -848,7 +848,7 @@ const AIPlaygroundPage: React.FC = () => {
   const [quotaUsed, setQuotaUsed]         = useState(0);
   const [quotaWindowStart, setQuotaWindowStart] = useState<Date | null>(null);
   const [quotaExempt, setQuotaExempt]     = useState(false); // Back to Basics Youth Education — no usage cap
-  const [playgroundModel, setPlaygroundModel]     = useState<string>('claude-haiku-4-5-20251001'); // default Haiku — overridden by profile
+  const [playgroundModel, setPlaygroundModel]     = useState<string>('claude-haiku-4-5'); // default Haiku — overridden by profile
   // Tracks the model actually used for the last response (may differ from playgroundModel
   // because chat-stream routes non-coding turns to Groq/Haiku automatically).
   const [activeModel, setActiveModel]             = useState<string>('');   // '' = not yet sent
@@ -916,7 +916,7 @@ const AIPlaygroundPage: React.FC = () => {
         console.log(`[Playground] model loaded: ${model} (profile: ${profileModel ?? 'not set'}, backToBasics: ${isBackToBasics})`);
       })
       .catch(() => {
-        setPlaygroundModel('claude-haiku-4-5-20251001');
+        setPlaygroundModel('claude-haiku-4-5');
         setModelLoaded(true);
       });
   }, [user?.id]);

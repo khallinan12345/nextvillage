@@ -41,7 +41,7 @@ const KEEP_RECENT           = 10;
 const PRICES = {
   'claude-sonnet-5':            { input: 2.0,  output: 10.0 }, // intro pricing through 2026-08-31
   'claude-sonnet-4-6':         { input: 3.0,  output: 15.0 },
-  'claude-haiku-4-5-20251001': { input: 1.0,  output:  5.0 },
+  'claude-haiku-4-5': { input: 1.0,  output:  5.0 },
   default:                     { input: 3.0,  output: 15.0 },
 };
 
@@ -160,7 +160,7 @@ async function compressOldMessages(messages, apiKey, user_id, cohort) {
     .map(m => `[${m.role.toUpperCase()}]: ${(m.content || '').slice(0, 800)}`)
     .join('\n');
 
-  const compressionModel = 'claude-haiku-4-5-20251001';
+  const compressionModel = 'claude-haiku-4-5';
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -298,7 +298,7 @@ async function classifyTask(messages, apiKey) {
         'content-type':      'application/json',
       },
       body: JSON.stringify({
-        model:      'claude-haiku-4-5-20251001',
+        model:      'claude-haiku-4-5',
         max_tokens: 5,
         temperature: 0,
         system: [{ type: 'text', text: 'You classify user messages. Reply with exactly one word: "coding" if the message is about writing, debugging, reviewing, or explaining code or technical implementation. Reply "non-coding" for everything else (concepts, learning, questions, advice, language help, general chat).', cache_control: { type: 'ephemeral' } }],
@@ -313,7 +313,7 @@ async function classifyTask(messages, apiKey) {
     // Log classifier cost (fire-and-forget)
     if (data.usage) {
       logCost({
-        model:       'claude-haiku-4-5-20251001',
+        model:       'claude-haiku-4-5',
         action:      'classify',
         inputTokens:  data.usage.input_tokens  ?? 0,
         outputTokens: data.usage.output_tokens ?? 0,
@@ -387,7 +387,7 @@ async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, tempe
       'content-type':      'application/json',
     },
     body: JSON.stringify({
-      model:      'claude-haiku-4-5-20251001',
+      model:      'claude-haiku-4-5',
       max_tokens: Math.min(max_tokens, 8192),
       temperature,
       messages:   cachedMessages,
@@ -400,7 +400,7 @@ async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, tempe
 
   const text = data.content?.[0]?.text ?? '';
   logCost({
-    model:           'claude-haiku-4-5-20251001',
+    model:           'claude-haiku-4-5',
     action:          'generate',
     inputTokens:      data.usage?.input_tokens                ?? 0,
     outputTokens:     data.usage?.output_tokens               ?? 0,
@@ -408,7 +408,7 @@ async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, tempe
     cacheWriteTokens: data.usage?.cache_creation_input_tokens ?? 0,
     user_id, cohort,
   });
-  return { text, model: 'claude-haiku-4-5-20251001', provider: 'anthropic' };
+  return { text, model: 'claude-haiku-4-5', provider: 'anthropic' };
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -437,7 +437,7 @@ export default async function handler(req) {
   const {
     messages:    rawMessages,
     system,
-    model       = 'claude-haiku-4-5-20251001',
+    model       = 'claude-haiku-4-5',
     max_tokens  = 16000,
     temperature = 0.3,
     user_id,    // pass through from AIPlaygroundPage if available

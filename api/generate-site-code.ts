@@ -42,7 +42,7 @@ import { logApiCost } from '../lib/api-cost-logger.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL_SONNET      = 'claude-sonnet-5'
-const MODEL_HAIKU       = 'claude-haiku-4-5-20251001'; // used for critique
+const MODEL_HAIKU       = 'claude-haiku-4-5'; // used for critique
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

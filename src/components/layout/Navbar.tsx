@@ -70,6 +70,7 @@ const Navbar: React.FC = () => {
         { name: 'AI Learning', path: '/learning/ai' },
         { name: 'Skills Development', path: '/learning/skills' },
         { name: 'Financial Literacy', path: '/learning/financial-literacy' },
+        { name: 'Solar Engineering & Installation', path: '/learning/solar-engineering' },
       ],
     },
     {
@@ -124,6 +125,7 @@ const Navbar: React.FC = () => {
         { name: 'AI Proficiency', path: '/certifications/ai-proficiency' },
         { name: 'AI Ready Skills', path: '/certifications/ai-ready-skills' },
         { name: 'Financial Literacy', path: '/certifications/financial-literacy' },
+        { name: 'Solar Engineering & Installation', path: '/certifications/solar-engineering' },
         { name: 'Vibe Coding', path: '/certifications/vibe-coding' },
         { name: 'Web Dev Certification', path: '/certifications/web-dev-certification' },
         { name: 'Full-Stack Certification', path: '/certifications/full-stack-certification' },
