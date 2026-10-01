@@ -757,7 +757,7 @@ const CodeAssistantPage: React.FC = () => {
 
   // NEW: Voice-related state variables
   const [voiceInputEnabled, setVoiceInputEnabled] = useState(false);
-  const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
+  const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speechRecognition, setSpeechRecognition] = useState<any>(null);
   const [wasListeningBeforeSubmit, setWasListeningBeforeSubmit] = useState(false);
@@ -1500,8 +1500,9 @@ Help them brainstorm and refine their ideas before they start coding.`;
           const finalChatHistory = [...updatedChatHistory, aiMessage];
           setChatHistory(finalChatHistory);
           
-          // TTS — critique mode only (code mode: students should focus on reading)
-          if (voiceOutputEnabled && mode === 'critique') {
+          // TTS only during hands-free voice conversation (voice input + output both on).
+          // Typed questions already get a per-message Listen button via AIPidginCoachWrapper.
+          if (voiceOutputEnabled && voiceInputEnabled && mode === 'critique') {
             hookSpeak(followUpResponse);
             // voice input restart handled by prevIsSpeaking useEffect
           } else {
@@ -1530,8 +1531,8 @@ Help them brainstorm and refine their ideas before they start coding.`;
           const finalChatHistory = [...updatedChatHistory, aiMessage];
           setChatHistory(finalChatHistory);
           
-          // TTS disabled for code mode
-          if (voiceOutputEnabled && mode === 'critique') {
+          // TTS only during hands-free voice conversation (voice input + output both on).
+          if (voiceOutputEnabled && voiceInputEnabled && mode === 'critique') {
             hookSpeak(aiResponse);
             // voice input restart handled by prevIsSpeaking useEffect
           } else {
@@ -1561,8 +1562,8 @@ Help them brainstorm and refine their ideas before they start coding.`;
         const finalChatHistory = [...updatedChatHistory, aiMessage];
         setChatHistory(finalChatHistory);
         
-        // TTS only for critique mode
-        if (voiceOutputEnabled && mode === 'critique') {
+        // TTS only during hands-free voice conversation (voice input + output both on).
+        if (voiceOutputEnabled && voiceInputEnabled && mode === 'critique') {
           hookSpeak(aiResponse);
           // voice input restart handled by prevIsSpeaking useEffect
         } else {
