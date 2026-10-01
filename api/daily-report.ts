@@ -4,21 +4,24 @@
  * Runs every day at 11:00 UTC (12:00 Nigerian WAT / West Africa Time = UTC+1).
  * Vercel cron: "0 11 * * *"
  *
- * Reports on Africa-cohort users who were active today:
- *   • "Active today" = the union of auth.users.last_sign_in_at falling
- *     today AND any dashboard/AI Playground/Systems Think/agriculture
- *     consultation row created or updated today. Login alone is NOT
- *     enough: this client uses persistSession + autoRefreshToken, so a
- *     returning user's session silently refreshes and last_sign_in_at
- *     never updates again — most real daily activity would otherwise be
- *     invisible. Real product usage on any of the four tables is treated
- *     as proof of activity regardless of login recency.
- *   • Breakdown by category_activity
- *   • AI Playground, Systems Think, and agriculture-consultation users
- *   • Certification attempt counts (all-time + today)
+ * Reports on EVERY user (site-wide, not limited to any cohort) who signed
+ * in today:
+ *   • One row per signed-in user: sign-in time, name, email, city, country,
+ *     organization, and every page/category they touched today.
+ *   • A previous Africa-cohort-only version filtered to continent='Africa'
+ *     OR one of three org IDs, which silently dropped users with a blank
+ *     continent/org (most of the missing users people noticed in the
+ *     email). This version has no cohort filter — everyone who signed in
+ *     today gets a row.
+ *   • "Active Today" (header stat) stays a union of sign-ins AND real
+ *     product usage (dashboard/AI Playground/Systems Think/agriculture),
+ *     since persistSession + autoRefreshToken means a returning user's
+ *     session can refresh silently without updating last_sign_in_at —
+ *     login alone would undercount that stat. The per-user TABLE below it
+ *     is keyed strictly off sign-ins, which is what was asked for.
  *
- * Sends email to khallinan1@udayton.edu and bennywhite.davidson@renewvia.com
- * Writes a row to public.daily_activity_log in Supabase.
+ * Sends email to khallinan1@udayton.edu.
+ * Writes a summary row to public.daily_activity_log in Supabase.
  *
  * Required env vars:
  *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, CRON_SECRET
@@ -37,11 +40,6 @@ const EXCLUDED_USER_IDS = new Set([
   "f6157a9d-5ffd-4058-b0b3-af3ea897d876", // Bennywhite Davidson (bennywhite090d@gmail.com)
 ]);
 
-// ─── Organization IDs (matches assess-monthly.ts) ─────────────────────────────
-const VAI_ORG_ID       = 'c0b48eae-67af-449d-8c04-cc6950bf0982'; // 100 Black Girls / vAI
-const SOLARDERO_ORG_ID = 'a1b2c3d4-0002-0002-0002-000000000002'; // Solardero / Ibiade
-const OLOIBIRI_ORG_ID  = 'a1b2c3d4-0001-0001-0001-000000000001'; // Davidson AI Futures Lab / Oloibiri
-
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -49,36 +47,24 @@ const supabase = createClient(
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface DailyMetrics {
-  logDate: string;
-  city: string;
-  totalAfricaUsers: number;
-  activeUsers: number;
-  signedInToday: number;
-  totalActivities: number;
-  catAiLearning: number;
-  catSkillsDevelopment: number;
-  catFoundations: number;
-  catCommunityImpact: number;
-  catMediaGeneration: number;
-  catSpecializedTracks: number;
-  catAiProficiencyCert: number;
-  catOther: number;
-  playgroundUsers: number;
-  playgroundChatsTotal: number;
-  systemsThinkUsers: number;
-  systemsThinkSessionsTotal: number;
-  agricultureUsers: number;
-  certAttemptedUsers: number;
-  certAttemptedToday: number;
-}
-
-interface UserProfile {
+interface UserRow {
   id: string;
   name: string | null;
+  email: string;
   city: string | null;
-  organization_id: string | null;
-  continent: string | null;
+  country: string | null;
+  organization: string | null;
+  lastSignInAt: string;
+  pages: string[];
+}
+
+interface DailySummary {
+  logDate: string;
+  totalRegisteredUsers: number;
+  signedInToday: number;
+  activeToday: number; // union of sign-in + activity
+  rows: UserRow[];
+  categoryTotals: Record<string, number>;
 }
 
 interface DailyCostSummary {
@@ -108,63 +94,10 @@ async function inChunks<T>(
   return results;
 }
 
-// ─── Profile Fetching (aligned with assess-monthly.ts) ────────────────────────
-// Single source of truth for fetching all Africa-cohort profiles.
-// Uses the SAME.or() filter as assess-monthly.ts to ensure identical coverage.
-
-async function fetchAllCohortProfiles(): Promise<UserProfile[]> {
-  const { data: profiles } = await supabase.from("profiles").select("id, name, city, organization_id, continent").or(`continent.eq.Africa,organization_id.eq.${VAI_ORG_ID},organization_id.eq.${SOLARDERO_ORG_ID},organization_id.eq.${OLOIBIRI_ORG_ID}`);
-
-  return (profiles || []).filter((p) => !EXCLUDED_USER_IDS.has(p.id));
-}
-
-// Split profiles into Oloibiri vs Ibiade cohorts.
-// Logic: Ibiade = explicitly city='Ibiade' OR organization_id=SOLARDERO_ORG_ID.
-// Oloibiri = everyone else in the Africa cohort.
-//
-// IMPORTANT: A user can only be in ONE cohort. If a user matches both
-// (e.g. Solardero org but city='Oloibiri'), Ibiade takes priority since
-// org_id is more reliable than free-text city field.
-
-function splitCohorts(profiles: UserProfile[]): {
-  oloibiriProfiles: UserProfile[];
-  ibiadeProfiles: UserProfile[];
-} {
-  const ibiadeProfiles: UserProfile[] = [];
-  const oloibiriProfiles: UserProfile[] = [];
-
-  const ibiadeIds = new Set<string>();
-
-  for (const p of profiles) {
-    const isIbiade =
-      p.organization_id === SOLARDERO_ORG_ID ||
-      (p.city || "").toLowerCase().trim() === "ibiade";
-
-    if (isIbiade) {
-      ibiadeProfiles.push(p);
-      ibiadeIds.add(p.id);
-    }
-  }
-
-  // Oloibiri = everyone NOT in Ibiade
-  for (const p of profiles) {
-    if (!ibiadeIds.has(p.id)) {
-      oloibiriProfiles.push(p);
-    }
-  }
-
-  return { oloibiriProfiles, ibiadeProfiles };
-}
-
 // ─── Auth Login Fetching ───────────────────────────────────────────────────────
-// profiles.updated_at is NOT a login signal in this app — it only changes when
-// a user edits their name/settings, which is rare. auth.users.last_sign_in_at
-// is maintained by Supabase Auth itself, but ONLY on a genuine new sign-in —
-// with persistSession + autoRefreshToken on, a returning user's session
-// refreshes silently and this never updates again. So it's one signal among
-// several fed into activeUserSet in fetchMetrics, not the sole source of
-// truth for "who showed up today." Paginated in case the user base grows
-// past what a single page returns.
+// auth.users.last_sign_in_at is maintained by Supabase Auth itself, but ONLY
+// on a genuine new sign-in. Paginated in case the user base grows past what
+// a single page returns.
 
 async function fetchAllAuthUsers(): Promise<Map<string, string | null>> {
   const loginMap = new Map<string, string | null>();
@@ -201,185 +134,106 @@ function todayWAT(): string {
   return wat.toISOString().split("T")[0];
 }
 
-async function fetchMetrics(logDate: string, cohortIds: string[], city: string, loginMap: Map<string, string | null>): Promise<DailyMetrics> {
+async function fetchDailySummary(
+  logDate: string,
+  loginMap: Map<string, string | null>
+): Promise<DailySummary> {
   const dayStartUTC = new Date(`${logDate}T00:00:00+01:00`).toISOString();
   const dayEndUTC   = new Date(`${logDate}T23:59:59+01:00`).toISOString();
 
-  const totalAfricaUsers = cohortIds.length;
+  // ── Total registered users (excluding admins) ──────────────────────────
+  const { count: totalRegisteredUsers } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true });
 
-  if (!cohortIds.length) {
-    return {
-      logDate, city, totalAfricaUsers: 0,
-      activeUsers: 0, signedInToday: 0, totalActivities: 0,
-      catAiLearning: 0, catSkillsDevelopment: 0, catFoundations: 0,
-      catCommunityImpact: 0, catMediaGeneration: 0, catSpecializedTracks: 0,
-      catAiProficiencyCert: 0, catOther: 0,
-      playgroundUsers: 0, playgroundChatsTotal: 0,
-      systemsThinkUsers: 0, systemsThinkSessionsTotal: 0,
-      agricultureUsers: 0,
-      certAttemptedUsers: 0, certAttemptedToday: 0,
-    };
-  }
+  // ── Who signed in today, site-wide (no cohort filter) ───────────────────
+  const signedInIds = [...loginMap.entries()]
+    .filter(([id, t]) => !EXCLUDED_USER_IDS.has(id) && !!t && t >= dayStartUTC && t <= dayEndUTC)
+    .map(([id]) => id);
 
-  // ── Dashboard sessions started OR updated on this day ────────────────
-  const [createdRows, updatedRows] = await Promise.all([
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("dashboard").select("id, user_id, category_activity, activity").in("user_id", chunk).gte("created_at", dayStartUTC).lte("created_at", dayEndUTC);
-      return data || [];
-    }),
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("dashboard").select("id, user_id, category_activity, activity").in("user_id", chunk).gte("updated_at", dayStartUTC).lte("updated_at", dayEndUTC);
-      return data || [];
-    }),
+  // ── Activity today, site-wide (no cohort filter) ────────────────────────
+  const dateFilter = (col1: string, col2: string) =>
+    `and(${col1}.gte.${dayStartUTC},${col1}.lte.${dayEndUTC}),and(${col2}.gte.${dayStartUTC},${col2}.lte.${dayEndUTC})`;
+
+  const [{ data: dashRows }, { data: pgRows }, { data: stRows }, { data: agRows }] = await Promise.all([
+    supabase.from("dashboard").select("user_id, category_activity, activity")
+      .or(dateFilter("created_at", "updated_at")),
+    supabase.from("ai_playground_chats").select("user_id")
+      .or(dateFilter("created_at", "updated_at")),
+    supabase.from("systems_think_sessions").select("user_id")
+      .or(dateFilter("created_at", "updated_at")),
+    supabase.from("agriculture_consultations").select("youth_user_id")
+      .or(dateFilter("created_at", "updated_at")),
   ]);
 
-  const sessionMap = new Map<string, { id: string; user_id: string; category_activity: string; activity: string }>();
-  for (const row of [...createdRows,...updatedRows]) {
-    sessionMap.set(row.id, row);
-  }
-  const sessionRows = [...sessionMap.values()];
-  const totalActivities = sessionRows.length;
-
-  // ── Category breakdown ────────────────────────────────────────────────
-  // Buckets mirror the five site areas (Learning, Community-Impact, Tech-
-  // Skills, Foundations, AI Playground handled separately below) so every
-  // activity.category_activity / activity.activity value the app writes
-  // lands somewhere other than "Other":
-  //   AI Learning            — AILearningPage ('AI Learning')
-  //   Skills Development     — AIReadySkillsPage ('Skills Development' / 'Skills' / vibe)
-  //   Foundations            — English/Math/Science Skills ('english_skills','math_skills','science_skills')
-  //   Community Impact       — community-impact/* pages ('Community Impact')
-  //   Media Generation       — tech-skills Image/Video/Voice Generation pages
-  //   Specialized Tracks     — Financial Literacy, Solar Engineering & Installation
-  //   AI Proficiency Cert    — any 'Certification' row
-  const catCounts: Record<string, number> = {
-    aiLearning: 0, skillsDevelopment: 0, foundations: 0,
-    communityImpact: 0, mediaGeneration: 0, specializedTracks: 0,
-    aiProficiencyCert: 0, other: 0,
+  // ── Per-user pages touched today ────────────────────────────────────────
+  const pagesByUser = new Map<string, Set<string>>();
+  const addPage = (userId: string | null | undefined, label: string) => {
+    if (!userId) return;
+    if (!pagesByUser.has(userId)) pagesByUser.set(userId, new Set());
+    pagesByUser.get(userId)!.add(label);
   };
-  for (const row of sessionRows) {
-    const cat = (row.category_activity || "").toLowerCase();
-    const act = (row.activity || "").toLowerCase();
-    if (act.includes("certification") || cat.includes("certification")) {
-      catCounts.aiProficiencyCert++;
-    } else if (cat.includes("ai learning") || cat.includes("ai proficiency")) {
-      catCounts.aiLearning++;
-    } else if (cat.includes("skills development") || cat === "skills" || cat.includes("vibe")) {
-      catCounts.skillsDevelopment++;
-    } else if (act.includes("english_skills") || act.includes("math_skills") || act.includes("science_skills")) {
-      catCounts.foundations++;
-    } else if (cat.includes("community impact")) {
-      catCounts.communityImpact++;
-    } else if (cat.includes("image generation") || cat.includes("video generation") || cat.includes("voice generation")) {
-      catCounts.mediaGeneration++;
-    } else if (cat.includes("financial literacy") || cat.includes("solar engineering")) {
-      catCounts.specializedTracks++;
-    } else {
-      catCounts.other++;
-    }
+  for (const row of dashRows || []) {
+    addPage(row.user_id, row.category_activity || "Unknown");
+  }
+  for (const row of pgRows || []) addPage(row.user_id, "AI Playground");
+  for (const row of stRows || []) addPage(row.user_id, "Systems Think");
+  for (const row of agRows || []) addPage((row as any).youth_user_id, "Agriculture Consultation");
+
+  // ── Active today: union of sign-ins + any activity signal ──────────────
+  const activeUserIds = new Set<string>([
+    ...signedInIds,
+    ...pagesByUser.keys(),
+  ]);
+  for (const id of EXCLUDED_USER_IDS) activeUserIds.delete(id);
+
+  // ── Category totals across all active users (for the summary line) ────
+  const categoryTotals: Record<string, number> = {};
+  for (const [userId, pages] of pagesByUser) {
+    if (EXCLUDED_USER_IDS.has(userId)) continue;
+    for (const p of pages) categoryTotals[p] = (categoryTotals[p] || 0) + 1;
   }
 
-  // ── AI Playground ─────────────────────────────────────────────────────
-  const [pgCreated, pgUpdated] = await Promise.all([
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("ai_playground_chats").select("id, user_id").in("user_id", chunk).gte("created_at", dayStartUTC).lte("created_at", dayEndUTC);
-      return data || [];
-    }),
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("ai_playground_chats").select("id, user_id").in("user_id", chunk).gte("updated_at", dayStartUTC).lte("updated_at", dayEndUTC);
-      return data || [];
-    }),
-  ]);
-  const pgMap = new Map<string, string>();
-  for (const row of [...pgCreated,...pgUpdated]) pgMap.set(row.id, row.user_id);
-  const pgRowsToday = [...pgMap.entries()].map(([id, user_id]) => ({ id, user_id }));
-  const playgroundUsers = new Set(pgRowsToday.map((r) => r.user_id)).size;
-  const playgroundChatsTotal = pgRowsToday.length;
-
-  // ── Systems Think ──────────────────────────────────────────────────────
-  const [stCreated, stUpdated] = await Promise.all([
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("systems_think_sessions").select("id, user_id").in("user_id", chunk).gte("created_at", dayStartUTC).lte("created_at", dayEndUTC);
-      return data || [];
-    }),
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("systems_think_sessions").select("id, user_id").in("user_id", chunk).gte("updated_at", dayStartUTC).lte("updated_at", dayEndUTC);
-      return data || [];
-    }),
-  ]);
-  const stMap = new Map<string, string>();
-  for (const row of [...stCreated,...stUpdated]) stMap.set(row.id, row.user_id);
-  const stRowsToday = [...stMap.entries()].map(([id, user_id]) => ({ id, user_id }));
-  const systemsThinkUsers = new Set(stRowsToday.map((r) => r.user_id)).size;
-  const systemsThinkSessionsTotal = stRowsToday.length;
-
-  // ── Agriculture Consultations (Community Impact) ───────────────────────
-  const [agCreated, agUpdated] = await Promise.all([
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("agriculture_consultations").select("id, youth_user_id").in("youth_user_id", chunk).gte("created_at", dayStartUTC).lte("created_at", dayEndUTC);
-      return data || [];
-    }),
-    inChunks(cohortIds, async (chunk) => {
-      const { data } = await supabase.from("agriculture_consultations").select("id, youth_user_id").in("youth_user_id", chunk).gte("updated_at", dayStartUTC).lte("updated_at", dayEndUTC);
-      return data || [];
-    }),
-  ]);
-  const agMap = new Map<string, string>();
-  for (const row of [...agCreated,...agUpdated]) agMap.set(row.id, row.youth_user_id);
-  const agricultureUserIds = new Set(agMap.values());
-  const agricultureUsers = agricultureUserIds.size;
-
-  // ── Active users: union of every real activity signal today ────────────
-  // auth.users.last_sign_in_at only updates on a genuine new sign-in. This
-  // client uses the default persistSession + autoRefreshToken, so a
-  // returning user's session silently refreshes and never re-triggers
-  // last_sign_in_at — most days, most real users are invisible to a
-  // login-only count. A user who touched the dashboard, AI Playground,
-  // Systems Think, or an agriculture consultation today is unambiguously
-  // active today regardless of when they last "signed in," so all four are
-  // combined here instead of relying on login alone.
-  const loginActiveIds = cohortIds.filter((id) => {
-    const lastSignIn = loginMap.get(id);
-    return !!lastSignIn && lastSignIn >= dayStartUTC && lastSignIn <= dayEndUTC;
-  });
-  const activeUserSet = new Set<string>([
-    ...loginActiveIds,
-    ...sessionRows.map((r) => r.user_id),
-    ...pgRowsToday.map((r) => r.user_id),
-    ...stRowsToday.map((r) => r.user_id),
-    ...agricultureUserIds,
-  ]);
-  const activeUsers = activeUserSet.size;
-  const signedInToday = new Set(loginActiveIds).size;
-
-  // ── Certifications ─────────────────────────────────────────────────────
-  const certAllTime = await inChunks(cohortIds, async (chunk) => {
-    const { data } = await supabase.from("dashboard").select("user_id, created_at, updated_at").in("user_id", chunk).eq("activity", "AI Proficiency Certification").not("certification_evaluation_score", "is", null);
+  // ── Profiles for everyone who signed in today ───────────────────────────
+  const profileRows = await inChunks(signedInIds, async (chunk) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, name, email, city, country, organization_id")
+      .in("id", chunk);
     return data || [];
   });
-  const certAttemptedUsers = new Set(certAllTime.map((r) => r.user_id)).size;
-  const certAttemptedToday = new Set(
-    certAllTime.filter((r) =>
-        (r.created_at >= dayStartUTC && r.created_at <= dayEndUTC) ||
-        (r.updated_at >= dayStartUTC && r.updated_at <= dayEndUTC)
-      ).map((r) => r.user_id)
-  ).size;
+
+  const orgIds = [...new Set(profileRows.map((p) => p.organization_id).filter(Boolean))] as string[];
+  const { data: orgRows } = orgIds.length
+    ? await supabase.from("organizations").select("id, name").in("id", orgIds)
+    : { data: [] as { id: string; name: string }[] };
+  const orgMap = new Map((orgRows || []).map((o) => [o.id, o.name]));
+
+  const profileMap = new Map(profileRows.map((p) => [p.id, p]));
+
+  const rows: UserRow[] = signedInIds
+    .map((id) => {
+      const p = profileMap.get(id);
+      return {
+        id,
+        name: p?.name ?? null,
+        email: p?.email ?? "(unknown)",
+        city: p?.city ?? null,
+        country: p?.country ?? null,
+        organization: p?.organization_id ? orgMap.get(p.organization_id) ?? null : null,
+        lastSignInAt: loginMap.get(id)!,
+        pages: [...(pagesByUser.get(id) || [])],
+      };
+    })
+    .sort((a, b) => (a.lastSignInAt < b.lastSignInAt ? 1 : -1));
 
   return {
-    logDate, city, totalAfricaUsers,
-    activeUsers, signedInToday, totalActivities,
-    catAiLearning:        catCounts.aiLearning,
-    catSkillsDevelopment: catCounts.skillsDevelopment,
-    catFoundations:       catCounts.foundations,
-    catCommunityImpact:   catCounts.communityImpact,
-    catMediaGeneration:   catCounts.mediaGeneration,
-    catSpecializedTracks: catCounts.specializedTracks,
-    catAiProficiencyCert: catCounts.aiProficiencyCert,
-    catOther:             catCounts.other,
-    playgroundUsers, playgroundChatsTotal,
-    systemsThinkUsers, systemsThinkSessionsTotal,
-    agricultureUsers,
-    certAttemptedUsers, certAttemptedToday,
+    logDate,
+    totalRegisteredUsers: totalRegisteredUsers ?? 0,
+    signedInToday: signedInIds.length,
+    activeToday: activeUserIds.size,
+    rows,
+    categoryTotals,
   };
 }
 
@@ -449,118 +303,53 @@ async function fetchDailyCosts(
 
 // ─── Email HTML ───────────────────────────────────────────────────────────────
 
-function catRow(label: string, count: number, total: number): string {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  const w = Math.min(pct * 1.2, 120);
-  const active = count > 0;
-  return `
-  <tr style="border-top:1px solid #e5e7eb;">
-    <td style="padding:6px 10px;font-size:11px;color:#374151;">${label}</td>
-    <td style="padding:6px 10px;text-align:center;font-size:12px;font-weight:700;color:${active ? "#1a3d2b" : "#9ca3af"};">${count}</td>
-    <td style="padding:6px 16px;">
-      <span style="display:inline-block;background:#e5e7eb;border-radius:3px;width:120px;height:7px;vertical-align:middle;">
-        <span style="display:inline-block;background:${active ? "#2d6a4f" : "#e5e7eb"};border-radius:3px;height:7px;width:${w}px;"></span>
-      </span>
-      <span style="font-size:10px;color:#6b7280;margin-left:6px;">${pct}%</span>
-    </td>
-  </tr>`;
+function esc(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 }
 
-function buildCohortPanel(m: DailyMetrics): string {
-  const participationPct = m.totalAfricaUsers > 0
-    ? Math.round((m.activeUsers / m.totalAfricaUsers) * 100)
-    : 0;
-  const isIbiade = m.city === "Ibiade";
-  const accentBg    = isIbiade ? "#dbeafe" : "#dcfce7";
-  const accentColor = isIbiade ? "#1e3a8a" : "#166534";
-  const headerBg    = isIbiade
-    ? "linear-gradient(135deg,#1a3d5c 0%,#1d6a8f 100%)"
-    : "linear-gradient(135deg,#1a3d2b 0%,#2d6a4f 100%)";
-  const subtitleColor = isIbiade ? "#52b0d0" : "#52b788";
-  const institution   = isIbiade
-    ? "Solardero Foundation · Ibiade, Ogun State"
-    : "Davidson AI Innovation Center · Oloibiri, Bayelsa";
+function fmtTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" }) + " UTC";
+}
+
+function pagePills(pages: string[]): string {
+  if (!pages.length) return `<span style="color:#9ca3af;font-style:italic;font-size:11px;">no logged activity</span>`;
+  return pages.map((p) => `
+    <span style="display:inline-block;font-size:10.5px;padding:2px 8px;margin:0 4px 4px 0;border:1px solid #c9d9cd;border-radius:20px;color:#374151;background:#eef3ef;white-space:nowrap;">${esc(p)}</span>
+  `).join("");
+}
+
+function buildUserTable(rows: UserRow[]): string {
+  if (!rows.length) {
+    return `<div style="padding:16px;text-align:center;color:#6b7280;font-size:12px;">No sign-ins today.</div>`;
+  }
+
+  const trs = rows.map((r) => `
+    <tr style="border-top:1px solid #e5e7eb;">
+      <td style="padding:9px 10px;font-family:monospace;font-size:11px;color:#55685d;white-space:nowrap;">${fmtTime(r.lastSignInAt)}</td>
+      <td style="padding:9px 10px;">
+        <div style="font-weight:600;font-size:12.5px;color:#16261c;">${esc(r.name || "(no name)")}</div>
+        <div style="font-size:10.5px;color:#8a988d;">${esc(r.email)}</div>
+      </td>
+      <td style="padding:9px 10px;font-size:12px;color:#16261c;white-space:nowrap;">${r.city ? esc(r.city) : '<span style="color:#9ca3af;">—</span>'}</td>
+      <td style="padding:9px 10px;font-size:12px;color:#16261c;white-space:nowrap;">${r.country ? esc(r.country) : '<span style="color:#9ca3af;">—</span>'}</td>
+      <td style="padding:9px 10px;font-size:11.5px;color:#55685d;">${r.organization ? esc(r.organization) : '<span style="color:#9ca3af;">—</span>'}</td>
+      <td style="padding:9px 10px;min-width:220px;">${pagePills(r.pages)}</td>
+    </tr>`).join("");
 
   return `
-  <div style="margin-bottom:24px;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-    <div style="background:${headerBg};padding:16px 20px;">
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${subtitleColor};margin-bottom:4px;font-weight:600;">${institution}</div>
-      <div style="font-size:16px;font-weight:700;color:#fff;">${m.city} Cohort</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.5);">${m.totalAfricaUsers} total learners</div>
-    </div>
-    <div style="padding:16px 20px;">
-      <!-- Chips -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-        <div style="flex:1;min-width:90px;background:${accentBg};border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:20px;font-weight:800;color:${accentColor};">${m.activeUsers}</div>
-          <div style="font-size:8px;color:${accentColor};font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Active Today</div>
-        </div>
-        <div style="flex:1;min-width:90px;background:#ede9fe;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:20px;font-weight:800;color:#5b21b6;">${m.signedInToday}</div>
-          <div style="font-size:8px;color:#5b21b6;font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Signed In Today</div>
-        </div>
-        <div style="flex:1;min-width:90px;background:#dbeafe;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:20px;font-weight:800;color:#1e40af;">${participationPct}%</div>
-          <div style="font-size:8px;color:#1e40af;font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Participation</div>
-        </div>
-        <div style="flex:1;min-width:90px;background:#fef3c7;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:20px;font-weight:800;color:#92400e;">${m.playgroundUsers}</div>
-          <div style="font-size:8px;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Playground</div>
-        </div>
-        <div style="flex:1;min-width:90px;background:#f3e8ff;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:20px;font-weight:800;color:#6b21a8;">${m.certAttemptedUsers}</div>
-          <div style="font-size:8px;color:#6b21a8;font-weight:600;text-transform:uppercase;letter-spacing:0.9px;margin-top:3px;">Cert Attempted</div>
-        </div>
-      </div>
-      <!-- Session overview -->
-      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#374151;">
-        <div style="display:flex;gap:20px;flex-wrap:wrap;">
-          <div>Unique active users: <strong>${m.activeUsers}</strong></div>
-          <div>Total activity rows: <strong>${m.totalActivities}</strong></div>
-          <div>Avg/user: <strong>${m.activeUsers > 0 ? (m.totalActivities / m.activeUsers).toFixed(1) : "—"}</strong></div>
-        </div>
-      </div>
-      <!-- Category table -->
-      <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;">
-        <thead>
-          <tr style="background:#f5faf6;">
-            <th style="padding:6px 10px;text-align:left;font-size:9px;color:#5a7060;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;">Category</th>
-            <th style="padding:6px 10px;text-align:center;font-size:9px;color:#5a7060;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;">Sessions</th>
-            <th style="padding:6px 16px;text-align:left;font-size:9px;color:#5a7060;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;">Share</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${catRow("🤖 AI Learning",         m.catAiLearning,        m.totalActivities)}
-          ${catRow("⚡ Skills Development",   m.catSkillsDevelopment, m.totalActivities)}
-          ${catRow("📚 Foundations",          m.catFoundations,       m.totalActivities)}
-          ${catRow("🤝 Community Impact",     m.catCommunityImpact,   m.totalActivities)}
-          ${catRow("🎨 Media Generation",     m.catMediaGeneration,   m.totalActivities)}
-          ${catRow("🔧 Specialized Tracks",   m.catSpecializedTracks, m.totalActivities)}
-          ${catRow("🏆 AI Proficiency Cert",  m.catAiProficiencyCert, m.totalActivities)}
-          ${m.catOther > 0 ? catRow("📁 Other", m.catOther, m.totalActivities) : ""}
-        </tbody>
-      </table>
-      <!-- Playground + Systems Think + Agriculture + cert row -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:130px;background:#fffdf0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;">
-          <div style="font-size:10px;font-weight:600;color:#92400e;margin-bottom:4px;">🎮 Playground</div>
-          <div style="font-size:11px;color:#374151;">Users: <strong>${m.playgroundUsers}</strong>   Chats: <strong>${m.playgroundChatsTotal}</strong></div>
-        </div>
-        <div style="flex:1;min-width:130px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;">
-          <div style="font-size:10px;font-weight:600;color:#3730a3;margin-bottom:4px;">🧠 Systems Think</div>
-          <div style="font-size:11px;color:#374151;">Users: <strong>${m.systemsThinkUsers}</strong>   Sessions: <strong>${m.systemsThinkSessionsTotal}</strong></div>
-        </div>
-        <div style="flex:1;min-width:130px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;">
-          <div style="font-size:10px;font-weight:600;color:#065f46;margin-bottom:4px;">🌾 Agriculture</div>
-          <div style="font-size:11px;color:#374151;">Youth active: <strong>${m.agricultureUsers}</strong></div>
-        </div>
-        <div style="flex:1;min-width:130px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 12px;">
-          <div style="font-size:10px;font-weight:600;color:#4c1d95;margin-bottom:4px;">🏆 Certifications</div>
-          <div style="font-size:11px;color:#374151;">Ever attempted: <strong>${m.certAttemptedUsers}</strong>   Today: <strong>${m.certAttemptedToday}</strong></div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead>
+      <tr style="background:#eef3ef;">
+        <th style="padding:8px 10px;text-align:left;font-size:9.5px;color:#55685d;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Time</th>
+        <th style="padding:8px 10px;text-align:left;font-size:9.5px;color:#55685d;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Name</th>
+        <th style="padding:8px 10px;text-align:left;font-size:9.5px;color:#55685d;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">City</th>
+        <th style="padding:8px 10px;text-align:left;font-size:9.5px;color:#55685d;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Country</th>
+        <th style="padding:8px 10px;text-align:left;font-size:9.5px;color:#55685d;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Organization</th>
+        <th style="padding:8px 10px;text-align:left;font-size:9.5px;color:#55685d;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Pages Used Today</th>
+      </tr>
+    </thead>
+    <tbody>${trs}</tbody>
+  </table>`;
 }
 
 function buildCostSection(cost: DailyCostSummary): string {
@@ -653,54 +442,55 @@ function buildCostSection(cost: DailyCostSummary): string {
   </div>`;
 }
 
-function buildEmailHtml(oloibiri: DailyMetrics, ibiade: DailyMetrics, dateLabel: string, cost: DailyCostSummary): string {
-  const totalActive = oloibiri.activeUsers + ibiade.activeUsers;
-  const totalLearners = oloibiri.totalAfricaUsers + ibiade.totalAfricaUsers;
-
+function buildEmailHtml(summary: DailySummary, dateLabel: string, cost: DailyCostSummary): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#f2f8f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-<div style="max-width:700px;margin:20px auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+<body style="margin:0;padding:0;background:#f3f6f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<div style="max-width:900px;margin:20px auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
   <!-- Header -->
-  <div style="background:linear-gradient(135deg,#0d1b14 0%,#1a3d2b 60%,#1a3d5c 100%);padding:24px 28px;">
+  <div style="background:linear-gradient(135deg,#0d1b14 0%,#1a3d2b 60%,#1a5c3f 100%);padding:24px 28px;">
     <div style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#52b788;margin-bottom:5px;font-weight:600;">
-      Girls AIing &amp; Vibing · Oloibiri (Davidson AI) &amp; Ibiade (Solardero)
+      nextVillage · Site-Wide Daily Activity
     </div>
     <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;">Daily Activity Report</div>
     <div style="font-size:11px;color:rgba(255,255,255,0.5);">${dateLabel} · 12:00 Nigerian Time (WAT)</div>
     <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;">
       <div style="background:rgba(255,255,255,0.12);border-radius:7px;padding:7px 12px;text-align:center;">
-        <div style="font-size:18px;font-weight:700;color:#fff;">${totalActive}</div>
-        <div style="font-size:8px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.8px;">Total Active</div>
+        <div style="font-size:18px;font-weight:700;color:#fff;">${summary.signedInToday}</div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.8px;">Signed In Today</div>
       </div>
       <div style="background:rgba(82,183,136,0.2);border-radius:7px;padding:7px 12px;text-align:center;">
-        <div style="font-size:18px;font-weight:700;color:#52b788;">${oloibiri.activeUsers}</div>
-        <div style="font-size:8px;color:#52b788;text-transform:uppercase;letter-spacing:0.8px;">Oloibiri</div>
-      </div>
-      <div style="background:rgba(82,176,208,0.2);border-radius:7px;padding:7px 12px;text-align:center;">
-        <div style="font-size:18px;font-weight:700;color:#52b0d0;">${ibiade.activeUsers}</div>
-        <div style="font-size:8px;color:#52b0d0;text-transform:uppercase;letter-spacing:0.8px;">Ibiade</div>
+        <div style="font-size:18px;font-weight:700;color:#52b788;">${summary.activeToday}</div>
+        <div style="font-size:8px;color:#52b788;text-transform:uppercase;letter-spacing:0.8px;">Active Today (login + usage)</div>
       </div>
       <div style="background:rgba(255,255,255,0.08);border-radius:7px;padding:7px 12px;text-align:center;">
-        <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.7);">${totalLearners}</div>
-        <div style="font-size:8px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.8px;">Total Cohort</div>
+        <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.7);">${summary.totalRegisteredUsers}</div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.8px;">Total Registered Users</div>
       </div>
     </div>
   </div>
 
   <div style="padding:20px 24px;">
-    ${buildCohortPanel(oloibiri)}
-    ${buildCohortPanel(ibiade)}
+
+    <!-- Per-user table -->
+    <div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+      <div style="background:#eef3ef;padding:10px 16px;font-size:11px;font-weight:700;color:#1a5c3f;text-transform:uppercase;letter-spacing:0.6px;">
+        Who Signed In Today
+      </div>
+      <div style="overflow-x:auto;">
+        ${buildUserTable(summary.rows)}
+      </div>
+    </div>
 
     ${buildCostSection(cost)}
 
     <!-- Footer -->
     <div style="border-top:1px solid #e5e7eb;padding-top:12px;color:#9ca3af;font-size:10px;">
-      <div>🕛 Generated at 12:00 WAT (11:00 UTC)  ·  🌍 Oloibiri + Ibiade cohorts  · 
-        <a href="https://girls-aiing-and-vibing.vercel.app" style="color:#2d6a4f;text-decoration:none;">Open App ↗</a>
+      <div>🕛 Generated at 12:00 WAT (11:00 UTC) ·
+        <a href="https://www.nextvillage.community" style="color:#1a5c3f;text-decoration:none;">Open App ↗</a>
       </div>
-      <div style="margin-top:3px;">Facilitator accounts excluded. Active users and Playground users are distinct user counts per cohort. Cohorts derived from profiles.continent, organization_id (vAI + Solardero), and city field.</div>
+      <div style="margin-top:3px;">Facilitator/admin accounts excluded. Site-wide — no cohort or organization filter. "Pages Used Today" lists every dashboard category_activity plus AI Playground / Systems Think / Agriculture Consultation activity logged today; "no logged activity" means the user signed in but touched nothing yet.</div>
     </div>
   </div>
 </div>
@@ -723,34 +513,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log(`\n${"─".repeat(50)}\nDAILY REPORT — ${dateLabel}\n${"─".repeat(50)}`);
 
   try {
-    // ── Fetch ALL cohort profiles using the same filter as assess-monthly.ts ──
-    const allProfiles = await fetchAllCohortProfiles();
-    const { oloibiriProfiles, ibiadeProfiles } = splitCohorts(allProfiles);
-
-    const oloibiriIds = oloibiriProfiles.map((p) => p.id);
-    const ibiadeIds   = ibiadeProfiles.map((p) => p.id);
-
-    console.log(`  Total cohort profiles: ${allProfiles.length}`);
-    console.log(`  Oloibiri cohort: ${oloibiriIds.length} users`);
-    console.log(`  Ibiade cohort:   ${ibiadeIds.length} users`);
-
-    // Log any users that might have ambiguous assignment for debugging
-    const bothOrgAndCity = allProfiles.filter(
-      (p) => p.organization_id === SOLARDERO_ORG_ID && (p.city || "").toLowerCase().trim() !== "ibiade" && p.city
-    );
-    if (bothOrgAndCity.length > 0) {
-      console.log(`  ⚠️  ${bothOrgAndCity.length} users have Solardero org but city≠Ibiade (assigned to Ibiade):`,
-        bothOrgAndCity.map((p) => `${p.id.slice(0, 8)} city="${p.city}"`).join(", ")
-      );
-    }
-
-    // ── Fetch metrics + cost data in parallel ────────────────────────────────
-    const dayStartUTC = new Date(`${logDate}T00:00:00+01:00`).toISOString();
-    const dayEndUTC   = new Date(`${logDate}T23:59:59+01:00`).toISOString();
-
     const costStartUTC = new Date(`${logDate}T00:00:00Z`).toISOString();
     const costEndUTC   = new Date(`${logDate}T23:59:59Z`).toISOString();
-    console.log(`  Cost window: ${costStartUTC} → ${costEndUTC}`);
 
     const [loginMap, costSummary] = await Promise.all([
       fetchAllAuthUsers(),
@@ -758,51 +522,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ]);
     console.log(`  Auth users with login history: ${loginMap.size}`);
 
-    const [oloibiriMetrics, ibiadeMetrics] = await Promise.all([
-      fetchMetrics(logDate, oloibiriIds, "Oloibiri", loginMap),
-      fetchMetrics(logDate, ibiadeIds,   "Ibiade",   loginMap),
-    ]);
-
-    const logMetrics = (label: string, m: DailyMetrics) => {
-      console.log(`  [${label}] Total: ${m.totalAfricaUsers} · Active: ${m.activeUsers} · Activities: ${m.totalActivities} · Playground: ${m.playgroundUsers} · SystemsThink: ${m.systemsThinkUsers} · Agriculture: ${m.agricultureUsers} · Certs: ${m.certAttemptedUsers}`);
-    };
-    logMetrics("Oloibiri", oloibiriMetrics);
-    logMetrics("Ibiade",   ibiadeMetrics);
+    const summary = await fetchDailySummary(logDate, loginMap);
+    console.log(`  Signed in today: ${summary.signedInToday} · Active today: ${summary.activeToday} · Total registered: ${summary.totalRegisteredUsers}`);
     console.log(`  [Cost] Anthropic: $${costSummary.anthropicCostUsd.toFixed(4)} · Groq: ${costSummary.groqRequests} reqs · Cache saved: $${costSummary.cacheSavingsUsd.toFixed(4)} · Available: ${costSummary.available}`);
 
-    // ── Upsert one row per cohort into daily_activity_log ───────────────────
+    // ── Upsert one summary row per day into daily_activity_log ──────────────
     let upsertError: string | null = null;
     try {
-      const upsertRows = [oloibiriMetrics, ibiadeMetrics].map((m) => ({
-        log_date:                m.logDate,
-        city:                    m.city,
+      const catAiLearning        = summary.categoryTotals["AI Learning"] || 0;
+      const catSkillsDevelopment = summary.categoryTotals["Skills Development"] || 0;
+      const catFoundations       = (summary.categoryTotals["english_skills"] || 0) + (summary.categoryTotals["math_skills"] || 0) + (summary.categoryTotals["science_skills"] || 0);
+      const catCommunityImpact   = summary.categoryTotals["Community Impact"] || 0;
+      const catMediaGeneration   = (summary.categoryTotals["Image Generation"] || 0) + (summary.categoryTotals["Video Generation"] || 0) + (summary.categoryTotals["Voice Generation"] || 0);
+      const catSpecializedTracks = (summary.categoryTotals["Financial Literacy"] || 0) + (summary.categoryTotals["Solar Engineering & Installation"] || 0);
+      const catAiProficiencyCert = summary.categoryTotals["Certification"] || 0;
+      const totalActivities      = Object.values(summary.categoryTotals).reduce((s, n) => s + n, 0);
+      const catOther = Math.max(0, totalActivities - catAiLearning - catSkillsDevelopment - catFoundations - catCommunityImpact - catMediaGeneration - catSpecializedTracks - catAiProficiencyCert);
+
+      const upsertRow = {
+        log_date:                summary.logDate,
+        city:                    "All",
         logged_at:               new Date().toISOString(),
-        active_users:            m.activeUsers,
-        signed_in_today:         m.signedInToday,
-        cat_ai_learning:         m.catAiLearning,
-        cat_skills_development:  m.catSkillsDevelopment,
-        cat_foundations:         m.catFoundations,
-        cat_community_impact:    m.catCommunityImpact,
-        cat_media_generation:    m.catMediaGeneration,
-        cat_specialized_tracks:  m.catSpecializedTracks,
-        cat_ai_proficiency_cert: m.catAiProficiencyCert,
-        cat_other:               m.catOther,
-        playground_users:        m.playgroundUsers,
-        playground_chats_total:  m.playgroundChatsTotal,
-        cert_attempted_users:    m.certAttemptedUsers,
-        cert_attempted_today:    m.certAttemptedToday,
-        total_activities:        m.totalActivities,
-        total_africa_users:      m.totalAfricaUsers,
+        active_users:            summary.activeToday,
+        signed_in_today:         summary.signedInToday,
+        cat_ai_learning:         catAiLearning,
+        cat_skills_development:  catSkillsDevelopment,
+        cat_foundations:         catFoundations,
+        cat_community_impact:    catCommunityImpact,
+        cat_media_generation:    catMediaGeneration,
+        cat_specialized_tracks:  catSpecializedTracks,
+        cat_ai_proficiency_cert: catAiProficiencyCert,
+        cat_other:               catOther,
+        playground_users:        0,
+        playground_chats_total:  0,
+        cert_attempted_users:    0,
+        cert_attempted_today:    0,
+        total_activities:        totalActivities,
+        total_africa_users:      summary.totalRegisteredUsers,
         cost_anthropic_usd:      costSummary.available ? costSummary.anthropicCostUsd : null,
         cost_groq_requests:      costSummary.available ? costSummary.groqRequests : null,
         cost_cache_savings_usd:  costSummary.available ? costSummary.cacheSavingsUsd : null,
         cost_cache_hit_rate_pct: costSummary.available && costSummary.totalInputTokens > 0
           ? Math.round(costSummary.cacheHitTokens / costSummary.totalInputTokens * 100) : null,
         cost_total_requests:     costSummary.available ? (costSummary.anthropicRequests + costSummary.groqRequests) : null,
-      }));
-      const { error } = await supabase.from("daily_activity_log").upsert(upsertRows, { onConflict: "log_date,city" });
+      };
+      const { error } = await supabase.from("daily_activity_log").upsert([upsertRow], { onConflict: "log_date,city" });
       if (error) { upsertError = error.message; console.error("❌ Upsert error:", error.message); }
-      else console.log(`✅ daily_activity_log upserted for ${logDate} (Oloibiri + Ibiade)`);
+      else console.log(`✅ daily_activity_log upserted for ${logDate}`);
     } catch (e: any) {
       upsertError = e.message;
       console.error("❌ Upsert threw:", e.message);
@@ -816,16 +582,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         emailError = "RESEND_API_KEY not set";
         console.warn("⚠️  RESEND_API_KEY not set — skipping email");
       } else {
-        const html = buildEmailHtml(oloibiriMetrics, ibiadeMetrics, dateLabel, costSummary);
-        const totalActive = oloibiriMetrics.activeUsers + ibiadeMetrics.activeUsers;
-        const activeLabel = `${totalActive} active (${oloibiriMetrics.activeUsers} Oloibiri · ${ibiadeMetrics.activeUsers} Ibiade)`;
+        const html = buildEmailHtml(summary, dateLabel, costSummary);
         const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Girls AIing & Vibing <reports@nextvillage.community>",
+            from: "nextVillage <reports@nextvillage.community>",
             to: ["khallinan1@udayton.edu"],
-            subject: `📅 Daily Report — ${dateLabel} · ${activeLabel}`,
+            subject: `📅 Daily Report — ${dateLabel} · ${summary.signedInToday} signed in`,
             html,
           }),
         });
@@ -843,19 +607,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       date: logDate,
-      totalCohort: allProfiles.length,
-      oloibiri: {
-        activeUsers: oloibiriMetrics.activeUsers,
-        signedInToday: oloibiriMetrics.signedInToday,
-        totalActivities: oloibiriMetrics.totalActivities,
-        totalLearners: oloibiriMetrics.totalAfricaUsers,
-      },
-      ibiade: {
-        activeUsers: ibiadeMetrics.activeUsers,
-        signedInToday: ibiadeMetrics.signedInToday,
-        totalActivities: ibiadeMetrics.totalActivities,
-        totalLearners: ibiadeMetrics.totalAfricaUsers,
-      },
+      signedInToday: summary.signedInToday,
+      activeToday: summary.activeToday,
+      totalRegisteredUsers: summary.totalRegisteredUsers,
+      rows: summary.rows.length,
       upsertOk: upsertError === null,
       upsertError,
       emailOk: emailError === null,
