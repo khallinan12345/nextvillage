@@ -39,11 +39,13 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AILearningPage = lazy(() => import('./pages/learning/AILearningPage'));
 const AIReadySkillsPage = lazy(() => import('./pages/learning/AIReadySkillsPage'));
 const FinancialLiteracyPage = lazy(() => import('./pages/learning/FinancialLiteracyPage'));
+const SolarEngineeringPage = lazy(() => import('./pages/learning/SolarEngineeringPage'));
 
 // Certification Pages
 const AILearningCertificationPage = lazy(() => import('./pages/learning/AILearningCertificationPage'));
 const AIReadySkillsCertificationPage = lazy(() => import('./pages/learning/AIReadySkillsCertificationPage'));
 const FinancialLiteracyCertificationPage = lazy(() => import('./pages/learning/FinancialLiteracyCertificationPage'));
+const SolarEngineeringCertificationPage = lazy(() => import('./pages/learning/SolarEngineeringCertificationPage'));
 const AIPlaygroundPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundPage'));
 const AIPlaygroundTogetherPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundTogetherPage'));
 const SystemsThinkPage = lazy(() => import('./pages/AIPlayground/SystemsThinkPage'));
@@ -259,11 +261,13 @@ export const AppContent: React.FC = () => {
         <Route path="/learning/ai" element={<AILearningPage />} />
         <Route path="/learning/skills" element={<AIReadySkillsPage />} />
         <Route path="/learning/financial-literacy" element={<FinancialLiteracyPage />} />
+        <Route path="/learning/solar-engineering" element={<SolarEngineeringPage />} />
 
         {/* Certification Routes */}
         <Route path="/certifications/ai-proficiency" element={<AILearningCertificationPage />} />
         <Route path="/certifications/ai-ready-skills" element={<AIReadySkillsCertificationPage />} />
         <Route path="/certifications/financial-literacy" element={<FinancialLiteracyCertificationPage />} />
+        <Route path="/certifications/solar-engineering" element={<SolarEngineeringCertificationPage />} />
         <Route path="/certifications/vibe-coding" element={<VibeCodingCertificationPage />} />
         <Route path="/certifications/web-dev-certification" element={<WebDevCertificationPage />} />
         <Route path="/certifications/full-stack-certification" element={<FullStackCertificationPage />} />
