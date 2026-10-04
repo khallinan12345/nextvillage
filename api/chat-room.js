@@ -126,7 +126,7 @@ export default async function handler(req, res) {
     // mirrors get_my_effective_profile() in the DB. ─────────────────────────
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('organization_id, join_code_used, role')
+      .select('organization_id, join_code_used, role, membership_status')
       .eq('id', user_id)
       .single();
 
@@ -161,6 +161,10 @@ export default async function handler(req, res) {
       }
       effectiveOrgId = org?.id ?? null;
     }
+
+    // A member a leader hasn't approved yet (or declined) is outside the
+    // org — mirrors get_my_effective_profile() returning no org for them.
+    if (profile.membership_status !== 'approved') effectiveOrgId = null;
 
     if (!isPlatformAdmin && (!effectiveOrgId || effectiveOrgId !== room.organization_id)) {
       return res.status(403).json({ success: false, error: 'not_authorized' });

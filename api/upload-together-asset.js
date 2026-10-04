@@ -97,7 +97,7 @@ export default async function handler(req, res) {
 
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
-    .select('organization_id, join_code_used')
+    .select('organization_id, join_code_used, membership_status')
     .eq('id', userId)
     .single();
   if (profileErr || !profile) {
@@ -123,6 +123,9 @@ export default async function handler(req, res) {
     }
     effectiveOrgId = org?.id ?? null;
   }
+
+  // Not yet approved by a leader (or declined) — outside the org.
+  if (profile.membership_status !== 'approved') effectiveOrgId = null;
 
   if (!effectiveOrgId || effectiveOrgId !== room.organization_id) {
     return res.status(403).json({ error: 'not_authorized' });

@@ -109,12 +109,12 @@ export default async function handler(req, res) {
   try {
     const { data: sender, error: senderErr } = await supabase
       .from('profiles')
-      .select('name, email, role, organization_id')
+      .select('name, email, role, organization_id, membership_status')
       .eq('id', user.id)
       .single();
 
     if (senderErr || !sender) return res.status(403).json({ error: 'Sender profile not found' });
-    if (!ALLOWED_ROLES.has(sender.role)) {
+    if (!ALLOWED_ROLES.has(sender.role) || sender.membership_status !== 'approved') {
       return res.status(403).json({ error: 'You do not have permission to send this' });
     }
 

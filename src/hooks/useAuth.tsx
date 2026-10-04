@@ -13,6 +13,7 @@ interface UserProfile {
   avatar_url?: string;
   team_id?: string;
   profile_completed?: boolean;
+  membership_status?: 'approved' | 'pending' | 'declined';
   created_at: string;
   updated_at: string;
 }
