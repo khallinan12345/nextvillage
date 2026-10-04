@@ -5,7 +5,7 @@
 // Fired fire-and-forget from ProfileCompletionPopup.tsx after someone enters
 // a join code for an existing organization. The database has already put
 // their profile in membership_status = 'pending' (see
-// 20261004120000_member_approval_and_role_guard.sql); this emails that
+// 20261004163910_member_approval_and_role_guard.sql); this emails that
 // org's leaders so the request doesn't sit unseen. Approving happens on the
 // leader's dashboard, never from the email itself — a forwarded email
 // shouldn't be able to let someone in.

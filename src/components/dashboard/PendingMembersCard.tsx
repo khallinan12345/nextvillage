@@ -6,7 +6,7 @@
 // RLS (profiles_select) already limits the query to the leader's own
 // organization; approving/declining goes through the review_membership()
 // RPC, which re-checks that the caller leads the member's organization.
-// See 20261004120000_member_approval_and_role_guard.sql.
+// See 20261004163910_member_approval_and_role_guard.sql.
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { UserPlus, Check, X, Loader2 } from 'lucide-react';
