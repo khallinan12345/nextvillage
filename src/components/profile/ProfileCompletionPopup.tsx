@@ -263,6 +263,12 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
 
     if (!name.trim()) { setError('Please enter your name'); return; }
 
+    // Learners can only join through an organization — a leader then
+    // approves them before they see anyone else in it.
+    if (role === 'student' && !orgCtx) {
+      setError('Please enter the join code your leader gave you'); return;
+    }
+
     if (role === 'site_leader') {
       if (leaderOrgMode === 'choose') {
         setError('Please choose to join an existing organization or create a new one'); return;
@@ -491,6 +497,17 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
             );
           }
         }
+      }
+
+      // ── Joined an existing org: the database put this profile in
+      // 'pending' — email that org's leaders so they can approve it ────────
+      if (join_code_used) {
+        fetch('/api/notify-join-request', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }).catch(err => {
+          console.warn('[ProfileCompletionPopup] Join request notification failed to send:', err);
+        });
       }
 
       // Show join-code modal for new org leaders; proceed immediately for everyone else
@@ -759,8 +776,8 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                 {/* Join code */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <Key className="inline mr-1" size={14} /> Organization Join Code
-                    <span className="text-gray-400 font-normal ml-1">(optional — ask your leader)</span>
+                    <Key className="inline mr-1" size={14} /> Organization Join Code *
+                    <span className="text-gray-400 font-normal ml-1">(ask your leader)</span>
                   </label>
                   <input type="text" value={joinCode}
                     onChange={e => handleJoinCodeChange(e.target.value)}

@@ -15,6 +15,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import PendingApprovalScreen from './PendingApprovalScreen';
 
 const RequireAuth: React.FC = () => {
   const { user, session, loading } = useAuth();
@@ -29,6 +30,12 @@ const RequireAuth: React.FC = () => {
 
   if (!session && !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Joined an organization but no leader has approved it yet (or one
+  // declined it) — nothing behind this gate is available until they do.
+  if (user?.membership_status === 'pending' || user?.membership_status === 'declined') {
+    return <PendingApprovalScreen status={user.membership_status} />;
   }
 
   return <Outlet />;

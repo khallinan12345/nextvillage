@@ -47,6 +47,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useLoginStreak } from '../hooks/useLoginStreak';
 import { useReflectionStreak } from '../hooks/useReflectionStreak';
 import ReflectionCard from '../components/dashboard/ReflectionCard';
+import PendingMembersCard from '../components/dashboard/PendingMembersCard';
 import { EvidencePicker } from '../components/community-impact/EvidencePicker';
 import classNames from 'classnames';
 
@@ -2224,6 +2225,11 @@ ${prior.impact_arc}
           </div>
         ) : (
           <div className="space-y-8">
+
+            {/* ── Join requests waiting on this leader ────────────────────── */}
+            {['site_leader', 'leader', 'platform_administrator'].includes(user?.role ?? '') && (
+              <PendingMembersCard />
+            )}
 
             {/* ── Module Progress Ring + Achievements ─────────────────────── */}
             {user?.role === 'student' && (
