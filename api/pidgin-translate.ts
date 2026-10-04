@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -22,6 +23,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await requireUser(req, res))) return;
 
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;

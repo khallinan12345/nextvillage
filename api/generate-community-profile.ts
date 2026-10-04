@@ -15,6 +15,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
+import { getRequestUser } from './_lib/requireUser.js';
 
 // ─── Clients ────────────────────────────────────────────────────────────────
 
@@ -486,12 +487,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  // Auth check (optional bearer token guard)
-  const authHeader = req.headers.authorization;
-  if (process.env.API_SECRET && authHeader !== `Bearer ${process.env.API_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized.' });
-  }
-
   const { organization_id } = (req.body ?? {}) as RequestBody;
 
   if (!organization_id?.trim()) {
@@ -499,6 +494,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Missing required field.',
       required: ['organization_id'],
     });
+  }
+
+  // Auth: this runs web research plus several Claude calls, so only the
+  // organization's own leader (who triggers it at signup), a platform
+  // admin, or a server-side script holding API_SECRET may start it.
+  const authHeader = req.headers.authorization;
+  const isServerCall = !!process.env.API_SECRET && authHeader === `Bearer ${process.env.API_SECRET}`;
+  if (!isServerCall) {
+    const user = await getRequestUser(req, supabase);
+    if (!user) return res.status(401).json({ error: 'Please sign in to use this feature.' });
+
+    const [{ data: org }, { data: caller }] = await Promise.all([
+      supabase.from('organizations').select('leader_id').eq('id', organization_id).maybeSingle(),
+      supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
+    ]);
+    if (org?.leader_id !== user.id && caller?.role !== 'platform_administrator') {
+      return res.status(403).json({ error: 'Only this organization\'s leader can do this.' });
+    }
   }
 
   const log: string[] = [];

@@ -39,6 +39,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { logApiCost } from '../lib/api-cost-logger.js';
+import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL_SONNET      = 'claude-sonnet-5'
@@ -631,6 +632,10 @@ function buildUserMessage(
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await requireUser(req, res))) return;
 
   const {
     action, prompt, taskId, projectFiles, sessionContext,
