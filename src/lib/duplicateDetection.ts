@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { authHeaders } from './authHeaders';
 
 export interface SimilarProfileMatch {
   id: string;
@@ -16,13 +16,9 @@ interface MatchInput {
 // The matching itself runs in api/find-similar-profile.js: the list of
 // existing accounts never reaches the browser, only one masked match.
 async function post(body: Record<string, unknown>): Promise<Response> {
-  const { data: { session } } = await supabase.auth.getSession();
   return fetch('/api/find-similar-profile', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
-    },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify(body),
   });
 }
