@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Buffer } from 'buffer';
+import { requireUser } from './_lib/requireUser.js';
 
 const GROQ_TRANSLATION_URL = 'https://api.groq.com/openai/v1/audio/translations';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -8,6 +9,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await requireUser(req, res))) return;
 
   if (!GROQ_API_KEY) {
     return res.status(500).json({ error: 'GROQ_API_KEY is not configured' });

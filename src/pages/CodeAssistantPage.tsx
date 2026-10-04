@@ -62,6 +62,7 @@ import {
 import classNames from 'classnames';
 import { useAuth } from '../hooks/useAuth';
 import ReactMarkdown from 'react-markdown';
+import { authHeaders } from '../lib/authHeaders';
 
 interface DashboardActivity {
   id: string;
@@ -177,9 +178,7 @@ class CodeExecutionService {
       // Only send Python and non-browser JavaScript to the server
       const response = await fetch(this.apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({
           code,
           language,

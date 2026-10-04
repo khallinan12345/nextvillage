@@ -10,6 +10,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { requireUser } from './_lib/requireUser.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -86,6 +87,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await requireUser(req, res))) return;
 
   const { organization_id } = req.body ?? {};
   if (!organization_id) {

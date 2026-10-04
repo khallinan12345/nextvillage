@@ -22,6 +22,7 @@ import {
   Volume2, VolumeX, Code, FolderOpen, Plus, X, ChevronDown, Edit3, Check, BookOpen,
 } from 'lucide-react';
 import classNames from 'classnames';
+import { authHeaders } from '../../lib/authHeaders';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ class CodeExecutionService {
     try {
       const response = await fetch(this.apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({ code, language }),
       });
       if (!response.ok) throw new Error(`API Error: ${response.status}`);

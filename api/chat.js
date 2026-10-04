@@ -5,6 +5,7 @@
 // baseline regardless of which page's system prompt (or lack of one) called them.
 import { appendSafetyFloor, checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
+import { requireUser } from './_lib/requireUser.js';
 //
 // ROUTING LOGIC:
 //   page = 'AILearningPage' | 'EnglishSkillsPage' |
@@ -1114,6 +1115,10 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await requireUser(req, res))) return;
 
   // Hoisted out of the try block so the catch handler below can still
   // attribute a failed request to a user/page when it logs the triage event.

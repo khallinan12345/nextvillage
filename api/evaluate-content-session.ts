@@ -5,6 +5,7 @@
 // AIContentCreationPage.tsx's handleEvaluate/handleSaveProject.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_MODEL = 'claude-sonnet-5';
@@ -91,6 +92,10 @@ Return JSON only — no markdown fences:
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await requireUser(req, res))) return;
 
   const { promptHistory, contentPieces, contentType, sessionContext } = req.body;
 

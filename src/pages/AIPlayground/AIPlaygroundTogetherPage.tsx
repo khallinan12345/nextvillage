@@ -19,6 +19,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { BACK_TO_BASICS_ORG_ID } from '../../lib/backToBasicsScope';
 import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X, Image as ImageIcon, BookOpen, Download } from 'lucide-react';
+import { authHeaders } from '../../lib/authHeaders';
 
 const QUOTA_TOKENS    = 25000;
 const QUOTA_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
@@ -316,8 +317,8 @@ const AIPlaygroundTogetherPage: React.FC = () => {
     try {
       const res = await fetch('/api/chat-room', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_id: activeRoom.id, user_id: user.id }),
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+        body: JSON.stringify({ room_id: activeRoom.id }),
       });
       const data = await res.json().catch(() => null);
       if (data?.error === 'quota_exceeded') {

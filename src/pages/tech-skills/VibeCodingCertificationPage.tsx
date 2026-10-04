@@ -37,6 +37,7 @@ import {
   ArrowRight, Play, CheckCircle, Bot, User, Send,
   ExternalLink,
 } from 'lucide-react';
+import { authHeaders } from '../../lib/authHeaders';
 
 // ─── Markdown components (dark theme) ────────────────────────────────────────
 
@@ -161,7 +162,7 @@ class CodeExecutionService {
     }
     try {
       const res = await fetch(this.apiUrl, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({ code, language }),
       });
       if (!res.ok) throw new Error(`API Error: ${res.status}`);

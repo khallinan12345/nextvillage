@@ -7,6 +7,7 @@
 //   4. critique uses claude-haiku-4-5 (Sonnet is overkill for prompt feedback)
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireUser } from './_lib/requireUser.js';
 
 interface ImageMeta {
   id: string;
@@ -335,6 +336,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')
     return res.status(405).json({ error: 'Method not allowed' });
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await requireUser(req, res))) return;
 
   try {
     const {
