@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import { findSimilarProfile, type SimilarProfileMatch } from '../../lib/duplicateDetection';
+import { findSimilarProfile, sendDuplicateResetLink, type SimilarProfileMatch } from '../../lib/duplicateDetection';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { Github, Eye, EyeOff } from 'lucide-react';
@@ -67,11 +67,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     try {
       setLoading(true);
       setError('');
-      const { error } = await supabase.auth.signInWithOtp({
-        email: similarMatch.rawEmail,
-        options: { emailRedirectTo: `${window.location.origin}/auth/reset-password` },
-      });
-      if (error) throw error;
+      await sendDuplicateResetLink(similarMatch.id, { email });
       setSimilarMatch(null);
       setView('magic-link-sent');
     } catch (err: any) {

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { findSimilarProfile, type SimilarProfileMatch } from '../../lib/duplicateDetection';
+import { findSimilarProfile, sendDuplicateResetLink, type SimilarProfileMatch } from '../../lib/duplicateDetection';
 import { User, GraduationCap, Globe, MapPin, Key, Building2, Search, PlusCircle, Upload, Copy, CheckCircle } from 'lucide-react';
 
 // Site leader can either join an existing org (they have a co-leader join code)
@@ -167,6 +167,14 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   const [duplicateMatch, setDuplicateMatch] = useState<SimilarProfileMatch | null>(null);
   const [mergedAndRedirected, setMergedAndRedirected] = useState(false);
 
+  // The join code of the organization being joined scopes the duplicate
+  // check (name matching only makes sense within one cohort). None when a
+  // leader is creating a brand-new org — there's no cohort to collide with.
+  const duplicateScopeCode =
+    role === 'student' && orgCtx ? joinCode :
+    role === 'site_leader' && leaderOrgMode === 'join' && coOrgCtx ? coJoinCode :
+    null;
+
   // Confirmed same person as an existing profile: soft-merge this brand-new
   // (throwaway) account into the original instead of creating a duplicate,
   // then send a password reset to the original account's email.
@@ -190,11 +198,10 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         .eq('id', session.user.id);
       if (mergeError) throw mergeError;
 
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: duplicateMatch.rawEmail,
-        options: { emailRedirectTo: `${window.location.origin}/auth/reset-password` },
+      await sendDuplicateResetLink(duplicateMatch.id, {
+        name: name.trim(),
+        joinCode: duplicateScopeCode ?? undefined,
       });
-      if (otpError) throw otpError;
 
       await supabase.auth.signOut();
       setMergedAndRedirected(true);
@@ -295,20 +302,11 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
       const actualEmail  = session.user.email;
 
       // ── Duplicate-account check ──────────────────────────────────────────
-      // Scoped to the organization the person is joining — checking names
-      // platform-wide would false-positive on unrelated people who share a
-      // common name. Skipped when no org is known yet (leader creating a
-      // brand-new org has no cohort to collide with).
-      const scopeOrgId =
-        role === 'student' ? (orgCtx?.id ?? null) :
-        (role === 'site_leader' && leaderOrgMode === 'join') ? (coOrgCtx?.id ?? null) :
-        null;
-
-      if (scopeOrgId && !duplicateMatch) {
+      // Scoped by duplicateScopeCode (see above).
+      if (duplicateScopeCode && !duplicateMatch) {
         const match = await findSimilarProfile({
           name: name.trim(),
-          organizationId: scopeOrgId,
-          excludeUserId: actualUserId,
+          joinCode: duplicateScopeCode,
         });
         if (match) {
           setDuplicateMatch(match);
