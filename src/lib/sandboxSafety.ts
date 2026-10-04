@@ -1,7 +1,7 @@
 // src/lib/sandboxSafety.ts
 //
 // Shared safety net for any AI-generated HTML rendered in a
-// sandbox="allow-scripts" iframe (Create Game, Website Builder, and their
+// sandbox="allow-scripts" iframe (Create Game, Website Builder, Code Assistant, and their
 // published views) — used by src/pages/tech-skills/CreateGamePage.tsx (via
 // gameTestHarness.ts), PlayGamePage.tsx, and WebsiteBuilderPage.tsx.
 //

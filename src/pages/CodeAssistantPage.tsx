@@ -10,6 +10,7 @@ import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import Editor from '@monaco-editor/react';
 // Import the chat client functions
 import { chatText, chatJSON, generateImageViaServer } from '../lib/chatClient';
+import { buildSafeHtml } from '../lib/sandboxSafety';
 import {
   Code,
   Presentation,
@@ -401,7 +402,10 @@ const HTMLPreview: React.FC<{
   useEffect(() => {
     if (isOpen && iframeRef.current) {
       // Use the complete HTML document (either original HTML or generated HTML for JS)
-      const blob = new Blob([code], { type: 'text/html' });
+      // No allow-same-origin on the iframe: student/AI code must never run
+      // as the site's own origin (it could read the signed-in session). The
+      // storage shim keeps localStorage use from crashing in that sandbox.
+      const blob = new Blob([buildSafeHtml(code)], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       iframeRef.current.src = url;
 
@@ -476,7 +480,7 @@ const HTMLPreview: React.FC<{
           <iframe
             ref={iframeRef}
             className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts"
             title="HTML Preview"
           />
         </div>
