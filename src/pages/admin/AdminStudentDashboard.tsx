@@ -10,6 +10,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
+import PendingMembersCard from '../../components/dashboard/PendingMembersCard';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -2850,6 +2851,14 @@ const AdminStudentDashboard: React.FC = () => {
             />
           )}
         </div>
+
+        {/* Join requests — first thing a leader sees on a busy intake day.
+            research_lead can view the dashboard but can't approve members. */}
+        {(isPlatformAdmin || userRole === 'leader' || userRole === 'site_leader') && (
+          <div className="mb-5">
+            <PendingMembersCard />
+          </div>
+        )}
 
         <div className="flex gap-1 mb-5 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
           {([
