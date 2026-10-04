@@ -4,10 +4,35 @@
 // Each request spins up a fresh sandbox, executes the code, and closes it.
 // Sandboxes are ephemeral — no state persists between requests.
 //
-// Environment variable required: E2B_API_KEY
+// Only signed-in, approved members can run code, and each person is capped
+// at RUN_LIMIT runs per RUN_WINDOW_MS — otherwise anyone who found this URL
+// could run code (e.g. a cryptominer) on our E2B account.
+//
+// Environment variables required: E2B_API_KEY, SUPABASE_URL,
+// SUPABASE_SERVICE_ROLE_KEY
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Sandbox } from '@e2b/code-interpreter';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+);
+
+// Same check as api/_lib/requireUser.js (kept inline: no other TypeScript
+// route imports from _lib). Never trust a user id from the request body.
+async function getRequestUser(req: VercelRequest) {
+  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  return error ? null : user;
+}
+
+// Generous for a learner working through an exercise; far too few to be
+// worth abusing. Logged in code_execution_log (service-role only).
+const RUN_LIMIT     = 30;
+const RUN_WINDOW_MS = 10 * 60 * 1000;
 
 interface ExecutionRequest {
   code: string;
@@ -125,16 +150,33 @@ async function executeWithE2B(
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
+// No CORS headers: only our own pages (same origin) call this.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin',  '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')
     return res.status(405).json({ error: 'Method not allowed' });
 
   try {
+    const user = await getRequestUser(req);
+    if (!user)
+      return res.status(401).json({ error: 'Please sign in to run code.', executionTime: 0, success: false });
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('membership_status')
+      .eq('id', user.id)
+      .single();
+    if (profile?.membership_status !== 'approved')
+      return res.status(403).json({ error: 'Your leader needs to approve your account before you can run code.', executionTime: 0, success: false });
+
+    const windowStart = new Date(Date.now() - RUN_WINDOW_MS).toISOString();
+    const { count } = await supabase
+      .from('code_execution_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', windowStart);
+    if ((count ?? 0) >= RUN_LIMIT)
+      return res.status(429).json({ error: 'You have run a lot of code in the last few minutes. Please wait a little and try again.', executionTime: 0, success: false });
+
     const { code, language, timeout }: ExecutionRequest = req.body;
 
     if (!code || !language)
@@ -146,6 +188,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`[execute-code] ${language} (${code.length} chars)`);
 
     const sanitizedCode = validateAndSanitizeCode(code, language);
+    await supabase.from('code_execution_log').insert({ user_id: user.id, language });
     const result        = await executeWithE2B(sanitizedCode, language, timeout);
 
     console.log(`[execute-code] ${result.success ? 'OK' : 'ERR'} ${result.executionTime}ms`);

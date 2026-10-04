@@ -22,6 +22,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { tryFreeTierChain } from './_lib/freeTierChain.js';
+import { getRequestUser } from './_lib/requireUser.js';
 
 // Back to Basics Youth Education stays exempt from the token quota below —
 // keep in sync with src/lib/backToBasicsScope.ts.
@@ -102,9 +103,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'method_not_allowed' });
   }
 
-  const { room_id, user_id } = req.body || {};
-  if (!room_id || !user_id) {
-    return res.status(400).json({ success: false, error: 'room_id and user_id are required' });
+  // Who is asking comes from their login token, never from the request
+  // body — otherwise anyone could trigger replies as any member.
+  const caller = await getRequestUser(req, supabase);
+  if (!caller) {
+    return res.status(401).json({ success: false, error: 'not_signed_in' });
+  }
+  const user_id = caller.id;
+
+  const { room_id } = req.body || {};
+  if (!room_id) {
+    return res.status(400).json({ success: false, error: 'room_id is required' });
   }
 
   try {

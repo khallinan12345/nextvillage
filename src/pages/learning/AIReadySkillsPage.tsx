@@ -81,6 +81,7 @@ import {
   BookOpen,
   X
 } from 'lucide-react';
+import { authHeaders } from '../../lib/authHeaders';
 import classNames from 'classnames';
 import { useAuth } from '../../hooks/useAuth';
 import { useVoice } from '../../hooks/useVoice';
@@ -1121,9 +1122,7 @@ class CodeExecutionService {
       
       const response = await fetch(this.apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({
           code,
           language,
