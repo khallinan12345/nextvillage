@@ -56,6 +56,17 @@ function estimateCost(model, inputTokens, outputTokens) {
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Same check as api/_lib/requireUser.js, as a plain fetch to Supabase Auth
+// so this Edge route doesn't pull in supabase-js.
+async function isSignedIn(authHeader) {
+  const token = (authHeader || '').replace(/^Bearer\s+/i, '');
+  if (!token || !SUPABASE_URL || !SUPABASE_KEY) return false;
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
+  }).catch(() => null);
+  return !!r?.ok;
+}
 const RESEND_KEY   = process.env.RESEND_API_KEY || '';
 const ALERT_EMAIL  = process.env.TRIAGE_ALERT_EMAIL || '';
 // TEMP DIAGNOSTIC — remove after confirming
@@ -420,6 +431,15 @@ export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Signed-in users only — otherwise anyone who finds this URL can spend
+  // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
+  if (!(await isSignedIn(req.headers.get('authorization')))) {
+    return new Response(JSON.stringify({ error: 'Please sign in to use this feature.' }), {
+      status: 401,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }
