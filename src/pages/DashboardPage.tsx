@@ -89,7 +89,6 @@ interface CurrentChallengeLeaderEntry {
   tier_label: string;
   status: string;
   action_taken: string | null;
-  impact_observed: string | null;
   submitted_at: string | null;
   awarded_at: string | null;
   rank: number;
@@ -149,7 +148,6 @@ interface GrandChallengeLeaderEntry {
   org_id: string;
   quarter: string;
   title: string;
-  community_member_name: string | null;
   community_impact_slug: string;
   journal_entry_count: number;
   weeks_documented: number;
