@@ -25,9 +25,34 @@
 --     one-line summary shown under each name on the weekly board.
 --   * Grand Challenge ranks are computed per real organization, not per
 --     inconsistent org_id text.
+--   * Leaderboards show "First L." instead of a full name. The shortening
+--     happens here, in the views and the cohort-names function, so the full
+--     name never leaves the database for a leaderboard.
 --   * anon has no access; authenticated and service_role keep SELECT only.
 --   * Reading other people's rows straight from grand_challenge_submissions
 --     is no longer allowed (learners still read their own).
+
+-- ── 0. "First L." display name ────────────────────────────────────────────
+-- 'Daniel Peace Azibaolari' -> 'Daniel A.'; one-word names stay as they are;
+-- blank names become 'Member'.
+
+CREATE OR REPLACE FUNCTION public.short_display_name(full_name text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+SET search_path = public
+AS $$
+  SELECT CASE
+    WHEN array_length(parts, 1) IS NULL THEN 'Member'
+    WHEN array_length(parts, 1) = 1 THEN parts[1]
+    ELSE parts[1] || ' ' || upper(left(parts[array_length(parts, 1)], 1)) || '.'
+  END
+  FROM (SELECT regexp_split_to_array(nullif(btrim(full_name), ''), '\s+') AS parts) s;
+$$;
+
+-- Functions inside a view run as the person querying, so they need EXECUTE.
+REVOKE ALL ON FUNCTION public.short_display_name(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.short_display_name(text) TO authenticated, service_role;
 
 -- ── 1. Who may see a given learner on a leaderboard ───────────────────────
 -- Runs as owner so it can read profiles; keyed on auth.uid() inside, so the
@@ -92,7 +117,7 @@ CREATE OR REPLACE VIEW public.community_leaderboard AS
         )
  SELECT ls.learner_id,
     ls.org_id,
-    p.name,
+    public.short_display_name(p.name) AS name,
     p.avatar_url,
     trm.tier AS highest_tier,
     trm.tier_label AS highest_tier_label,
@@ -128,7 +153,7 @@ CREATE VIEW public.current_challenge_leaderboard AS
  SELECT ce.challenge_id,
     ce.learner_id,
     ce.org_id,
-    p.name,
+    public.short_display_name(p.name) AS name,
     p.avatar_url,
     ce.tier_awarded,
         CASE ce.tier_awarded
@@ -181,7 +206,7 @@ CREATE VIEW public.grand_challenge_leaderboard AS
     g.is_quarter_winner,
     g.status,
     g.submitted_at,
-    p.name AS learner_name,
+    public.short_display_name(p.name) AS learner_name,
     p.avatar_url,
     row_number() OVER (
       PARTITION BY coalesce(p.organization_id, org_id_for_join_code(p.join_code_used)), g.quarter
@@ -205,6 +230,30 @@ GRANT SELECT ON public.community_leaderboard,
                 public.current_challenge_leaderboard,
                 public.grand_challenge_leaderboard
   TO authenticated, service_role;
+
+-- ── 5b. Cohort leaderboard names: "First L." too ──────────────────────────
+-- Same rules as before (approved students of the viewer's own org, or a
+-- platform admin); only the name is shortened.
+
+CREATE OR REPLACE FUNCTION public.get_cohort_member_names(p_join_code text)
+RETURNS TABLE(id uuid, name text)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT p.id, public.short_display_name(p.name)
+  FROM profiles p
+  WHERE p.join_code_used = p_join_code
+    AND p.role = 'student'
+    AND p.membership_status = 'approved'
+    AND (
+      (SELECT role FROM get_my_profile()) = 'platform_administrator'
+      OR org_id_for_join_code(p_join_code) = (SELECT organization_id FROM get_my_effective_profile())
+    );
+$$;
+REVOKE EXECUTE ON FUNCTION public.get_cohort_member_names(text) FROM PUBLIC, anon;
+GRANT  EXECUTE ON FUNCTION public.get_cohort_member_names(text) TO authenticated;
 
 -- ── 6. Stop any signed-in user reading every Grand Challenge submission ───
 -- (learners_own_submissions and service_manages_submissions remain.)
