@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { Eye, EyeOff } from 'lucide-react';
+import { passwordProblem, friendlyPasswordError, PASSWORD_MIN_LENGTH, PASSWORD_RULE_TEXT } from '../../lib/passwordRules';
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,8 +20,9 @@ const ResetPasswordPage: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    const problem = passwordProblem(password);
+    if (problem) {
+      setError(problem);
       return;
     }
 
@@ -38,7 +40,8 @@ const ResetPasswordPage: React.FC = () => {
       setSuccess(true);
       setTimeout(() => navigate('/home'), 2500);
     } catch (err: any) {
-      setError(err?.message || 'Failed to reset password. Please try again.');
+      const raw = err?.message || '';
+      setError(friendlyPasswordError(raw) || raw || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -96,6 +99,7 @@ const ResetPasswordPage: React.FC = () => {
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+              <p className="mt-1 text-xs text-gray-500">{PASSWORD_RULE_TEXT}</p>
             </div>
 
             {/* Confirm password */}
@@ -137,7 +141,7 @@ const ResetPasswordPage: React.FC = () => {
               fullWidth
               isLoading={loading}
               size="lg"
-              disabled={password !== confirm || password.length < 6}
+              disabled={password !== confirm || password.length < PASSWORD_MIN_LENGTH}
             >
               Reset password
             </Button>
