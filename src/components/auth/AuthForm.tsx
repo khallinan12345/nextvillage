@@ -5,6 +5,7 @@ import { findSimilarProfile, sendDuplicateResetLink, type SimilarProfileMatch } 
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { Github, Eye, EyeOff } from 'lucide-react';
+import { passwordProblem, friendlyPasswordError, PASSWORD_RULE_TEXT } from '../../lib/passwordRules';
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -85,6 +86,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
 
     try {
       if (mode === 'signup') {
+        const problem = passwordProblem(password);
+        if (problem) {
+          setError(problem);
+          setLoading(false);
+          return;
+        }
+
         // 1. Exact email match — hard block
         const exists = await emailAlreadyExists(email);
         if (exists) {
@@ -143,8 +151,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
           'Please confirm your email before signing in. Check your inbox for the confirmation link.';
       } else if (raw.includes('User already registered')) {
         friendly = 'An account with this email already exists. Please sign in instead.';
-      } else if (raw.includes('Password should be')) {
-        friendly = 'Password must be at least 6 characters.';
+      } else if (friendlyPasswordError(raw)) {
+        friendly = friendlyPasswordError(raw)!;
       } else if (raw) {
         friendly = raw;
       }
@@ -336,6 +344,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
+
+          {mode === 'signup' && (
+            <p className="mt-1 text-xs text-gray-500">{PASSWORD_RULE_TEXT}</p>
+          )}
 
           {/* Forgot password link — login mode only */}
           {mode === 'login' && (
