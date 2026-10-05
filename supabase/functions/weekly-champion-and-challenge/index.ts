@@ -18,6 +18,16 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.3';
 
+// "First L." for anywhere a student's name goes out to other people.
+// Mirrors src/lib/displayName.ts (Deno functions can't import from src/).
+function shortDisplayName(fullName: string | null | undefined): string {
+  const parts = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'Member';
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+}
+
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TiedLearner {
@@ -515,7 +525,7 @@ async function postCombinedNews(
   // ── Champion section ──
   let championSection = '';
   if (champion.status === 'declared' || champion.status === 'already_declared') {
-    const name = champion.champion_name!;
+    const name = shortDisplayName(champion.champion_name);
     const tierLabel = champion.winning_tier_label!;
     const storySnippet = champion.champion_story
       ? ` Here is what made their work stand out: "${champion.champion_story.slice(0, 400).trim()}${champion.champion_story.length > 400 ? '…' : ''}"`
@@ -536,7 +546,7 @@ async function postCombinedNews(
   const body = `${championSection}${challengeSection}`;
 
   const title = champion.champion_name
-    ? `🏆 ${champion.champion_name} is this week's Champion + New Challenge Inside`
+    ? `🏆 ${shortDisplayName(champion.champion_name)} is this week's Champion + New Challenge Inside`
     : `🌍 New Community Challenge for ${orgName}`;
 
   try {

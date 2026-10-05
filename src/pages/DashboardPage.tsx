@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { resolveChallengeOrgSlug } from '../lib/communityChallengeScope';
+import { shortDisplayName } from '../lib/displayName';
 import { Project, Team, UserProfile } from '../types/supabase';
 import {
   Plus,
@@ -2345,7 +2346,7 @@ ${prior.impact_arc}
                     This Week's Community Champion
                   </p>
                   <p className="text-sm font-bold text-gray-900">
-                    {weeklyChampion.champion_name}
+                    {shortDisplayName(weeklyChampion.champion_name)}
                     <span className={classNames(
                       'ml-2 text-xs px-2 py-0.5 rounded-full font-semibold border align-middle',
                       TIER_COLOURS[weeklyChampion.winning_tier]?.bg,
@@ -3018,7 +3019,7 @@ ${prior.impact_arc}
                                   {pc.winner_name && (
                                     <div className="flex items-center gap-1.5 mt-1">
                                       <span className="text-sm">🏆</span>
-                                      <span className="text-xs font-semibold text-amber-700">{pc.winner_name}</span>
+                                      <span className="text-xs font-semibold text-amber-700">{shortDisplayName(pc.winner_name)}</span>
                                       {pc.winner_tier && (
                                         <span className={classNames('text-xs px-1.5 py-0.5 rounded-full font-semibold border', tc.bg, tc.text, tc.border)}>
                                           {TIER_LABELS_MAP[pc.winner_tier] ?? pc.winner_tier}

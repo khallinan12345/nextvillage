@@ -17,6 +17,7 @@ import {
   BookOpen, ExternalLink,
 } from "lucide-react";
 import { BookCard, BookModal } from "../components/BookModal";
+import { shortDisplayName } from "../lib/displayName";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1483,7 +1484,7 @@ const PublicLandingPage: React.FC = () => {
                               <span style={{ fontSize: "1.2rem" }}>{meta.emoji}</span>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontWeight: 700, color: isLatest ? "#fef3c7" : "#fff", fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                  {w.winner_name}
+                                  {shortDisplayName(w.winner_name)}
                                 </div>
                                 <div style={{ fontSize: "0.65rem", color: isLatest ? "#fbbf24" : "rgba(255,255,255,0.35)", fontWeight: 600, marginTop: 1 }}>
                                   {fmtWeek(w.week_start, w.week_end)}
@@ -1602,7 +1603,7 @@ const PublicLandingPage: React.FC = () => {
                               🏆 Weekly Champion
                             </div>
                             <div style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: "#fff", fontSize: "1.15rem", lineHeight: 1.2 }}>
-                              {w.winner_name}
+                              {shortDisplayName(w.winner_name)}
                             </div>
                             <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "0.2rem" }}>
                               {fmtWeek(w.week_start, w.week_end)}
