@@ -8,6 +8,11 @@
 // viewers see new messages via a Supabase Realtime subscription, not
 // client-side streaming.
 //
+// Safety: every student message is checked in the database as it's saved
+// (phone numbers, "WhatsApp me", offers abroad, money, secrecy) and anyone
+// can report a message with the flag button; both alert the org's leaders.
+// See 20261005021247_together_room_safety_flags.sql.
+//
 // Back to Basics Youth Education stays exempt from the usage quota below —
 // keep in sync with src/lib/backToBasicsScope.ts.
 
@@ -18,7 +23,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { BACK_TO_BASICS_ORG_ID } from '../../lib/backToBasicsScope';
-import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X, Image as ImageIcon, BookOpen, Download } from 'lucide-react';
+import { Users, Plus, Send, Trash2, Lock, Bot, ArrowLeft, Loader2, MessageSquare, Pencil, Check, X, Image as ImageIcon, BookOpen, Download, Flag } from 'lucide-react';
 import { authHeaders } from '../../lib/authHeaders';
 
 const QUOTA_TOKENS    = 25000;
@@ -122,6 +127,13 @@ const AIPlaygroundTogetherPage: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [claudeThinking, setClaudeThinking] = useState(false);
   const [roomError, setRoomError] = useState('');
+
+  // ── Report a message ─────────────────────────────────────────────────────
+  const [reportingId, setReportingId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
+  const [reportError, setReportError] = useState('');
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
 
   // ── Image sharing + book view ────────────────────────────────────────────
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -493,6 +505,26 @@ const AIPlaygroundTogetherPage: React.FC = () => {
       .eq('id', messageId);
   };
 
+  const startReport = (messageId: string) => {
+    setReportingId(messageId);
+    setReportReason('');
+    setReportError('');
+  };
+
+  const submitReport = async () => {
+    if (!reportingId || submittingReport) return;
+    setSubmittingReport(true);
+    setReportError('');
+    const { error } = await supabase.rpc('report_together_message', {
+      p_message_id: reportingId,
+      p_reason: reportReason.trim() || null,
+    });
+    setSubmittingReport(false);
+    if (error) { setReportError('Could not send the report — please try again or tell your leader.'); return; }
+    setReportedIds(prev => new Set(prev).add(reportingId));
+    setReportingId(null);
+  };
+
   const handleCloseRoom = async () => {
     if (!isLeader || !user?.id || !activeRoom) return;
     const { data } = await supabase
@@ -734,7 +766,8 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                   const isDeleted = !!msg.deleted_at;
                   const label = isAssistant ? 'Claude' : isMe ? 'You' : msg.sender_name;
                   return (
-                    <div key={msg.id} className="group flex items-start gap-2">
+                    <div key={msg.id}>
+                    <div className="group flex items-start gap-2">
                       <div className={`flex-1 rounded-2xl px-4 py-2.5 max-w-[85%] ${
                         isAssistant ? 'bg-violet-50 border border-violet-100'
                           : isMe ? 'bg-purple-600 text-white ml-auto'
@@ -769,6 +802,60 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                           <Trash2 size={14} />
                         </button>
                       )}
+                      {/* Always visible (not hover-only) so it works on phones. */}
+                      {!isMe && !isDeleted && (
+                        reportedIds.has(msg.id) ? (
+                          <span className="p-1 text-red-400 flex-shrink-0 mt-1" title="Reported">
+                            <Flag size={14} fill="currentColor" />
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => startReport(msg.id)}
+                            className="p-1 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 mt-1"
+                            title="Report this message"
+                            aria-label="Report this message"
+                          >
+                            <Flag size={14} />
+                          </button>
+                        )
+                      )}
+                    </div>
+                    {reportedIds.has(msg.id) && (
+                      <p className="text-xs text-gray-500 mt-1 ml-1">Reported — a leader will look at it. Thank you for speaking up.</p>
+                    )}
+                    {reportingId === msg.id && (
+                      <div className="mt-2 max-w-[85%] rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
+                        <p className="text-sm text-gray-800">
+                          Report this message to your leader? They’ll see who sent it and what it says. The sender isn’t told who reported it.
+                        </p>
+                        <textarea
+                          value={reportReason}
+                          onChange={e => setReportReason(e.target.value)}
+                          maxLength={500}
+                          rows={2}
+                          placeholder="What’s wrong? (optional)"
+                          className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        />
+                        {reportError && <p className="text-xs text-red-600">{reportError}</p>}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={submitReport}
+                            disabled={submittingReport}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60"
+                          >
+                            {submittingReport ? <Loader2 size={14} className="animate-spin" /> : <Flag size={14} />}
+                            Send report
+                          </button>
+                          <button
+                            onClick={() => setReportingId(null)}
+                            disabled={submittingReport}
+                            className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-white disabled:opacity-60"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     </div>
                   );
                 })

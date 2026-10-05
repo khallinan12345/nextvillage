@@ -48,6 +48,7 @@ import { useLoginStreak } from '../hooks/useLoginStreak';
 import { useReflectionStreak } from '../hooks/useReflectionStreak';
 import ReflectionCard from '../components/dashboard/ReflectionCard';
 import PendingMembersCard from '../components/dashboard/PendingMembersCard';
+import SafetyFlagsCard from '../components/dashboard/SafetyFlagsCard';
 import { EvidencePicker } from '../components/community-impact/EvidencePicker';
 import classNames from 'classnames';
 
@@ -2226,9 +2227,12 @@ ${prior.impact_arc}
         ) : (
           <div className="space-y-8">
 
-            {/* ── Join requests waiting on this leader ────────────────────── */}
+            {/* ── Safety flags + join requests waiting on this leader ─────── */}
             {['site_leader', 'leader', 'platform_administrator'].includes(user?.role ?? '') && (
-              <PendingMembersCard />
+              <>
+                <SafetyFlagsCard />
+                <PendingMembersCard />
+              </>
             )}
 
             {/* ── Module Progress Ring + Achievements ─────────────────────── */}

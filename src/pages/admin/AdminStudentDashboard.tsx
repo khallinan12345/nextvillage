@@ -11,6 +11,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import PendingMembersCard from '../../components/dashboard/PendingMembersCard';
+import SafetyFlagsCard from '../../components/dashboard/SafetyFlagsCard';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -2852,10 +2853,11 @@ const AdminStudentDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Join requests — first thing a leader sees on a busy intake day.
+        {/* Safety flags and join requests — first thing a leader sees on a busy intake day.
             research_lead can view the dashboard but can't approve members. */}
         {(isPlatformAdmin || userRole === 'leader' || userRole === 'site_leader') && (
-          <div className="mb-5">
+          <div className="mb-5 space-y-5">
+            <SafetyFlagsCard />
             <PendingMembersCard />
           </div>
         )}
