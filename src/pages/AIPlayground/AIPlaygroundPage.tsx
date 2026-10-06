@@ -759,21 +759,21 @@ async function* chatPlaygroundFree(
 
 const MODEL_OPTIONS = [
   { value: 'claude-haiku-4-5', label: 'Claude Haiku' },
-  { value: 'claude-sonnet-5',           label: 'Claude Sonnet 5' },
+  { value: 'claude-sonnet-5-5',           label: 'Claude Sonnet 5.5' },
   { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6' },
 ];
 const getModelDisplayName = (modelId: string): string => {
   const trimmed = (modelId || '').trim();
   const match = MODEL_OPTIONS.find(m => m.value === trimmed);
   if (match) return match.label;
-  if (trimmed.includes('sonnet'))          return 'Claude Sonnet 5';
+  if (trimmed.includes('sonnet'))          return 'Claude Sonnet 5.5';
   if (trimmed.includes('haiku'))           return 'Claude Haiku 4.5';
   if (trimmed.includes('llama-3.3-70b'))   return 'Llama 3.3 70B';
   if (trimmed.includes('llama3.1-8b'))     return 'Llama 3.1 8B';
   return trimmed || 'Claude';
 };
 
-// Back to Basics Youth Education gets Sonnet 5 as their default model.
+// Back to Basics Youth Education gets Sonnet 5.5 as their default model.
 const PLATFORM_DEFAULT_MODEL  = 'claude-haiku-4-5';
 
 // ── System prompt ──────────────────────────────────────────────────────────────
@@ -905,11 +905,11 @@ const AIPlaygroundPage: React.FC = () => {
         setQuotaExempt(isBackToBasics);
 
         let model = PLATFORM_DEFAULT_MODEL;
-        if (profileModel === 'claude-sonnet-5' || profileModel === 'claude-sonnet-4-6') {
+        if (profileModel === 'claude-sonnet-5-5' || profileModel === 'claude-sonnet-4-6') {
           // Explicit prior preference — respect it regardless of org.
-          model = 'claude-sonnet-5';
+          model = 'claude-sonnet-5-5';
         } else if (isBackToBasics && (!profileModel || profileModel === PLATFORM_DEFAULT_MODEL)) {
-          model = 'claude-sonnet-5';
+          model = 'claude-sonnet-5-5';
         }
         setPlaygroundModel(model);
         setModelLoaded(true);
@@ -2051,7 +2051,7 @@ const AIPlaygroundPage: React.FC = () => {
                 className="flex-1 resize-none outline-none text-base text-gray-800 placeholder-gray-400 bg-transparent min-h-[24px] max-h-[200px] leading-6" />
               <span
                 className={`flex-shrink-0 text-xs mb-0.5 pr-1 font-medium transition-colors ${
-                  (activeModel || playgroundModel) === 'claude-sonnet-4-6' || (activeModel || playgroundModel) === 'claude-sonnet-5'
+                  (activeModel || playgroundModel) === 'claude-sonnet-4-6' || (activeModel || playgroundModel) === 'claude-sonnet-5-5'
                     ? 'text-violet-600'
                     : (activeModel || playgroundModel).includes('llama') || (activeModel || playgroundModel).includes('groq')
                       ? 'text-emerald-600'

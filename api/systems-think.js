@@ -30,13 +30,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const MODEL = 'claude-sonnet-5';
+const MODEL = 'claude-sonnet-5-5';
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;  // 4MB, matches other image-upload limits in this codebase
 const MAX_PDF_BYTES   = 8 * 1024 * 1024;  // 8MB — documents run larger than a single photo
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']);
 
 // ─── Cost logging (fire-and-forget) ────────────────────────────────────────
-const PRICES = { input: 2.0, output: 10.0 }; // claude-sonnet-5 intro pricing
+const PRICES = { input: 2.0, output: 10.0 }; // claude-sonnet-5-5 intro pricing
 
 async function logCost(inputTokens, outputTokens, userId) {
   if (!inputTokens && !outputTokens) return;
@@ -511,14 +511,14 @@ export default async function handler(req, res) {
       // 32000 requires a streaming call instead. Verified live before
       // shipping.
       max_tokens: 16000,
-      // claude-sonnet-5 (and the Opus 4.7+/Fable 5 family) reject a
+      // claude-sonnet-5-5 (and the Opus 4.7+/Fable 5 family) reject a
       // non-default `temperature` with a 400 — omit it entirely rather than
       // pass a value, matching the same check in api/chat-room.js /
       // api/chat-stream.js.
-      // Explicit high effort: this page leans on multi-layered Socratic
-      // reasoning (deciding when to question vs. offer a perspective), the
-      // one case that earns full depth among the pages tuned down elsewhere.
-      output_config: { effort: 'high' },
+      // Medium effort: this page leans on multi-layered Socratic reasoning
+      // (deciding when to question vs. offer a perspective), so it gets one
+      // step more depth than the "low" used for ordinary chat.
+      output_config: { effort: 'medium' },
       system: buildSystemPrompt(currentArtifact, memoryContext),
       messages: anthropicMessages,
       tools: [UPDATE_ARTIFACT_TOOL],

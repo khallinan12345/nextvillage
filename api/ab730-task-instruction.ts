@@ -11,7 +11,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL             = 'claude-sonnet-5';
+const MODEL             = 'claude-sonnet-5-5';
 
 // ─── Cost logger (fire-and-forget) ───────────────────────────────────────────
 function logCost(action: string, inputTokens: number, outputTokens: number) {
@@ -58,6 +58,7 @@ async function callClaude(system: string, user: string, maxTokens = 1200, action
     body: JSON.stringify({
       model:      MODEL,
       max_tokens: maxTokens,
+      output_config: { effort: 'low' },
       system,
       messages: [{ role: 'user', content: user }],
     }),

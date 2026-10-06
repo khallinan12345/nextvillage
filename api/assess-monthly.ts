@@ -96,8 +96,9 @@ async function callClaude(
       "anthropic-beta": "prompt-caching-2024-07-31",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-5",
+      model: "claude-sonnet-5-5",
       max_tokens: maxTokens,
+      output_config: { effort: "medium" },
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userPrompt }],
     }),
@@ -114,7 +115,7 @@ async function callClaude(
   // Log cost — tagged as monthly_assessment so it's never "unknown" in the dashboard
   logApiCost({
     source:  "monthly_assessment",
-    model:   "claude-sonnet-5",
+    model:   "claude-sonnet-5-5",
     action:  "assess",
     usage:   data.usage,
     user_id: userId ?? null,
@@ -172,7 +173,9 @@ interface BatchRequest {
   params: {
     model: string;
     max_tokens: number;
-    temperature: number;
+    // Sonnet 5.5 rejects a non-default temperature; only set it for Haiku requests.
+    temperature?: number;
+    output_config?: { effort: "low" | "medium" };
     system: object[];
     messages: object[];
   };
@@ -836,7 +839,7 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
       .insert({
         user_id: userId,
         measured_at: endDate.toISOString(),
-        assessment_model: "claude-sonnet-5",
+        assessment_model: "claude-sonnet-5-5",
         assessment_version: "v2.0",
         cognitive_score: result.cognitive_score,
         cognitive_evidence: result.cognitive_evidence,
@@ -2111,7 +2114,7 @@ async function generateGlobalSummary(
       creativity_dist:        bandDist(grp.map(r => r.creativity_score)),
       pue_dist:               bandDist(grp.map(r => r.pue_score)),
 
-      assessment_model: "claude-sonnet-5",
+      assessment_model: "claude-sonnet-5-5",
       notes: null,
     };
 
@@ -2424,7 +2427,7 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
 
             const { error: insertError } = await supabase.from("user_monthly_assessments").insert({
               user_id: userId, measured_at: endDate.toISOString(),
-              assessment_model: "claude-sonnet-5-batch", assessment_version: "v2.1",
+              assessment_model: "claude-sonnet-5-5-batch", assessment_version: "v2.1",
               session_count: sessionCounts[userId] || 0,
               engaged_session_count: engagedCounts[userId] || 0,
               cognitive_score: result.cognitive_score, cognitive_evidence: result.cognitive_evidence,
@@ -2670,7 +2673,7 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
 
           const { error: insertError } = await supabase.from("user_monthly_assessments").insert({
             user_id: userId, measured_at: endDate.toISOString(),
-            assessment_model: "claude-sonnet-5-batch", assessment_version: "v2.1",
+            assessment_model: "claude-sonnet-5-5-batch", assessment_version: "v2.1",
             session_count: sessionCounts[userId] || 0,
             engaged_session_count: engagedCounts[userId] || 0,
             cognitive_score: result.cognitive_score, cognitive_evidence: result.cognitive_evidence,

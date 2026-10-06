@@ -42,7 +42,7 @@ import { logApiCost } from '../lib/api-cost-logger.js';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL_SONNET      = 'claude-sonnet-5'
+const MODEL_SONNET      = 'claude-sonnet-5-5'
 const MODEL_HAIKU       = 'claude-haiku-4-5'; // used for critique
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -237,6 +237,7 @@ async function callAnthropic(
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
+      ...(model === MODEL_SONNET ? { output_config: { effort: 'medium' } } : {}), // Haiku (critique) rejects effort
       system:     systemPrompt,
       messages:   [{ role: 'user', content: userContent }],
     }),

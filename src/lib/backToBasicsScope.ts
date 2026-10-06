@@ -1,6 +1,6 @@
 /**
  * backToBasicsScope — org boundary for features exclusive to Back to Basics
- * Youth Education (the Sonnet 5 default in "Use Claude", the image-generation
+ * Youth Education (the Sonnet 5.5 default in "Use Claude", the image-generation
  * quota exemption, and the usage-quota exemption on "Use Claude Together",
  * which is otherwise available to every organization).
  *

@@ -54,7 +54,7 @@ const MAX_DIGEST_POSTS = 30;
 const DRAFT_TOP_N = 10;
 
 // Fallback if model_config lookup is unavailable
-const DEFAULT_SONNET = "claude-sonnet-5";
+const DEFAULT_SONNET = "claude-sonnet-5-5";
 
 const SUBSTACK_URL = "https://substack.com/@kevinpatrickhallinan";
 
@@ -257,6 +257,7 @@ async function draftReplies(posts: RankedPost[]): Promise<void> {
       body: JSON.stringify({
         model,
         max_tokens: 4000,
+        ...(/^claude-haiku/.test(model) ? {} : { output_config: { effort: "low" } }),
         system: DRAFT_SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
       }),

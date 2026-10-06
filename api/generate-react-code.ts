@@ -29,13 +29,13 @@ import { logApiCost } from '../lib/api-cost-logger.js';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL_SONNET  = 'claude-sonnet-5';
+const MODEL_SONNET  = 'claude-sonnet-5-5';
 const MODEL_HAIKU   = 'claude-haiku-4-5'; // critique only
 
-// claude-sonnet-5 rejects a non-default `temperature` with a 400 — only
+// claude-sonnet-5-5 rejects a non-default `temperature` with a 400 — only
 // send it for models that still accept it (Haiku does).
 function modelAllowsCustomTemperature(model: string): boolean {
-  return !/^claude-sonnet-5/.test(model);
+  return !/^claude-sonnet-5-5/.test(model);
 }
 
 // ─── Task context strings (guide the AI per task) ────────────────────────────
@@ -247,6 +247,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         model,
         max_tokens:  maxTokens,
+        ...(model === MODEL_SONNET ? { output_config: { effort: 'medium' } } : {}), // Haiku (critique) rejects effort
         ...(modelAllowsCustomTemperature(model) ? { temperature: 0.2 } : {}),
         system:      buildSystemPrompt(action, taskId, sessionContext),
         messages:    [{ role: 'user', content: userMessage }],
