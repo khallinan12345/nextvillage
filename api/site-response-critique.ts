@@ -22,7 +22,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireUser } from './_lib/requireUser.js';
 // Migrated from OpenAI → Anthropic direct fetch
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_MODEL = 'claude-sonnet-5';
+const ANTHROPIC_MODEL = 'claude-sonnet-5-5';
 
 // ─── Cost logger (fire-and-forget, mirrors chat.js pattern) ──────────────────
 function logCost(inputTokens: number, outputTokens: number, cacheHitTokens = 0, cacheWriteTokens = 0) {
@@ -150,6 +150,7 @@ Evaluate their response.`;
       body: JSON.stringify({
         model:       ANTHROPIC_MODEL,
         max_tokens:  200,
+        output_config: { effort: 'low' },
         system:      system,
         messages:    [{ role: 'user', content: user }],
       }),

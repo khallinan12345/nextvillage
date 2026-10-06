@@ -23,7 +23,7 @@
 const DEFAULT_MODELS = {
   anthropic_haiku:   'claude-haiku-4-5',
   anthropic_sonnet:  'claude-sonnet-4-6',
-  anthropic_sonnet5: 'claude-sonnet-5',
+  anthropic_sonnet55: 'claude-sonnet-5-5',
   groq:              'openai/gpt-oss-120b',
   cerebras:          'gpt-oss-120b',
   deepseek:          'deepseek-chat',
@@ -130,7 +130,7 @@ const CHECKS = [
   { providers: ['openrouter'],
     label: 'OpenRouter',
     list:  () => listOpenAICompatible('https://openrouter.ai/api/v1', process.env.OPENROUTER_API_KEY) },
-  { providers: ['anthropic_haiku', 'anthropic_sonnet', 'anthropic_sonnet5'],
+  { providers: ['anthropic_haiku', 'anthropic_sonnet', 'anthropic_sonnet55'],
     label: 'Anthropic',
     list:  listAnthropic },
   { providers: ['cloudflare'],

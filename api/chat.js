@@ -17,7 +17,7 @@ import { requireUser } from './_lib/requireUser.js';
 //          'CreateGamePage' | 'WebsiteBuilderPage'
 //     → taskType === 'coding' (or omitted, the default for these pages
 //       except WebDevelopmentPage)
-//         → Anthropic claude-sonnet-5 (more capable generation for coding —
+//         → Anthropic claude-sonnet-5-5 (more capable generation for coding —
 //           all six hybrid pages route coding tasks here; Haiku was hitting
 //           quality/error ceilings as projects grew more elaborate)
 //     → taskType !== 'coding'  (evaluation, planning, help popup, critique, task instructions, Q&A)
@@ -27,11 +27,11 @@ import { requireUser } from './_lib/requireUser.js';
 //         chain with Haiku as the final fallback, not Haiku as the primary.
 //
 //   page = 'AIPlaygroundPage'
-//     → Anthropic claude-sonnet-5 if a Sonnet playgroundModel is selected
+//     → Anthropic claude-sonnet-5-5 if a Sonnet playgroundModel is selected
 //     → Groq (primary) → ... → Anthropic Haiku (final) otherwise
 //
 //   page = 'SystemsThinkPage'
-//     → Anthropic claude-sonnet-5 always (no free-tier fallback)
+//     → Anthropic claude-sonnet-5-5 always (no free-tier fallback)
 //
 //   all other pages / no page supplied
 //     → Anthropic claude-haiku-4-5 (default)
@@ -76,8 +76,8 @@ const FREE_TIER_PAGES = new Set([
   'PidginTranslationModule',
   // HealthcareNavigatorPage deliberately excluded: health-adjacent
   // conversation text should only ever reach Anthropic, not the free-tier
-  // fallback chain — see SONNET5_PAGES below, where it routes straight to
-  // Sonnet 5 rather than through the default Haiku route.
+  // fallback chain — see SONNET55_PAGES below, where it routes straight to
+  // Sonnet 5.5 rather than through the default Haiku route.
 ]);
 
 // Pages where the conversation is fundamentally about a real community
@@ -97,8 +97,8 @@ const COMMUNITY_HELPER_PAGES = new Set([
   'AIAmbassadorsPage',         'AIAmbassadorsCertificationPage',
 ]);
 
-// Pages that use claude-sonnet-5 for coding tasks, free-tier for non-coding
-// tasks. All six route coding calls to Sonnet 5 — Haiku was hitting
+// Pages that use claude-sonnet-5-5 for coding tasks, free-tier for non-coding
+// tasks. All six route coding calls to Sonnet 5.5 — Haiku was hitting
 // quality/error ceilings as student projects grew more elaborate.
 const HYBRID_CODING_PAGES = new Set([
   'VibeCodingPage',
@@ -109,37 +109,40 @@ const HYBRID_CODING_PAGES = new Set([
   'WebsiteBuilderPage',
 ]);
 
-// Pages that always route straight to Sonnet 5, never the free-tier chain.
+// Pages that always route straight to Sonnet 5.5, never the free-tier chain.
 //   SystemsThinkPage: not coding, but the reasoning quality bar is high
 //     enough (multi-layered Socratic dialogue, judging when to shift from
 //     questioning to offering a perspective) that Haiku isn't reliable enough.
 //   HealthcareNavigatorPage: health-adjacent conversation should only ever
 //     reach Anthropic's own contractually-reviewed terms, never a free-tier
-//     provider — and Sonnet 5 for now, per explicit product decision.
-const SONNET5_PAGES = new Set([
+//     provider — and Sonnet 5.5 for now, per explicit product decision.
+const SONNET55_PAGES = new Set([
   'SystemsThinkPage',
   'HealthcareNavigatorPage',
 ]);
 
-// Per-page reasoning effort — a good model at low effort has held up well
-// for Oloibiri's learners in practice, so "low" is now the platform-wide
-// default on every Sonnet 5 route (per an observed cost uptick), with
-// SystemsThinkPage kept at "high" as the one deliberate exception — its
-// multi-layered Socratic reasoning is the one place the extra depth earns
-// its cost. Never applies to Haiku 4.5 — see modelSupportsEffort() — Haiku
+// Per-task reasoning effort — a good model at low effort has held up well
+// for Oloibiri's learners in practice, so "low" is the default on every
+// Sonnet 5.5 route (per an observed cost uptick). "medium" is used where the
+// extra depth earns its cost: code generation (the hybrid coding pages) and
+// SystemsThinkPage's multi-layered Socratic reasoning. Never applies to Haiku 4.5 — see modelSupportsEffort() — Haiku
 // rejects the effort parameter outright, so a page pinned to Haiku (e.g.
 // certification pages) is already running as cheap as this lever can make
 // it and gets no output_config.effort at all.
 const PAGE_EFFORT = {
-  SystemsThinkPage: 'high',
+  SystemsThinkPage: 'medium',
 };
 
+// Effort is "low" or "medium" depending on the task: medium for code
+// generation (the hybrid coding pages only reach Sonnet on their coding path)
+// and for Systems Think's reasoning; low for everything else.
 function getEffortForPage(page) {
-  return PAGE_EFFORT[page] || 'low';
+  if (PAGE_EFFORT[page]) return PAGE_EFFORT[page];
+  return HYBRID_CODING_PAGES.has(page) ? 'medium' : 'low';
 }
 
 // output_config.effort errors on Haiku 4.5 — only send it to models that
-// actually support it (Sonnet 5 and the Sonnet/Opus 4.6+ family).
+// actually support it (Sonnet 5.5 and the Sonnet/Opus 4.6+ family).
 function modelSupportsEffort(model) {
   return !/^claude-haiku/.test(model);
 }
@@ -176,7 +179,7 @@ const CERT_PAGES = new Set([
 const DEFAULT_MODELS = {
   anthropic_haiku:   'claude-haiku-4-5',
   anthropic_sonnet:  'claude-sonnet-4-6',
-  anthropic_sonnet5: 'claude-sonnet-5',
+  anthropic_sonnet55: 'claude-sonnet-5-5',
   groq:             'openai/gpt-oss-120b',      // was llama-3.3-70b-versatile (deprecated Jun 17 2026)
   cerebras:         'gpt-oss-120b',             // same weights — dual-homed, no output drift on failover
   gemini:           'gemini-2.0-flash',
@@ -227,7 +230,7 @@ async function refreshModels() {
 // ── Pricing table (per million tokens, USD) ───────────────────────────────────
 
 const PRICING = {
-  'claude-sonnet-5':             { input: 2.00,  output: 10.00, cacheWrite: 2.50,  cacheRead: 0.20  },
+  'claude-sonnet-5-5':             { input: 2.00,  output: 10.00, cacheWrite: 2.50,  cacheRead: 0.20  },
   'claude-sonnet-4-6':           { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
   'claude-haiku-4-5':   { input: 1.00,  output: 5.00,  cacheWrite: 1.25,  cacheRead: 0.10  },
   'llama-3.3-70b-versatile':     { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
@@ -427,7 +430,7 @@ function resolveRoute(page, playgroundModel, taskType) {
   }
 
   // Hybrid coding pages:
-  //   taskType === 'coding'     → Sonnet 5 (code generation needs reliability)
+  //   taskType === 'coding'     → Sonnet 5.5 (code generation needs reliability)
   //   taskType === 'non-coding' → free-tier chain, Haiku as final fallback
   //   taskType omitted          → 'non-coding' for WebDevelopmentPage
   //                               (evaluation, help popup, task instructions omit taskType)
@@ -436,19 +439,19 @@ function resolveRoute(page, playgroundModel, taskType) {
     const isCoding = taskType === 'coding'
       || (taskType == null && page !== 'WebDevelopmentPage');
     if (isCoding) {
-      return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
+      return { provider: 'anthropic', model: MODELS.anthropic_sonnet55 };
     }
     // non-coding (or WebDevelopmentPage with no taskType) → free-tier chain
     return { provider: 'groq', model: MODELS.groq };
   }
 
-  if (SONNET5_PAGES.has(page)) {
-    return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
+  if (SONNET55_PAGES.has(page)) {
+    return { provider: 'anthropic', model: MODELS.anthropic_sonnet55 };
   }
 
-  // AIPlaygroundPage → Sonnet 5 if a Sonnet playgroundModel is selected, otherwise free-tier chain
+  // AIPlaygroundPage → Sonnet 5.5 if a Sonnet playgroundModel is selected, otherwise free-tier chain
   if (page === 'AIPlaygroundPage') {
-    if (playgroundModel === MODELS.anthropic_sonnet5 || playgroundModel === MODELS.anthropic_sonnet || playgroundModel === 'claude-sonnet-4-6' || playgroundModel === 'claude-sonnet-5') return { provider: 'anthropic', model: MODELS.anthropic_sonnet5 };
+    if (playgroundModel === MODELS.anthropic_sonnet55 || playgroundModel === MODELS.anthropic_sonnet || playgroundModel === 'claude-sonnet-4-6' || playgroundModel === 'claude-sonnet-5-5') return { provider: 'anthropic', model: MODELS.anthropic_sonnet55 };
     return { provider: 'groq', model: MODELS.groq };
   }
 
@@ -498,11 +501,11 @@ function applyCacheToLastAssistant(messages) {
 
 // ── Anthropic call (with prompt caching on system prompt) ──────────────────────
 
-// Claude Sonnet 5 (and the Opus 4.7+/Fable 5 family) reject a non-default
+// Claude Sonnet 5.5 (and the Opus 4.7+/Fable 5 family) reject a non-default
 // `temperature` with a 400 — only send it for models that still accept it.
 // See api/chat-stream.js's identical gate for the incident this fixed.
 function modelAllowsCustomTemperature(model) {
-  return !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+  return !/^claude-(sonnet-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
 }
 
 // `system` here is always appendSafetyFloor()'d — built once at the top of
@@ -564,7 +567,7 @@ async function callAnthropic(model, messages, system, max_tokens, temperature, p
     throw err;
   }
 
-  // Sonnet 5 (and other adaptive-thinking models) run thinking on by default
+  // Sonnet 5.5 (and other adaptive-thinking models) run thinking on by default
   // when `thinking` is omitted, which puts a `thinking` block at content[0]
   // and the real answer in a later `text` block — content[0].text is
   // undefined in that case, silently returning "". Find the text block
@@ -1104,7 +1107,7 @@ export default async function handler(req, res) {
         'openrouter/llama-3.3-70b:free (free fallback)',
         'mistral/small (free fallback)',
         'anthropic/haiku (final paid fallback + most coding tasks)',
-        'anthropic/sonnet-5 (Create Game + Website Builder coding tasks)',
+        'anthropic/sonnet-5.5 (Create Game + Website Builder coding tasks)',
       ],
       method:    'GET',
       timestamp: new Date().toISOString(),
