@@ -157,6 +157,8 @@ describe('run', () => {
     expect(a.model).toBe(d.model);
     expect(a.model).toBe('claude-sonnet-5-5');
     expect('temperature' in a).toBe(false);                                // newer models reject it
+    expect(a.output_config).toEqual({ effort: 'medium' });                  // same effort for both
+    expect(d.output_config).toEqual({ effort: 'medium' });
     expect(a.system.split('# CLASSROOM ENVIRONMENT')[1]).toBe(d.system.split('# CLASSROOM ENVIRONMENT')[1]);
 
     const rows = state.tables.udolli_analyses;
@@ -245,6 +247,7 @@ describe('compare', () => {
     expect(input).toContain('archive-desk@example.invalid');
     expect(input).toContain('Booby trap');
     expect(state.claudeCalls[0].model).toBe('claude-sonnet-5-5');
+    expect(state.claudeCalls[0].output_config).toEqual({ effort: 'medium' });
     expect(state.tables.udolli_comparisons).toHaveLength(1);
   });
 

@@ -22,7 +22,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireUser } from './_lib/requireUser.js';
 import { ANCHOR_SOUL, DRIFTWOOD_SOUL } from './_lib/udolliSouls.js';
 import {
-  MODEL, MAX_MESSAGE_CHARS, MAX_SOURCE_CHARS,
+  MODEL, EFFORT, MAX_MESSAGE_CHARS, MAX_SOURCE_CHARS,
   hasUdolliAccess, buildSystem, buildUserContent, buildHistory,
   parseOutbox, computeSignals, COMPARE_SYSTEM, buildCompareInput,
   groupRounds, parseJsonLoose,
@@ -38,7 +38,7 @@ const RUN_LIMIT = 24;      // agent answers per user per 10 minutes (12 rounds w
 const COMPARE_LIMIT = 6;   // comparisons per user per 10 minutes
 const WINDOW_MS = 10 * 60 * 1000;
 
-// Estimate only, per million tokens (same rates api/systems-think.js uses for Sonnet 5; update if Sonnet 5.5 is priced differently).
+// Estimate only, per million tokens (Sonnet 5.5 is $2 in / $10 out per million tokens).
 const PRICES = { input: 2.0, output: 10.0 };
 
 async function logCost(usage, userId, action) {
@@ -117,6 +117,7 @@ async function runAgents(req, res, user) {
     const response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 2000,
+      output_config: { effort: EFFORT },
       system: buildSystem(SOULS[agent]),
       messages: [...history, { role: 'user', content: buildUserContent({ prompt: message, sourceTitle, sourceText }) }],
     });
@@ -191,6 +192,7 @@ async function compareSession(req, res, user) {
     response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 3000,
+      output_config: { effort: EFFORT },
       system: COMPARE_SYSTEM,
       messages: [{ role: 'user', content: `Here is the session.\n\n${buildCompareInput(rounds)}` }],
     });
