@@ -151,36 +151,45 @@ const AnswerBox: React.FC<{ agent: AgentId; a?: Analysis; pending: boolean; skip
 };
 
 const SoulPanel: React.FC = () => {
-  const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState<AgentId | null>(null);
   const [souls, setSouls] = useState<{ anchor: string; driftwood: string } | null>(null);
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    if (!open || souls) return;
+    if (!shown || souls) return;
     fetch('/api/udolli?action=souls')
       .then(async (r) => { if (!r.ok) throw new Error(); setSouls(await r.json()); })
       .catch(() => setErr('Could not load the instruction files.'));
-  }, [open, souls]);
+  }, [shown, souls]);
 
   const lines = (t: string) => t.trimEnd().split('\n').length;
+  const toggle = (a: AgentId) => setShown(shown === a ? null : a);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-800">
-        {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <FileText className="w-4 h-4 text-gray-500" /> See what makes the two agents different
-      </button>
-      {open && (
-        <div className="px-4 pb-4">
-          <p className="text-sm text-gray-600 mb-3">The two agents use the same AI model and the same tools. The only difference is the file below that tells each one how to behave. Somebody sat down and wrote the second file.</p>
-          {err && <p className="text-sm text-red-600">{err}</p>}
-          {!souls && !err && <p className="text-sm text-gray-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading&hellip;</p>}
-          {souls && (
-            <div className="grid md:grid-cols-2 gap-3">
-              <div><p className="text-xs font-bold text-amber-800 mb-1">Driftwood · {lines(souls.driftwood)} lines</p><pre className="text-xs bg-amber-50 border border-amber-200 rounded p-3 whitespace-pre-wrap max-h-96 overflow-y-auto">{souls.driftwood}</pre></div>
-              <div><p className="text-xs font-bold text-emerald-800 mb-1">Anchor · {lines(souls.anchor)} lines</p><pre className="text-xs bg-emerald-50 border border-emerald-200 rounded p-3 whitespace-pre-wrap max-h-96 overflow-y-auto">{souls.anchor}</pre></div>
-            </div>
-          )}
+    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+      <p className="text-sm text-gray-700 mb-2">
+        <span className="font-semibold text-gray-900">What makes the two agents different?</span> They use the same AI model and the same tools. The only difference is a written instruction file (called <span className="font-mono">soul.md</span>) that tells each one how to behave. Read each one:
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => toggle('anchor')} aria-pressed={shown === 'anchor'}
+          className={classNames('inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold',
+            shown === 'anchor' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100')}>
+          <Anchor className="w-4 h-4" /> Guarded instructions (Anchor)
+        </button>
+        <button onClick={() => toggle('driftwood')} aria-pressed={shown === 'driftwood'}
+          className={classNames('inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold',
+            shown === 'driftwood' ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100')}>
+          <Wind className="w-4 h-4" /> Unguarded instructions (Driftwood)
+        </button>
+      </div>
+      {shown && err && <p className="mt-3 text-sm text-red-600">{err}</p>}
+      {shown && !souls && !err && <p className="mt-3 text-sm text-gray-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading&hellip;</p>}
+      {shown && souls && (
+        <div className="mt-3">
+          <p className={classNames('text-xs font-bold mb-1', shown === 'anchor' ? 'text-emerald-800' : 'text-amber-800')}>
+            {shown === 'anchor' ? 'Anchor' : 'Driftwood'} · {lines(souls[shown])} lines
+          </p>
+          <pre className={classNames('text-xs border rounded p-3 whitespace-pre-wrap max-h-96 overflow-y-auto', shown === 'anchor' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200')}>{souls[shown]}</pre>
         </div>
       )}
     </div>
@@ -435,11 +444,16 @@ const UDolliPage: React.FC = () => {
               {/* Step 1: page */}
               <div>
                 <p className="text-sm font-bold text-gray-900 mb-1">1. Give them something to read <span className="font-normal text-gray-500">(optional)</span></p>
+                <p className="text-sm text-gray-600 mb-2">Choose what both agents will be handed to read along with your message. You don&rsquo;t have to create anything: the pages below are already written for you, and the tricks (if any) are already in them. Pick one to see what it is and what to watch for, or choose &ldquo;No page&rdquo; to just chat.</p>
                 <select value={pageChoice} onChange={(e) => setPageChoice(e.target.value)} className="w-full rounded-md border border-gray-300 text-sm px-3 py-2">
                   <option value="none">No page. Just chat.</option>
                   {TEST_PAGES.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
                   <option value="custom">Paste my own page or article text&hellip;</option>
                 </select>
+
+                {pageChoice === 'none' && (
+                  <p className="mt-2 text-sm text-gray-600 rounded-md border border-gray-200 bg-gray-50 p-3">No page will be attached. Type your message in the box in step 2 just below, and both agents will answer it with nothing else to read.</p>
+                )}
 
                 {selectedPage && (
                   <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-3">
@@ -464,33 +478,9 @@ const UDolliPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Ideas */}
-              <div>
-                <p className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-1"><Lightbulb className="w-4 h-4 text-amber-500" /> Ideas to try</p>
-                <div className="space-y-2">
-                  {IDEA_GROUPS.map((g) => (
-                    <details key={g.label} className="group rounded-md border border-gray-200">
-                      <summary className="cursor-pointer select-none px-3 py-2 text-sm font-semibold text-gray-800">{g.label}</summary>
-                      <div className="px-3 pb-3">
-                        <p className="text-xs text-gray-500 mb-2">{g.blurb}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {g.ideas.map((idea) => (
-                            <button key={idea.text} onClick={() => tryIdea(idea.text, idea.needsPage)}
-                              className="text-left text-xs rounded-full border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-900 px-3 py-1.5">
-                              {idea.text}{idea.needsPage && <span className="ml-1 opacity-60">(uses a page)</span>}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </details>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 mt-2">If you try to get an agent to email someone, use an address that ends in <span className="font-mono">@example.invalid</span>. It can never receive mail. Please don&rsquo;t use a real person&rsquo;s address, even though nothing is actually sent.</p>
-              </div>
-
               {/* Step 2: ask */}
               <div>
-                <p className="text-sm font-bold text-gray-900 mb-1">2. Ask</p>
+                <p className="text-sm font-bold text-gray-900 mb-1">2. Type your message</p>
                 {source && sourceTitle && (
                   <p className="mb-2 inline-flex items-center gap-1 text-xs bg-violet-100 text-violet-800 rounded px-2 py-1">
                     <FileText className="w-3 h-3" /> Page attached: {sourceTitle}
@@ -514,6 +504,30 @@ const UDolliPage: React.FC = () => {
                   </button>
                 </div>
                 {error && <p className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
+              </div>
+
+              {/* Ideas */}
+              <div>
+                <p className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-1"><Lightbulb className="w-4 h-4 text-amber-500" /> Not sure what to say? Click an idea to fill in the message box above</p>
+                <div className="space-y-2">
+                  {IDEA_GROUPS.map((g) => (
+                    <details key={g.label} className="group rounded-md border border-gray-200">
+                      <summary className="cursor-pointer select-none px-3 py-2 text-sm font-semibold text-gray-800">{g.label}</summary>
+                      <div className="px-3 pb-3">
+                        <p className="text-xs text-gray-500 mb-2">{g.blurb}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {g.ideas.map((idea) => (
+                            <button key={idea.text} onClick={() => tryIdea(idea.text, idea.needsPage)}
+                              className="text-left text-xs rounded-full border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-900 px-3 py-1.5">
+                              {idea.text}{idea.needsPage && <span className="ml-1 opacity-60">(uses a page)</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">If you try to get an agent to email someone, use an address that ends in <span className="font-mono">@example.invalid</span>. It can never receive mail. Please don&rsquo;t use a real person&rsquo;s address, even though nothing is actually sent.</p>
               </div>
             </div>
           </div>
