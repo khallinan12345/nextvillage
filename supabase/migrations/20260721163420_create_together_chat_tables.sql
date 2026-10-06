@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS "public"."together_rooms" (
     "created_by"      uuid NOT NULL REFERENCES "public"."profiles"("id"),
     "created_by_name" text NOT NULL,
     "status"          text NOT NULL DEFAULT 'active',
-    "model"           text NOT NULL DEFAULT 'claude-sonnet-5',
+    "model"           text NOT NULL DEFAULT 'claude-sonnet-5-5',
     "created_at"      timestamp with time zone NOT NULL DEFAULT now(),
     "updated_at"      timestamp with time zone NOT NULL DEFAULT now(),
     "closed_at"       timestamp with time zone,

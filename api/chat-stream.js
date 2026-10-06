@@ -39,7 +39,7 @@ const KEEP_RECENT           = 10;
 
 // ─── Token prices per million (USD) ──────────────────────────────────────────
 const PRICES = {
-  'claude-sonnet-5':            { input: 2.0,  output: 10.0 }, // intro pricing through 2026-08-31
+  'claude-sonnet-5-5':            { input: 2.0,  output: 10.0 }, // intro pricing through 2026-08-31
   'claude-sonnet-4-6':         { input: 3.0,  output: 15.0 },
   'claude-haiku-4-5': { input: 1.0,  output:  5.0 },
   default:                     { input: 3.0,  output: 15.0 },
@@ -593,12 +593,12 @@ export default async function handler(req) {
   // Cache the last assistant message so repeated context is served from cache
   const cachedMessagesForApi = applyCacheToLastAssistant(messagesForApi);
 
-  // Claude Sonnet 5 (and the Opus 4.7+/Fable 5 family) reject a non-default
+  // Claude Sonnet 5.5 (and the Opus 4.7+/Fable 5 family) reject a non-default
   // `temperature` with a 400 — only send it for models that still accept it.
-  const modelAllowsCustomTemperature = !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+  const modelAllowsCustomTemperature = !/^claude-(sonnet-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
   // output_config.effort errors on Haiku 4.5 — only send it to models that
-  // support it. "low" is the platform-wide default on every Sonnet 5 route
-  // (per an observed cost uptick) — see api/chat.js's PAGE_EFFORT comment.
+  // support it. This streaming path is code generation, so it runs at "medium"
+  // effort (ordinary chat routes use "low") — see api/chat.js's PAGE_EFFORT comment.
   const modelSupportsEffort = !/^claude-haiku/.test(model);
 
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
@@ -613,7 +613,7 @@ export default async function handler(req) {
       model,
       max_tokens,
       ...(modelAllowsCustomTemperature ? { temperature } : {}),
-      ...(modelSupportsEffort ? { output_config: { effort: 'low' } } : {}),
+      ...(modelSupportsEffort ? { output_config: { effort: 'medium' } } : {}), // coding path
       stream: true,
       messages: cachedMessagesForApi,
       ...(systemPayload ? { system: systemPayload } : {}),

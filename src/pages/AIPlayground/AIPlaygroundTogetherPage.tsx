@@ -273,7 +273,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
         name,
         created_by:       user.id,
         created_by_name:  user.name,
-        model:            'claude-sonnet-5',
+        model:            'claude-sonnet-5-5',
       })
       .select('*')
       .single();

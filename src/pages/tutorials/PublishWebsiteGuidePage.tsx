@@ -62,8 +62,8 @@ const STEPS: GuideStep[] = [
     title: 'Add an AI chatbot to your site (optional)',
     blurb: 'If you want visitors to be able to chat with an AI on your site, this is the step where you\'ll need a key.',
     body: [
-      "A lot of students get to the Interactivity & State task in Phase 2 and realize what they actually want is a chatbot visitors can talk to. That's a great feature — but it needs a real Anthropic API key for the Claude Sonnet 5 model, and that's not something you sign up for yourself. It costs real money to use, so a facilitator hands it out.",
-      "When you reach that point and decide you want a chatbot, message your facilitator and ask for an Anthropic API key for the Claude Sonnet 5 model — mention what you're building so they know it's for a real project, not a test.",
+      "A lot of students get to the Interactivity & State task in Phase 2 and realize what they actually want is a chatbot visitors can talk to. That's a great feature — but it needs a real Anthropic API key for the Claude Sonnet 5.5 model, and that's not something you sign up for yourself. It costs real money to use, so a facilitator hands it out.",
+      "When you reach that point and decide you want a chatbot, message your facilitator and ask for an Anthropic API key for the Claude Sonnet 5.5 model — mention what you're building so they know it's for a real project, not a test.",
       "Once you have the key, save it somewhere private — a notes app, not a chat message you'll lose. You'll use it twice: once now to test the chatbot live in the Website Builder's preview, and again later as a Vercel environment variable named VITE_ANTHROPIC_API_KEY when you deploy the finished site in Step 6.",
       "Treat it like a password. Never paste it into a prompt you send the Website Builder's own AI, and never type it directly into a file that gets pushed to GitHub — it always goes in as an environment variable, never as text in your code.",
       "Back in the Website Builder, describe the chatbot you want when you get to the Interactivity & State task, the same way you'd describe any other feature.",
@@ -72,7 +72,7 @@ const STEPS: GuideStep[] = [
     copyBlocks: [
       {
         label: 'Message to send your facilitator',
-        text: "Hi — I'm building [your site name] in the Website Builder and I'd like to add an AI chatbot for visitors. Could you send me an Anthropic API key for the Claude Sonnet 5 model?",
+        text: "Hi — I'm building [your site name] in the Website Builder and I'd like to add an AI chatbot for visitors. Could you send me an Anthropic API key for the Claude Sonnet 5.5 model?",
       },
       {
         label: 'Prompt for the Website Builder',

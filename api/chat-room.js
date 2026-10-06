@@ -37,23 +37,23 @@ const supabase = createClient(
 );
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Claude Sonnet 5 (and the Opus 4.7+/Fable 5 family) reject a non-default
+// Claude Sonnet 5.5 (and the Opus 4.7+/Fable 5 family) reject a non-default
 // `temperature` with a 400 — keep this in sync with the identical check in
 // api/chat-stream.js.
 function modelAllowsCustomTemperature(model) {
-  return !/^claude-(sonnet-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+  return !/^claude-(sonnet-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
 }
 
 // output_config.effort errors on Haiku 4.5 — only send it to models that
-// support it. "low" is the platform-wide default on every Sonnet 5 route
-// (per an observed cost uptick) — see api/chat.js's PAGE_EFFORT comment.
+// support it. Room chat runs at "low" effort (ordinary conversation); coding
+// and reasoning-heavy routes use "medium" — see api/chat.js's PAGE_EFFORT comment.
 function modelSupportsEffort(model) {
   return !/^claude-haiku/.test(model);
 }
 
 // ─── Cost logging (fire-and-forget) ───────────────────────────────────────
 const PRICES = {
-  'claude-sonnet-5':            { input: 2.0, output: 10.0 }, // intro pricing through 2026-08-31
+  'claude-sonnet-5-5':            { input: 2.0, output: 10.0 }, // intro pricing through 2026-08-31
   'claude-sonnet-4-6':          { input: 3.0, output: 15.0 },
   'claude-haiku-4-5':  { input: 1.0, output:  5.0 },
   default:                      { input: 3.0, output: 15.0 },
@@ -284,7 +284,7 @@ export default async function handler(req, res) {
     }
 
     // ── Free tier skipped or exhausted — Anthropic, with the book tool ────
-    const model = room.model || 'claude-sonnet-5';
+    const model = room.model || 'claude-sonnet-5-5';
     const currentBook = (room.book_content || '').trim();
     const systemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at ${orgName}. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Contribute naturally to whatever the group is building (for example, a community story) — build on what's already been said, don't repeat yourself, and prioritize direction from a leader. Keep replies focused and not overly long — this is a live group conversation, not a report.
 

@@ -195,7 +195,7 @@ const EPISODES: Episode[] = [
         title: 'Open the Playground and set it up',
         body: [
           'Open the AI Playground now and do three things.',
-          'Pick your model at the top. Sonnet 5 for anything needing real thinking — design decisions, hard bugs, code you want reasoned about. Haiku for quick lookups; it is faster and cheaper.',
+          'Pick your model at the top. Sonnet 5.5 for anything needing real thinking — design decisions, hard bugs, code you want reasoned about. Haiku for quick lookups; it is faster and cheaper.',
           'Find the paperclip and the pin. The paperclip attaches a file to one message only — good for an error screenshot. The pin keeps a file available for the whole conversation without pasting it again. When you work on one file for an hour, pin it once and then just talk.',
           'Notice your token budget. Roughly 25,000 tokens every three hours, in and out. Paste a 500-line file five times and you have spent your afternoon. That is not the platform being mean — every message costs real money, and asking for exactly what you need is a professional skill.',
         ],

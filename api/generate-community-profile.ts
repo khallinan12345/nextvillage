@@ -184,8 +184,9 @@ async function researchCommunity(
   const orgAnswers = formatOrgAnswers(org);
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-5',
+    model: 'claude-sonnet-5-5',
     max_tokens: 4000,
+    output_config: { effort: 'medium' },
     tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
     tool_choice: { type: 'auto' },
     messages: [
@@ -378,8 +379,9 @@ async function generateBatch(
   ].join('\n');
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-5',
+    model: 'claude-sonnet-5-5',
     max_tokens: 16000,
+    output_config: { effort: 'medium' },
     messages: [{ role: 'user', content: prompt }],
   });
 
