@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useBranding } from '../lib/useBranding';
 import { resolveChallengeOrgSlug } from '../lib/communityChallengeScope';
+import { shortDisplayName } from '../lib/displayName';
 
 
 
@@ -521,7 +522,7 @@ const HomePage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-amber-300 uppercase tracking-widest mb-0.5">This Week's Community Champion</p>
                       <p className="text-sm font-bold text-white">
-                        {weeklyChampion.champion_name}
+                        {shortDisplayName(weeklyChampion.champion_name)}
                         <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-200 align-middle">
                           {weeklyChampion.winning_tier_label}
                         </span>

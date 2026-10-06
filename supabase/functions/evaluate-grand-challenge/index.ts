@@ -13,7 +13,10 @@
 //   2. Load learner profile for context
 //   3. Call Claude to evaluate the impact arc
 //   4. Write evaluation back to grand_challenge_submissions
-//   5. Upsert to grand_challenge_leaderboard
+//
+// There is no separate leaderboard write: grand_challenge_leaderboard is a
+// read-only view built from grand_challenge_submissions, so step 4 is what
+// puts the learner on the board.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.3';
@@ -30,15 +33,6 @@ const TIER_LABELS: Record<string, string> = {
   bridge:     'Community Connector',
   builder:    'AI for Good',
   multiplier: 'Village Leader',
-};
-
-// Tier rank for leaderboard ordering (higher = better)
-const TIER_RANK: Record<string, number> = {
-  multiplier: 5,
-  builder:    4,
-  bridge:     3,
-  scout:      2,
-  seed:       1,
 };
 
 // ─── Evidence linking ──────────────────────────────────────────────────────────
@@ -291,29 +285,6 @@ async function evaluateSubmission(
     .eq('id', submissionId);
 
   if (updateErr) throw new Error(`Update submission: ${updateErr.message}`);
-
-  // ── 7. Upsert to leaderboard ──────────────────────────────────────────────
-  const { error: leaderboardErr } = await supabase
-    .from('grand_challenge_leaderboard')
-    .upsert({
-      learner_id:           submission.learner_id,
-      org_id:               submission.org_id,
-      quarter:              submission.quarter,
-      title:                submission.title,
-      community_member_name: submission.community_member_name,
-      community_impact_slug: submission.community_impact_slug,
-      journal_entry_count:  submission.journal_entry_count,
-      weeks_documented:     submission.weeks_documented,
-      tier_awarded:         evaluation.tier,
-      tier_rank:            TIER_RANK[evaluation.tier] ?? 1,
-      is_quarter_winner:    false, // set by select-grand-challenge-winner
-      status:               'awarded',
-      submitted_at:         submission.submitted_at,
-      learner_name:         learnerName,
-      avatar_url:           profile?.city ?? null,
-    }, { onConflict: 'learner_id,quarter,org_id' });
-
-  if (leaderboardErr) throw new Error(`Upsert leaderboard: ${leaderboardErr.message}`);
 
   console.log(`[evaluate-grand-challenge] Submission ${submissionId} awarded ${evaluation.tier}`);
 
