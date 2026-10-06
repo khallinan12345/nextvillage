@@ -5,11 +5,15 @@ import { useAuth } from '../../hooks/useAuth';
 import { Menu, X, Sparkles, LogOut, ShieldCheck, ChevronUp, ChevronDown } from 'lucide-react';
 import classNames from 'classnames';
 import { useBranding } from '../../lib/useBranding';
+import { useUdolliAccess } from '../../hooks/useUdolliAccess';
+import { UDOLLI_PATH } from '../../lib/udolliScope';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  // UD-OLLI guardrail lab link: only for UD-OLLI members (and their leader / admins)
+  const { hasAccess: hasUdolli } = useUdolliAccess();
 
   // Admin link visible to leaders and platform administrators
   const isLeaderOrAdmin =
@@ -54,6 +58,7 @@ const Navbar: React.FC = () => {
 
   const navigationLinks = [
     { name: 'Home', path: '/home', shorthand: 'Home' },
+    ...(hasUdolli ? [{ name: 'UDOLLI', path: UDOLLI_PATH, shorthand: 'UDOLLI' }] : []),
     {
       name: 'Foundations',
       shorthand: 'Foundations',
