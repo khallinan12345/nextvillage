@@ -50,6 +50,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import { getOrCreateDashboardRow, isUuid } from '../../lib/dashboardRows';
 import { chatText, chatJSON, ChatMessage as ClientChatMessage } from '../../lib/chatClient';
 import AppLayout from '../../components/layout/AppLayout';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
@@ -1792,7 +1793,21 @@ Remember: Every response is an opportunity to help them improve. Be specific, en
       // it; everyone else (an org still generating content, or a legacy
       // account) keeps the existing generic mock catalog.
       const orgActivities = organizationId ? await fetchOrgSkillsActivities(organizationId) : [];
-      setAllSkillsActivities(orgActivities.length > 0 ? orgActivities : buildSkillsMockActivities());
+
+      // The catalog entries are synthetic ('mock-' ids). Where this learner
+      // already has a real dashboard row for the module, use it, so progress,
+      // scores and chat history show up and saves go to the real row.
+      const rowsByModule = new Map<string, DashboardActivity>();
+      (dashboardData ?? []).forEach((row: DashboardActivity) => {
+        if (row.learning_module_id) rowsByModule.set(row.learning_module_id, row);
+      });
+      const catalog = orgActivities.map(entry => {
+        const row = entry.learning_module_id ? rowsByModule.get(entry.learning_module_id) : null;
+        return row
+          ? { ...entry, ...row, learning_modules: entry.learning_modules, isPublic: entry.isPublic }
+          : entry;
+      });
+      setAllSkillsActivities(catalog.length > 0 ? catalog : buildSkillsMockActivities());
     } catch (err) {
       console.error('[Skills Activities] Error loading:', err);
 
@@ -3288,8 +3303,9 @@ Provide assessment now:`;
     }
   };
 
-  const handleActivitySelect = async (activity: DashboardActivity) => {
-    if (!isActivitySelectable(activity)) return;
+  const handleActivitySelect = async (selected: DashboardActivity) => {
+    if (!isActivitySelectable(selected)) return;
+    let activity = selected;
 
     // CHAT HISTORY LOADING & PERSISTENCE:
     // When user opens an activity, we load any previously saved chat messages to allow them to
@@ -3315,6 +3331,37 @@ Provide assessment now:`;
       setUserContinent(profile.continent);
     }
     
+    // A session starts here. Catalog entries have no dashboard row yet (their
+    // 'mock-' id is synthetic), so create it now; every later save keys on the
+    // real row id. Generic offline entries (no real module) stay local-only.
+    if (String(activity.id ?? '').startsWith('mock-') && isUuid(activity.learning_module_id) && user?.id) {
+      try {
+        const row = await getOrCreateDashboardRow(supabase, {
+          userId: user.id,
+          learningModuleId: activity.learning_module_id,
+          title: activity.title,
+          categoryActivity: 'Skills',
+          subCategory: activity.sub_category,
+          gradeLevel: userGradeLevel,
+          continent: userContinent,
+        });
+        activity = {
+          ...activity,
+          id: row.id,
+          progress: row.progress,
+          chat_history: row.chat_history ?? activity.chat_history,
+        };
+        setSelectedActivity(activity);
+        setAllSkillsActivities(prev => prev.map(a =>
+          a.learning_module_id === activity.learning_module_id
+            ? { ...a, id: row.id, progress: row.progress }
+            : a));
+      } catch (err) {
+        // Keep the session usable offline; it just won't be saved this time.
+        console.error('[Activity Select] Could not create dashboard row:', err);
+      }
+    }
+
     if (activity.progress === 'not started') {
       await updateActivityStatus(activity.id);
     }
