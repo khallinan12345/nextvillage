@@ -11,6 +11,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import CohortProgress from '../components/CohortProgress';
 import {
   ArrowRight, Mail, Linkedin, MessageCircle, Sparkles,
   Globe, ChevronDown, Brain, Code, ImagePlus, Briefcase, Heart,
@@ -858,6 +859,8 @@ const PublicLandingPage: React.FC = () => {
                     </div>
                   );
                 })()}
+
+                <CohortProgress />
 
                 {/* ── Longitudinal: Persistent Learner Trajectories ─────── */}
                 {(() => {
