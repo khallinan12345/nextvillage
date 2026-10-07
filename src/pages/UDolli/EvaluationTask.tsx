@@ -1,7 +1,7 @@
 // Task 2: Be the independent evaluator.
 //
 // Self-contained. No API call, no agent run, no database write. The article
-// and the briefing are both fixed, and the answer key is in evaluationLogic.ts.
+// and the briefing are both fixed, and the answer key is in evaluationTask.ts.
 // Thirty people can run this at the same time on their own phones.
 
 import React, { useMemo, useState } from 'react';
@@ -10,7 +10,7 @@ import { ClipboardCheck, Eye, RotateCcw, FileText, Bot, CheckCircle2, XCircle, C
 import {
   BRIEF_INTRO, BRIEF_TEXT, CLAIMS, SOURCE_TEXT, SOURCE_TITLE, STATUS_LABEL,
   type Status,
-} from './evaluationLogic';
+} from './evaluationTask';
 
 type Mark = Status | null;
 
