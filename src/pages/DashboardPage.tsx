@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { isPlaceholderRow } from '../lib/dashboardRows';
 import { resolveChallengeOrgSlug } from '../lib/communityChallengeScope';
 import { shortDisplayName } from '../lib/displayName';
 import { Project, Team, UserProfile } from '../types/supabase';
@@ -815,6 +816,9 @@ const DashboardPage: React.FC = () => {
       'creativity': 3, 'communication': 3, 'problem_solving': 3, 'digital_fluency': 3
     };
 
+    // Every known certification is listed, even before any assessment row exists.
+    knownCerts.forEach(certName => certMap.set(certName, { scores: [], updated: '' }));
+
     const certificationRows = dashboardRows.filter(row => row.category_activity === 'Certification');
 
     certificationRows.forEach(row => {
@@ -825,10 +829,9 @@ const DashboardPage: React.FC = () => {
         
         for (const certName of knownCerts) {
           if (key.startsWith(`certification_${certName}_`)) {
-            if (!certMap.has(certName)) {
-              certMap.set(certName, { scores: [], updated: row.updated_at || '' });
-            }
-            certMap.get(certName)!.scores.push(value as number | null);
+            const entry = certMap.get(certName)!;
+            entry.scores.push(value as number | null);
+            if (row.updated_at && row.updated_at > entry.updated) entry.updated = row.updated_at;
             break;
           }
         }
@@ -1586,22 +1589,14 @@ ${prior.impact_arc}
           .from('dashboard').select('*').eq('user_id', user.id)
           .order('updated_at', { ascending: false });
 
-        if (dashboardError || !dashboardData || dashboardData.length === 0) {
-          const { error: rpcError } = await supabase.rpc(
-            'create_grade_appropriate_dashboard_activities_by_continent',
-            { user_id_param: user.id, continent_param: userProfile!.continent }
-          );
-          if (rpcError) throw rpcError;
-          const { data: retry, error: retryError } = await supabase
-            .from('dashboard').select('*').eq('user_id', user.id)
-            .order('updated_at', { ascending: false });
-          if (retryError) throw retryError;
-          dashboardActivities = retry || [];
-          certifications = extractCertificationProgress(retry || []);
-        } else {
-          dashboardActivities = dashboardData;
-          certifications = extractCertificationProgress(dashboardData);
-        }
+        if (dashboardError) throw dashboardError;
+
+        // A row means the learner started something. Rows are created when an
+        // activity is opened, never in advance. Older accounts still carry
+        // pre-seeded 'not started' placeholders; hide them so they are not
+        // shown or counted as progress.
+        dashboardActivities = (dashboardData || []).filter(r => !isPlaceholderRow(r));
+        certifications = extractCertificationProgress(dashboardActivities);
 
         const learningActivities = dashboardActivities.filter(a => a.category_activity !== 'Certification');
         let dashboardSummary = null;
@@ -1640,9 +1635,6 @@ ${prior.impact_arc}
     if (!userProfile?.continent) return;
     try {
       setRefreshing(true); setError(null);
-      const { error: rpcError } = await supabase.rpc('create_grade_appropriate_dashboard_activities_by_continent',
-        { user_id_param: user.id, continent_param: userProfile.continent });
-      if (rpcError) throw rpcError;
       await fetchDashboardData(true);
     } catch (err) {
       setError('Failed to refresh dashboard: ' + (err as Error).message);
