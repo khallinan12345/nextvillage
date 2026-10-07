@@ -22,6 +22,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useUdolliAccess } from '../../hooks/useUdolliAccess';
 import ComparisonModal from './ComparisonModal';
 import EvaluationTask from './EvaluationTask';
+import ShutdownTask from './ShutdownTask';
 import { IDEA_GROUPS, TEST_PAGES } from './testPages';
 import type { AgentId, Analysis, Comparison, Round, Session } from './types';
 
@@ -221,7 +222,7 @@ const UDolliPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [comparing, setComparing] = useState(false);
   const [compareError, setCompareError] = useState('');
-  const [task, setTask] = useState<1 | 2>(1);
+  const [task, setTask] = useState<1 | 2 | 3>(1);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -353,7 +354,7 @@ const UDolliPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">UD-OLLI AI Lab</h1>
 
           <div className="mt-3 inline-flex rounded-lg border border-gray-300 overflow-hidden text-sm font-semibold">
-            {([1, 2] as const).map((t) => (
+            {([1, 2, 3] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTask(t)}
@@ -362,7 +363,7 @@ const UDolliPage: React.FC = () => {
                   task === t ? 'bg-violet-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50',
                 )}
               >
-                Task {t} · {t === 1 ? 'Guarded vs. unguarded' : 'Be the evaluator'}
+                Task {t} · {t === 1 ? 'Guarded vs. unguarded' : t === 2 ? 'Be the evaluator' : 'Pull the plug'}
               </button>
             ))}
           </div>
@@ -375,7 +376,7 @@ const UDolliPage: React.FC = () => {
           )}
         </header>
 
-        {task === 2 ? <EvaluationTask /> : (
+        {task === 3 ? <ShutdownTask /> : task === 2 ? <EvaluationTask /> : (
         <div className="grid lg:grid-cols-[240px_1fr] gap-5">
           {/* History */}
           <aside className="lg:sticky lg:top-20 lg:self-start">
