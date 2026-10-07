@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getOrCreateDashboardRow, isUuid } from './dashboardRows';
+import { getOrCreateDashboardRow, isPlaceholderRow, isUuid } from './dashboardRows';
 
 const seed = {
   userId: 'u1',
@@ -87,5 +87,20 @@ describe('getOrCreateDashboardRow', () => {
   it('throws on other insert errors so callers can keep their local fallback', async () => {
     const { client } = fakeClient({ selects: [{ data: null }], insert: { error: { code: '42501', message: 'denied' } } });
     await expect(getOrCreateDashboardRow(client, seed)).rejects.toMatchObject({ code: '42501' });
+  });
+});
+
+describe('isPlaceholderRow', () => {
+  it('flags never-started rows with no chat or score', () => {
+    expect(isPlaceholderRow({ progress: 'not started', chat_history: null })).toBe(true);
+    expect(isPlaceholderRow({ progress: 'not started', chat_history: '[]' })).toBe(true);
+    expect(isPlaceholderRow({ progress: 'not started' })).toBe(true);
+  });
+
+  it('keeps anything the learner actually did', () => {
+    expect(isPlaceholderRow({ progress: 'started', chat_history: '[]' })).toBe(false);
+    expect(isPlaceholderRow({ progress: 'completed', chat_history: null })).toBe(false);
+    expect(isPlaceholderRow({ progress: 'not started', chat_history: '[{"role":"user","content":"hi"}]' })).toBe(false);
+    expect(isPlaceholderRow({ progress: 'not started', chat_history: '[]', certification_evaluation_score: 3 })).toBe(false);
   });
 });

@@ -75,3 +75,22 @@ export async function getOrCreateDashboardRow(client: SupabaseClient, seed: Dash
   }
   return data as DashboardRowRef;
 }
+
+/**
+ * True for a leftover pre-seeded row: never started, no chat, no score.
+ * Older learners still have these; they are not sessions and are hidden from
+ * progress displays and counts.
+ */
+export function isPlaceholderRow(row: {
+  progress?: string | null;
+  chat_history?: unknown;
+  certification_evaluation_score?: unknown;
+}): boolean {
+  if (row.progress !== 'not started') return false;
+  if (row.certification_evaluation_score != null) return false;
+  const h = row.chat_history;
+  if (h == null) return true;
+  if (typeof h === 'string') return ['', '[]', 'null', '{}', '""'].includes(h.trim());
+  if (Array.isArray(h)) return h.length === 0;
+  return false;
+}

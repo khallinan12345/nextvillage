@@ -2567,7 +2567,8 @@ const AdminStudentDashboard: React.FC = () => {
         .in('user_id', learnerIds)
         .order('updated_at', { ascending: false });
       if (error) throw error;
-      setStudentSessionRows((data || []) as StudentSessionRow[]);
+      // Pre-seeded 'not started' placeholders are not sessions.
+      setStudentSessionRows(((data || []) as StudentSessionRow[]).filter(r => r.progress !== 'not started'));
     } catch (err: any) {
       setStudentSummaryError(err.message || 'Failed to load student session summary');
       setStudentSessionRows([]);

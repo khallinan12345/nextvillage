@@ -473,29 +473,8 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         await supabase.from('profiles').insert(profilePayload);
       }
 
-      // ── Seed dashboard activities for learners ─────────────────────────────
-      if (role === 'student') {
-        const seedContinent = profileContinent || 'Africa';
-        const { error: rpcError } = await supabase.rpc(
-          'create_grade_appropriate_dashboard_activities_by_continent',
-          { user_id_param: actualUserId, continent_param: seedContinent }
-        );
-        if (rpcError) {
-          const { data: modules } = await supabase
-            .from('learning_modules').select('learning_module_id, title, category, grade_level')
-            .eq('continent', seedContinent).eq('public', 1)
-            .in('grade_level', [parseInt(gradeLevel, 10), 4]).limit(10);
-          if (modules?.length) {
-            await supabase.from('dashboard').insert(
-              modules.map(mod => ({
-                user_id: actualUserId, learning_module_id: mod.learning_module_id,
-                status: 'not_started', progress: 0,
-                created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-              }))
-            );
-          }
-        }
-      }
+      // Dashboard rows are no longer pre-created here: a row is created when
+      // the learner actually opens an activity (see src/lib/dashboardRows.ts).
 
       // ── Joined an existing org: the database put this profile in
       // 'pending' — email that org's leaders so they can approve it ────────
