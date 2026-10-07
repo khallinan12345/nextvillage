@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { Search, Check, Minus, X, Quote, Eye } from 'lucide-react';
-import { CLAUSES, CRITICS_LINE, PLACES, SCENARIO, TAKEAWAY, TESTS, type Rating } from './auditTask';
+import { CLAUSES, CRITICS_LINE, PLACES, SCENARIO, TAKEAWAY, TESTS, type Rating } from './auditLogic';
 
 const RATING_STYLE: Record<Rating, string> = {
   yes: 'bg-emerald-100 text-emerald-800 border-emerald-300',
