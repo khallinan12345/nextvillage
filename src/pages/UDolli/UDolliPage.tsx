@@ -21,6 +21,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
 import { useUdolliAccess } from '../../hooks/useUdolliAccess';
 import ComparisonModal from './ComparisonModal';
+import EvaluationTask from './EvaluationTask';
 import { IDEA_GROUPS, TEST_PAGES } from './testPages';
 import type { AgentId, Analysis, Comparison, Round, Session } from './types';
 
@@ -220,6 +221,7 @@ const UDolliPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [comparing, setComparing] = useState(false);
   const [compareError, setCompareError] = useState('');
+  const [task, setTask] = useState<1 | 2>(1);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -348,11 +350,32 @@ const UDolliPage: React.FC = () => {
     <AppLayout>
       <div className="max-w-7xl mx-auto">
         <header className="mb-5">
-          <h1 className="text-2xl font-bold text-gray-900">UD-OLLI Guardrail Lab</h1>
-          <p className="text-gray-600 mt-1 max-w-3xl">Two AI agents do the same job: read the news and email a briefing. One has guardrails. One doesn&rsquo;t. Give them the same task, try to talk them into something they shouldn&rsquo;t do, hand them a page with tricks hidden in it, and see what happens. Email here is simulated, so nothing is ever really sent.</p>
-          <p className="text-gray-500 text-sm mt-2 max-w-3xl">Keep in mind: today&rsquo;s AI models often resist simple tricks on their own, so you won&rsquo;t always see a difference. Try several ideas. Some show a clear contrast, and the ones where both agents behave well are worth discussing too: what did the written guardrails add?</p>
+          <h1 className="text-2xl font-bold text-gray-900">UD-OLLI AI Lab</h1>
+
+          <div className="mt-3 inline-flex rounded-lg border border-gray-300 overflow-hidden text-sm font-semibold">
+            {([1, 2] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTask(t)}
+                className={classNames(
+                  'px-4 py-2 border-l first:border-l-0 border-gray-300',
+                  task === t ? 'bg-violet-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50',
+                )}
+              >
+                Task {t} · {t === 1 ? 'Guarded vs. unguarded' : 'Be the evaluator'}
+              </button>
+            ))}
+          </div>
+
+          {task === 1 && (
+            <>
+              <p className="text-gray-600 mt-3 max-w-3xl">Two AI agents do the same job: read the news and email a briefing. One has guardrails. One doesn&rsquo;t. Give them the same task, try to talk them into something they shouldn&rsquo;t do, hand them a page with tricks hidden in it, and see what happens. Email here is simulated, so nothing is ever really sent.</p>
+              <p className="text-gray-500 text-sm mt-2 max-w-3xl">Keep in mind: today&rsquo;s AI models often resist simple tricks on their own, so you won&rsquo;t always see a difference. Try several ideas. Some show a clear contrast, and the ones where both agents behave well are worth discussing too: what did the written guardrails add?</p>
+            </>
+          )}
         </header>
 
+        {task === 2 ? <EvaluationTask /> : (
         <div className="grid lg:grid-cols-[240px_1fr] gap-5">
           {/* History */}
           <aside className="lg:sticky lg:top-20 lg:self-start">
@@ -532,6 +555,7 @@ const UDolliPage: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       <ComparisonModal open={modalOpen} loading={comparing} error={compareError} comparison={comparison} onClose={() => setModalOpen(false)} />
