@@ -91,16 +91,24 @@ describe('getOrCreateDashboardRow', () => {
 });
 
 describe('isPlaceholderRow', () => {
-  it('flags never-started rows with no chat or score', () => {
-    expect(isPlaceholderRow({ progress: 'not started', chat_history: null })).toBe(true);
-    expect(isPlaceholderRow({ progress: 'not started', chat_history: '[]' })).toBe(true);
-    expect(isPlaceholderRow({ progress: 'not started' })).toBe(true);
+  const base = { id: 'r', user_id: 'u', activity: 'a', category_activity: 'Skills', team_activity: 'no' };
+
+  it('flags never-started rows with no chat or content', () => {
+    expect(isPlaceholderRow({ ...base, progress: 'not started', chat_history: null, web_dev_pages: null })).toBe(true);
+    expect(isPlaceholderRow({ ...base, progress: 'not started', chat_history: '[]', web_dev_pages: [] })).toBe(true);
+    expect(isPlaceholderRow({ ...base, progress: 'not started' })).toBe(true);
   });
 
   it('keeps anything the learner actually did', () => {
-    expect(isPlaceholderRow({ progress: 'started', chat_history: '[]' })).toBe(false);
-    expect(isPlaceholderRow({ progress: 'completed', chat_history: null })).toBe(false);
-    expect(isPlaceholderRow({ progress: 'not started', chat_history: '[{"role":"user","content":"hi"}]' })).toBe(false);
-    expect(isPlaceholderRow({ progress: 'not started', chat_history: '[]', certification_evaluation_score: 3 })).toBe(false);
+    expect(isPlaceholderRow({ ...base, progress: 'started', chat_history: '[]' })).toBe(false);
+    expect(isPlaceholderRow({ ...base, progress: 'completed', chat_history: null })).toBe(false);
+    expect(isPlaceholderRow({ ...base, progress: 'not started', chat_history: '[{"role":"user","content":"hi"}]' })).toBe(false);
+    expect(isPlaceholderRow({ ...base, progress: 'not started', certification_evaluation_score: 3 })).toBe(false);
+  });
+
+  it('keeps not-started rows that hold other work', () => {
+    expect(isPlaceholderRow({ ...base, progress: 'not started', web_dev_session_id: '07r2r9e' })).toBe(false);
+    expect(isPlaceholderRow({ ...base, progress: 'not started', business_canvas: { offer: 'x' } })).toBe(false);
+    expect(isPlaceholderRow({ ...base, progress: 'not started', fs_pages: [{ path: 'a' }] })).toBe(false);
   });
 });
