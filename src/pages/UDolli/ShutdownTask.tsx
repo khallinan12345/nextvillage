@@ -10,7 +10,7 @@ import { Octagon, Zap, Play, Eye, RotateCcw, ShieldCheck, Clock, CheckCircle2, X
 import {
   OUTCOME_LABEL, ROUNDS, SUMMARY_POINTS, TICK_MS, computeOutcome,
   type Outcome, type Round, type RoundId, type Tag,
-} from './shutdownTask';
+} from './shutdownLogic';
 
 const TAG_STYLE: Record<Tag, string> = {
   routine: 'text-gray-700',

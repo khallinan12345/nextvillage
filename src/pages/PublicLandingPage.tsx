@@ -259,6 +259,7 @@ const PublicLandingPage: React.FC = () => {
   }
   const [longRows, setLongRows]     = useState<PubVisitRow[]>([]);
   const [allTime,  setAllTime]      = useState<AllTimeRow | null>(null);
+  const [headline, setHeadline]      = useState<HeadlineStats | null>(null);
   const [longLoading, setLongLoading] = useState(true);
 
   interface StreamRow { activity_month: string; stream: string; activity_count: number; }
@@ -282,6 +283,17 @@ const PublicLandingPage: React.FC = () => {
     community_member_role: string | null;
     tier_awarded: string | null;
   }
+  // Output of get_headline_stats(): staff excluded, certificates counted live.
+  interface HeadlineStats {
+    as_of: string;
+    enrolled_learners: number;
+    active_learners: number;
+    persistent_learners: number;
+    certifications_total: number;
+    learners_certified: number;
+    certifications_by_type: Record<string, number>;
+  }
+
   interface ChallengeSlugStats {
     slug: string;
     total: number;
@@ -349,17 +361,19 @@ const PublicLandingPage: React.FC = () => {
 
       // ── Paginated fetch of dashboard_stats for longitudinal panel ────────
       // Fetch by-visit-rank data and all-time summary (both public/anon)
-      const [{ data: visitData, error: visitErr }, { data: atData, error: atErr }, { data: streamData }, { data: bandData }] = await Promise.all([
+      const [{ data: visitData, error: visitErr }, { data: atData, error: atErr }, { data: streamData }, { data: bandData }, { data: headlineData }] = await Promise.all([
         supabase.from('dashboard_stats_public').select('*').order('visit_rank', { ascending: true }),
         supabase.from('dashboard_stats_alltime').select('*').single(),
         supabase.from('dashboard_activity_streams').select('*').order('activity_month', { ascending: true }),
         supabase.rpc('get_session_band_stats'),
+        supabase.rpc('get_headline_stats'),
       ]);
       if (visitErr) console.error('[PublicLandingPage] visit rows error:', visitErr.message);
       if (atErr)    console.error('[PublicLandingPage] alltime error:',    atErr.message);
       console.log('[PublicLandingPage] visit rows:', visitData?.length ?? 0, 'alltime:', atData);
       setLongRows((visitData as PubVisitRow[]) || []);
       setAllTime(atData as AllTimeRow ?? null);
+      setHeadline((headlineData as HeadlineStats | null) ?? null);
       setStreamRows((streamData as StreamRow[]) || []);
       setBandRows((bandData as BandRow[]) || []);
       setLongLoading(false);
@@ -838,16 +852,18 @@ const PublicLandingPage: React.FC = () => {
               <>
                 {/* ── All-time impact stats (from dashboard_stats_alltime) ── */}
                 {(() => {
-                  const learners  = allTime?.total_learners  ?? latest?.learner_count  ?? 0;
+                  // Prefer the single-definition headline stats (staff excluded,
+                  // certificates counted live); fall back to the snapshot view.
+                  const learners  = headline?.enrolled_learners ?? allTime?.total_learners ?? latest?.learner_count ?? 0;
                   const sessions  = allTime?.total_sessions  ?? latest?.sessions_count ?? 0;
-                  const certs     = allTime?.total_certs     ?? latest?.certs_total    ?? 0;
+                  const certs     = headline?.certifications_total ?? allTime?.total_certs ?? latest?.certs_total ?? 0;
                   const maxVisits = longRows.length > 0 ? Math.max(...longRows.map(r => r.visit_rank)) : 0;
                   return (
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:"1rem", marginBottom:"2.5rem" }}>
                       {([
-                        { val: learners,                               label:"Learners",        sub:"enrolled to date",  color:"#d97706" },
+                        { val: learners,                               label:"Learners",        sub: headline ? `enrolled · ${headline.active_learners} active · ${headline.persistent_learners} in 3+ months` : "enrolled to date",  color:"#d97706" },
                         { val: sessions > 0 ? sessions.toLocaleString() : "—", label:"AI Sessions", sub:"all time",    color:"#7c3aed" },
-                        { val: certs > 0    ? certs                    : "—",  label:"Certifications", sub:"earned",   color:"#fbbf24" },
+                        { val: certs > 0    ? certs                    : "—",  label:"Certifications", sub: headline ? `formal, earned by ${headline.learners_certified} learners` : "earned",   color:"#fbbf24" },
                         { val: maxVisits > 0 ? `${maxVisits}+ months`  : "—",  label:"Learner retention", sub:"most persistent learners", color:"#4ade80" },
                       ] as {val:string|number, label:string, sub:string, color:string}[]).map(s => (
                         <div key={s.label} style={{ background:"rgba(255,255,255,0.05)", border:`1px solid ${s.color}22`, borderRadius:14, padding:"1.25rem 1rem", textAlign:"center" }}>
@@ -859,6 +875,13 @@ const PublicLandingPage: React.FC = () => {
                     </div>
                   );
                 })()}
+
+                {headline && (
+                  <div style={{ fontSize:"0.7rem", color:"rgba(255,255,255,0.4)", textAlign:"center", margin:"-1.75rem 0 2.5rem", lineHeight:1.6 }}>
+                    As of {headline.as_of}. Enrolled = approved learners (staff excluded). Active = at least one session.
+                    Certifications: {Object.entries(headline.certifications_by_type).map(([t, n]) => `${t.replace(/ Certification$/, '')} ${n}`).join(' · ')}.
+                  </div>
+                )}
 
                 <CohortProgress />
 
