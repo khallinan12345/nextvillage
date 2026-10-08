@@ -1,0 +1,89 @@
+learner_token,grade_band,total_activities_started,total_activities_completed,total_certifications_earned,active_days,active_months,first_active_date,last_active_date,session_band,peak_pue_score,peak_role_readiness_signal,highest_ai_prof_level,total_certs_passed,ever_produced_artifact,peak_artifact_quality,peak_peer_diffusion_signal,is_persistent_learner,site
+030ebc8d09b0c73e8903defdd164d138,1-4,0,0,0,31,1,2025-10-01,2025-10-31,null,70.00,null,null,0,null,null,null,null,Oloibiri
+0484fd315a0b818aa76d04a3a57c0f3c,1-4,117,3,0,1,1,2026-04-20,2026-04-20,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+06895d8f3c621280e7c8b702d33fa3e4,1-4,126,0,0,31,1,2025-08-01,2025-08-31,Core (50+),45.00,null,null,0,null,null,null,null,Oloibiri
+073d512fb30133803e3bba976c18ee28,1-4,144,0,0,1,1,2026-04-08,2026-04-08,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+0df5f189d855478e76a6c59ff8a59c52,1-4,265,27,5,37,4,2025-11-21,2026-04-30,Core (50+),2.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+0f0c6d11376dc48302a4ad6e5a5bb19b,1-4,191,27,0,61,2,2026-03-01,2026-04-30,Core (50+),22.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+0fa403f253b8a89ca1e11ec158555711,1-4,96,0,0,1,1,2026-03-20,2026-03-20,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+1266e1b5011817a13df6ada543b21224,null,151,0,0,7,4,2025-08-04,2026-04-29,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+155230e12029a978719c5780425da048,null,99,0,0,59,2,2026-02-01,2026-03-31,Core (50+),78.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+1b1eaeeebcd81f4bb8bb58f83a8460e0,null,13,0,0,2,2,2025-08-04,2026-03-30,Developing (11-25),null,null,null,null,null,null,null,null,Oloibiri
+1cd0e069c3d83686ff9a915bc0fd333f,1-4,154,0,0,30,1,2026-04-01,2026-04-30,Core (50+),2.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+1e1c637492cfab8f3a1e88aa4d8bb0dc,1-4,142,0,0,58,2,2025-11-01,2026-02-28,Core (50+),55.00,null,null,0,null,null,null,null,Oloibiri
+1e6798ed293e4fa971fb5d6fbf857345,1-4,31,0,0,16,3,2026-02-05,2026-04-23,Established (26-50),null,null,null,null,null,null,null,null,Oloibiri
+24be5e85e478d67b63d989b91129ffb7,1-4,154,0,0,30,1,2026-04-01,2026-04-30,Core (50+),0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+24c6c0633ae2f2f7bf67e62139f25cf3,1-4,133,0,0,6,1,2026-03-16,2026-03-29,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+2637271cdaf6a008014724a9c994a8b2,1-4,0,0,0,30,1,2026-04-01,2026-04-30,null,12.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+27fa51410e55d024641cd9f061792bbd,null,0,0,0,61,2,2026-03-01,2026-04-30,null,74.00,null,Not Attempted,3155,null,null,null,null,Oloibiri
+28b86d6c6d03b2e455ac497bf4ab1952,1-4,215,0,0,105,4,2025-08-01,2026-04-20,Core (50+),55.00,null,Not Attempted,1333,null,null,null,null,Oloibiri
+2c204e6b272b8328c136c040b9eb361b,1-4,94,0,0,31,1,2025-08-01,2025-08-31,Core (50+),35.00,null,null,0,null,null,null,null,Oloibiri
+3141a3c364b73be684947149393d4aa6,1-4,99,3,0,67,3,2025-10-01,2026-04-30,Core (50+),45.00,null,Not Attempted,990,null,null,null,null,Oloibiri
+34a007f1d44d0d2b0dcede0918dae894,null,141,0,0,33,3,2025-08-01,2026-02-19,Core (50+),40.00,null,Not Attempted,155,null,null,null,null,Oloibiri
+39da17a8ad3f6d2bc8f29253d99d898b,1-4,171,13,0,61,2,2026-03-01,2026-04-30,Core (50+),28.00,null,Not Attempted,240,null,null,null,null,Oloibiri
+3b88372fae0bc52f740a64b88799c0da,1-4,122,0,0,30,1,2026-04-01,2026-04-30,Core (50+),2.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+3d3fd993c2145da36f8483cc95d4a459,1-4,101,0,0,31,1,2026-03-01,2026-03-31,Core (50+),35.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+3de4667edff3d0337b9ed3d5bdef9f17,1-4,69,0,0,32,2,2025-08-01,2026-02-05,Core (50+),0.00,null,Not Attempted,403,null,null,null,null,Oloibiri
+3ee47815b2eef9d98b9c40cb6c86918c,1-4,126,0,0,31,1,2025-08-01,2025-08-31,Core (50+),20.00,null,Not Attempted,186,null,null,null,null,Oloibiri
+448684f995c1bb63afe64e1b002050f5,1-4,80,0,0,31,1,2025-10-01,2025-10-31,Core (50+),70.00,null,null,0,null,null,null,null,Oloibiri
+48250acab4b185c689ddefa8c04ba160,1-4,0,0,0,30,1,2026-04-01,2026-04-30,null,0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+4936ff0bc40a36084cccfcb9c9623d48,1-4,129,0,0,31,2,2026-03-30,2026-04-30,Core (50+),42.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+4e7b171163043be6faae32b79c849d43,1-4,118,0,0,31,1,2026-03-01,2026-03-31,Core (50+),0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+554ed8b8e98f07a5a3272c782afa6497,1-4,146,4,0,31,2,2026-03-22,2026-04-30,Core (50+),28.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+57105f8a48118e2431503352341ccd3c,null,0,0,0,31,1,2025-08-01,2025-08-31,null,35.00,null,null,0,null,null,null,null,Oloibiri
+57caa2776c43bfa2435ef250deb523cd,1-4,225,0,0,89,3,2025-08-01,2026-04-30,Core (50+),40.00,null,Not Attempted,240,null,null,null,null,Oloibiri
+58679e9b988053c6998099cb8cc563fe,null,86,0,0,31,1,2025-08-01,2025-08-31,Core (50+),65.00,null,null,0,null,null,null,null,Oloibiri
+5a0be5b24d75e29cdaeff4811ea53a32,null,225,6,1,90,4,2025-08-04,2026-04-30,Core (50+),50.00,null,Not Attempted,244,null,null,null,null,Oloibiri
+5b0df097c979d7d5e906e27c53782e2f,1-4,80,0,0,31,1,2025-08-01,2025-08-31,Core (50+),0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+687e7f2c03ca39d3b06703b655d00e1b,1-4,118,0,0,1,1,2026-03-26,2026-03-26,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+6959a44e13e620acaa9912c02135f76c,null,86,0,0,31,1,2025-10-01,2025-10-31,Core (50+),45.00,null,null,0,null,null,null,null,Oloibiri
+69b6be0fbe5714082376df7fd08f3668,1-4,97,0,0,1,1,2026-03-26,2026-03-26,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+6ba41981995a273b9979b8150feb293b,1-4,147,0,0,30,1,2026-04-01,2026-04-30,Core (50+),28.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+6fd86f9e01e3451f92e9cba604e82118,1-4,132,19,0,1,1,2026-04-21,2026-04-21,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+7084fa3741017512ad2d82a29ea549a5,1-4,254,0,0,71,4,2025-11-01,2026-04-27,Core (50+),60.00,null,null,0,null,null,null,null,Oloibiri
+717034df07fd5d8ae1e0cb09d469c1ba,1-4,240,0,0,10,2,2026-03-25,2026-04-30,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+747b531794025284948c00e3f12ba13e,1-4,124,0,0,30,1,2026-04-01,2026-04-30,Core (50+),18.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+76888e17804dd816a3fd773ef345ca3d,1-4,0,0,0,61,2,2026-03-01,2026-04-30,null,68.00,null,Not Attempted,2673,null,null,null,null,Oloibiri
+7938598b376ce8d0360bb1485fda976d,1-4,86,0,0,31,1,2025-10-01,2025-10-31,Core (50+),45.00,null,null,0,null,null,null,null,Oloibiri
+7b61fee9028bd964738ecd6836261ffa,1-4,0,0,0,150,5,2025-08-01,2026-04-30,null,50.00,null,Not Attempted,2562,null,null,null,null,Oloibiri
+7bb5ab4b9d1c0f0b3f06994e80e23701,1-4,3,0,0,2,2,2026-02-08,2026-04-08,Emerging (1-10),null,null,null,null,null,null,null,null,Oloibiri
+7e1fe6ad34103a7f764a484bd1c6c351,1-4,260,169,5,61,2,2026-03-01,2026-04-30,Core (50+),88.00,null,Not Attempted,5085,null,null,null,null,Oloibiri
+8148e482b4082809ce1e3f5ffb779bee,1-4,0,0,0,30,1,2026-04-01,2026-04-30,null,0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+828eb72f93c63a89c644dd2b2349927d,1-4,126,0,0,31,1,2025-08-01,2025-08-31,Core (50+),30.00,null,Not Attempted,155,null,null,null,null,Oloibiri
+850d3892495760edcf517fd71340b610,1-4,240,6,0,37,6,2025-08-21,2026-04-30,Core (50+),18.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+8ab4e184c8824f944a57f81232b01146,1-4,198,0,0,30,1,2026-04-01,2026-04-30,Core (50+),5.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+8b8d7b9ae884e134dab6fff4cc12064c,1-4,185,0,0,61,2,2025-08-01,2025-11-30,Core (50+),80.00,null,null,0,null,null,null,null,Oloibiri
+8d98fb32eb76c02d072b69a225a7eff0,1-4,118,0,0,1,1,2026-03-25,2026-03-25,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+8f51af0fcf47abe52ba64ae9ed29d403,1-4,0,0,0,31,1,2025-08-01,2025-08-31,null,45.00,null,Not Attempted,186,null,null,null,null,Oloibiri
+935190c8f1264d90b667623d472471f9,1-4,264,154,5,61,2,2026-03-01,2026-04-30,Core (50+),58.00,null,Not Attempted,3211,null,null,null,null,Oloibiri
+9530dd6abef8b2c6856fab1cf69063d5,1-4,139,18,0,30,1,2026-04-01,2026-04-30,Core (50+),8.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+9b4e872e356ffb11163d6c340ee38d8d,1-4,0,0,0,31,1,2025-08-01,2025-08-31,null,35.00,null,null,0,null,null,null,null,Oloibiri
+9c22048ec350106789d13a12e93ff33d,1-4,0,0,0,119,4,2025-11-01,2026-04-30,null,55.00,null,Not Attempted,580,null,null,null,null,Oloibiri
+9d273ccbc3c403951890ab2f1fca704e,null,0,0,0,30,1,2025-11-01,2025-11-30,null,50.00,null,null,0,null,null,null,null,Oloibiri
+9f3dbd801b28894b9db4817947bb5162,1-4,156,0,0,30,1,2026-04-01,2026-04-30,Core (50+),2.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+a06615cda21ac01717862d2483002d2b,1-4,142,24,0,61,2,2026-03-01,2026-04-30,Core (50+),8.00,null,Not Attempted,30,null,null,null,null,Oloibiri
+a0c3cd54da58fd413a07326def91cd3c,1-4,0,0,0,31,1,2025-08-01,2025-08-31,null,68.00,null,Not Attempted,31,null,null,null,null,Oloibiri
+a7bc38575b4bd66ffd95b97f6bad2f9f,1-4,234,0,0,32,2,2025-08-13,2026-04-30,Core (50+),18.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+a838d2f4d2c62187d01d0260dd91c125,1-4,186,6,0,40,3,2025-08-01,2026-04-26,Core (50+),70.00,null,null,0,null,null,null,null,Oloibiri
+a88f175671a60c827cf91b02170d1a03,1-4,118,0,0,31,1,2026-03-01,2026-03-31,Core (50+),0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+b0c3a3bc4441889c2e6010b3c0e3165e,1-4,16,0,0,1,1,2025-08-04,2025-08-04,Developing (11-25),null,null,null,null,null,null,null,null,Oloibiri
+ba64a97ca4565f87e3d7a045338a0e62,1-4,86,0,0,1,1,2025-08-30,2025-08-30,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+baa98667a68603d0b3718cd52c596384,1-4,0,0,0,30,1,2026-04-01,2026-04-30,null,0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+c15561fefee569cb77945d9ea2559958,1-4,120,0,0,61,2,2026-03-01,2026-04-30,Core (50+),8.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+cb54489ec2441cc1d9457fd4f214d608,1-4,86,0,0,1,1,2025-08-30,2025-08-30,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+cb76c6e4e36e72bc7e3cc54d746634d1,1-4,129,1,0,40,4,2025-08-06,2026-04-15,Core (50+),70.00,null,null,0,null,null,null,null,Oloibiri
+d6d6e24962578a6b3184528b11a2602e,null,0,0,0,31,1,2025-08-01,2025-08-31,null,50.00,null,Not Attempted,93,null,null,null,null,Oloibiri
+d6dd03444d9f56d4a5a84c4f7ee45b18,1-4,146,0,0,1,1,2026-04-17,2026-04-17,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+d8bfb0e3d33f09c50c2d73821e75a3ed,1-4,97,0,0,1,1,2026-03-27,2026-03-27,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+d8cb96ed12fec1a78588d9283fb896e8,1-4,45,0,0,4,2,2025-08-04,2026-04-08,Established (26-50),null,null,null,null,null,null,null,null,Oloibiri
+daff8a343f130caadecfd0293c272fa8,1-4,199,0,0,30,1,2025-11-01,2025-11-30,Core (50+),68.00,null,null,0,null,null,null,null,Oloibiri
+db175dc22d0f6e625757cc0177375139,1-4,0,0,0,30,1,2026-04-01,2026-04-30,null,4.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+db19ac678da66c98b7f2db303e6bac05,1-4,0,0,0,30,1,2025-11-01,2025-11-30,null,70.00,null,null,0,null,null,null,null,Oloibiri
+dff796f2addcf12172cbc1b135826ad1,1-4,0,0,0,30,1,2026-04-01,2026-04-30,null,0.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+e2823354beb62ff039ff8e6929fd9d5a,1-4,16,0,0,1,1,2025-08-04,2025-08-04,Developing (11-25),null,null,null,null,null,null,null,null,Oloibiri
+e47ca312d7fc578a681514c83c9a5709,1-4,0,0,0,31,1,2026-03-01,2026-03-31,null,5.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+e6269e712c343b63c15bf9516d340ea0,1-4,205,19,0,32,2,2025-08-19,2026-04-30,Core (50+),18.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+e9940bed5fd035cbe3e4a2c9a61e5cf5,1-4,405,14,0,89,3,2026-02-01,2026-04-30,Core (50+),50.00,null,Not Attempted,244,null,null,null,null,Oloibiri
+f1edaa82541cb46731663b6dc0138359,1-4,114,0,0,1,1,2026-04-29,2026-04-29,Core (50+),null,null,null,null,null,null,null,null,Oloibiri
+f2fa25c2ce6a47e626ac5778293b2a73,1-4,172,0,0,31,2,2026-03-30,2026-04-30,Core (50+),2.00,null,Not Attempted,0,null,null,null,null,Oloibiri
+f4ff1cc6c352e987b9aaa3d3359fe580,1-4,0,0,0,30,1,2026-04-01,2026-04-30,null,22.00,null,Not Attempted,0,null,null,null,null,Oloibiri

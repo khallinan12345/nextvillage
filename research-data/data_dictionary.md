@@ -2,16 +2,21 @@
 ## Education Before Electricity — Research Dataset
 ### Hallinan, Hao, Davidson & Clergy (2026)
 
-**Source table:** `public.dashboard_stats` (Supabase project: nextvillage.community)  
-**Export SQL:** `export_anonymized.sql`  
+**Revision:** 2, regenerated 8 October 2026 (the April 2026 files are in `archive-v1-april-2026-export/`; see the README for what changed)  
+**Source tables:** `public.user_monthly_assessments`, `public.dashboard`, `public.profiles` (Supabase project: nextvillage.community)  
+**Export SQL:** `export_research_data.sql`  
 **Data window:** August 1, 2025 – April 30, 2026  
-**Records:** 3,012 (after k-anonymity suppression of 169 rows)
+**Records:** 2,424 learner-days from 60 learners (after dropping any date with fewer than 5 learners); 62 learners in the cohort file; 9 months
 
 ---
 
 ## General Notes
 
-**Learner tokens:** All three files use the same token system. Tokens are stable — the same learner has the same token in every file. Assigned by the platform at account creation; not sequential by join date.
+**Learner tokens:** All three files use the same token system. Tokens are stable — the same learner has the same token in every file and in the April 2026 files. A token is a salted hash (MD5) of the account ID, 32 hexadecimal characters; not sequential by join date. The salt is in the platform's public source code, so tokens are pseudonymous, not anonymous.
+
+**What counts as a session (revision 2):** a dashboard row where the learner started or completed something, has a chat, or holds work (a project, a canvas, a score). Rows the platform created in advance for activities the learner never opened are not sessions and are excluded. A session is dated by its first chat message (completions by the last message); rows with no chat use the row's creation date. AI Playground chats are not included in `activities_*` or `session_count`.
+
+**Who is included:** approved student/learner accounts at the Oloibiri site (including the duplicate organization records for the site). Staff accounts (teachers, site leaders, administrators) are excluded.
 
 **Deployment month numbering:** Computed as `EXTRACT(MONTH FROM AGE(date, '2025-06-01')) + 1`. Month 1 = June 2025 (lab launch). Month 3 = August 2025 (first month in this dataset). Month 11 = April 2026.
 
@@ -35,8 +40,8 @@
 
 ## File 1: `learner_daily_panel.csv`
 
-**Unit of observation:** One row per learner per activity date.  
-**Rows:** 3,012  
+**Unit of observation:** One row per learner per activity date, for each date in an assessed month or on which the learner started a session. Assessment metrics are one value per learner-month, repeated on each day of that month.  
+**Rows:** 2,424  
 **Primary use:** Scaffolding decline analysis (Figure 4), reasoning trajectory (Figure 5), natural experiment (Section 4.5), PUE indicators (Section 5.3)
 
 ### Identifiers and time
@@ -53,14 +58,14 @@
 
 | Column | Type | Description |
 |---|---|---|
-| `activities_started_today` | integer | Sessions started on this date. |
+| `activities_started_today` | integer | Real sessions started on this date (see "What counts as a session"). |
 | `activities_completed_today` | integer | Sessions completed on this date. |
 | `certifications_earned_today` | integer | Certifications passed on this date. |
 | `categories_active_today` | text[] | Array of activity stream names active this date. |
-| `activities_started_total` | integer | Cumulative sessions started through this date. Use for session band assignment. |
+| `activities_started_total` | integer | Cumulative real sessions started through this date, including any before the window. Use for session band assignment. |
 | `activities_completed_total` | integer | Cumulative sessions completed through this date. |
 | `certifications_earned_total` | integer | Cumulative certifications earned through this date. |
-| `session_count` | integer | AI chat sessions in the most recent assessment period. |
+| `session_count` | integer | Real curriculum sessions started in the assessment month (restated in October 2026; the original recorded values are kept in `session_count_raw` in the database). |
 | `engaged_session_count` | integer | Sessions with substantive AI exchange above minimum message threshold. |
 | `avg_words_per_session` | numeric | Average word count per learner turn across engaged sessions. Proxy for response elaboration depth. |
 
@@ -102,7 +107,7 @@
 | `ai_prof_understanding_score` | numeric | Understanding dimension (0–100): conceptual grasp of how AI works. |
 | `ai_prof_verification_score` | numeric | Verification dimension (0–100): ability to evaluate AI outputs. |
 | `ai_prof_min_score` | numeric | Minimum across all four dimensions. Conservative certification threshold. |
-| `ai_prof_cert_level` | string | Proficiency tier. Values: `Novice`, `Developing`, `Proficient`, `Advanced`. |
+| `ai_prof_cert_level` | string | Proficiency tier. Values that occur in the data: `Not Attempted` or empty. (The tiers `Novice`, `Developing`, `Proficient` and `Advanced` are defined but were not recorded for any learner.) |
 
 ### Core capability scores
 
@@ -153,7 +158,7 @@
 
 | Column | Type | Description |
 |---|---|---|
-| `artifact_produced` | boolean | Whether learner produced a structured enterprise planning artifact this period. |
+| `artifact_produced` | boolean | Whether learner produced a structured enterprise planning artifact this period. **Empty in this export** (the scores exist in the monthly assessments as `enterprise_artifact_*` but have not been mapped to these columns). |
 | `artifact_quality_score` | numeric | Overall artifact quality (0–1). |
 | `artifact_goal_specificity` | numeric | Specificity of stated goals (0–1). |
 | `artifact_resource_spec` | numeric | Resource identification and specification (0–1). |
@@ -161,36 +166,36 @@
 | `artifact_constraint_integration` | numeric | Awareness of real-world constraints (0–1). |
 | `artifact_quantitative_reasoning` | numeric | Use of numbers, quantities, or estimates (0–1). |
 | `artifact_feasibility` | numeric | Overall feasibility of the plan (0–1). |
-| `is_persistent_learner` | boolean | Active across 3+ non-consecutive months. |
+| `is_persistent_learner` | boolean | Real sessions in 3 or more calendar months of the window. Empty in the April 2026 export. |
 
 ---
 
 ## File 2: `learner_cohort_summary.csv`
 
 **Unit of observation:** One row per learner.  
-**Rows:** Up to 88.  
+**Rows:** 62.  
 **Primary use:** Cohort characterization (Table 2), session band analysis (Table 3), certification outcomes (Section 4.4).
 
 | Column | Type | Description |
 |---|---|---|
 | `learner_token` | string | Anonymized learner identifier. |
-| `grade_band` | string | Education level, pre-binned for k-anonymity. Values: `Primary`, `Junior Secondary`, `Senior Secondary`, `Adult`. |
-| `total_activities_started` | integer | Total sessions started across full window. **Use for session band assignment.** |
+| `grade_band` | string | Grade level, pre-binned. Values: `1-4`, `5-8`, `9-12`, or empty when no grade is recorded. |
+| `total_activities_started` | integer | Total real sessions started through 2026-04-30, including any before the window. **Use for session band assignment.** |
 | `total_activities_completed` | integer | Total sessions completed. |
-| `total_certifications_earned` | integer | Total certifications earned. |
-| `active_days` | integer | Distinct dates with recorded activity. |
+| `total_certifications_earned` | integer | Formal certifications earned (a certificate was issued) through 2026-04-30. |
+| `active_days` | integer | Distinct dates on which a real session started. |
 | `active_months` | integer | Distinct months with recorded activity. |
 | `first_active_date` | date | First date with activity in the data window. |
 | `last_active_date` | date | Last date with activity. |
-| `session_band` | string | Values: `Emerging (1-10)`, `Developing (11-25)`, `Established (26-50)`, `Core (50+)`. Matches paper Table 3. |
+| `session_band` | string | Revision 2 values: `Early (<25)`, `Developing (25-49)`, `Established (50-99)`, `Core (100+)`; empty when the learner has no real session. The April 2026 export used `Emerging (1-10)`, `Developing (11-25)`, `Established (26-50)`, `Core (50+)` on counts that included pre-created rows, so paper Table 3 built on that export needs recomputing. |
 | `peak_pue_score` | numeric | Highest PUE score across all assessment periods. |
 | `peak_role_readiness_signal` | integer | Highest role readiness signal recorded. |
 | `highest_ai_prof_level` | string | Highest AI proficiency tier achieved. Values: `Novice`, `Developing`, `Proficient`, `Advanced`. |
-| `total_certs_passed` | integer | Total certifications passed. Primary certification outcome variable. |
-| `ever_produced_artifact` | boolean | Whether learner ever produced a structured enterprise artifact. |
-| `peak_artifact_quality` | numeric | Highest artifact quality score achieved (0–1). |
+| `total_certs_passed` | integer | Same as `total_certifications_earned` in revision 2: formal certifications earned. Primary certification outcome variable. |
+| `ever_produced_artifact` | boolean | **Empty in this export.** |
+| `peak_artifact_quality` | numeric | **Empty in this export.** |
 | `peak_peer_diffusion_signal` | integer | Highest peer diffusion signal recorded. |
-| `is_persistent_learner` | boolean | Meets persistence threshold across full window. |
+| `is_persistent_learner` | boolean | Real sessions in 3 or more calendar months of the window. |
 | `site` | string | All records: `Oloibiri`. |
 
 ---
@@ -198,7 +203,7 @@
 ## File 3: `disruption_periods.csv`
 
 **Unit of observation:** One row per calendar month.  
-**Rows:** 9 (August 2025 – April 2026).  
+**Rows:** 9 (August 2025 – April 2026). A month is omitted if fewer than 5 learners were active in it; none were omitted in revision 2.  
 **Primary use:** Natural experiment analysis (Section 4.5).
 
 | Column | Type | Description |
@@ -209,8 +214,8 @@
 | `facilitator_present` | boolean | `false` only for Feb 2026. |
 | `platform_accessible` | boolean | `false` for Oct–Nov 2025. |
 | `adequate_solar` | boolean | `false` for Jan 2026. |
-| `active_learners` | integer | Distinct learners with activity this month. |
-| `total_sessions` | integer | Community total sessions. |
+| `active_learners` | integer | Distinct learners who started a real session this month. |
+| `total_sessions` | integer | Community total real sessions started this month. |
 | `total_completions` | integer | Community total completed sessions. |
 | `total_certifications` | integer | Community total certifications earned. |
 | `avg_scaffold_clarification` | numeric | Community average clarification requests per session. |
