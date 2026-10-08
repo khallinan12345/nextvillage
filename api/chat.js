@@ -116,9 +116,14 @@ const HYBRID_CODING_PAGES = new Set([
 //   HealthcareNavigatorPage: health-adjacent conversation should only ever
 //     reach Anthropic's own contractually-reviewed terms, never a free-tier
 //     provider — and Sonnet 5.5 for now, per explicit product decision.
+//   PromptChallengePage: the anchor task that is repeated at 0/25/50/100
+//     sessions to measure growth. The free-tier chain rotates between
+//     different providers and models, which would change the facilitator
+//     between checkpoints, so this page is pinned to one model.
 const SONNET55_PAGES = new Set([
   'SystemsThinkPage',
   'HealthcareNavigatorPage',
+  'PromptChallengePage',
 ]);
 
 // Per-task reasoning effort — a good model at low effort has held up well
