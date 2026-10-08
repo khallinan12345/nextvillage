@@ -37,6 +37,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Learning Pages
 const AILearningPage = lazy(() => import('./pages/learning/AILearningPage'));
+const PromptChallengePage = lazy(() => import('./pages/learning/PromptChallengePage'));
 const AIReadySkillsPage = lazy(() => import('./pages/learning/AIReadySkillsPage'));
 const FinancialLiteracyPage = lazy(() => import('./pages/learning/FinancialLiteracyPage'));
 const SolarEngineeringPage = lazy(() => import('./pages/learning/SolarEngineeringPage'));
@@ -261,6 +262,7 @@ export const AppContent: React.FC = () => {
         <Route path="/math-skills" element={<MathSkillsPage />} />
         <Route path="/science-skills" element={<ScienceSkillsPage />} />
         <Route path="/learning/ai" element={<AILearningPage />} />
+        <Route path="/prompt-challenge/:attemptId" element={<PromptChallengePage />} />
         <Route path="/learning/skills" element={<AIReadySkillsPage />} />
         <Route path="/learning/financial-literacy" element={<FinancialLiteracyPage />} />
         <Route path="/learning/solar-engineering" element={<SolarEngineeringPage />} />
