@@ -1138,7 +1138,7 @@ const PublicLandingPage: React.FC = () => {
                                               <span style={{ fontSize:"0.75rem", flexShrink:0 }}>🔴</span>
                                               <span style={{ fontSize:"0.68rem", color:"rgba(255,255,255,0.5)", lineHeight:1.55 }}>
                                                 <strong style={{ color:"rgba(248,113,113,0.9)" }}>Disruption — Mo.4:</strong>{" "}
-                                                Rainy season solar power outages eliminated reliable electricity, and the programme's on-the-ground leader suffered a home fire requiring family relocation. Sessions dropped from 136 (Mo.3) to 15. The clarification spike reflects learners re-engaging after a gap, not regression.
+                                                Rainy season solar power outages eliminated reliable electricity, and the programme's on-the-ground leader suffered a home fire requiring family relocation. Session counts in this month of use may be lower than usual as a result.
                                               </span>
                                             </div>
                                           </td>
@@ -1180,7 +1180,7 @@ const PublicLandingPage: React.FC = () => {
                         const bw = barW * 0.75;
                         const xLeft = (i: number) => PL + i * barW + barW * 0.125;
                         const yP = (v: number) => PT + (1 - v / maxScore) * iH;
-                        const bandShortNames = ['Early', 'Developing', 'Established', 'Core'];
+                        const bandShortNames = ['Under 25', '25–49', '50–99', '100+'];
 
                         const skills = [
                           { key: 'cognitive' as const,          color: '#fbbf24', label: 'Cognitive' },
@@ -1198,12 +1198,12 @@ const PublicLandingPage: React.FC = () => {
                         return (
                           <div style={{ marginBottom:"1.25rem" }}>
                             <div style={{...lbl, color:A.purple, marginBottom:"0.5rem"}}>
-                              Capability arc by cumulative sessions — skills peak, then community application rises
+                              Capability by cumulative sessions
                             </div>
                             <p style={{ fontSize:"0.82rem", color:"rgba(255,255,255,0.5)", marginBottom:"1.25rem", lineHeight:1.6, maxWidth:700 }}>
-                              Skill scores peak in the Developing band (50–99 sessions) as learners master the curriculum.
-                              Beyond 100 sessions, scores plateau as learners shift to self-directed community application —
-                              visible in the rising role readiness signals. This is not regression: it is graduation from the rubric into real-world use.
+                              Learners are grouped by the total number of real sessions they have completed: under 25, 25–49, 50–99 and 100 or more.
+                              A learner appears in every band they pass through, so the bands overlap, and the upper bands hold far fewer
+                              learners (see n). Read differences between bands as a pattern to keep watching, not as settled findings.
                             </p>
 
                             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem", marginBottom:"1rem" }}>
@@ -1247,16 +1247,12 @@ const PublicLandingPage: React.FC = () => {
                                         <text x={xMid(bi)} y={H-24} textAnchor="middle" fontSize={11} fill="rgba(255,255,255,0.35)">
                                           n={band.n_learners}
                                         </text>
-                                        {bi === 1 && (
-                                          <text x={xMid(bi)} y={yP((bands[1]?.critical_thinking ?? 0)) - 10} textAnchor="middle"
-                                            fontSize={13} fill={A.teal} fontWeight="bold">▲ peak</text>
-                                        )}
                                       </g>
                                     );
                                   })}
                                 </svg>
                                 <p style={{ fontSize:"0.75rem", color:"rgba(255,255,255,0.4)", marginTop:"0.5rem", lineHeight:1.5 }}>
-                                  Peak at 50–99 sessions. Plateau beyond 100 reflects shift to self-directed use, not regression.
+                                  Average score per band, from the monthly AI assessments. n is the number of learners in each band.
                                 </p>
                               </div>
 
@@ -1303,7 +1299,7 @@ const PublicLandingPage: React.FC = () => {
                                   ))}
                                 </svg>
                                 <p style={{ fontSize:"0.75rem", color:"rgba(255,255,255,0.4)", marginTop:"0.5rem", lineHeight:1.5 }}>
-                                  Community application and enterprise orientation reach 75% in the Core band.
+                                  Share of learner-months showing each signal, by band. Learners in the 100+ band are the most persistent, so this group is small.
                                 </p>
                               </div>
                             </div>
@@ -1322,7 +1318,7 @@ const PublicLandingPage: React.FC = () => {
                                     <div style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.4)", marginBottom:"0.5rem" }}>n={band.n_learners} learners</div>
                                     <div style={{ fontSize:"0.78rem", color:"rgba(255,255,255,0.7)", lineHeight:1.55 }}>
                                       {isCore
-                                        ? `75% community application · 75% enterprise — graduated from curriculum into real use`
+                                        ? `${band.community_application_pct ?? '—'}% community application · ${band.enterprise_orientation_pct ?? '—'}% enterprise · Clarif: ${band.avg_clarification ?? '—'}/session`
                                         : `CT: ${band.critical_thinking ?? '—'} · PS: ${band.problem_solving ?? '—'} · Clarif: ${band.avg_clarification ?? '—'}/session`
                                       }
                                     </div>
@@ -1340,12 +1336,13 @@ const PublicLandingPage: React.FC = () => {
                         <p style={{ margin:0, fontSize:"0.8rem", color:"rgba(255,255,255,0.55)", lineHeight:1.7 }}>
                           <strong style={{ color:"#c4b5fd", fontWeight:700 }}>Understanding these charts.</strong>{" "}
                           The scaffolding table tracks monthly progression — how AI dependence falls as learners return month after month.
-                          The capability arc tracks cumulative experience — skill scores peak around 50–99 total sessions, then learners shift
-                          from curriculum to self-directed community use. These are two complementary lenses on the same journey:
-                          one shows <em>when</em> learners become independent, the other shows <em>what they do</em> with that independence.
-                          The Core band (130+ sessions) shows 75% community application and 75% enterprise orientation — learners who have
-                          graduated from the rubric into real-world impact. The assessment instrument can no longer fully see what they are doing,
-                          because they have outgrown it.
+                          The capability view groups learners by cumulative experience. Clarification requests per session fall from{" "}
+                          {bandRows[0]?.avg_clarification ?? '—'} in the first band to {bandRows[bandRows.length - 1]?.avg_clarification ?? '—'} in
+                          the last, and the share of learner-months showing community application rises from{" "}
+                          {bandRows[0]?.community_application_pct ?? '—'}% to {bandRows[bandRows.length - 1]?.community_application_pct ?? '—'}%.
+                          These are two lenses on the same journey: one shows <em>when</em> learners become more independent, the other
+                          shows <em>what they do</em> with that independence. The upper bands contain few learners, so we report them
+                          as they are and will add more evidence as the cohorts grow.
                         </p>
                       </div>
 
