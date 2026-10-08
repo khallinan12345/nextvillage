@@ -1,7 +1,10 @@
 cohort_month,deployment_month_number,period_type,facilitator_present,platform_accessible,adequate_solar,active_learners,total_sessions,total_completions,total_certifications,avg_scaffold_clarification,avg_scaffold_decomposition,avg_correction_runs,avg_reasoning_l0,avg_reasoning_l1,avg_reasoning_l2,avg_reasoning_l3,avg_pue_score,avg_role_readiness,avg_ai_prof_score,site
-2025-08-01,3,Active,true,true,true,30,1642,0,0,2.1875000000000000,1.3500000000000000,0.73750000000000000000,null,null,null,null,42.1111111111111111,null,null,Oloibiri
-2025-10-01,5,ISP_outage,true,false,true,7,384,0,0,2.5000000000000000,1.5000000000000000,1.00000000000000000000,null,null,null,null,54.1666666666666667,null,null,Oloibiri
-2025-11-01,6,ISP_outage,true,false,true,11,604,0,0,null,null,null,null,null,null,null,52.2500000000000000,null,null,Oloibiri
-2026-02-01,9,Facilitator_absent,false,true,true,17,461,0,0,null,null,null,null,null,null,null,47.8000000000000000,null,null,Oloibiri
-2026-03-01,10,Active,true,true,true,36,2608,29,1,7.6823529411764706,1.4823529411764706,1.8411764705882353,null,null,null,null,21.2941176470588235,null,null,Oloibiri
-2026-04-01,11,Active,true,true,true,50,3833,484,15,7.0250000000000000,0.40638888888888888889,1.2430555555555556,null,null,null,null,17.3888888888888889,null,null,Oloibiri
+2025-08-01,3,Active,true,true,true,16,106,12,0,2.4166666666666667,1.4166666666666667,0.75000000000000000000,null,null,null,null,38.3076923076923077,null,null,Oloibiri
+2025-09-01,4,Active,true,true,true,11,33,1,0,2.5000000000000000,1.50000000000000000000,1.00000000000000000000,null,null,null,null,50.0000000000000000,null,null,Oloibiri
+2025-10-01,5,ISP_outage,true,false,true,9,111,2,0,2.5000000000000000,1.50000000000000000000,1.00000000000000000000,null,null,null,null,58.7500000000000000,null,null,Oloibiri
+2025-11-01,6,ISP_outage,true,false,true,11,98,3,0,null,null,null,null,null,null,null,48.2857142857142857,null,null,Oloibiri
+2025-12-01,7,Active,true,true,true,11,86,0,0,null,null,null,null,null,null,null,60.0000000000000000,null,null,Oloibiri
+2026-01-01,8,Solar_weather,true,true,false,5,11,0,0,null,null,null,null,null,null,null,40.0000000000000000,null,null,Oloibiri
+2026-02-01,9,Facilitator_absent,false,true,true,12,84,7,0,null,null,null,null,null,null,null,47.5454545454545455,null,null,Oloibiri
+2026-03-01,10,Active,true,true,true,23,174,26,1,9.1000000000000000,1.7642857142857143,2.1214285714285714,null,null,null,null,13.4000000000000000,null,null,Oloibiri
+2026-04-01,11,Active,true,true,true,36,776,343,0,8.4692307692307692,0.48076923076923076923,1.3480769230769231,null,null,null,null,17.8461538461538462,null,null,Oloibiri

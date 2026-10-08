@@ -15,13 +15,43 @@
 
 ```
 research-data/
-  learner_daily_panel.csv          # Longitudinal daily panel — primary analysis dataset
-  learner_cohort_summary.csv       # One row per learner — cohort characteristics and totals
-  disruption_periods.csv           # Monthly aggregates — natural experiment data
+  learner_daily_panel.csv          # Longitudinal daily panel (revision 2)
+  learner_cohort_summary.csv       # One row per learner — cohort characteristics and totals (revision 2)
+  disruption_periods.csv           # Monthly aggregates — natural experiment data (revision 2)
   data_dictionary.md               # Variable definitions for all three files
   README.md                        # This file
-  export_anonymized.sql            # SQL used to generate all three CSVs from Supabase
+  export_research_data.sql         # SQL that generates all three CSVs from the database (revision 2)
+  archive-v1-april-2026-export/    # The files as first exported in April 2026, kept unchanged
 ```
+
+---
+
+## Revision 2 (October 2026): what changed and why
+
+The three CSV files were regenerated from the database on 8 October 2026. The April 2026 files are kept in `archive-v1-april-2026-export/` so that anything computed from them can still be reproduced.
+
+**The platform was counting activities that learners never opened.** Until October 2026 the application created a dashboard row for every grade-appropriate module when a learner signed up. Those placeholder rows (31,912 of the 37,481 rows in the table, 85%) were counted as "sessions started", which is what `total_activities_started`, `session_count` and the session bands were built from. In the April export 62 of 88 learners fell in the top band (Core, 50+), with a median of 136 activities started but a median of 0 completed.
+
+What revision 2 does differently:
+
+| | April 2026 export | Revision 2 |
+|---|---|---|
+| What counts as a session | Every dashboard row, including rows created in advance | A row where the learner started or completed something, has a chat, or holds work |
+| Date of a session | When the row was created (the signup date for pre-created rows) | The first chat message (completions: the last message) |
+| Who is included | Every account with activity, including 14 accounts that are now staff | Approved student/learner accounts at the Oloibiri site only |
+| Session bands | Emerging 1–10, Developing 11–25, Established 26–50, Core 50+ | Early <25, Developing 25–49, Established 50–99, Core 100+ |
+| Anonymity rule | Documented as k=3; the platform code uses 5 | A learner-day or month is dropped when fewer than 5 learners are present |
+| `is_persistent_learner` | Empty | Real sessions in 3 or more calendar months of the window |
+| `artifact_*` fields | Empty | Still empty (not populated by the original pipeline either) |
+
+Resulting files: **2,424 learner-day rows (60 learners), 62 learners in the cohort file, 9 months**. The April files held a 100-row daily panel and a 6-row monthly file (the documentation described 3,012 and 9), so they were partial extracts of the dataset described. The January 2026 daily rows are absent because fewer than 5 learners were present on any January date; January remains in `disruption_periods.csv`.
+
+The assessment metrics (scaffolding, reasoning, capability scores, PUE and role signals) are **unchanged**: they come from the same monthly assessments, one per learner-month, repeated on each day of that month. Only the engagement counts, the dates, the population and the bands changed.
+
+**Statements elsewhere in this README that the data do not support** (left as written; they need a decision from the authors):
+- *Learner tokens "(e.g. `L001`–`L088`)"*: tokens are salted hashes of the account ID, 32 hexadecimal characters. The salt is visible in the platform's public source code, so treat tokens as pseudonymous rather than anonymous.
+- *"88 unique learners"*: revision 2 has 62 learners. Of the 88 in the April file, 14 are accounts that are now staff, and others had only pre-created rows.
+- *"All three [disruptions] produced near-zero community engagement"*: in neither export do sessions fall to near zero in the outage months. Revision 2 monthly sessions are 111 (Oct) and 98 (Nov) for the ISP outage against 33 in September and 86 in December; the April file showed 384 and 604.
 
 ---
 
@@ -36,7 +66,7 @@ The Davidson AI Innovation Center (vAI) was established in June 2025 by communit
 - **Technical & Creative Skills** — coding, content creation, digital tools
 - **Community Impact AI** — health navigation, agricultural consulting, enterprise development
 
-The deployment reached 88 unique learners over the study period. Two learners are identified by name in the paper as longitudinal case studies — Silas Clergy (co-author, software developer) and Solomon Matthias Solomon (community health navigator) — with their explicit consent.
+The April 2026 export reported 88 unique learners; see Revision 2 above for why the regenerated files describe 62. Two learners are identified by name in the paper as longitudinal case studies — Silas Clergy (co-author, software developer) and Solomon Matthias Solomon (community health navigator) — with their explicit consent.
 
 ---
 
@@ -46,20 +76,20 @@ The lab launched in June 2025 and recorded first learner activity on July 15, 20
 
 Researchers should note:
 - **June–July 2025**: deployment and onboarding period; session data available from corresponding author on request
-- **August 2025 – April 2026**: full pre-computed metrics available in this repository (3,012 learner-day records)
+- **August 2025 – April 2026**: metrics available in this repository (2,424 learner-day records in revision 2)
 - **Paper references to "11-month deployment"** span June 2025 – April 2026; quantitative analyses draw on the August 2025 – April 2026 window unless otherwise noted
 
 ---
 
 ## Anonymization Protocol
 
-All three datasets were generated from `public.dashboard_stats` using the SQL in `export_anonymized.sql`. Anonymization was implemented at the database layer before export:
+All three datasets were generated using the SQL in `export_research_data.sql` (revision 2; the April export came from `public.dashboard_stats`). Anonymization is applied in that query:
 
-**Pseudonymization:** The `dashboard_stats` table uses platform-generated `learner_token` values (e.g. `L001`–`L088`) in place of raw Supabase `user_id` UUID values. Tokens are stable across all three files — the same learner has the same token everywhere. Tokens cannot be reversed to identify individuals without access to the platform's authentication records.
+**Pseudonymization:** `learner_token` is a salted hash (MD5) of the Supabase account ID, in place of the raw `user_id` UUID. Tokens are stable across all three files and across revisions — the same learner has the same token everywhere. Re-identifying a learner requires their account ID, but because the salt appears in the platform's public source code, tokens are pseudonymous, not anonymous.
 
-**K-anonymity suppression:** The platform's edge function implements k-anonymity (k=3) at write time. Rows where a learner's activity pattern constitutes a rare combination that could facilitate re-identification are flagged `k_anon_suppressed = true` and excluded from all three exports. Of 3,181 total Oloibiri rows in the study window, 169 (4.7%) were suppressed — concentrated in disruption-period months when active learner counts were low.
+**K-anonymity suppression:** In revision 2 a learner-day row is dropped when fewer than 5 learners are present on that date, and a month is dropped from `disruption_periods.csv` when fewer than 5 learners were active in it. (This is the threshold the platform code uses; the April README said k=3.)
 
-**Attribute binning:** `grade_band` (already binned in `dashboard_stats`) replaces raw grade level. No precise birthdates or ages are recorded in the platform.
+**Attribute binning:** `grade_band` (1-4, 5-8, 9-12) replaces raw grade level. No precise birthdates or ages are recorded in the platform.
 
 **Content exclusion:** Raw chat transcripts are not included. Scaffolding metrics are pre-computed aggregates (clarification requests per session, decomposition requests per session) that convey instructional dependency without exposing message content.
 
@@ -91,7 +121,7 @@ The three disruption types are analytically separable and represent distinct inv
 ### Scaffolding demand decline (Paper Figure 4 / Section 4.3)
 Use `learner_daily_panel.csv`:
 - Sort by `learner_token`, then compute `cumulative_sessions` as running sum of `activities_started_today` per learner
-- Assign session band from cumulative total: Emerging (1–10), Developing (11–25), Established (26–50), Core (50+)
+- Assign session band from cumulative total (revision 2): Early (<25), Developing (25–49), Established (50–99), Core (100+)
 - DV: `scaffold_clarification_per_session` — expected to decline monotonically across bands
 - Exclude disruption-period months for the primary analysis; include for the natural experiment analysis
 
