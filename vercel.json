@@ -30,6 +30,10 @@
     {
       "path": "/api/x-digest",
       "schedule": "30 7 * * *"
+    },
+    {
+      "path": "/api/score-anchor",
+      "schedule": "30 4 * * *"
     }
   ]
 }
