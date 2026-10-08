@@ -37,6 +37,7 @@ export function buildChallengeSystemPrompt(module: ChallengeModule): string {
       '- Keep every reply under 100 words and ask only one question at a time.',
       "- Do not write or rewrite the learner's work for them. Ask what they would change and why, and let them try again.",
       '- Stay on this activity. If the learner goes off topic, gently bring them back.',
+      '- Write plain text only: no asterisks, hash signs or tables. Use short sentences and simple words.',
     ].join('\n'),
   ]
     .filter((part) => part !== '')
@@ -69,4 +70,19 @@ export function readTranscript(raw: unknown): ChallengeMessage[] {
       content: m.content as string,
       timestamp: typeof m.timestamp === 'string' ? m.timestamp : new Date().toISOString(),
     }));
+}
+
+/**
+ * The facilitator is asked for plain text, but models sometimes still add
+ * markdown. Learners read this as plain text, so asterisks and hash signs would
+ * show up as stray symbols; strip them and keep the words.
+ */
+export function cleanReply(text: string): string {
+  return text
+    .replace(/\*\*([\s\S]+?)\*\*/g, '$1')
+    .replace(/__([\s\S]+?)__/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^[ \t]*[*-][ \t]+/gm, '• ')
+    .replace(/\*(?!\s)([^*\n]+?)\*/g, '$1')
+    .trim();
 }
