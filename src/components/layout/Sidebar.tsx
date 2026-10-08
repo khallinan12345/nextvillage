@@ -6,7 +6,7 @@ import {
   Award, Brain, BarChart, BookOpen, GraduationCap,
   Code, Database, Layers, ImagePlus, Video, Mic, PenLine, Zap,
   Briefcase, Code2, Film, ImagePlus as ImagePlusIcon, Mic as MicIcon,
-  Cpu, Wand2, ChevronDown, ChevronUp, ShieldCheck, Users, Sprout, Fish, Heart,
+  Cpu, Wand2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Users, Sprout, Fish, Heart,
   GitBranch, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe, Puzzle
 } from 'lucide-react';
 import classNames from 'classnames';
@@ -381,6 +381,23 @@ const Sidebar: React.FC = () => {
                   <ShieldCheck size={20} />
                 </span>
                 Admin
+              </Link>
+              <Link
+                to="/admin/learner-growth"
+                className={classNames(
+                  'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors',
+                  isActive('/admin/learner-growth')
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'text-amber-600 hover:bg-amber-50 hover:text-amber-700'
+                )}
+              >
+                <span className={classNames(
+                  'flex-shrink-0',
+                  isActive('/admin/learner-growth') ? 'text-amber-700' : 'text-amber-400'
+                )}>
+                  <TrendingUp size={20} />
+                </span>
+                Learner growth
               </Link>
             </>
           )}

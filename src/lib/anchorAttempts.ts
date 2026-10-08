@@ -56,11 +56,11 @@ export async function startAnchorAttempt(client: SupabaseClient, kind: AttemptKi
   return data as AnchorAttempt;
 }
 
-/** Link the dashboard row the learner worked in and keep a transcript snapshot. */
+/** Mark the attempt finished and keep a transcript snapshot. A dashboard row is optional. */
 export async function finishAnchorAttempt(
   client: SupabaseClient,
   attemptId: string,
-  dashboardId: string,
+  dashboardId: string | null,
   transcript: unknown[],
 ): Promise<void> {
   const { error } = await client.rpc('finish_anchor_attempt', {
@@ -94,4 +94,17 @@ export function nextPrompt(status: CheckpointStatus | null): NextPrompt {
     return { type: 'checkpoint', checkpoint: status.due_checkpoint };
   }
   return null;
+}
+
+/** Keep the conversation as the learner goes, so an unfinished attempt can be resumed. */
+export async function saveAnchorTranscript(
+  client: SupabaseClient,
+  attemptId: string,
+  transcript: unknown[],
+): Promise<void> {
+  const { error } = await client.rpc('save_anchor_transcript', {
+    p_attempt: attemptId,
+    p_transcript: transcript,
+  });
+  if (error) throw error;
 }

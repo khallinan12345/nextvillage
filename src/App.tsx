@@ -37,6 +37,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Learning Pages
 const AILearningPage = lazy(() => import('./pages/learning/AILearningPage'));
+const PromptChallengePage = lazy(() => import('./pages/learning/PromptChallengePage'));
 const AIReadySkillsPage = lazy(() => import('./pages/learning/AIReadySkillsPage'));
 const FinancialLiteracyPage = lazy(() => import('./pages/learning/FinancialLiteracyPage'));
 const SolarEngineeringPage = lazy(() => import('./pages/learning/SolarEngineeringPage'));
@@ -86,6 +87,7 @@ const TechSkillsPage = lazy(() => import('./pages/tech-skills/TechSkillsPage'));
 // Legacy pages - kept for backwards compatibility
 const CodeAssistantPage = lazy(() => import('./pages/CodeAssistantPage'));
 const AdminStudentDashboard = lazy(() => import('./pages/admin/AdminStudentDashboard'));
+const LearnerGrowthPage = lazy(() => import('./pages/admin/LearnerGrowthPage'));
 
 // Community Impact Pages
 const AIAmbassadorsPage = lazy(() => import('./pages/community-impact/AIAmbassadorsPage'));
@@ -260,6 +262,7 @@ export const AppContent: React.FC = () => {
         <Route path="/math-skills" element={<MathSkillsPage />} />
         <Route path="/science-skills" element={<ScienceSkillsPage />} />
         <Route path="/learning/ai" element={<AILearningPage />} />
+        <Route path="/prompt-challenge/:attemptId" element={<PromptChallengePage />} />
         <Route path="/learning/skills" element={<AIReadySkillsPage />} />
         <Route path="/learning/financial-literacy" element={<FinancialLiteracyPage />} />
         <Route path="/learning/solar-engineering" element={<SolarEngineeringPage />} />
@@ -371,6 +374,7 @@ export const AppContent: React.FC = () => {
         <Route path="/admin/projects" element={<DashboardPage />} />
         <Route path="/admin/education" element={<DashboardPage />} />
         <Route path="/admin/student-dashboard" element={<AdminStudentDashboard />} />
+        <Route path="/admin/learner-growth" element={<LearnerGrowthPage />} />
         <Route path="/teacher-dashboard" element={<Navigate to="/admin/student-dashboard" replace />} />
 
         </Route>

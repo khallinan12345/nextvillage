@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { isPlaceholderRow } from '../lib/dashboardRows';
+import AnchorPromptCard from '../components/anchor/AnchorPromptCard';
 import { resolveChallengeOrgSlug } from '../lib/communityChallengeScope';
 import { shortDisplayName } from '../lib/displayName';
 import { Project, Team, UserProfile } from '../types/supabase';
@@ -2225,6 +2226,9 @@ ${prior.impact_arc}
                 <PendingMembersCard />
               </>
             )}
+
+            {/* ── Prompt Challenge: shown only when a checkpoint or revisit is due ── */}
+            {['student', 'learner'].includes(user?.role ?? '') && <AnchorPromptCard />}
 
             {/* ── Module Progress Ring + Achievements ─────────────────────── */}
             {user?.role === 'student' && (
