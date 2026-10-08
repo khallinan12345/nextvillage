@@ -7,6 +7,7 @@ import {
   buildChallengeSystemPrompt,
   canFinish,
   challengeGreeting,
+  cleanReply,
   readTranscript,
   toModelMessages,
   type ChallengeMessage,
@@ -76,12 +77,12 @@ export default function PromptChallengePage() {
     setBusy(true);
     setNotice(null);
     try {
-      const reply = await chatText({
+      const reply = cleanReply(await chatText({
         page: 'PromptChallengePage',
         system: buildChallengeSystemPrompt(module),
         messages: toModelMessages(withLearner),
         max_tokens: 400,
-      });
+      }));
       const full: ChallengeMessage[] = [...withLearner, { role: 'assistant', content: reply, timestamp: new Date().toISOString() }];
       setMessages(full);
       saveAnchorTranscript(supabase, attemptId, full).catch(() => {
@@ -146,7 +147,9 @@ export default function PromptChallengePage() {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-4">
       <header>
-        <h1 className="text-xl font-semibold text-gray-900">{module?.title}</h1>
+        <Link to="/dashboard" className="text-sm text-blue-700 underline">Back to your dashboard</Link>
+        <p className="text-xs text-gray-500 mt-0.5">Your conversation is saved. You can come back and continue later.</p>
+        <h1 className="mt-3 text-xl font-semibold text-gray-900">{module?.title}</h1>
         {module?.description && <p className="text-sm text-gray-600 mt-1">{module.description}</p>}
       </header>
 

@@ -4,6 +4,7 @@ import {
   buildChallengeSystemPrompt,
   canFinish,
   challengeGreeting,
+  cleanReply,
   learnerMessageCount,
   readTranscript,
   toModelMessages,
@@ -24,6 +25,7 @@ describe('buildChallengeSystemPrompt', () => {
     expect(p.indexOf('Guide students')).toBeLessThan(p.indexOf('Activity: Prompt Improvement Challenge'));
     expect(p.indexOf('Activity:')).toBeLessThan(p.indexOf('How to respond:'));
     expect(p).toContain('under 100 words');
+    expect(p).toContain('Write plain text only');
     expect(p).toContain("Do not write or rewrite the learner's work");
   });
 
@@ -70,5 +72,21 @@ describe('readTranscript', () => {
     const out = readTranscript(saved);
     expect(out.map((x) => x.content)).toEqual(['Hello', 'my prompt']);
     expect(readTranscript('nope')).toEqual([]);
+  });
+});
+
+describe('cleanReply', () => {
+  it('removes bold and heading markers but keeps the words', () => {
+    expect(cleanReply('Now look. **What could make your question clearer?** Think.')).toBe('Now look. What could make your question clearer? Think.');
+    expect(cleanReply('## Step one\nAsk her.')).toBe('Step one\nAsk her.');
+    expect(cleanReply('__Listen__ well')).toBe('Listen well');
+  });
+  it('turns list markers into plain bullets and drops single-asterisk emphasis', () => {
+    expect(cleanReply('- ask about fish\n* ask about rain')).toBe('• ask about fish\n• ask about rain');
+    expect(cleanReply('Write *exactly* what she says')).toBe('Write exactly what she says');
+  });
+  it('leaves ordinary text and emoji alone', () => {
+    expect(cleanReply('What a good idea! 🌿')).toBe('What a good idea! 🌿');
+    expect(cleanReply('2 * 3 is six')).toBe('2 * 3 is six');
   });
 });

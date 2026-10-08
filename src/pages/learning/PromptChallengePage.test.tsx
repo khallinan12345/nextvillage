@@ -76,6 +76,17 @@ describe('PromptChallengePage', () => {
     expect(saved.map((m) => m.role)).toEqual(['assistant', 'user', 'assistant']);
   });
 
+  it('cleans markdown out of the assistant reply and offers a way back to the dashboard', async () => {
+    chatText.mockResolvedValue('Now think. **What could make your question clearer?**');
+    open();
+    await screen.findByLabelText('Your message');
+    expect(screen.getByRole('link', { name: 'Back to your dashboard' })).toHaveAttribute('href', '/dashboard');
+    expect(screen.getByText(/Your conversation is saved/)).toBeInTheDocument();
+    await say('my first prompt');
+    expect(await screen.findByText('Now think. What could make your question clearer?')).toBeInTheDocument();
+    expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument();
+  });
+
   it('lets the learner finish only after enough messages, then saves with no dashboard row', async () => {
     open();
     await screen.findByLabelText('Your message');
