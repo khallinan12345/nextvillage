@@ -6,6 +6,7 @@
 import { appendSafetyFloor, checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 import { requireUser } from './_lib/requireUser.js';
+import { fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
 //
 // ROUTING LOGIC:
 //   page = 'AILearningPage' | 'EnglishSkillsPage' |
@@ -542,7 +543,8 @@ function splitCacheableSystem(system) {
 async function callAnthropic(model, messages, system, max_tokens, temperature, page = '') {
   const systemPayload = splitCacheableSystem(system);
 
-  const cachedMessages = applyCacheToLastAssistant(messages);
+  // Haiku 5.5 costs 5x more per token past 100k prompt tokens — keep under it.
+  const cachedMessages = applyCacheToLastAssistant(usesHaiku55(model) ? fitToBudget(messages, system).messages : messages);
 
   const requestBody = {
     model,
@@ -988,7 +990,8 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
 async function callAnthropicStreaming(model, messages, system, max_tokens, temperature, res, page = '') {
   const systemPayload = splitCacheableSystem(system);
 
-  const cachedMessages = applyCacheToLastAssistant(messages);
+  // Haiku 5.5 costs 5x more per token past 100k prompt tokens — keep under it.
+  const cachedMessages = applyCacheToLastAssistant(usesHaiku55(model) ? fitToBudget(messages, system).messages : messages);
 
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
