@@ -43,7 +43,7 @@ import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL_SONNET      = 'claude-sonnet-5-5'
-const MODEL_HAIKU       = 'claude-haiku-4-5'; // used for critique
+const MODEL_HAIKU       = 'claude-haiku-5-5'; // used for critique
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

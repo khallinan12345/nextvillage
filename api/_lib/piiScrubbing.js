@@ -178,7 +178,7 @@ async function extractSpans(indexedTexts, firstName, tier, logEvent) {
         'Content-Type':      'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-haiku-5-5',
         max_tokens: EXTRACTION_MAX_TOKENS,
         temperature: 0,
         system: buildExtractionSystemPrompt(firstName, tier),

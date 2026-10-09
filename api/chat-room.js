@@ -41,10 +41,10 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // `temperature` with a 400 — keep this in sync with the identical check in
 // api/chat-stream.js.
 function modelAllowsCustomTemperature(model) {
-  return !/^claude-(sonnet-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+  return !/^claude-(sonnet-5-5|haiku-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
 }
 
-// output_config.effort errors on Haiku 4.5 — only send it to models that
+// output_config.effort errors on Haiku 5.5 — only send it to models that
 // support it. Room chat runs at "low" effort (ordinary conversation); coding
 // and reasoning-heavy routes use "medium" — see api/chat.js's PAGE_EFFORT comment.
 function modelSupportsEffort(model) {
@@ -55,6 +55,7 @@ function modelSupportsEffort(model) {
 const PRICES = {
   'claude-sonnet-5-5':            { input: 2.0, output: 10.0 }, // intro pricing through 2026-08-31
   'claude-sonnet-4-6':          { input: 3.0, output: 15.0 },
+  'claude-haiku-5-5':  { input: 0.10, output: 0.50 },  // $/MTok, prompts up to 100k
   'claude-haiku-4-5':  { input: 1.0, output:  5.0 },
   default:                      { input: 3.0, output: 15.0 },
 };

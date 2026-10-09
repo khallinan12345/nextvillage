@@ -41,6 +41,7 @@ const KEEP_RECENT           = 10;
 const PRICES = {
   'claude-sonnet-5-5':            { input: 2.0,  output: 10.0 }, // intro pricing through 2026-08-31
   'claude-sonnet-4-6':         { input: 3.0,  output: 15.0 },
+  'claude-haiku-5-5': { input: 0.10,  output: 0.50 },  // $/MTok, prompts up to 100k
   'claude-haiku-4-5': { input: 1.0,  output:  5.0 },
   default:                     { input: 3.0,  output: 15.0 },
 };
@@ -171,7 +172,7 @@ async function compressOldMessages(messages, apiKey, user_id, cohort) {
     .map(m => `[${m.role.toUpperCase()}]: ${(m.content || '').slice(0, 800)}`)
     .join('\n');
 
-  const compressionModel = 'claude-haiku-4-5';
+  const compressionModel = 'claude-haiku-5-5';
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -185,7 +186,6 @@ async function compressOldMessages(messages, apiKey, user_id, cohort) {
       body: JSON.stringify({
         model:       compressionModel,
         max_tokens:  600,
-        temperature: 0.1,
         system: [{ type: 'text', text: 'You are a conversation summariser. Write a concise factual summary of a chat history for use as context in an ongoing conversation. Include: key topics discussed, decisions made, important facts the user shared, and any code or artifacts produced. Write in third person. Be specific and dense — this replaces the full history.', cache_control: { type: 'ephemeral' } }],
         messages: [{
           role:    'user',
@@ -309,9 +309,8 @@ async function classifyTask(messages, apiKey) {
         'content-type':      'application/json',
       },
       body: JSON.stringify({
-        model:      'claude-haiku-4-5',
+        model:      'claude-haiku-5-5',
         max_tokens: 5,
-        temperature: 0,
         system: [{ type: 'text', text: 'You classify user messages. Reply with exactly one word: "coding" if the message is about writing, debugging, reviewing, or explaining code or technical implementation. Reply "non-coding" for everything else (concepts, learning, questions, advice, language help, general chat).', cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: userText.slice(0, 500) }],
       }),
@@ -324,7 +323,7 @@ async function classifyTask(messages, apiKey) {
     // Log classifier cost (fire-and-forget)
     if (data.usage) {
       logCost({
-        model:       'claude-haiku-4-5',
+        model:       'claude-haiku-5-5',
         action:      'classify',
         inputTokens:  data.usage.input_tokens  ?? 0,
         outputTokens: data.usage.output_tokens ?? 0,
@@ -398,9 +397,8 @@ async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, tempe
       'content-type':      'application/json',
     },
     body: JSON.stringify({
-      model:      'claude-haiku-4-5',
+      model:      'claude-haiku-5-5',
       max_tokens: Math.min(max_tokens, 8192),
-      temperature,
       messages:   cachedMessages,
       ...(systemPayload ? { system: systemPayload } : {}),
     }),
@@ -411,7 +409,7 @@ async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, tempe
 
   const text = data.content?.[0]?.text ?? '';
   logCost({
-    model:           'claude-haiku-4-5',
+    model:           'claude-haiku-5-5',
     action:          'generate',
     inputTokens:      data.usage?.input_tokens                ?? 0,
     outputTokens:     data.usage?.output_tokens               ?? 0,
@@ -419,7 +417,7 @@ async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, tempe
     cacheWriteTokens: data.usage?.cache_creation_input_tokens ?? 0,
     user_id, cohort,
   });
-  return { text, model: 'claude-haiku-4-5', provider: 'anthropic' };
+  return { text, model: 'claude-haiku-5-5', provider: 'anthropic' };
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -457,7 +455,7 @@ export default async function handler(req) {
   const {
     messages:    rawMessages,
     system,
-    model       = 'claude-haiku-4-5',
+    model       = 'claude-haiku-5-5',
     max_tokens  = 16000,
     temperature = 0.3,
     user_id,    // pass through from AIPlaygroundPage if available
@@ -595,8 +593,8 @@ export default async function handler(req) {
 
   // Claude Sonnet 5.5 (and the Opus 4.7+/Fable 5 family) reject a non-default
   // `temperature` with a 400 — only send it for models that still accept it.
-  const modelAllowsCustomTemperature = !/^claude-(sonnet-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
-  // output_config.effort errors on Haiku 4.5 — only send it to models that
+  const modelAllowsCustomTemperature = !/^claude-(sonnet-5-5|haiku-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+  // output_config.effort errors on Haiku 5.5 — only send it to models that
   // support it. This streaming path is code generation, so it runs at "medium"
   // effort (ordinary chat routes use "low") — see api/chat.js's PAGE_EFFORT comment.
   const modelSupportsEffort = !/^claude-haiku/.test(model);

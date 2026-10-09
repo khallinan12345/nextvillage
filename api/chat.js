@@ -34,7 +34,7 @@ import { requireUser } from './_lib/requireUser.js';
 //     → Anthropic claude-sonnet-5-5 always (no free-tier fallback)
 //
 //   all other pages / no page supplied
-//     → Anthropic claude-haiku-4-5 (default)
+//     → Anthropic claude-haiku-5-5 (default)
 //
 // TASK TYPE (for coding pages):
 //   The frontend should send taskType = 'coding' | 'non-coding' in the request body.
@@ -130,7 +130,7 @@ const SONNET55_PAGES = new Set([
 // for Oloibiri's learners in practice, so "low" is the default on every
 // Sonnet 5.5 route (per an observed cost uptick). "medium" is used where the
 // extra depth earns its cost: code generation (the hybrid coding pages) and
-// SystemsThinkPage's multi-layered Socratic reasoning. Never applies to Haiku 4.5 — see modelSupportsEffort() — Haiku
+// SystemsThinkPage's multi-layered Socratic reasoning. Never applies to Haiku 5.5 — see modelSupportsEffort() — Haiku
 // rejects the effort parameter outright, so a page pinned to Haiku (e.g.
 // certification pages) is already running as cheap as this lever can make
 // it and gets no output_config.effort at all.
@@ -146,7 +146,7 @@ function getEffortForPage(page) {
   return HYBRID_CODING_PAGES.has(page) ? 'medium' : 'low';
 }
 
-// output_config.effort errors on Haiku 4.5 — only send it to models that
+// output_config.effort errors on Haiku 5.5 — only send it to models that
 // actually support it (Sonnet 5.5 and the Sonnet/Opus 4.6+ family).
 function modelSupportsEffort(model) {
   return !/^claude-haiku/.test(model);
@@ -182,7 +182,7 @@ const CERT_PAGES = new Set([
 //   );
 
 const DEFAULT_MODELS = {
-  anthropic_haiku:   'claude-haiku-4-5',
+  anthropic_haiku:   'claude-haiku-5-5',
   anthropic_sonnet:  'claude-sonnet-4-6',
   anthropic_sonnet55: 'claude-sonnet-5-5',
   groq:             'openai/gpt-oss-120b',      // was llama-3.3-70b-versatile (deprecated Jun 17 2026)
@@ -237,6 +237,7 @@ async function refreshModels() {
 const PRICING = {
   'claude-sonnet-5-5':             { input: 2.00,  output: 10.00, cacheWrite: 2.50,  cacheRead: 0.20  },
   'claude-sonnet-4-6':           { input: 3.00,  output: 15.00, cacheWrite: 3.75,  cacheRead: 0.30  },
+  'claude-haiku-5-5':   { input: 0.10,  output: 0.50,  cacheWrite: 0.125,  cacheRead: 0.01  },  // $/MTok, prompts up to 100k
   'claude-haiku-4-5':   { input: 1.00,  output: 5.00,  cacheWrite: 1.25,  cacheRead: 0.10  },
   'llama-3.3-70b-versatile':     { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
   'gemini-2.0-flash':            { input: 0.00,  output: 0.00,  cacheWrite: 0.00,  cacheRead: 0.00  },
@@ -510,7 +511,7 @@ function applyCacheToLastAssistant(messages) {
 // `temperature` with a 400 — only send it for models that still accept it.
 // See api/chat-stream.js's identical gate for the incident this fixed.
 function modelAllowsCustomTemperature(model) {
-  return !/^claude-(sonnet-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
+  return !/^claude-(sonnet-5-5|haiku-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
 }
 
 // `system` here is always appendSafetyFloor()'d — built once at the top of

@@ -18,7 +18,7 @@
 
 const COMPRESSION_THRESHOLD = 30;  // compress chats with more messages than this
 const KEEP_RECENT           = 20;  // keep this many recent messages verbatim
-const HAIKU_MODEL           = 'claude-haiku-4-5';
+const HAIKU_MODEL           = 'claude-haiku-5-5';
 const MAX_CHARS_PER_MSG     = 800; // truncate each message in the transcript
 
 const DRY_RUN        = process.env.DRY_RUN === 'true';

@@ -179,6 +179,7 @@ const getProviderColor = (provider: string) =>
 
 const PRICING: Record<string, { input: number; output: number; label: string }> = {
   'claude-sonnet-4-6':         { input: 3.00,  output: 15.00, label: 'Sonnet 4.6' },
+  'claude-haiku-5-5': { input: 0.10,  output: 0.50,  label: 'Haiku 5.5' },  // $/MTok, prompts up to 100k
   'claude-haiku-4-5': { input: 1.00,  output: 5.00,  label: 'Haiku 4.5' },
   'llama-3.3-70b-versatile':   { input: 0.00,  output: 0.00,  label: 'Groq Llama 70B' },
   'gemini-2.0-flash':          { input: 0.00,  output: 0.00,  label: 'Gemini 2.0 Flash' },
@@ -1388,7 +1389,7 @@ const ModelOverviewPanel: React.FC<{
             { name: 'Cerebras', model: 'Llama 70B', color: getProviderColor('cerebras'), free: true },
             { name: 'OpenRouter', model: 'Llama 70B', color: getProviderColor('openrouter'), free: true },
             { name: 'Mistral', model: 'Small', color: getProviderColor('mistral'), free: true },
-            { name: 'Anthropic', model: 'Haiku 4.5', color: getProviderColor('anthropic'), free: false },
+            { name: 'Anthropic', model: 'Haiku 5.5', color: getProviderColor('anthropic'), free: false },
           ].map((p, i, arr) => (
             <React.Fragment key={p.name}>
               <div className={classNames('px-3 py-2 rounded-lg border text-xs', p.color.bg, p.color.border)}>

@@ -241,6 +241,7 @@ async function fetchDailySummary(
 
 const PRICING_PER_MTOK: Record<string, { input: number; output: number }> = {
   "claude-sonnet-4-6":         { input: 3.00,  output: 15.00 },
+  "claude-haiku-5-5": { input: 0.10,  output: 0.50  },  // $/MTok, prompts up to 100k
   "claude-haiku-4-5": { input: 1.00,  output: 5.00  },
   "llama-3.3-70b-versatile":   { input: 0.00,  output: 0.00  },
 };
