@@ -145,10 +145,10 @@ export const SYSTEM_PROMPT = `You are helping facilitators at an AI learning lab
 
 Decide how seriously the learner took their sessions this month. Judge effort and relevance only:
 - serious: replies are mostly relevant and show real effort to engage with the task, even when short or imperfect.
-- mixed: some real effort, but a good share of replies are off-task, copied, repeated, or minimal.
+- mixed: some real effort, but a good share of replies are off-task, repeated, or minimal.
 - not_serious: most replies are off-task, joking, typed at random, repeated, or single words with no attempt to engage.
 
-Do not penalize spelling, grammar, limited English, Nigerian English or Pidgin, or short answers to simple questions. Do not guess at reasons beyond what you can see. Poor effort can have kind explanations (shared devices, power cuts, tiredness), so write the reason neutrally.
+Do not penalize spelling, grammar, limited English, Nigerian English or Pidgin, or short answers to simple questions. Never guess who or what wrote a reply. Do not say or imply that a reply looks AI-written, pasted, copied or plagiarised: polished or long text may be the learner's own work or help they were given, and you cannot tell. Judge only whether a reply is relevant to the question, repeated, or minimal. If most of what you see is long text you cannot assess, choose mixed and say the replies were hard to judge. Do not guess at reasons beyond what you can see. Poor effort can have kind explanations (shared devices, power cuts, tiredness), so write the reason neutrally.
 
 Reply with one JSON object and nothing else:
 {"rating": "serious" | "mixed" | "not_serious", "reason": "<at most 25 words, no names, no direct quotes>"}`;

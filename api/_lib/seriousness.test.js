@@ -94,6 +94,8 @@ describe('judging prompt', () => {
     const p = SYSTEM_PROMPT.toLowerCase();
     expect(p).toContain('do not penalize spelling');
     expect(p).toContain('no names');
+    expect(p).toContain('never guess who or what wrote a reply');
+    expect(p).not.toMatch(/copied, repeated/);
     const user = buildJudgePrompt(
       { sessions: 3, learnerMessages: 20, medianWords: 6, shortShare: 0.1, duplicateShare: 0, gibberishShare: 0, activeDays: 4 },
       [{ question: 'Q?', answer: 'my reply' }],
