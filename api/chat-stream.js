@@ -21,6 +21,7 @@
 // Pure `fetch`-based, no Node-only APIs, so it works unmodified in this Edge runtime.
 import { checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
+import { estimateTokens, fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
 
 export const config = { runtime: 'edge' };
 
@@ -159,7 +160,8 @@ function logCost({ model, action, inputTokens, outputTokens, cacheHitTokens = 0,
 //   { compressed: false, messages: originalMessages }                      — no compression needed
 
 async function compressOldMessages(messages, apiKey, user_id, cohort) {
-  if (messages.length <= COMPRESSION_THRESHOLD) {
+  // Compress on length, or on size: Haiku 5.5 is 5x pricier past 100k prompt tokens.
+  if (messages.length <= KEEP_RECENT || (messages.length <= COMPRESSION_THRESHOLD && estimateTokens(messages) < 70_000)) {
     return { compressed: false, messages };
   }
 
@@ -386,7 +388,7 @@ async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, tempe
     ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
     : undefined;
 
-  const cachedMessages = applyCacheToLastAssistant(messages);
+  const cachedMessages = applyCacheToLastAssistant(fitToBudget(messages, system).messages);
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -589,7 +591,9 @@ export default async function handler(req) {
 
   // ── Coding path: Sonnet with streaming ────────────────────────────────────
   // Cache the last assistant message so repeated context is served from cache
-  const cachedMessagesForApi = applyCacheToLastAssistant(messagesForApi);
+  const cachedMessagesForApi = applyCacheToLastAssistant(
+    usesHaiku55(model) ? fitToBudget(messagesForApi, systemPayload).messages : messagesForApi,
+  );
 
   // Claude Sonnet 5.5 (and the Opus 4.7+/Fable 5 family) reject a non-default
   // `temperature` with a 400 — only send it for models that still accept it.

@@ -151,10 +151,17 @@ export async function assessMonthlySkills(
     }
   }
 
-  const combinedText = [
+  const fullText = [
     structuredLessonText ? `[Structured lesson conversations]\n${structuredLessonText}` : "",
     ...freeformSections,
   ].filter(Boolean).join("\n\n---\n\n");
+
+  // Haiku 5.5 costs 5x more per token once a prompt passes 100k tokens, and a
+  // very active learner's month can get there. Keep the most recent text that
+  // fits (about 85k tokens at 3 characters per token, leaving room for the
+  // instructions and the reply).
+  const MAX_CHARS = 255_000;
+  const combinedText = fullText.length > MAX_CHARS ? fullText.slice(-MAX_CHARS) : fullText;
 
   if (!combinedText.trim()) {
     console.log(`No user messages found.`);
