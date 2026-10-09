@@ -18,6 +18,7 @@
 // ─── Token prices per million (update if Anthropic changes rates) ─────────────
 const PRICES: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-6':        { input: 3.0,  output: 15.0 },
+  'claude-haiku-5-5': { input: 0.10,  output: 0.50 },  // $/MTok, prompts up to 100k
   'claude-haiku-4-5': { input: 1.0,  output:  5.0 },
   'claude-opus-4-6':          { input: 5.0,  output: 25.0 },
   // fallback for unknown models — assume Sonnet pricing

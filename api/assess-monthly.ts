@@ -67,7 +67,7 @@ const supabase = createClient(
 //                         prompt). Saves ~90% on repeated input tokens across
 //                         learners who share the same static schema block.
 //
-//  2. callClaudeHaiku   — Haiku 4.5 for cheap structured tasks (cert summary,
+//  2. callClaudeHaiku   — Haiku 5.5 for cheap structured tasks (cert summary,
 //                         playground summary). 3x cheaper than Sonnet.
 //
 //  3. Batch API path    — submitBatchRequests / pollBatchResults implement the
@@ -139,9 +139,8 @@ async function callClaudeHaiku(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
+      model: "claude-haiku-5-5",
       max_tokens: maxTokens,
-      temperature: 0.2,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     }),
@@ -157,7 +156,7 @@ async function callClaudeHaiku(
   // Log cost — tagged as monthly_assessment
   logApiCost({
     source:  "monthly_assessment",
-    model:   "claude-haiku-4-5",
+    model:   "claude-haiku-5-5",
     action:  "assess_haiku",
     usage:   data.usage,
     user_id: userId ?? null,
@@ -173,8 +172,6 @@ interface BatchRequest {
   params: {
     model: string;
     max_tokens: number;
-    // Sonnet 5.5 rejects a non-default temperature; only set it for Haiku requests.
-    temperature?: number;
     output_config?: { effort: "low" | "medium" };
     system: object[];
     messages: object[];

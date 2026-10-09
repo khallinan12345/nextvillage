@@ -30,12 +30,12 @@ import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL_SONNET  = 'claude-sonnet-5-5';
-const MODEL_HAIKU   = 'claude-haiku-4-5'; // critique only
+const MODEL_HAIKU   = 'claude-haiku-5-5'; // critique only
 
 // claude-sonnet-5-5 rejects a non-default `temperature` with a 400 — only
 // send it for models that still accept it (Haiku does).
 function modelAllowsCustomTemperature(model: string): boolean {
-  return !/^claude-sonnet-5-5/.test(model);
+  return !/^claude-(sonnet-5-5|haiku-5-5)/.test(model);
 }
 
 // ─── Task context strings (guide the AI per task) ────────────────────────────

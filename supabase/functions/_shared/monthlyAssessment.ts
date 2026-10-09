@@ -180,7 +180,7 @@ Provide JSON with scores (0-100) and evidence arrays for:
 - pue_evidence`;
 
   const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
+    model: 'claude-haiku-5-5',
     // Merging in Playground/Systems Think content produces much longer
     // evidence arrays than a single structured lesson did; 1024 was cutting
     // the JSON off mid-string on richer months, breaking JSON.parse below.
@@ -223,7 +223,7 @@ Provide JSON with scores (0-100) and evidence arrays for:
       user_id: userId,
       measured_at: endDate.toISOString(),
       ...result,
-      assessment_model: "claude-haiku-4-5",
+      assessment_model: "claude-haiku-5-5",
       assessment_version: "v2.0",
     });
 

@@ -4,7 +4,7 @@
 //   1. callClaude() now returns full API response so we can read usage tokens
 //   2. logCost() writes input/output tokens + estimated cost to api_cost_log
 //   3. Context caps: pageContext snippets 200 chars, existingCode 3000 chars in generate, 4000 in iterate
-//   4. critique uses claude-haiku-4-5 (Sonnet is overkill for prompt feedback)
+//   4. critique uses claude-haiku-5-5 (Sonnet is overkill for prompt feedback)
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireUser } from './_lib/requireUser.js';
@@ -31,7 +31,7 @@ interface GenerateRequest {
 
 const ANTHROPIC_API_URL  = 'https://api.anthropic.com/v1/messages';
 const MODEL_SONNET       = 'claude-sonnet-5-5';
-const MODEL_HAIKU        = 'claude-haiku-4-5'; // critique only
+const MODEL_HAIKU        = 'claude-haiku-5-5'; // critique only
 
 // Token prices per million (update if Anthropic changes rates)
 const PRICES: Record<string, { input: number; output: number }> = {

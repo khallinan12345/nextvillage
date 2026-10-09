@@ -25,6 +25,7 @@ function logCost(page: string, model: string, usage: { input_tokens?: number; ou
   const MTok = 1_000_000;
   const prices: Record<string, { input: number; output: number }> = {
     'claude-sonnet-5-5':           { input: 2.00, output: 10.00 },
+    'claude-haiku-5-5': { input: 0.10, output: 0.50 },  // $/MTok, prompts up to 100k
     'claude-haiku-4-5': { input: 1.00, output:  5.00 },
   };
   const p = prices[model] ?? prices['claude-sonnet-5-5'];
