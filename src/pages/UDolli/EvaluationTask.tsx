@@ -10,7 +10,7 @@ import { ClipboardCheck, Eye, RotateCcw, FileText, Bot, CheckCircle2, XCircle, C
 import {
   BRIEF_INTRO, BRIEF_TEXT, CLAIMS, SOURCE_TEXT, SOURCE_TITLE, STATUS_LABEL,
   type Status,
-} from './evaluationTask';
+} from './evaluationTaskData';
 
 type Mark = Status | null;
 
