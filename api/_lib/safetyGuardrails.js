@@ -62,7 +62,7 @@ const MODERATION_CATEGORIES = ['self_harm', 'harm_to_others', 'hate_or_discrimin
 // main conversation. Deliberately self-contained (a direct fetch, not each
 // caller's own callAnthropic wrapper) so this file has no dependency on
 // either host file's shape.
-export async function moderateMessage(text) {
+export async function moderateMessage(text, logEvent = null) {
   const trimmed = (text || '').trim();
   if (trimmed.length < 3) return 'none';
   if (!process.env.ANTHROPIC_API_KEY) return 'none'; // fail open — backup layer, not the only one
@@ -77,12 +77,16 @@ export async function moderateMessage(text) {
       body: JSON.stringify({
         model: 'claude-haiku-5-5',
         max_tokens: 10,
-        temperature: 0,
         system: MODERATION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: trimmed.slice(0, 2000) }],
       }),
     });
-    if (!upstream.ok) return 'none';
+    if (!upstream.ok) {
+      // Fail open for the student, but never silently: a classifier that is
+      // down is a safeguarding gap the team needs to see.
+      logEvent?.({ event_type: 'safety_classifier_upstream_error', severity: 'error', payload: { status: upstream.status } });
+      return 'none';
+    }
     const data = await upstream.json();
     const raw = ((data?.content || []).find(b => b?.type === 'text')?.text || '').trim().toLowerCase();
     return MODERATION_CATEGORIES.find(c => raw.includes(c)) || 'none';
@@ -186,7 +190,7 @@ export function checkAndEscalate({ messages, userId, page, supabaseUrl, supabase
   const lastUserMessage = [...(messages || [])].reverse().find(m => m.role === 'user');
   if (!lastUserMessage) return;
   const text = extractMessageText(lastUserMessage.content);
-  moderateMessage(text)
+  moderateMessage(text, logEvent)
     .then(category => {
       if (category !== 'none') {
         flagSafetyIncident({ userId, page, category, excerpt: text, supabaseUrl, supabaseKey, resendKey, logEvent }).catch(() => {});
