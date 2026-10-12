@@ -336,6 +336,9 @@ function isPermanentError(error) {
   const message = error?.message?.toLowerCase() || '';
   return (
     status === 404 ||
+    status === 402 ||
+    message.includes('payment required') ||
+    message.includes('billing') ||
     message.includes('does not exist') ||
     message.includes('model not found') ||
     message.includes('daily free allocation') ||
@@ -581,6 +584,9 @@ async function callAnthropic(model, messages, system, max_tokens, temperature, p
   // undefined in that case, silently returning "". Find the text block
   // explicitly instead of assuming it's first.
   const text = (data?.content || []).find(b => b?.type === 'text')?.text ?? '';
+  if (!text.trim()) {
+    console.warn(`[chat.js] Anthropic returned no text: model=${data.model} stop_reason=${data.stop_reason} blocks=${(data?.content || []).map(b => b?.type).join(',') || 'none'} output_tokens=${data.usage?.output_tokens}`);
+  }
   return {
     id:     data.id,
     object: 'chat.completion',
@@ -801,7 +807,7 @@ async function callMistral(model, messages, system, max_tokens, temperature) {
     // auth failures (and some validation errors) come back as {detail: "..."}
     const message = data.error?.message
       || (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail))
-      || 'Mistral API error';
+      || `Mistral API error (HTTP ${upstream.status}): ${JSON.stringify(data).slice(0, 300)}`;
     const err = new Error(message);
     err.status = upstream.status;
     throw err;
@@ -903,7 +909,13 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
       name:     'anthropic',
       model:    MODELS.anthropic_haiku,
       keyEnv:   'ANTHROPIC_API_KEY',
-      fn:       () => callAnthropic(MODELS.anthropic_haiku, messages, system, max_tokens, temperature, page),
+      // Last resort, so one empty/transient reply shouldn't sink the request:
+      // retry once if the first attempt comes back with no text.
+      fn:       async () => {
+        const first = await callAnthropic(MODELS.anthropic_haiku, messages, system, max_tokens, temperature, page);
+        if (first?.choices?.[0]?.message?.content?.trim()) return first;
+        return callAnthropic(MODELS.anthropic_haiku, messages, system, max_tokens, temperature, page);
+      },
     },
   ];
 
