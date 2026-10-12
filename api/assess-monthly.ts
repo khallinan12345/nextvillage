@@ -52,6 +52,18 @@ const EXCLUDED_USER_IDS = new Set([
   "f6157a9d-5ffd-4058-b0b3-af3ea897d876", // Bennywhite Davidson (bennywhite090d@gmail.com)
 ]);
 
+// ─── Evidence gate ───────────────────────────────────────────────────────────
+// A learner needs at least this many pieces of observable evidence in the period
+// (engaged curriculum sessions + substantive AI Playground chats) to be scored.
+// Below it, we store a "usage-only" row — counts, no skill scores — because
+// advanced learners who mostly work with AI outside the platform would otherwise
+// get scores that don't reflect their growth.
+const MIN_EVIDENCE_SESSIONS = 3;
+const USAGE_ONLY_VERSION = "usage-v1";
+const PLAYGROUND_MIN_USER_WORDS = 30; // a Playground chat counts as evidence at/above this
+// Supabase .or() filter that keeps scored rows and drops usage-only rows
+const SCORED_ROWS_FILTER = `assessment_version.is.null,assessment_version.neq.${USAGE_ONLY_VERSION}`;
+
 // ─── Clients ─────────────────────────────────────────────────────────────────
 
 const supabase = createClient(
@@ -348,7 +360,7 @@ interface AssessmentSummary {
   sessionCount: number;
   engagedSessionCount: number;
   scores: MonthlySkillsResult | null;
-  status: "success" | "skipped" | "no_activity" | "error";
+  status: "success" | "skipped" | "no_activity" | "usage_only" | "error";
   error?: string;
 }
 
@@ -408,8 +420,10 @@ Analyze these ${sessionCount} structured curriculum sessions${playgroundSessionC
 
 Your scores should reflect the WHOLE learner — both structured curriculum activity and any free-form Playground use. Playground conversations reveal self-directed interests, PUE reasoning, and enterprise thinking that may not surface in the curriculum.
 
-STRUCTURED CURRICULUM CONVERSATIONS:
-${transcript}
+${sessionCount < MIN_EVIDENCE_SESSIONS ? `EVIDENCE NOTE: this learner has little structured curriculum activity this period (${sessionCount} session${sessionCount === 1 ? "" : "s"}). They may be an advanced learner who works with AI mostly in the free-form Playground or outside this platform. Base scores ONLY on what is actually visible below. Do not penalize the absence of curriculum activity, and do not score a dimension low simply because it is not observable — use 0 for dimensions with no evidence, per the instruction below. Scaffolding, role-readiness and enterprise-artifact fields that depend on curriculum sessions should be 0 / empty when no curriculum evidence exists.
+
+` : ""}STRUCTURED CURRICULUM CONVERSATIONS:
+${transcript || "(none this period)"}
 ${playgroundTranscript ? `
 AI PLAYGROUND CONVERSATIONS (free-form, unconstrained — no curriculum scaffolding):
 Note: scaffolding convergence metrics apply to curriculum sessions only. Playground sessions show purely learner-initiated behaviour.
@@ -620,16 +634,17 @@ async function assessMonthlySkills(
     .lte("created_at", endDate.toISOString())
     .order("created_at", { ascending: true });
 
-  if (error || !activities?.length) {
+  if (error) {
     return { result: null, sessionCount: 0, engagedSessionCount: 0, status: "no_activity" };
   }
 
-  const sessionCount = activities.length;
+  // Playground-only learners have no `dashboard` rows, so don't bail out here.
+  const sessionCount = activities?.length ?? 0;
 
   type ChatMsg = { role: string; content: string };
   type ParsedSession = { messages: ChatMsg[] };
 
-  const parsedSessions: ParsedSession[] = activities.map((a) => {
+  const parsedSessions: ParsedSession[] = (activities || []).map((a) => {
     try {
       const h = typeof a.chat_history === "string" ? JSON.parse(a.chat_history) : (a.chat_history || []);
       return { messages: Array.isArray(h) ? h : [] };
@@ -644,9 +659,69 @@ async function assessMonthlySkills(
     (s) => s.messages.filter((m) => m.role === "user").length >= 1
   ).length;
 
-  if (engagedSessionCount === 0) {
+  // Fetch AI Playground chats for this period (free-form, unconstrained access)
+  type PlayMsg = { role: string; content: string };
+  let playgroundSections: string[] = [];
+  let playgroundSessionCount = 0;
+  let playgroundWordCount = 0;
+  let playgroundEvidenceCount = 0; // chats with enough learner words to count as evidence
+
+  try {
+    const { data: pgRows } = await supabase
+      .from("ai_playground_chats")
+      .select("id, title, messages, updated_at")
+      .eq("user_id", userId)
+      .gte("updated_at", startDate.toISOString())
+      .lte("updated_at", endDate.toISOString())
+      .order("updated_at", { ascending: true });
+
+    if (pgRows?.length) {
+      playgroundSessionCount = pgRows.length;
+      for (const row of pgRows) {
+        const msgs: PlayMsg[] = Array.isArray(row.messages) ? row.messages : [];
+        const userMsgs = msgs.filter((m) => m.role === "user");
+        const chatWords = userMsgs.reduce((acc, m) => acc + (m.content || "").split(/\s+/).filter(Boolean).length, 0);
+        playgroundWordCount += chatWords;
+        if (chatWords >= PLAYGROUND_MIN_USER_WORDS) playgroundEvidenceCount++;
+        const section = msgs
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m) => `[${m.role.toUpperCase()}]: ${(m.content || "").slice(0, 800)}`)
+          .join("\n");
+        if (section) playgroundSections.push(`--- PLAYGROUND: ${(row.title || "Chat").slice(0, 60)} ---\n${section}`);
+      }
+    }
+  } catch (pgErr: any) {
+    console.warn(`   Playground fetch skipped: ${pgErr.message}`);
+  }
+
+  // ── Evidence gate ──────────────────────────────────────────────────────────
+  // Curriculum sessions with a learner turn + substantive Playground chats.
+  const evidenceCount = engagedSessionCount + playgroundEvidenceCount;
+  if (evidenceCount === 0 && playgroundSessionCount === 0) {
     return { result: null, sessionCount, engagedSessionCount: 0, status: "no_activity" };
   }
+  if (evidenceCount < MIN_EVIDENCE_SESSIONS) {
+    const { error: usageErr } = await supabase.from("user_monthly_assessments").insert({
+      user_id: userId,
+      measured_at: endDate.toISOString(),
+      assessment_model: null,
+      assessment_version: USAGE_ONLY_VERSION,
+      session_count: sessionCount,
+      engaged_session_count: engagedSessionCount,
+      ai_playground_session_count: playgroundSessionCount,
+      ai_playground_word_count: playgroundWordCount,
+    });
+    if (usageErr) return { result: null, sessionCount, engagedSessionCount, status: "error", error: usageErr.message };
+    console.log(`   ${userId.slice(0, 8)} → usage-only (evidence ${evidenceCount} < ${MIN_EVIDENCE_SESSIONS})`);
+    return { result: null, sessionCount, engagedSessionCount, status: "usage_only" };
+  }
+
+  // When curriculum evidence is thin, the Playground IS the evidence — give it room.
+  const curriculumThin = engagedSessionCount < MIN_EVIDENCE_SESSIONS;
+  const PLAYGROUND_BUDGET = curriculumThin ? 16000 : 4000;
+  const joinedPlayground = playgroundSections.join("\n\n");
+  let playgroundTranscript = joinedPlayground.slice(0, PLAYGROUND_BUDGET);
+  if (joinedPlayground.length > PLAYGROUND_BUDGET) playgroundTranscript += "\n[PLAYGROUND TRANSCRIPT TRUNCATED]";
 
   // PATCH 2026-05-07: budgets tightened — previous values (40k/20k) were
   // producing 150k+ token calls. New values target ~20k tokens per assessment.
@@ -676,10 +751,6 @@ async function assessMonthlySkills(
     .filter(Boolean)
     .join("\n\n");
 
-  if (!learnerOnlyTranscript.trim()) {
-    return { result: null, sessionCount, engagedSessionCount: 0, status: "no_activity" };
-  }
-
   // Tightened budgets — targets ~20k tokens per assessment (was 150k+)
   // 15k learner chars ≈ 3,750 tokens; 6k scaffold chars ≈ 1,500 tokens
   const LEARNER_BUDGET  = 15000;
@@ -695,42 +766,6 @@ async function assessMonthlySkills(
 
   // Combined transcript passed to Claude: learner-first, scaffold appended
   const truncated = `${truncatedLearner}\n\n=== FULL DIALOGUE (AI+LEARNER) FOR SCAFFOLDING ANALYSIS ONLY ===\n${truncatedScaffold}`;
-
-  // Fetch AI Playground chats for this period (free-form, unconstrained access)
-  type PlayMsg = { role: string; content: string };
-  let playgroundTranscript = "";
-  let playgroundSessionCount = 0;
-  let playgroundWordCount = 0;
-
-  try {
-    const { data: pgRows } = await supabase
-      .from("ai_playground_chats")
-      .select("id, title, messages, updated_at")
-      .eq("user_id", userId)
-      .gte("updated_at", startDate.toISOString())
-      .lte("updated_at", endDate.toISOString())
-      .order("updated_at", { ascending: true });
-
-    if (pgRows?.length) {
-      playgroundSessionCount = pgRows.length;
-      const pgSections: string[] = [];
-      for (const row of pgRows) {
-        const msgs: PlayMsg[] = Array.isArray(row.messages) ? row.messages : [];
-        const userMsgs = msgs.filter((m) => m.role === "user");
-        playgroundWordCount += userMsgs.reduce((acc, m) => acc + (m.content || "").split(/\s+/).length, 0);
-        const section = msgs
-          .filter((m) => m.role === "user" || m.role === "assistant")
-          .map((m) => `[${m.role.toUpperCase()}]: ${(m.content || "").slice(0, 800)}`)
-          .join("\n");
-        if (section) pgSections.push(`--- PLAYGROUND: ${(row.title || "Chat").slice(0, 60)} ---\n${section}`);
-      }
-      // Tightened from 10k to 4k — playground is supplementary context
-      playgroundTranscript = pgSections.join("\n\n").slice(0, 4000);
-      if (pgSections.join("\n\n").length > 4000) playgroundTranscript += "\n[PLAYGROUND TRANSCRIPT TRUNCATED]";
-    }
-  } catch (pgErr: any) {
-    console.warn(`   Playground fetch skipped: ${pgErr.message}`);
-  }
 
   try {
     // Sanitize the entire assembled prompt — bad chars can come from
@@ -963,6 +998,7 @@ async function fetchCohortHistory(excludeIds: Set<string>): Promise<CohortMonthR
         ai_prof_understanding_gpt, ai_prof_verification_gpt,
         cert_passed_count
       `)
+      .or(SCORED_ROWS_FILTER)
       .order("measured_at", { ascending: true });
 
     // If the v2.0 columns don't exist yet, fall back to base columns only
@@ -1031,6 +1067,7 @@ async function fetchCohortHistoryBase(excludeIds: Set<string>): Promise<CohortMo
         cognitive_score, critical_thinking_score,
         problem_solving_score, creativity_score, pue_score
       `)
+      .or(SCORED_ROWS_FILTER)
       .order("measured_at", { ascending: true });
 
     if (!allRows?.length) return [];
@@ -1179,9 +1216,16 @@ async function getAfricanUsersNeedingAssessment(startDate: Date, endDate: Date):
   const { data: activities } = await supabase
     .from("dashboard").select("user_id").in("user_id", ids)
     .gte("updated_at", startDate.toISOString()).lte("updated_at", endDate.toISOString());
-  if (!activities?.length) return [];
+  // Learners who only use the AI Playground never appear in `dashboard`
+  const { data: pgActivities } = await supabase
+    .from("ai_playground_chats").select("user_id").in("user_id", ids)
+    .gte("updated_at", startDate.toISOString()).lte("updated_at", endDate.toISOString());
 
-  const activeIds = [...new Set(activities.map((a) => a.user_id).filter(Boolean))] as string[];
+  const activeIds = [...new Set([
+    ...(activities || []).map((a) => a.user_id),
+    ...(pgActivities || []).map((a) => a.user_id),
+  ].filter(Boolean))] as string[];
+  if (!activeIds.length) return [];
 
   const { data: assessed } = await supabase
     .from("user_monthly_assessments").select("user_id").in("user_id", activeIds)
@@ -1208,6 +1252,7 @@ async function fetchAllHistoricalData(userIds: string[]): Promise<Map<string, Hi
       ai_prof_application_gpt, ai_prof_ethics_gpt, ai_prof_understanding_gpt, ai_prof_verification_gpt,
       cert_attempted_count, cert_passed_count, cert_names_passed, cert_avg_score`)
     .in("user_id", userIds)
+    .or(SCORED_ROWS_FILTER)
     .order("measured_at", { ascending: true });
 
   const map = new Map<string, HistoricalRecord[]>();
@@ -1862,7 +1907,7 @@ async function sendEmailReport(
   const allIds = (africanProfiles || []).map((p) => p.id);
 
   const { data: anyAssessments } = await supabase
-    .from("user_monthly_assessments").select("user_id").in("user_id", allIds);
+    .from("user_monthly_assessments").select("user_id").in("user_id", allIds).or(SCORED_ROWS_FILTER);
   const idsWithHistory = [...new Set((anyAssessments || []).map((a) => a.user_id))]
     .filter((id): id is string => !EXCLUDED_USER_IDS.has(id as string));
   const historyMap = await fetchAllHistoricalData(idsWithHistory);
@@ -1893,7 +1938,28 @@ async function sendEmailReport(
     console.warn("   Cohort history fetch failed (non-fatal):", err.message);
   }
 
-  const html = buildEmailHtml(monthLabel, allSummaries, historyMap, playgroundMap, cohortHistory, durationMs);
+  let html = buildEmailHtml(monthLabel, allSummaries, historyMap, playgroundMap, cohortHistory, durationMs);
+
+  // Usage-only learners: too little observable evidence to score fairly
+  const { data: usageRows } = await supabase
+    .from("user_monthly_assessments")
+    .select("user_id, session_count, engaged_session_count, ai_playground_session_count, ai_playground_word_count")
+    .eq("assessment_version", USAGE_ONLY_VERSION)
+    .in("user_id", allIds)
+    .gte("measured_at", startDate.toISOString())
+    .lte("measured_at", endDate.toISOString());
+  if (usageRows?.length) {
+    const usageHtml = `
+  <div style="max-width:900px;margin:16px auto;background:#fff;border-radius:8px;padding:16px 20px;font-family:Arial,sans-serif;">
+    <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:4px;">Usage-only learners (${usageRows.length})</div>
+    <div style="font-size:11px;color:#6b7280;margin-bottom:10px;">Fewer than ${MIN_EVIDENCE_SESSIONS} observable sessions (curriculum + substantive Playground) this period, so no skill scores were generated. These learners may be working with AI outside the platform; scores here would not reflect their growth.</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr style="text-align:left;color:#6b7280;"><th style="padding:4px 6px;">Learner</th><th>Sessions</th><th>Engaged</th><th>Playground chats</th><th>Playground words</th></tr>
+      ${usageRows.map((r) => `<tr style="border-top:1px solid #e5e7eb;"><td style="padding:4px 6px;">${nameMap[r.user_id] || "Unknown"}</td><td>${r.session_count ?? 0}</td><td>${r.engaged_session_count ?? 0}</td><td>${r.ai_playground_session_count ?? 0}</td><td>${(r.ai_playground_word_count ?? 0).toLocaleString()}</td></tr>`).join("")}
+    </table>
+  </div>`;
+    html = html.replace("</body></html>", `${usageHtml}\n</body></html>`);
+  }
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -1943,6 +2009,7 @@ async function generateGlobalSummary(
       ai_prof_understanding_score, ai_prof_verification_score,
       cert_passed_count
     `)
+    .or(SCORED_ROWS_FILTER)
     .gte("measured_at", startDate.toISOString())
     .lte("measured_at", endDate.toISOString());
 
@@ -2230,6 +2297,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .from("user_monthly_assessments")
         .select("*")
         .in("user_id", allIds)
+        .or(SCORED_ROWS_FILTER)
         .gte("measured_at", startDate.toISOString())
         .lte("measured_at", endDate.toISOString());
 
@@ -2818,9 +2886,10 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
 
     const succeeded = results.filter((r) => r.status === "success").length;
     const skipped   = results.filter((r) => r.status === "skipped" || r.status === "no_activity").length;
+    const usageOnly = results.filter((r) => r.status === "usage_only").length;
     const failed    = results.filter((r) => r.status === "error").length;
 
-    console.log(`\n✅ Done — ${succeeded} assessed, ${skipped} skipped, ${failed} errors`);
+    console.log(`\n✅ Done — ${succeeded} assessed, ${usageOnly} usage-only, ${skipped} skipped, ${failed} errors`);
 
     // Build summaries for the email from results that succeeded
     const successIds = results.filter((r) => r.status === "success").map((r) => r.userId);
@@ -2836,7 +2905,7 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
         .gte("measured_at", startDate.toISOString())
         .lte("measured_at", endDate.toISOString());
 
-      if (periodRows?.length) {
+      if (periodRows?.length || usageOnly > 0) {
         // Fetch names for the report
         const VAI_ORG_ID_ORC       = "c0b48eae-67af-449d-8c04-cc6950bf0982";
         const SOLARDERO_ORG_ID_ORC = "a1b2c3d4-0002-0002-0002-000000000002";
@@ -2847,7 +2916,7 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
         const nameMap: Record<string, string> = {};
         for (const p of profilesForReport || []) nameMap[p.id] = p.name || "Unknown";
 
-        const reportSummaries: AssessmentSummary[] = periodRows.map((row) => ({
+        const reportSummaries: AssessmentSummary[] = (periodRows || []).map((row) => ({
           userId: row.user_id,
           name: nameMap[row.user_id] || "Unknown",
           sessionCount: row.session_count || 0,
@@ -2879,6 +2948,7 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
       period: `${startStr} to ${endStr}`,
       total: userIds.length,
       succeeded,
+      usageOnly,
       skipped,
       failed,
       emailSent,
