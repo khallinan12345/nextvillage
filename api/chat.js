@@ -189,8 +189,9 @@ const DEFAULT_MODELS = {
   groq:             'openai/gpt-oss-120b',      // was llama-3.3-70b-versatile (deprecated Jun 17 2026)
   cerebras:         'gpt-oss-120b',             // same weights — dual-homed, no output drift on failover
   gemini:           'gemini-2.0-flash',
-  cloudflare:       '@cf/meta/llama-3.3-70b-instruct-fp8-fast', // still live, now the odd one out
-  openrouter:       'nvidia/nemotron-3-ultra-550b-a55b:free',   // was llama-3.3-70b:free (delisted)
+  cloudflare:       '@cf/openai/gpt-oss-120b',  // same weights as groq/cerebras; was llama-3.3-70b-instruct-fp8-fast
+  cloudflare_nemotron: '@cf/nvidia/nemotron-3-120b-a12b', // second Cloudflare model, own cooldown slot
+  openrouter:       'thinkingmachines/inkling:free',            // 975B general-purpose MoE; was nemotron-3-ultra-550b
   mistral:          'mistral-small-latest',
 };
 
@@ -769,7 +770,7 @@ async function callOpenRouter(model, messages, system, max_tokens, temperature) 
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
       'Content-Type':  'application/json',
     },
-    body: JSON.stringify({ model, messages: orMessages, max_tokens, temperature }),
+    body: JSON.stringify({ model, messages: orMessages, max_tokens, temperature, reasoning: { effort: 'low' } }),
   });
 
   const data = await upstream.json();
@@ -892,6 +893,12 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
       model:    MODELS.cloudflare,
       keyEnv:   'CLOUDFLARE_API_TOKEN',
       fn:       () => callCloudflare(MODELS.cloudflare, messages, system, max_tokens, temperature),
+    },
+    {
+      name:     'cloudflare_nemotron',
+      model:    MODELS.cloudflare_nemotron,
+      keyEnv:   'CLOUDFLARE_API_TOKEN',
+      fn:       () => callCloudflare(MODELS.cloudflare_nemotron, messages, system, max_tokens, temperature),
     },
     {
       name:     'openrouter',
@@ -1124,7 +1131,7 @@ export default async function handler(req, res) {
       providers: [
         'groq/llama-3.3-70b (primary free)',
         'gemini/2.0-flash (free fallback)',
-        'cloudflare/llama-3.3-70b-fp8 (free fallback)',
+        'cloudflare/gpt-oss-120b + nemotron-3-120b (free fallbacks)',
         'openrouter/llama-3.3-70b:free (free fallback)',
         'mistral/small (free fallback)',
         'anthropic/haiku (final paid fallback + most coding tasks)',
