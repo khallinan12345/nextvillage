@@ -126,7 +126,7 @@ export const EvidencePicker: React.FC<EvidencePickerProps> = ({ sourceType, sour
   if (!loading && rows.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="stack-y-2">
       <label className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
         <Sprout size={14} /> Attach evidence from your consultations
         <span className="font-normal text-gray-400 text-xs">(optional)</span>

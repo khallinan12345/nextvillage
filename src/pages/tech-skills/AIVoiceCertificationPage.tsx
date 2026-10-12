@@ -208,7 +208,7 @@ const VoiceCard: React.FC<{ entry: VoiceEntry; onDelete: (id: string) => void }>
         </button>
       </div>
       {expanded && (
-        <div className="px-3 pb-3 border-t border-hair pt-2 space-y-2">
+        <div className="px-3 pb-3 border-t border-hair pt-2 stack-y-2">
           {entry.status === 'generating' && (
             <div className="flex items-center gap-2 text-xs text-accent py-1">
               <Loader2 size={13} className="animate-spin" /> Generating audio…
@@ -218,9 +218,9 @@ const VoiceCard: React.FC<{ entry: VoiceEntry; onDelete: (id: string) => void }>
             <MiniAudioPlayer src={entry.audioUrl} />
           )}
           {entry.status === 'failed' && (
-            <p className="text-xs text-red-400 bg-red-900/20 rounded px-2 py-1.5">Generation failed.</p>
+            <p className="text-xs text-red-400 bg-red-900/20 rounded-sm px-2 py-1.5">Generation failed.</p>
           )}
-          <div className="space-y-0.5 text-[10px] text-muted">
+          <div className="stack-y-0.5 text-[10px] text-muted">
             <p><span className="text-muted">Script:</span> {entry.script}</p>
             <p><span className="text-muted">Voice:</span> {preset?.label} ({preset?.style}) · {entry.emotion} · {entry.speed}× speed</p>
             <p><span className="text-muted">Words:</span> {entry.wordCount}</p>
@@ -228,12 +228,12 @@ const VoiceCard: React.FC<{ entry: VoiceEntry; onDelete: (id: string) => void }>
           <div className="flex gap-2">
             {entry.audioUrl && (
               <a href={entry.audioUrl} download target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] bg-accent hover:bg-accent/90 text-white rounded px-2 py-1 transition-colors">
+                className="flex items-center gap-1 text-[10px] bg-accent hover:bg-accent/90 text-white rounded-sm px-2 py-1 transition-colors">
                 <Download size={10} /> Download
               </a>
             )}
             <button onClick={() => onDelete(entry.id)}
-              className="flex items-center gap-1 text-[10px] bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded px-2 py-1 transition-colors">
+              className="flex items-center gap-1 text-[10px] bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded-sm px-2 py-1 transition-colors">
               <Trash2 size={10} /> Remove
             </button>
           </div>
@@ -651,7 +651,7 @@ Respond ONLY in this JSON format:
             {view !== 'overview' && (
               <>
                 <div className="w-px h-5 bg-hair" />
-                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-none px-1 py-0.5 w-44"
+                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-hidden px-1 py-0.5 w-44"
                   value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Portfolio name…" />
               </>
             )}
@@ -676,7 +676,7 @@ Respond ONLY in this JSON format:
             </div>
             {view === 'build' && (
               <button onClick={handleEvaluate} disabled={isEvaluating || succeededEntries.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow disabled:opacity-50 transition-colors">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow-sm disabled:opacity-50 transition-colors">
                 {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
                 {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
               </button>
@@ -731,7 +731,7 @@ Respond ONLY in this JSON format:
 
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-muted uppercase mb-3">📋 Certification Guidelines</p>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {[
                   { icon: '✅', text: lvl <= 1 ? 'Always say WHY you are making each voice — for an ad, a story, a news report.' : 'State a clear purpose for every voice entry. Purpose is a scored criterion.' },
                   { icon: '✅', text: lvl <= 1 ? 'Choose an emotion that fits what you want the voice to feel like.' : 'Choose emotion and voice deliberately to match the script content and purpose — not randomly.' },
@@ -750,7 +750,7 @@ Respond ONLY in this JSON format:
             {/* Script tip */}
             <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl mb-5">
               <p className="text-xs font-bold text-accent uppercase mb-2">🎙️ What makes a great voice script?</p>
-              <div className="space-y-1.5 text-xs text-muted">
+              <div className="stack-y-1.5 text-xs text-muted">
                 <div className="flex items-start gap-2"><span className="text-red-400 flex-shrink-0 font-bold">✗ Weak:</span><span className="italic">"Hello. I like school."</span></div>
                 <div className="flex items-start gap-2"><span className="text-accent flex-shrink-0 font-bold">✓ Strong:</span><span className="italic">"Good morning, everyone. My name is Amara, and I am here today to tell you something important. Every girl in our community deserves access to technology. At the Davidson AI Center, that is exactly what we are building — together, one skill at a time."</span></div>
                 <p className="text-muted mt-2">Strong scripts have: <span className="text-body">a clear opening · a message · natural pacing · an audience in mind · an emotional tone</span></p>
@@ -763,7 +763,7 @@ Respond ONLY in this JSON format:
               {assessments.length === 0 ? (
                 <p className="text-sm text-muted italic">Loading criteria…</p>
               ) : (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const sl = scoreLabel(sc?.score ?? null);
@@ -828,7 +828,7 @@ Respond ONLY in this JSON format:
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
                 {genError && (
                   <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-2">
                     <AlertCircle size={12} className="flex-shrink-0 text-red-400 mt-0.5" />
@@ -849,7 +849,7 @@ Respond ONLY in this JSON format:
                   </label>
                   <input type="text" value={purpose} onChange={e => setPurpose(e.target.value)}
                     placeholder={lvl <= 1 ? 'e.g. A radio ad for solar energy' : 'e.g. Narration for a community solar energy documentary'}
-                    className="w-full bg-paper border border-hair rounded-lg px-3 py-2 text-sm text-ink placeholder-muted outline-none focus:border-accent transition-colors" />
+                    className="w-full bg-paper border border-hair rounded-lg px-3 py-2 text-sm text-ink placeholder-muted outline-hidden focus:border-accent transition-colors" />
                   <p className="text-[9px] text-muted mt-0.5">Stating a purpose is part of your evaluation.</p>
                 </div>
 
@@ -864,7 +864,7 @@ Respond ONLY in this JSON format:
                     placeholder={lvl <= 1
                       ? 'e.g. Hello! My name is Amara. Today I want to tell you about solar energy in our village…'
                       : 'e.g. Good morning. I am speaking to you today about a change that is coming to our community. Solar energy is not just about electricity — it is about opportunity, about education, about the future we are building together.'}
-                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-none focus:border-accent transition-colors leading-relaxed" />
+                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-hidden focus:border-accent transition-colors leading-relaxed" />
                   <div className="flex justify-between mt-0.5">
                     <p className="text-[9px] text-muted">Ctrl+Enter to generate · {script.trim().split(/\s+/).filter(Boolean).length} words</p>
                     <span className={`text-[9px] ${script.length > 1800 ? 'text-amber-400' : 'text-muted'}`}>{script.length}/2000</span>
@@ -923,7 +923,7 @@ Respond ONLY in this JSON format:
 
                 {/* Stats if entries exist */}
                 {entries.length > 1 && (
-                  <div className="p-2.5 bg-card border border-hair rounded-lg text-[10px] text-muted space-y-0.5">
+                  <div className="p-2.5 bg-card border border-hair rounded-lg text-[10px] text-muted stack-y-0.5">
                     <p><span className="text-accent font-bold">{succeededEntries.length}</span> complete · <span className="text-muted">{generatingCount > 0 ? `${generatingCount} generating` : ''}</span></p>
                     <p>Voices used: {[...new Set(entries.map(e => e.voiceLabel))].join(', ')}</p>
                     <p>Emotions used: {[...new Set(entries.map(e => e.emotion))].join(', ')}</p>
@@ -935,7 +935,7 @@ Respond ONLY in this JSON format:
                   <p className="text-[10px] font-bold text-muted uppercase mb-2 flex items-center gap-1.5">
                     <ClipboardList size={11} /> Rubric Criteria
                   </p>
-                  <div className="space-y-1.5">
+                  <div className="stack-y-1.5">
                     {assessments.map(a => {
                       const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                       const isOpen = expandedCrit === a.certification_id;
@@ -952,9 +952,9 @@ Respond ONLY in this JSON format:
                             {isOpen ? <ChevronUp size={12} className="text-muted flex-shrink-0" /> : <ChevronDown size={12} className="text-muted flex-shrink-0" />}
                           </button>
                           {isOpen && (
-                            <div className="px-3 py-2.5 bg-paper border-t border-hair space-y-2">
+                            <div className="px-3 py-2.5 bg-paper border-t border-hair stack-y-2">
                               <p className="text-[10px] text-muted leading-relaxed">{a.description}</p>
-                              <div className="space-y-1">
+                              <div className="stack-y-1">
                                 {[
                                   { level: 0, text: a.certification_level0_metric, color: 'text-red-400' },
                                   { level: 1, text: a.certification_level1_metric, color: 'text-amber-400' },
@@ -1000,14 +1000,14 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              <div className="flex-1 overflow-y-auto p-3 stack-y-2">
                 {entries.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-16 space-y-3">
+                  <div className="flex flex-col items-center justify-center h-full text-center py-16 stack-y-3">
                     <Mic size={48} className="text-muted" />
                     <p className="text-muted text-sm font-medium">
                       {lvl <= 1 ? 'Your voice recordings will appear here.' : 'Your voice portfolio builds up here as you generate.'}
                     </p>
-                    <div className="max-w-xs space-y-1 text-xs text-muted">
+                    <div className="max-w-xs stack-y-1 text-xs text-muted">
                       <p>💡 {lvl <= 1 ? 'Write a script, choose a voice, then click Create.' : 'Write a purposeful script, direct the voice and emotion, then generate.'}</p>
                       <p>🔄 {lvl <= 1 ? 'Try the same script again with a better version.' : 'Iterate — try the same content with a different voice or emotion.'}</p>
                       <p>⚡ {lvl <= 1 ? 'Voices take 3–5 seconds to make.' : 'MiniMax Speech generates in ~3–5 seconds.'}</p>
@@ -1043,7 +1043,7 @@ Respond ONLY in this JSON format:
               : 'Submit your voice portfolio for evaluation to see results.')}
 
             {!anyScored ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <ClipboardList size={48} className="text-muted mx-auto" />
                 <p className="text-muted">{lvl <= 1 ? 'You have not been evaluated yet. Go to Build and create some voices first.' : 'No evaluation data yet. Generate voices and submit for evaluation.'}</p>
                 <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl">
@@ -1051,7 +1051,7 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 <div className="flex items-center gap-5 p-5 bg-surface border border-accent/30 rounded-2xl">
                   <Trophy size={40} className="text-amber-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -1069,7 +1069,7 @@ Respond ONLY in this JSON format:
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const sl = scoreLabel(sc.score);
@@ -1092,7 +1092,7 @@ Respond ONLY in this JSON format:
                           {isOpen ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-3">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 stack-y-3">
                             {sc.evidence && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Evidence</p>
@@ -1102,7 +1102,7 @@ Respond ONLY in this JSON format:
                             {assessment && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Rubric</p>
-                                <div className="space-y-1">
+                                <div className="stack-y-1">
                                   {[
                                     { level: 0, text: assessment.certification_level0_metric, color: 'text-red-400' },
                                     { level: 1, text: assessment.certification_level1_metric, color: 'text-amber-400' },
@@ -1152,7 +1152,7 @@ Respond ONLY in this JSON format:
         {view === 'certificate' && (
           <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
             {!allProficient ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <XCircle size={48} className="text-amber-400 mx-auto" />
                 <h2 className="text-lg font-bold text-ink">{lvl <= 1 ? 'Not ready yet.' : 'Certificate Not Yet Available'}</h2>
                 <p className="text-muted text-sm max-w-sm mx-auto">
@@ -1163,13 +1163,13 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 {renderVoiceBar(lvl <= 1
                   ? 'Congratulations! You passed the AI Voice Creation Certification.'
                   : 'Congratulations on passing the AI Voice Creation Certification.')}
 
                 {/* Preview */}
-                <div className="p-6 bg-surface border-2 border-accent/40 rounded-2xl text-center space-y-4 relative overflow-hidden">
+                <div className="p-6 bg-surface border-2 border-accent/40 rounded-2xl text-center stack-y-4 relative overflow-hidden">
                   <div className="relative">
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-amber-400" /></div>
                     <p className="text-xs font-bold text-accent uppercase tracking-widest">Certificate of Achievement</p>
@@ -1195,12 +1195,12 @@ Respond ONLY in this JSON format:
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div>
                     <label className="text-xs font-bold text-muted uppercase block mb-1.5">Full name for the certificate:</label>
                     <input type="text" value={certName} onChange={e => setCertName(e.target.value)}
                       placeholder="e.g. Amara Okoye"
-                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-none focus:border-accent transition-colors" />
+                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-hidden focus:border-accent transition-colors" />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 transition-all hover:scale-[1.01]">

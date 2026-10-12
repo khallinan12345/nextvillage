@@ -71,8 +71,8 @@ const markdown = {
   h3: ({ children }: any) => <h3 className="font-semibold text-ink mb-2 mt-3">{children}</h3>,
   p: ({ children }: any) => <p className="text-ink mb-3 leading-relaxed">{children}</p>,
   strong: ({ children }: any) => <strong className="font-semibold text-gray-900">{children}</strong>,
-  ul: ({ children }: any) => <ul className="list-disc ml-5 space-y-1 mb-3 text-ink">{children}</ul>,
-  ol: ({ children }: any) => <ol className="list-decimal ml-5 space-y-2 mb-3 text-ink">{children}</ol>,
+  ul: ({ children }: any) => <ul className="list-disc ml-5 stack-y-1 mb-3 text-ink">{children}</ul>,
+  ol: ({ children }: any) => <ol className="list-decimal ml-5 stack-y-2 mb-3 text-ink">{children}</ol>,
   a: ({ href, children }: any) => <Link to={href || '#'} className="text-accent hover:underline font-medium">{children}</Link>,
 };
 
@@ -521,7 +521,7 @@ ${levelHint} Markdown bullets.`,
         </p>
       </div>
 
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
         <h2 className="text-2xl font-bold text-ink mb-6">Why Solar Engineering & Installation Matters</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {[
@@ -538,12 +538,12 @@ ${levelHint} Markdown bullets.`,
         </div>
       </div>
 
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
         <h2 className="text-2xl font-bold text-ink mb-6 flex items-center gap-3"><Trophy className="h-8 w-8 text-yellow-500" /> Your Progress</h2>
         {assessments.length === 0 ? (
           <p className="text-body">No assessments are set up yet. Ask your facilitator to run the Solar Engineering migration.</p>
         ) : (
-          <div className="space-y-4 mb-6">
+          <div className="stack-y-4 mb-6">
             {assessments.map(a => {
               const s = scoreOf(a);
               const maxed = s === 3;
@@ -571,7 +571,7 @@ ${levelHint} Markdown bullets.`,
         )}
       </div>
 
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
         <h2 className="text-2xl font-bold text-ink mb-4">How Certification Works</h2>
         <p className="text-lg text-body mb-6">
           Reach <strong>Proficient or higher</strong> on <strong>all {assessments.length || 6} assessments</strong>. Retake any assessment as often as you like — each challenge is new and built around your context.
@@ -595,7 +595,7 @@ ${levelHint} Markdown bullets.`,
         </div>
       </div>
 
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
         <h2 className="text-2xl font-bold text-ink mb-4">Beyond This Certificate: Real-World Credentials</h2>
         <p className="text-body mb-4">This program builds the foundation. To work as a licensed installer, most learners will also need:</p>
         <div className="grid md:grid-cols-3 gap-6 text-center">
@@ -619,7 +619,7 @@ ${levelHint} Markdown bullets.`,
   const renderDefineContext = () => (
     <div className="max-w-4xl mx-auto">
       <button onClick={() => setView('overview')} className="flex items-center gap-2 text-accent hover:underline mb-6"><ArrowLeft className="h-5 w-5" /> Back</button>
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
         <h2 className="text-3xl font-bold text-ink mb-2">{selected?.assessment_name}</h2>
         <p className="text-body mb-6">{selected?.description}</p>
 
@@ -633,7 +633,7 @@ ${levelHint} Markdown bullets.`,
 
         {errorBox}
 
-        <div className="space-y-6">
+        <div className="stack-y-6">
           {([
             ['topic', 'Topic', `e.g. Sizing a battery bank, calculating voltage drop, choosing a mounting method`, 'What installation situation will your challenge be about?'],
             ['setting', 'Setting', 'e.g. A tin roof home, a market shop, a rural clinic', 'Where does it happen?'],
@@ -643,7 +643,7 @@ ${levelHint} Markdown bullets.`,
             <div key={k}>
               <label className="block text-sm font-semibold text-body mb-2">{label} <span className="text-red-500">*</span></label>
               <input value={ctx[k]} onChange={e => setCtx({ ...ctx, [k]: e.target.value })} placeholder={ph}
-                className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none" />
+                className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-hidden" />
               <p className="text-sm text-muted mt-1">{help}</p>
             </div>
           ))}
@@ -665,7 +665,7 @@ ${levelHint} Markdown bullets.`,
   const renderTake = () => (
     <div className="max-w-4xl mx-auto">
       <button onClick={() => setView('define-context')} className="flex items-center gap-2 text-accent hover:underline mb-6"><ArrowLeft className="h-5 w-5" /> Back to context</button>
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
         <h2 className="text-3xl font-bold text-ink mb-4">{selected?.assessment_name}</h2>
 
         <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 mb-6 flex items-start gap-3">
@@ -683,14 +683,14 @@ ${levelHint} Markdown bullets.`,
 
         <div className="bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
           <h3 className="text-lg font-bold text-ink mb-3">How you'll be scored</h3>
-          <ul className="space-y-2 text-sm">
+          <ul className="stack-y-2 text-sm">
             {selected && levelsOf(selected).map((l, i) => <li key={i}><strong>{i} ({SCORE_LABELS[i]}):</strong> {l}</li>)}
           </ul>
         </div>
 
         <label className="block text-sm font-semibold text-body mb-2">Your response <span className="text-red-500">*</span></label>
         <textarea value={response} onChange={e => setResponse(e.target.value)}
-          className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none min-h-[320px] font-mono text-sm" />
+          className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-hidden min-h-[320px] font-mono text-sm" />
         <div className="flex justify-end my-3">
           <button onClick={improveEnglish} disabled={!response.trim() || isImproving}
             className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50">
@@ -711,7 +711,7 @@ ${levelHint} Markdown bullets.`,
     const passed = result.score >= 2;
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-surface rounded-full mb-4">
               {passed ? <Sparkles className="h-16 w-16 text-green-600" /> : <RefreshCw className="h-16 w-16 text-yellow-600" />}
@@ -762,14 +762,14 @@ ${levelHint} Markdown bullets.`,
 
   const renderCertificate = () => (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm text-center">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs text-center">
         <Award className="h-24 w-24 text-accent mx-auto mb-6" />
         <h2 className="text-4xl font-bold text-ink mb-4">Congratulations! 🎉</h2>
         <p className="text-xl text-body mb-8">You passed every Solar Engineering & Installation assessment.</p>
         <div className="bg-surface border border-hair rounded-xl p-8 mb-8">
           <h3 className="text-lg font-bold text-ink mb-4">How should your name appear on the certificate?</h3>
           <input value={certificateName} onChange={e => setCertificateName(e.target.value)} placeholder="Your full name"
-            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg focus:border-accent focus:outline-none text-center text-lg" />
+            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg focus:border-accent focus:outline-hidden text-center text-lg" />
         </div>
         {errorBox}
         <button onClick={generateCertificate} disabled={!certificateName.trim() || generating}

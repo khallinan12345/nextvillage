@@ -415,13 +415,13 @@ const SubmissionControls: React.FC<{
   const { speak, cancel, speaking, fallbackText, clearFallback } = useVoice(true);
 
   return (
-    <div className="space-y-2">
+    <div className="stack-y-2">
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Write your answer here — be specific about your platform..."
         rows={6}
-        className="w-full text-sm rounded-md border border-gray-200 bg-white p-3 resize-y focus:outline-none focus:ring-2"
+        className="w-full text-sm rounded-md border border-gray-200 bg-white p-3 resize-y focus:outline-hidden focus:ring-2"
         style={{ ['--tw-ring-color' as any]: accentColor }}
       />
       <button
@@ -446,7 +446,7 @@ const SubmissionControls: React.FC<{
             <div className="flex items-start gap-1.5">
               <p className="text-xs text-emerald-800 leading-relaxed flex-1">{record.ai_feedback}</p>
               <button onClick={() => speaking ? cancel() : speak(record.ai_feedback!)}
-                className="p-1 rounded text-emerald-700 hover:bg-emerald-100 flex-shrink-0" title="Read feedback aloud">
+                className="p-1 rounded-sm text-emerald-700 hover:bg-emerald-100 flex-shrink-0" title="Read feedback aloud">
                 {speaking ? <VolumeX size={13}/> : <Volume2 size={13}/>}
               </button>
             </div>
@@ -463,7 +463,7 @@ const SubmissionControls: React.FC<{
             <div className="flex items-start gap-1.5">
               <p className="text-xs text-amber-800 leading-relaxed flex-1">{record.ai_feedback}</p>
               <button onClick={() => speaking ? cancel() : speak(record.ai_feedback!)}
-                className="p-1 rounded text-amber-700 hover:bg-amber-100 flex-shrink-0" title="Read feedback aloud">
+                className="p-1 rounded-sm text-amber-700 hover:bg-amber-100 flex-shrink-0" title="Read feedback aloud">
                 {speaking ? <VolumeX size={13}/> : <Volume2 size={13}/>}
               </button>
             </div>
@@ -490,7 +490,7 @@ const DiagCard: React.FC<{
   const passed = record?.status === 'pass';
 
   return (
-    <div className={`rounded-lg border bg-white p-4 transition-shadow hover:shadow-sm ${
+    <div className={`rounded-lg border bg-white p-4 transition-shadow hover:shadow-xs ${
       passed ? 'border-emerald-300' : 'border-purple-200'
     }`}>
       <button onClick={() => setOpen(o => !o)} className="w-full text-left">
@@ -512,8 +512,8 @@ const DiagCard: React.FC<{
       </button>
 
       {open && (
-        <div className="mt-3 pt-3 border-t border-purple-100 space-y-3">
-          <div className="rounded bg-purple-50 p-2.5">
+        <div className="mt-3 pt-3 border-t border-purple-100 stack-y-3">
+          <div className="rounded-sm bg-purple-50 p-2.5">
             <span className="font-medium text-purple-700 text-xs">Definition: </span>
             <span className="text-xs text-gray-700">{item.def}</span>
           </div>
@@ -595,8 +595,8 @@ const TaskRow: React.FC<{
       </div>
 
       {open && !locked && (
-        <div className="ml-7 mb-3 space-y-3">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 text-sm text-gray-700">
+        <div className="ml-7 mb-3 stack-y-3">
+          <div className="rounded-lg border border-gray-200 bg-white p-4 stack-y-3 text-sm text-gray-700">
             <div className="rounded-md p-3" style={{ background: phaseBg, borderLeft: `3px solid ${phaseColor}` }}>
               <p className="text-xs font-mono uppercase tracking-wider mb-1.5" style={{ color: phaseColor }}>
                 {task.def.label}
@@ -687,7 +687,7 @@ const PhaseSection: React.FC<{
       </button>
 
       {open && (
-        <div className="space-y-3">
+        <div className="stack-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {phase.tracks.map((track, ti) => (
               <div key={ti} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
@@ -891,7 +891,7 @@ const TechSkillsPage: React.FC = () => {
         </p>
         <h1 className="text-4xl font-extrabold text-gray-900 leading-tight mb-3">
           Employable{' '}
-          <span className="bg-gradient-to-r from-purple-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-purple-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
             Developer Roadmap
           </span>
         </h1>
@@ -987,7 +987,7 @@ const TechSkillsPage: React.FC = () => {
                 </p>
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-xs">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-purple-500 to-emerald-500 transition-all duration-500"
+                    className="h-full rounded-full bg-linear-to-r from-purple-500 to-emerald-500 transition-all duration-500"
                     style={{ width: `${totalTasks > 0 ? (totalPassed / totalTasks) * 100 : 0}%` }}
                   />
                 </div>

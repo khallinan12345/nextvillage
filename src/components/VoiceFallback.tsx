@@ -32,7 +32,7 @@ export const VoiceFallback: React.FC<VoiceFallbackProps> = ({
   return (
     <div
       className={`flex items-start gap-3 bg-amber-50 border border-amber-200 
-                  rounded-xl px-4 py-3 shadow-sm animate-fade-in ${className}`}
+                  rounded-xl px-4 py-3 shadow-xs animate-fade-in ${className}`}
       role="status"
       aria-live="polite"
     >

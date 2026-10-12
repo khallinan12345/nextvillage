@@ -111,7 +111,7 @@ const VideoCard: React.FC<{ job: VideoJob; onReuse: (p: string) => void; onDelet
   const cfg = STATUS_CONFIG[job.status];
   const playUrl = (job as any).saved_video_url || job.video_url;
   return (
-    <div className={classNames('rounded-xl border backdrop-blur-sm overflow-hidden', cfg.border, 'bg-slate-900/60')}>
+    <div className={classNames('rounded-xl border backdrop-blur-xs overflow-hidden', cfg.border, 'bg-slate-900/60')}>
       <button onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors">
         <span className={classNames('text-sm font-semibold shrink-0', cfg.color)}>{cfg.icon} {STATUS_LABEL[job.status]}</span>
@@ -120,9 +120,9 @@ const VideoCard: React.FC<{ job: VideoJob; onReuse: (p: string) => void; onDelet
         {expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
       </button>
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
+        <div className="px-4 pb-4 stack-y-3 border-t border-white/10 pt-3">
           {job.status === 'succeeded' && playUrl && !videoError && (
-            <div className="space-y-2">
+            <div className="stack-y-2">
               <div className="relative rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16/9' }}>
                 <video
                   src={playUrl}
@@ -137,7 +137,7 @@ const VideoCard: React.FC<{ job: VideoJob; onReuse: (p: string) => void; onDelet
                     if (v.paused) { v.muted = false; v.play().catch(() => {}); } else v.pause();
                   }}
                 />
-                <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded pointer-events-none">
+                <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-sm pointer-events-none">
                   hover to preview · click to play with sound
                 </div>
               </div>
@@ -1080,7 +1080,7 @@ Return ONLY the improved text. No explanation, no preamble.`
         {/* ══════════════════════════════════════════════════════════════════
             COST WARNING BANNER — always visible at top of page
             ══════════════════════════════════════════════════════════════════ */}
-        <div className="mb-6 rounded-2xl border-2 border-amber-500/50 bg-gradient-to-r from-amber-950/80 via-red-950/60 to-amber-950/80 backdrop-blur-sm overflow-hidden">
+        <div className="mb-6 rounded-2xl border-2 border-amber-500/50 bg-linear-to-r from-amber-950/80 via-red-950/60 to-amber-950/80 backdrop-blur-xs overflow-hidden">
           <div className="px-5 py-4 flex items-start gap-4">
             <div className="shrink-0 mt-0.5">
               <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/30">
@@ -1135,10 +1135,10 @@ Return ONLY the improved text. No explanation, no preamble.`
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="mb-6">
-          <div className="inline-flex flex-col items-start gap-1 rounded-xl bg-slate-900/80 border border-slate-700/60 backdrop-blur-sm p-5 mb-4 w-full">
+          <div className="inline-flex flex-col items-start gap-1 rounded-xl bg-slate-900/80 border border-slate-700/60 backdrop-blur-xs p-5 mb-4 w-full">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-600">
+                <div className="p-2 rounded-lg bg-linear-to-br from-cyan-500 to-violet-600">
                   <Film className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -1195,7 +1195,7 @@ Return ONLY the improved text. No explanation, no preamble.`
             {(['generate', 'history'] as ViewMode[]).map(v => (
               <button key={v} onClick={() => { setView(v); if (v === 'history') loadHistory(); }}
                 className={classNames('px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize',
-                  view === v ? 'bg-gradient-to-r from-cyan-600 to-violet-600 text-white shadow'
+                  view === v ? 'bg-linear-to-r from-cyan-600 to-violet-600 text-white shadow-sm'
                              : 'text-slate-400 hover:text-slate-200')}>
                 {v === 'history' ? `${lvl <= 1 ? 'My Videos' : 'History'} (${history.length})` : (lvl <= 1 ? 'Make Video' : v)}
               </button>
@@ -1205,7 +1205,7 @@ Return ONLY the improved text. No explanation, no preamble.`
 
         {/* ── Generate view ───────────────────────────────────────────────── */}
         {view === 'generate' && (
-          <div className="space-y-4">
+          <div className="stack-y-4">
 
             {/* Weekly usage indicator */}
             <div className={classNames(
@@ -1231,7 +1231,7 @@ Return ONLY the improved text. No explanation, no preamble.`
             </div>
 
             {/* Prompt card */}
-            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
+            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-xs">
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 {uiText.promptLabel}
               </label>
@@ -1250,7 +1250,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                 }}
                 rows={4} maxLength={1000} disabled={isGenerating}
                 placeholder={uiText.promptPlaceholder}
-                className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition disabled:opacity-50"
+                className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-hidden transition disabled:opacity-50"
               />
               <div className="flex items-center justify-between mt-1 mb-3">
                 <p className="text-xs text-slate-500">{uiText.promptHint}</p>
@@ -1298,7 +1298,7 @@ Return ONLY the improved text. No explanation, no preamble.`
             </div>
 
             {/* ── Image anchoring ───────────────────────────────────────── */}
-            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm space-y-4">
+            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-xs stack-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-300">
@@ -1340,7 +1340,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                         title="Remove start image">
                         <XIcon size={12} />
                       </button>
-                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1">
+                      <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-black/70 to-transparent px-2 py-1">
                         <p className="text-xs text-cyan-300 truncate">{startImage?.name}</p>
                       </div>
                     </div>
@@ -1389,7 +1389,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                         title="Remove end image">
                         <XIcon size={12} />
                       </button>
-                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1">
+                      <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-black/70 to-transparent px-2 py-1">
                         <p className="text-xs text-violet-300 truncate">{endImage?.name}</p>
                       </div>
                     </div>
@@ -1435,14 +1435,14 @@ Return ONLY the improved text. No explanation, no preamble.`
               )}
 
               {imageMode === 'start-end' && (
-                <div className="border-t border-slate-700/40 pt-4 space-y-1.5">
+                <div className="border-t border-slate-700/40 pt-4 stack-y-1.5">
                   <button
                     onClick={handleSimpleTransition}
                     disabled={isGenerating}
                     className={classNames(
                       'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed',
                       isSimpleTransition
-                        ? 'bg-cyan-600 text-white shadow-sm'
+                        ? 'bg-cyan-600 text-white shadow-xs'
                         : 'bg-slate-800 text-slate-300 border border-slate-600/60 hover:bg-slate-700'
                     )}>
                     <Sparkles size={14} />
@@ -1489,7 +1489,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                           onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                         />
                         {img.source === 'last_frame' && (
-                          <div className="absolute top-1 left-1 bg-violet-600/80 text-white text-[9px] px-1 rounded leading-tight">
+                          <div className="absolute top-1 left-1 bg-violet-600/80 text-white text-[9px] px-1 rounded-sm leading-tight">
                             last frame
                           </div>
                         )}
@@ -1497,7 +1497,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                           <button
                             onClick={() => applyUrlAsStartImage(img.url, img.label)}
                             disabled={isGenerating}
-                            className="text-[10px] font-semibold bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-0.5 rounded w-14 text-center disabled:opacity-40 transition-colors"
+                            className="text-[10px] font-semibold bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-0.5 rounded-sm w-14 text-center disabled:opacity-40 transition-colors"
                             title="Use as start frame"
                           >
                             ▶ Start
@@ -1505,7 +1505,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                           <button
                             onClick={() => applyUrlAsEndImage(img.url, img.label)}
                             disabled={isGenerating || !startImage}
-                            className="text-[10px] font-semibold bg-violet-600 hover:bg-violet-500 text-white px-2 py-0.5 rounded w-14 text-center disabled:opacity-40 transition-colors"
+                            className="text-[10px] font-semibold bg-violet-600 hover:bg-violet-500 text-white px-2 py-0.5 rounded-sm w-14 text-center disabled:opacity-40 transition-colors"
                             title={!startImage ? 'Set a start frame first' : 'Use as end frame'}
                           >
                             ⏹ End
@@ -1522,7 +1522,7 @@ Return ONLY the improved text. No explanation, no preamble.`
             </div>
 
             {showCritique && (
-              <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5 backdrop-blur-xs">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-amber-300 flex items-center gap-2">
                     <Lightbulb size={16} />
@@ -1545,7 +1545,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                           {critiqueText}
                         </div>
                         {improvedPromptSuggestion && (
-                          <div className="mt-4 pt-4 border-t border-amber-500/20 space-y-2">
+                          <div className="mt-4 pt-4 border-t border-amber-500/20 stack-y-2">
                             <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
                               <Sparkles size={12} />
                               {lvl <= 1 ? 'Suggested better prompt (keeps your idea)' : 'AI-suggested improved prompt — keeps your original intent'}
@@ -1570,8 +1570,8 @@ Return ONLY the improved text. No explanation, no preamble.`
                 )}
 
                 {critiqueStep === 'step' && (
-                  <div className="space-y-3">
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  <div className="stack-y-3">
+                    <div className="stack-y-2 max-h-64 overflow-y-auto pr-1">
                       {stepMessages.map((m, i) => (
                         <div key={i} className={classNames('rounded-lg px-3 py-2 text-sm',
                           m.role === 'coach'
@@ -1591,7 +1591,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                       <input type="text" value={stepInput} onChange={e => setStepInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStepSend(); } }}
                         placeholder={lvl <= 1 ? 'Type your answer…' : 'Type your response…'}
-                        className="flex-1 bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:ring-1 focus:ring-teal-500/50" />
+                        className="flex-1 bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-hidden focus:ring-1 focus:ring-teal-500/50" />
                       <button onClick={handleImproveStep}
                         disabled={!stepInput.trim() || isImprovingStep || isStepSending}
                         title="Improve my English"
@@ -1611,10 +1611,10 @@ Return ONLY the improved text. No explanation, no preamble.`
             )}
 
             {/* Duration — locked to 5 s for cost control */}
-            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
+            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-xs">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-sm font-semibold text-slate-300">{uiText.durationLabel}</span>
-                <span className="px-3 py-1 rounded-lg text-sm font-semibold bg-gradient-to-r from-cyan-600 to-violet-600 text-white">5s</span>
+                <span className="px-3 py-1 rounded-lg text-sm font-semibold bg-linear-to-r from-cyan-600 to-violet-600 text-white">5s</span>
                 <span className="text-xs text-slate-500">
                   {lvl <= 1 ? 'All videos are 5 seconds long.' : 'Fixed at 5 seconds — generation typically takes 2–5 minutes.'}
                 </span>
@@ -1631,7 +1631,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                   </label>
                   <input type="text" value={negPrompt} onChange={e => setNegPrompt(e.target.value)}
                     disabled={isGenerating}
-                    className="w-full bg-slate-800/80 border border-slate-600/50 rounded-lg px-3 py-2 text-slate-200 text-xs outline-none focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-50" />
+                    className="w-full bg-slate-800/80 border border-slate-600/50 rounded-lg px-3 py-2 text-slate-200 text-xs outline-hidden focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-50" />
                   <p className="text-xs text-slate-600 mt-1">704 × 480 px · 24 fps</p>
                 </div>
               )}
@@ -1650,7 +1650,7 @@ Return ONLY the improved text. No explanation, no preamble.`
 
             {/* Active job status */}
             {activeJob && (
-              <div className={classNames('rounded-2xl border backdrop-blur-sm p-5 space-y-4',
+              <div className={classNames('rounded-2xl border backdrop-blur-xs p-5 stack-y-4',
                 activeJob.status === 'succeeded' ? 'bg-green-950/30 border-green-500/30' :
                 activeJob.status === 'failed'    ? 'bg-red-950/30 border-red-500/30'     :
                 'bg-cyan-950/30 border-cyan-500/30')}>
@@ -1683,8 +1683,8 @@ Return ONLY the improved text. No explanation, no preamble.`
                   </div>
                 </div>
                 {videoUrl && (
-                  <div className="space-y-3">
-                    <div className="space-y-1">
+                  <div className="stack-y-3">
+                    <div className="stack-y-1">
                       <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
                         Video Title
                       </label>
@@ -1693,7 +1693,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                         value={videoName}
                         onChange={e => setVideoName(e.target.value)}
                         placeholder={prompt.trim().slice(0, 50) || 'Enter a title for your video…'}
-                        className="w-full bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-green-400 placeholder-slate-500"
+                        className="w-full bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-hidden focus:border-green-400 placeholder-slate-500"
                       />
                     </div>
                     <div className="rounded-xl overflow-hidden bg-black border border-green-500/20">
@@ -1772,7 +1772,7 @@ Return ONLY the improved text. No explanation, no preamble.`
               const readyToGenerate = scorePassed || isSimpleTransition;
 
               return (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {!limitReached && isSimpleTransition && (
                     <div className="rounded-xl px-4 py-3 text-sm border flex items-start gap-3 bg-cyan-900/20 border-cyan-500/30 text-cyan-300">
                       <span className="shrink-0 mt-0.5">✨</span>
@@ -1848,7 +1848,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                     className={classNames(
                       'w-full flex items-center justify-center gap-3 rounded-xl py-3.5 font-semibold text-base transition-all',
                       prompt.trim() && !isStarting && readyToGenerate && !limitReached
-                        ? 'bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.01]'
+                        ? 'bg-linear-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.01]'
                         : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                     )}>
                     {isStarting
@@ -1863,7 +1863,7 @@ Return ONLY the improved text. No explanation, no preamble.`
 
         {/* ── Saved video thumbnails ────────────────────────────────────────── */}
         {view === 'generate' && savedThumbnails.length > 0 && (
-          <div className="space-y-3 mt-2">
+          <div className="stack-y-3 mt-2">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
               <Film size={14} /> My Saved Videos
             </h3>
@@ -1901,7 +1901,7 @@ Return ONLY the improved text. No explanation, no preamble.`
 
         {/* ── History view ─────────────────────────────────────────────────── */}
         {view === 'history' && (
-          <div className="space-y-3">
+          <div className="stack-y-3">
             {loadingHist ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
@@ -1934,8 +1934,8 @@ Return ONLY the improved text. No explanation, no preamble.`
 
       {/* ── Confirmation dialog ────────────────────────────────────────────── */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="bg-slate-900 border border-amber-500/40 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs px-4">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-2xl p-6 max-w-md w-full shadow-2xl stack-y-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-amber-500/20 shrink-0">
                 <AlertTriangle size={22} className="text-amber-400" />
@@ -1945,7 +1945,7 @@ Return ONLY the improved text. No explanation, no preamble.`
               </h2>
             </div>
 
-            <div className="bg-slate-800/80 rounded-xl px-4 py-3 text-sm text-slate-300 space-y-1">
+            <div className="bg-slate-800/80 rounded-xl px-4 py-3 text-sm text-slate-300 stack-y-1">
               <p className="font-semibold text-slate-200 truncate">"{prompt.trim().slice(0, 80)}{prompt.length > 80 ? '…' : ''}"</p>
               {promptScore !== null && (
                 <p className="text-xs text-green-400">
@@ -1968,7 +1968,7 @@ Return ONLY the improved text. No explanation, no preamble.`
               </button>
               <button
                 onClick={() => { setShowConfirm(false); handleGenerate(); }}
-                className="flex-1 bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors shadow-lg">
+                className="flex-1 bg-linear-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors shadow-lg">
                 {lvl <= 1 ? '🎬 Yes, make my video!' : 'Confirm — Generate Video'}
               </button>
             </div>

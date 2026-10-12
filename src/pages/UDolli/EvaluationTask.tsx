@@ -65,7 +65,7 @@ const EvaluationTask: React.FC = () => {
   const machine = problems.filter((c) => c.machineCheckable).length;
 
   return (
-    <div className="space-y-4">
+    <div className="stack-y-4">
       <header>
         <h2 className="text-xl font-bold text-gray-900">Task 2 · Be the independent evaluator</h2>
         <p className="text-gray-600 mt-1 max-w-3xl">
@@ -90,7 +90,7 @@ const EvaluationTask: React.FC = () => {
             <span className="ml-auto text-xs text-gray-500">{showSource ? 'Hide' : 'Show'}</span>
           </button>
           {showSource && (
-            <pre className="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap font-serif leading-relaxed max-h-[32rem] overflow-y-auto">
+            <pre className="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap font-serif leading-relaxed max-h-128 overflow-y-auto">
               {SOURCE_TEXT}
             </pre>
           )}
@@ -129,7 +129,7 @@ const EvaluationTask: React.FC = () => {
               </div>
 
               {revealed && (
-                <div className="mt-2 ml-7 space-y-1">
+                <div className="mt-2 ml-7 stack-y-1">
                   <p className={classNames(
                     'text-xs font-semibold inline-flex items-center gap-1',
                     correct ? 'text-emerald-700' : 'text-red-700',
@@ -183,7 +183,7 @@ const EvaluationTask: React.FC = () => {
         </div>
 
         {revealed && (
-          <div className="px-4 pb-4 space-y-2 text-sm text-gray-700">
+          <div className="px-4 pb-4 stack-y-2 text-sm text-gray-700">
             <p>
               The briefing contained {problems.length} problems in {BRIEF_TEXT.trim().split(/\n\s*\n/).length} paragraphs.
               None of them are spelling. Nothing is garbled. It reads better than most human first drafts,

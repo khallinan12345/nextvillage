@@ -88,8 +88,8 @@ const PendingMembersCard: React.FC = () => {
   if (members.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-amber-200 overflow-hidden">
-      <div className="px-5 py-4 border-b bg-gradient-to-r from-amber-50 to-yellow-50">
+    <div className="bg-white rounded-xl shadow-xs border border-amber-200 overflow-hidden">
+      <div className="px-5 py-4 border-b bg-linear-to-r from-amber-50 to-yellow-50">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <UserPlus size={20} className="text-amber-600" />

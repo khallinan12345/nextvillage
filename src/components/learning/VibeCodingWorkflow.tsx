@@ -353,7 +353,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
   };
 
   return (
-    <div className="space-y-6">
+    <div className="stack-y-6">
       {/* Progress Indicator */}
       <div className="bg-white rounded-lg shadow-md p-4">
         <div className="flex items-center justify-between">
@@ -400,7 +400,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
       {/* PHASE 1: INSTRUCTION WRITING */}
       {(currentPhase === 'instructions' || critique) && (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+          <div className="bg-linear-to-r from-purple-600 to-pink-600 px-6 py-4">
             <div className="flex items-center gap-3">
               <Lightbulb className="h-6 w-6 text-white" />
               <div>
@@ -412,7 +412,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
             </div>
           </div>
           
-          <div className="p-6 space-y-4">
+          <div className="p-6 stack-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Programming Language
@@ -444,7 +444,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
 
             {/* Show critique if available (for improvement) */}
             {critique && currentPhase === 'instructions' && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-sm">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-yellow-800">
@@ -470,7 +470,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
 
             {/* AI-improved prompt panel — shown after "Improve My Instructions" is clicked */}
             {showImprovedPromptPanel && (
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 space-y-2">
+              <div className="bg-linear-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 stack-y-2">
                 <div className="flex items-start gap-2">
                   <Sparkles className="h-4 w-4 text-purple-600 flex-shrink-0 mt-0.5" />
                   <div>
@@ -492,9 +492,9 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
               </div>
             )}
 
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs text-gray-500 stack-y-1">
               <p><strong>💡 Tip:</strong> Good instructions include:</p>
-              <ul className="list-disc list-inside ml-2 space-y-0.5">
+              <ul className="list-disc list-inside ml-2 stack-y-0.5">
                 <li>What the code should do (functionality)</li>
                 <li>What inputs it should accept</li>
                 <li>What outputs it should produce</li>
@@ -508,7 +508,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
       {/* PHASE 2: AI CRITIQUE */}
       {currentPhase === 'critique' && critique && (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 px-6 py-4">
+          <div className="bg-linear-to-r from-yellow-500 to-orange-500 px-6 py-4">
             <div className="flex items-center gap-3">
               <Sparkles className="h-6 w-6 text-white" />
               <div>
@@ -520,7 +520,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
             </div>
           </div>
           
-          <div className="p-6 space-y-6">
+          <div className="p-6 stack-y-6">
             {/* Problem Decomposition */}
             <div className="border-l-4 border-purple-500 pl-4">
               <div className="flex items-center justify-between mb-2">
@@ -535,11 +535,11 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
                   {critique.problemDecomposition.score}/3
                 </span>
               </div>
-              <div className="bg-gray-50 rounded p-3 mb-2">
+              <div className="bg-gray-50 rounded-sm p-3 mb-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Evidence</p>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{critique.problemDecomposition.evidence}</p>
               </div>
-              <div className="bg-amber-50 rounded p-3">
+              <div className="bg-amber-50 rounded-sm p-3">
                 <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">How to improve</p>
                 <p className="text-sm text-amber-800 whitespace-pre-wrap">{critique.problemDecomposition.improvement}</p>
               </div>
@@ -559,11 +559,11 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
                   {critique.promptEngineering.score}/3
                 </span>
               </div>
-              <div className="bg-gray-50 rounded p-3 mb-2">
+              <div className="bg-gray-50 rounded-sm p-3 mb-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Evidence</p>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{critique.promptEngineering.evidence}</p>
               </div>
-              <div className="bg-amber-50 rounded p-3">
+              <div className="bg-amber-50 rounded-sm p-3">
                 <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">How to improve</p>
                 <p className="text-sm text-amber-800 whitespace-pre-wrap">{critique.promptEngineering.improvement}</p>
               </div>
@@ -609,7 +609,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
       {/* PHASE 3: CODE GENERATION & EXECUTION */}
       {currentPhase === 'code' && generatedCode && (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-green-600 to-teal-600 px-6 py-4">
+          <div className="bg-linear-to-r from-green-600 to-teal-600 px-6 py-4">
             <div className="flex items-center gap-3">
               <Code2 className="h-6 w-6 text-white" />
               <div>
@@ -621,7 +621,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
             </div>
           </div>
           
-          <div className="p-6 space-y-4">
+          <div className="p-6 stack-y-4">
             {/* Original Instructions Reminder */}
             <div className="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4">
               <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
@@ -643,7 +643,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
                   <Sparkles className="h-4 w-4" />
                   AI Critique Summary:
                 </h4>
-                <div className="text-sm text-blue-800 space-y-1">
+                <div className="text-sm text-blue-800 stack-y-1">
                   <p>
                     <strong>Problem Decomposition:</strong> {critique.problemDecomposition.score}/3
                     {critique.problemDecomposition.score < 2 && ' - ' + critique.problemDecomposition.improvement}
@@ -830,7 +830,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
       {/* PHASE 4: DEBUGGING & ITERATION */}
       {currentPhase === 'debugging' && executionResult?.error && (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-4">
+          <div className="bg-linear-to-r from-red-600 to-pink-600 px-6 py-4">
             <div className="flex items-center gap-3">
               <Terminal className="h-6 w-6 text-white" />
               <div>
@@ -842,7 +842,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
             </div>
           </div>
           
-          <div className="p-6 space-y-4">
+          <div className="p-6 stack-y-4">
             {/* Error Display */}
             <div className="bg-red-50 border-l-4 border-red-500 p-4">
               <h4 className="font-semibold text-red-900 mb-2">Error Encountered:</h4>
@@ -896,7 +896,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
             {/* Learning Reflection */}
             <div className="bg-yellow-50 rounded-lg p-4 text-sm">
               <p className="font-semibold text-yellow-900 mb-2">🤔 Reflection Questions:</p>
-              <ul className="text-yellow-800 space-y-1 list-disc list-inside">
+              <ul className="text-yellow-800 stack-y-1 list-disc list-inside">
                 <li>Was your original instruction clear enough?</li>
                 <li>Did you specify all the requirements?</li>
                 <li>What could you add to prevent this error?</li>
@@ -934,7 +934,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
 
       {/* Vibe Coding Prompt Panel */}
       {showVibePrompt && (
-        <div className="bg-gradient-to-br from-purple-900/10 to-pink-900/5 border border-purple-300 rounded-xl shadow-md">
+        <div className="bg-linear-to-br from-purple-900/10 to-pink-900/5 border border-purple-300 rounded-xl shadow-md">
           <div className="px-5 py-4 border-b border-purple-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Wand2 className="w-5 h-5 text-purple-600" />
@@ -944,7 +944,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
               <X size={18} />
             </button>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-5 stack-y-3">
             <p className="text-xs text-purple-700">
               This prompt captures your design from this session. Paste it into <strong>ChatGPT, Claude, Cursor, or Replit</strong> to continue building or start fresh on any device.
             </p>
@@ -952,7 +952,7 @@ Output ONLY the improved prompt — no explanation, no preamble, no labels.`;
               value={vibePrompt}
               onChange={e => setVibePrompt(e.target.value)}
               rows={7}
-              className="w-full bg-white border border-purple-200 rounded-lg px-4 py-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-purple-400 font-mono leading-relaxed"
+              className="w-full bg-white border border-purple-200 rounded-lg px-4 py-3 text-sm text-gray-800 resize-none focus:outline-hidden focus:border-purple-400 font-mono leading-relaxed"
             />
             <div className="flex flex-wrap gap-3 items-center">
               <Button

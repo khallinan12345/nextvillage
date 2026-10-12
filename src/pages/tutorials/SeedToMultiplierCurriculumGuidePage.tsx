@@ -203,7 +203,7 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-6">
 
         {/* header */}
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-emerald-950 to-emerald-800 p-6 text-white">
+        <div className="mb-6 rounded-2xl bg-linear-to-br from-emerald-950 to-emerald-800 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">Curriculum</p>
           <h1 className="mt-1 text-3xl font-extrabold">The Core Path</h1>
           <p className="mt-1 max-w-xl text-sm text-emerald-100">
@@ -227,7 +227,7 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-emerald-950/60">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-300 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-linear-to-r from-amber-400 to-emerald-300 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>

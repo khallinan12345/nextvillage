@@ -709,7 +709,7 @@ Return valid JSON only (no markdown, no code fences):
         <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4 py-4">
           {/* Header */}
           <div className="flex items-center gap-3 p-4 bg-card border border-hair rounded-2xl mb-3">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${activePersona.colour} flex items-center justify-center text-2xl flex-shrink-0`}>
+            <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${activePersona.colour} flex items-center justify-center text-2xl flex-shrink-0`}>
               {activePersona.emoji}
             </div>
             <div className="flex-1 min-w-0">
@@ -749,11 +749,11 @@ Return valid JSON only (no markdown, no code fences):
 
           {/* Chat */}
           <div className="flex-1 bg-card border border-hair rounded-2xl flex flex-col overflow-hidden" style={{ height: '420px' }}>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-3">
               {sessionMessages.map(msg => (
                 <div key={msg.id} className={`flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${activePersona.colour} flex items-center justify-center text-base flex-shrink-0`}>
+                    <div className={`w-8 h-8 rounded-lg bg-linear-to-br ${activePersona.colour} flex items-center justify-center text-base flex-shrink-0`}>
                       {activePersona.emoji}
                     </div>
                   )}
@@ -771,7 +771,7 @@ Return valid JSON only (no markdown, no code fences):
               ))}
               {isSending && (
                 <div className="flex items-start gap-2">
-                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${activePersona.colour} flex items-center justify-center text-base flex-shrink-0`}>{activePersona.emoji}</div>
+                  <div className={`w-8 h-8 rounded-lg bg-linear-to-br ${activePersona.colour} flex items-center justify-center text-base flex-shrink-0`}>{activePersona.emoji}</div>
                   <div className="bg-paper rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex gap-1.5">{[0,150,300].map(d=><div key={d} className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</div>
                   </div>
@@ -787,7 +787,7 @@ Return valid JSON only (no markdown, no code fences):
                   onKeyDown={handleKeyDown} rows={2}
                   placeholder={`Advise ${activePersona.name}…`}
                   disabled={isSending}
-                  className="flex-1 bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted outline-none focus:border-accent resize-none leading-relaxed disabled:opacity-50"
+                  className="flex-1 bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted outline-hidden focus:border-accent resize-none leading-relaxed disabled:opacity-50"
                 />
                 <div className="flex flex-col gap-1.5">
                   <button onClick={toggleListening}
@@ -816,12 +816,12 @@ Return valid JSON only (no markdown, no code fences):
       <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
         <main className="flex-1 overflow-y-auto relative z-10">
-          <div className="max-w-2xl mx-auto px-6 py-8 space-y-5">
+          <div className="max-w-2xl mx-auto px-6 py-8 stack-y-5">
             <VoiceBar text="Welcome to the Agriculture Consultant Certification. Complete three written sections and at least two live consultations with different farmer personas, then submit for evaluation." />
 
             {/* Header */}
-            <div className="p-6 bg-gradient-to-br bg-surface border border-hair rounded-2xl text-center space-y-2">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br bg-accent flex items-center justify-center">
+            <div className="p-6 bg-linear-to-br bg-surface border border-hair rounded-2xl text-center stack-y-2">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-linear-to-br bg-accent flex items-center justify-center">
                 <Sprout size={32} className="text-white" />
               </div>
               <h1 className="text-2xl font-bold text-ink">Agriculture Consultant Certification</h1>
@@ -838,9 +838,9 @@ Return valid JSON only (no markdown, no code fences):
             </div>
 
             {/* Requirements */}
-            <div className="p-5 bg-card border border-hair rounded-2xl space-y-4">
+            <div className="p-5 bg-card border border-hair rounded-2xl stack-y-4">
               <h2 className="text-sm font-bold text-ink uppercase tracking-wider">What you need to complete</h2>
-              <div className="space-y-3">
+              <div className="stack-y-3">
                 {[
                   {
                     icon: <PenLine size={16} />, colour: 'text-green-400',
@@ -871,9 +871,9 @@ Return valid JSON only (no markdown, no code fences):
             </div>
 
             {/* Rubric */}
-            <div className="p-5 bg-card border border-hair rounded-2xl space-y-3">
+            <div className="p-5 bg-card border border-hair rounded-2xl stack-y-3">
               <h2 className="text-sm font-bold text-ink uppercase tracking-wider">You'll be assessed on</h2>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {RUBRIC_DIMENSIONS.map(d => (
                   <div key={d.id} className="flex items-start gap-2 text-sm">
                     <Sprout size={12} className="text-green-400 flex-shrink-0 mt-0.5" />
@@ -923,7 +923,7 @@ Return valid JSON only (no markdown, no code fences):
       <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-2xl mx-auto px-6 py-6 space-y-4">
+          <div className="max-w-2xl mx-auto px-6 py-6 stack-y-4">
 
             <div className="flex items-center justify-between">
               <button onClick={() => setView('overview')} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors">
@@ -949,12 +949,12 @@ Return valid JSON only (no markdown, no code fences):
 
             {/* ── Written tab ── */}
             {buildTab === 'written' && (
-              <div className="space-y-4">
+              <div className="stack-y-4">
                 {WRITTEN_SECTIONS.map(sec => {
                   const val  = portfolio[sec.key];
                   const done = val.trim().length > 30;
                   return (
-                    <div key={sec.key} className={`rounded-2xl border ${sec.colour} p-5 space-y-3`}>
+                    <div key={sec.key} className={`rounded-2xl border ${sec.colour} p-5 stack-y-3`}>
                       <div className="flex items-center gap-2">
                         <span className="text-muted">{sec.icon}</span>
                         <h3 className="text-sm font-bold text-ink flex-1">{sec.label}</h3>
@@ -969,7 +969,7 @@ Return valid JSON only (no markdown, no code fences):
                         onChange={e => setWritten(sec.key, e.target.value)}
                         rows={sec.rows}
                         placeholder={sec.placeholder}
-                        className="w-full bg-card border border-hair border border-hair rounded-xl px-4 py-3 text-sm text-body placeholder-muted outline-none focus:border-accent resize-none leading-relaxed"
+                        className="w-full bg-card border border-hair border border-hair rounded-xl px-4 py-3 text-sm text-body placeholder-muted outline-hidden focus:border-accent resize-none leading-relaxed"
                       />
                       <p className="text-right text-xs text-muted">{val.length} characters</p>
                     </div>
@@ -984,10 +984,10 @@ Return valid JSON only (no markdown, no code fences):
 
             {/* ── Sessions tab ── */}
             {buildTab === 'sessions' && (
-              <div className="space-y-4">
+              <div className="stack-y-4">
                 {/* Completed sessions */}
                 {portfolio.sessions.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     <p className="text-xs font-semibold text-muted uppercase tracking-wider">Completed Consultations</p>
                     {portfolio.sessions.map(s => (
                       <div key={s.personaId} className="flex items-center gap-3 p-3 bg-surface border border-hair rounded-xl">
@@ -1007,7 +1007,7 @@ Return valid JSON only (no markdown, no code fences):
                 )}
 
                 {/* Persona grid */}
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   <p className="text-xs font-semibold text-muted uppercase tracking-wider">
                     {portfolio.sessions.length < MIN_SESSIONS
                       ? `Choose a farmer to advise (need ${MIN_SESSIONS - portfolio.sessions.length} more)`
@@ -1018,7 +1018,7 @@ Return valid JSON only (no markdown, no code fences):
                     return (
                       <button key={persona.id} onClick={() => startSession(persona)}
                         className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border transition-all ${done ? 'border-hair bg-surface opacity-75' : 'border-hair bg-paper hover:border-accent/40'}`}>
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${persona.colour} flex items-center justify-center text-2xl flex-shrink-0`}>
+                        <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${persona.colour} flex items-center justify-center text-2xl flex-shrink-0`}>
                           {persona.emoji}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1036,7 +1036,7 @@ Return valid JSON only (no markdown, no code fences):
                 </div>
 
                 {ready && (
-                  <div className="space-y-3 pt-2">
+                  <div className="stack-y-3 pt-2">
                     <div className="p-3 bg-surface border border-hair rounded-xl flex items-center gap-2">
                       <CheckCircle size={15} className="text-green-400" />
                       <p className="text-sm text-muted font-semibold">Portfolio complete! Ready to evaluate.</p>
@@ -1070,7 +1070,7 @@ Return valid JSON only (no markdown, no code fences):
       <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-2xl mx-auto px-6 py-6 space-y-5">
+          <div className="max-w-2xl mx-auto px-6 py-6 stack-y-5">
             <VoiceBar text={`Your Agriculture Consultant Certification results are ready. ${allProficient ? 'Congratulations — you have achieved certification level on all criteria!' : 'Continue building your portfolio and try again.'}`} />
 
             {overallScore !== null && (
@@ -1092,7 +1092,7 @@ Return valid JSON only (no markdown, no code fences):
             )}
 
             {assessmentScores.length > 0 && (
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {assessmentScores.map(sc => {
                   const dim = RUBRIC_DIMENSIONS.find(d => d.label === sc.assessment_name);
                   const { text, color, bg, border } = scoreLabel(sc.score);
@@ -1152,7 +1152,7 @@ Return valid JSON only (no markdown, no code fences):
       <div className="min-h-screen flex flex-col bg-paper">
         <Navbar />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-2xl mx-auto px-6 py-6 space-y-5">
+          <div className="max-w-2xl mx-auto px-6 py-6 stack-y-5">
             <VoiceBar text="Enter your name to generate your Agriculture Consultant Certificate." />
 
             {!allProficient && (
@@ -1164,7 +1164,7 @@ Return valid JSON only (no markdown, no code fences):
 
             {allProficient && (
               <>
-                <div className="p-6 bg-gradient-to-br bg-surface border border-hair rounded-2xl text-center space-y-4">
+                <div className="p-6 bg-linear-to-br bg-surface border border-hair rounded-2xl text-center stack-y-4">
                   <Trophy size={48} className="text-green-400 mx-auto" />
                   <div>
                     <h2 className="text-xl font-bold text-ink">🎓 Certification Achieved!</h2>
@@ -1185,7 +1185,7 @@ Return valid JSON only (no markdown, no code fences):
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <label className="block text-sm font-semibold text-body">
                     Full name as it should appear on the certificate:
                   </label>
@@ -1193,7 +1193,7 @@ Return valid JSON only (no markdown, no code fences):
                     type="text" value={certName}
                     onChange={e => setCertName(e.target.value)}
                     placeholder="e.g. Amara Johnson"
-                    className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-none focus:border-accent text-base"
+                    className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-hidden focus:border-accent text-base"
                   />
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
                     className="w-full flex items-center justify-center gap-3 py-3.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-bold rounded-xl transition-all">

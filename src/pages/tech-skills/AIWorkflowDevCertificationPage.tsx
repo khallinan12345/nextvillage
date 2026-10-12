@@ -267,7 +267,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
       <React.Fragment key={node.path}>
         {node.isFolder ? (
           <button onClick={() => toggle(node.path)}
-            className="w-full flex items-center gap-1 py-0.5 text-xs text-muted hover:text-body hover:bg-hair rounded"
+            className="w-full flex items-center gap-1 py-0.5 text-xs text-muted hover:text-body hover:bg-hair rounded-sm"
             style={{ paddingLeft: `${8 + depth * 10}px` }}>
             {open.has(node.path) ? <ChevronDown size={10} /> : <ChevronDown size={10} style={{ transform: 'rotate(-90deg)' }} />}
             <span className="text-amber-400 text-[10px]">📁</span>
@@ -285,7 +285,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
         {node.isFolder && open.has(node.path) && renderTree(node.children, depth + 1)}
       </React.Fragment>
     ));
-  return <div className="space-y-0">{renderTree(buildTree(files))}</div>;
+  return <div className="stack-y-0">{renderTree(buildTree(files))}</div>;
 };
 
 // ─── Test Workflow Panel ──────────────────────────────────────────────────────
@@ -330,24 +330,24 @@ const TestWorkflowPanel: React.FC<{ apiKey: string }> = ({ apiKey }) => {
           {showAdvanced ? <ChevronUp size={10} /> : <ChevronDown size={10} />} Advanced
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 stack-y-3">
         <div>
           <label className="text-[10px] text-muted uppercase font-bold block mb-1">System Prompt (how the AI behaves)</label>
           <textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} rows={3}
-            className="w-full bg-card border border-hair rounded-lg px-2.5 py-2 text-xs text-body resize-y outline-none focus:border-accent font-mono leading-relaxed" />
+            className="w-full bg-card border border-hair rounded-lg px-2.5 py-2 text-xs text-body resize-y outline-hidden focus:border-accent font-mono leading-relaxed" />
         </div>
         <div>
           <label className="text-[10px] text-muted uppercase font-bold block mb-1">User Prompt (your workflow input)</label>
           <textarea value={userPrompt} onChange={e => setUserPrompt(e.target.value)} rows={4}
             placeholder="What should the AI do? e.g. Summarise this text: [paste text here]"
-            className="w-full bg-card border border-hair rounded-lg px-2.5 py-2 text-xs text-body resize-y outline-none focus:border-accent leading-relaxed" />
+            className="w-full bg-card border border-hair rounded-lg px-2.5 py-2 text-xs text-body resize-y outline-hidden focus:border-accent leading-relaxed" />
         </div>
         {showAdvanced && (
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] text-muted uppercase font-bold block mb-1">Model</label>
               <select value={model} onChange={e => setModel(e.target.value)}
-                className="w-full bg-card border border-hair rounded-lg px-2 py-1.5 text-xs text-ink outline-none focus:border-accent">
+                className="w-full bg-card border border-hair rounded-lg px-2 py-1.5 text-xs text-ink outline-hidden focus:border-accent">
                 <option value="claude-haiku-5-5">claude-haiku-5-5 (fast)</option>
                 <option value="claude-sonnet-4-6">claude-sonnet-4-6 (smart)</option>
               </select>
@@ -355,7 +355,7 @@ const TestWorkflowPanel: React.FC<{ apiKey: string }> = ({ apiKey }) => {
             <div>
               <label className="text-[10px] text-muted uppercase font-bold block mb-1">Max Tokens</label>
               <input type="number" value={maxTokens} onChange={e => setMaxTokens(Number(e.target.value))} min={50} max={2000} step={50}
-                className="w-full bg-card border border-hair rounded-lg px-2 py-1.5 text-xs text-ink outline-none focus:border-accent" />
+                className="w-full bg-card border border-hair rounded-lg px-2 py-1.5 text-xs text-ink outline-hidden focus:border-accent" />
             </div>
           </div>
         )}
@@ -370,7 +370,7 @@ const TestWorkflowPanel: React.FC<{ apiKey: string }> = ({ apiKey }) => {
         )}
         {error && <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-2"><AlertCircle size={12} className="text-red-400 flex-shrink-0 mt-0.5" /><p className="text-xs text-red-300">{error}</p></div>}
         {response && (
-          <div className="space-y-1">
+          <div className="stack-y-1">
             <p className="text-[10px] font-bold text-muted uppercase">AI Response</p>
             <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg">
               <p className="text-xs text-body leading-relaxed whitespace-pre-wrap">{response}</p>
@@ -827,13 +827,13 @@ Respond ONLY in this JSON format:
 
       {/* ── StackBlitz modal ──────────────────────────────────────────── */}
       {showSBModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-card border border-hair rounded-2xl w-[460px] shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-hair flex justify-between items-center">
               <h2 className="text-base font-bold text-ink flex items-center gap-2"><ExternalLink size={16} className="text-accent" /> Open in StackBlitz</h2>
               <button onClick={() => setShowSBModal(false)} className="p-1 text-muted hover:text-ink"><X size={16} /></button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-5 stack-y-3">
               <p className="text-sm text-body">Your project opens in StackBlitz for live preview. Add VITE_ANTHROPIC_API_KEY in StackBlitz environment settings for AI calls to work.</p>
               <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-300">⚠️ Never paste your API key directly into code — use environment variables.</div>
             </div>
@@ -858,7 +858,7 @@ Respond ONLY in this JSON format:
             {view !== 'overview' && (
               <>
                 <div className="w-px h-5 bg-hair" />
-                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-none px-1 py-0.5 w-44"
+                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-hidden px-1 py-0.5 w-44"
                   value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="App name…" />
               </>
             )}
@@ -902,7 +902,7 @@ Respond ONLY in this JSON format:
                   {downloading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} .zip
                 </button>
                 <button onClick={handleEvaluate} disabled={isEvaluating || !hasCode}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow disabled:opacity-50 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow-sm disabled:opacity-50 transition-colors">
                   {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
                   {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
                 </button>
@@ -921,7 +921,7 @@ Respond ONLY in this JSON format:
                   <input type={showKey ? 'text' : 'password'} value={creds.anthropicKey}
                     onChange={e => updateCreds({ anthropicKey: e.target.value })}
                     placeholder="sk-ant-…"
-                    className="w-full bg-paper border border-hair rounded-lg px-3 py-1.5 pr-8 text-xs text-ink placeholder-muted outline-none focus:border-accent font-mono" />
+                    className="w-full bg-paper border border-hair rounded-lg px-3 py-1.5 pr-8 text-xs text-ink placeholder-muted outline-hidden focus:border-accent font-mono" />
                   <button onClick={() => setShowKey(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-body">
                     {showKey ? <EyeOff size={12} /> : <Eye size={12} />}
                   </button>
@@ -991,7 +991,7 @@ Respond ONLY in this JSON format:
             {/* Rules */}
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-muted uppercase mb-3">📋 Certification Requirements</p>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {[
                   { icon: '✅', text: lvl <= 1 ? 'Your app must call the AI using callAI() or a similar function.' : 'Implement at least one callAI() call that sends a user input to the Anthropic API and displays the response.' },
                   { icon: '✅', text: lvl <= 1 ? 'Write instructions for the AI (a system prompt) that shape how it responds.' : 'Use a system prompt that shapes the AI\'s behaviour for your specific workflow use case.' },
@@ -1011,7 +1011,7 @@ Respond ONLY in this JSON format:
             <div className="p-4 bg-card border border-hair rounded-xl mb-6">
               <p className="text-xs font-bold text-muted uppercase mb-3">🎯 What You Will Be Evaluated On</p>
               {assessments.length === 0 ? <p className="text-sm text-muted italic">Loading criteria…</p> : (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const sl = scoreLabel(sc?.score ?? null);
@@ -1076,7 +1076,7 @@ Respond ONLY in this JSON format:
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
                 {genError && <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-2"><AlertCircle size={12} className="flex-shrink-0 text-red-400 mt-0.5" /><p className="text-xs text-red-300">{genError}</p></div>}
                 {evalError && <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-2"><AlertCircle size={12} className="flex-shrink-0 text-red-400 mt-0.5" /><p className="text-xs text-red-300">{evalError}</p></div>}
 
@@ -1094,14 +1094,14 @@ Respond ONLY in this JSON format:
                       ? 'e.g. Make an app where someone types a short story idea and the AI writes the full first paragraph for them'
                       : 'e.g. Build a document summariser: user pastes text, callAI() sends it with a system prompt "You are a summariser — return 3 bullet points", display the bullets in a styled card with a copy button'}
                     rows={7}
-                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-none focus:border-accent transition-colors leading-relaxed" />
+                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-hidden focus:border-accent transition-colors leading-relaxed" />
                   <p className="text-[9px] text-muted mt-0.5">Ctrl+Enter to generate</p>
                 </div>
 
                 {/* Criteria accordion */}
                 <div>
                   <p className="text-[10px] font-bold text-muted uppercase mb-2 flex items-center gap-1.5"><ClipboardList size={11} /> Rubric Criteria</p>
-                  <div className="space-y-1.5">
+                  <div className="stack-y-1.5">
                     {assessments.map(a => {
                       const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                       const isOpen = expandedCrit === a.certification_id;
@@ -1118,9 +1118,9 @@ Respond ONLY in this JSON format:
                             {isOpen ? <ChevronUp size={12} className="text-muted flex-shrink-0" /> : <ChevronDown size={12} className="text-muted flex-shrink-0" />}
                           </button>
                           {isOpen && (
-                            <div className="px-3 py-2.5 bg-paper border-t border-hair space-y-2">
+                            <div className="px-3 py-2.5 bg-paper border-t border-hair stack-y-2">
                               <p className="text-[10px] text-muted leading-relaxed">{a.description}</p>
-                              <div className="space-y-1">
+                              <div className="stack-y-1">
                                 {[
                                   { level: 0, text: a.certification_level0_metric, color: 'text-red-400' },
                                   { level: 1, text: a.certification_level1_metric, color: 'text-amber-400' },
@@ -1169,7 +1169,7 @@ Respond ONLY in this JSON format:
                   <div className="ml-auto flex items-center gap-2">
                     <span className="text-xs text-muted truncate max-w-36">{activeFilePath}</span>
                     <button onClick={() => navigator.clipboard.writeText(activeFile?.content || '').then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}
-                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-muted hover:text-ink hover:bg-hair rounded transition-colors">
+                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-muted hover:text-ink hover:bg-hair rounded-sm transition-colors">
                       {copied ? <><Check size={11} /> Copied</> : <><Copy size={11} /> Copy</>}
                     </button>
                   </div>
@@ -1210,7 +1210,7 @@ Respond ONLY in this JSON format:
               : 'Submit your project for evaluation to see results.')}
 
             {!anyScored ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <Cpu size={48} className="text-muted mx-auto" />
                 <p className="text-muted">{lvl <= 1 ? 'You have not been evaluated yet. Go to Build and create your workflow app first.' : 'No evaluation data yet. Build your app and submit for evaluation.'}</p>
                 <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl">
@@ -1218,7 +1218,7 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 <div className="flex items-center gap-5 p-5 bg-surface border border-accent/30 rounded-2xl">
                   <Trophy size={40} className="text-amber-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -1236,7 +1236,7 @@ Respond ONLY in this JSON format:
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const sl = scoreLabel(sc.score);
@@ -1259,12 +1259,12 @@ Respond ONLY in this JSON format:
                           {isOpen ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-3">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 stack-y-3">
                             {sc.evidence && <div><p className="text-[10px] font-bold text-muted uppercase mb-1">Evidence</p><p className="text-xs text-body leading-relaxed">{sc.evidence}</p></div>}
                             {assessment && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Rubric</p>
-                                <div className="space-y-1">
+                                <div className="stack-y-1">
                                   {[
                                     { level: 0, text: assessment.certification_level0_metric, color: 'text-red-400' },
                                     { level: 1, text: assessment.certification_level1_metric, color: 'text-amber-400' },
@@ -1314,7 +1314,7 @@ Respond ONLY in this JSON format:
         {view === 'certificate' && (
           <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
             {!allProficient ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <XCircle size={48} className="text-amber-400 mx-auto" />
                 <h2 className="text-lg font-bold text-ink">{lvl <= 1 ? 'Not ready yet.' : 'Certificate Not Yet Available'}</h2>
                 <p className="text-muted text-sm max-w-sm mx-auto">
@@ -1325,13 +1325,13 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 {renderVoiceBar(lvl <= 1
                   ? 'Congratulations! You passed the AI Workflow Development Certification.'
                   : 'Congratulations on passing the AI Workflow Development Certification.')}
 
                 {/* Preview */}
-                <div className="p-6 bg-surface border-2 border-accent/40 rounded-2xl text-center space-y-4 relative overflow-hidden">
+                <div className="p-6 bg-surface border-2 border-accent/40 rounded-2xl text-center stack-y-4 relative overflow-hidden">
                   <div className="relative">
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-amber-400" /></div>
                     <p className="text-xs font-bold text-accent uppercase tracking-widest">Certificate of Achievement</p>
@@ -1357,11 +1357,11 @@ Respond ONLY in this JSON format:
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div>
                     <label className="text-xs font-bold text-muted uppercase block mb-1.5">Full name for the certificate:</label>
                     <input type="text" value={certName} onChange={e => setCertName(e.target.value)} placeholder="e.g. Amara Okoye"
-                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-none focus:border-accent transition-colors" />
+                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-hidden focus:border-accent transition-colors" />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 hover:scale-[1.01] transition-all">

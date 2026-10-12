@@ -138,7 +138,7 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
   };
 
   return (
-    <div className="mt-2 space-y-2 border-t border-slate-700/30 pt-2 text-left">
+    <div className="mt-2 stack-y-2 border-t border-slate-700/30 pt-2 text-left">
       {showPidgin && pidginText && (
         <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-lg p-2.5 text-xs text-emerald-200 italic leading-relaxed">
           {pidginText}
@@ -146,7 +146,7 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
       )}
 
       {displayError && (
-        <div className="text-[10px] text-amber-400 flex items-center gap-1 bg-amber-500/10 p-1 rounded border border-amber-500/20">
+        <div className="text-[10px] text-amber-400 flex items-center gap-1 bg-amber-500/10 p-1 rounded-sm border border-amber-500/20">
           <AlertCircle size={10} />
           {displayError}
         </div>
@@ -158,7 +158,7 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
           disabled={isTranslating}
           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
             showPidgin 
-              ? 'bg-emerald-600 text-white shadow-sm' 
+              ? 'bg-emerald-600 text-white shadow-xs' 
               : 'bg-slate-800 text-slate-300 border border-slate-700/60 hover:bg-slate-700'
           }`}
         >

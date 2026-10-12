@@ -1,6 +1,140 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+  --color-paper: #faf9f5;
+  --color-surface: #fdfcfa;
+  --color-card: #ffffff;
+  --color-hair: #e7e5e0;
+  --color-ink: #292524;
+  --color-body: #44403c;
+  --color-muted: #a8a29e;
+  --color-accent: #7c3aed;
+
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
+
+  --color-purple-50: #f5f3ff;
+  --color-purple-100: #ede9fe;
+  --color-purple-200: #ddd6fe;
+  --color-purple-300: #c4b5fd;
+  --color-purple-400: #a78bfa;
+  --color-purple-500: #8b5cf6;
+  --color-purple-600: #7c3aed;
+  --color-purple-700: #6d28d9;
+  --color-purple-800: #5b21b6;
+  --color-purple-900: #4c1d95;
+  --color-purple-950: #2e1065;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-200: #99f6e4;
+  --color-teal-300: #5eead4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+  --color-teal-900: #134e4a;
+  --color-teal-950: #042f2e;
+
+  --animate-fade-in: fadeIn 0.5s ease-in-out;
+  --animate-slide-up: slideUp 0.5s ease-out;
+
+  --transition-property-height: height;
+  --transition-property-spacing: margin, padding;
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes slideUp {
+    0% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility container {
+  /* Remove Tailwind’s container max‐width entirely (so it’s full-width) */
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+@utility wide-container {
+  /* Or if you prefer a “centered but much wider” wrapper */
+  max-width: 90vw;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@utility sidebar-link {
+  /* Sidebar link tweaks */
+  @apply block px-3 py-3 text-base font-semibold rounded-md transition-colors;
+  & svg {
+    @apply mr-3 flex-shrink-0 w-6 h-6;
+  }
+}
+
+@utility navbar-link {
+  /* Navbar link tweaks */
+  @apply px-4 py-3 text-base font-semibold rounded-lg transition-all duration-200;
+}
+
+/* stack-y-N / stack-x-N replace space-y-N / space-x-N. Tailwind 4 puts the spacing on the
+   previous sibling's end edge, which loses to a child's own bottom or right margin class.
+   Tailwind 3 put it on the following sibling's start edge; keep that so layouts don't shift. */
+@utility stack-y-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    margin-top: calc(var(--spacing) * --value(number, [length]));
+    margin-bottom: 0;
+  }
+}
+@utility stack-x-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    margin-left: calc(var(--spacing) * --value(number, [length]));
+    margin-right: 0;
+  }
+}
 
 @layer base {
   html {
@@ -12,20 +146,43 @@
     @apply font-sans text-gray-900 bg-gray-50 min-h-screen;
   }
 
+  /* Explicit sizes and line heights: in Tailwind 4 a leading-* utility here
+     would override the line height that text-4xl/3xl/2xl bring with them. */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium leading-tight;
+    font-weight: 500;
+    line-height: 1.25;
   }
 
   h1 {
-    @apply text-4xl; /* Slightly larger than default */
+    font-size: 2.25rem; /* Slightly larger than default */
+    line-height: 2.5rem;
   }
 
   h2 {
-    @apply text-3xl;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
   }
 
   h3 {
-    @apply text-2xl;
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  /* Tailwind 3 left text fields with the browser's white; Tailwind 4 makes them transparent. */
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='button'], [type='submit'], [type='reset'], [type='color'], [type='file']),
+  textarea,
+  select {
+    background-color: #fff;
+  }
+
+  /* Tailwind 4 changed these two defaults; keep the Tailwind 3 look. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
   }
 
   a {
@@ -33,43 +190,16 @@
   }
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(1rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@layer components {
-  /* Remove Tailwind’s container max‐width entirely (so it’s full-width) */
-  .container {
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-
-  /* Or if you prefer a “centered but much wider” wrapper */
-  .wide-container {
-    max-width: 90vw;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  /* Sidebar link tweaks */
-  .sidebar-link {
-    @apply block px-3 py-3 text-base font-semibold rounded-md transition-colors;
-  }
-  .sidebar-link svg {
-    @apply mr-3 flex-shrink-0 w-6 h-6;
-  }
-
-  /* Navbar link tweaks */
-  .navbar-link {
-    @apply px-4 py-3 text-base font-semibold rounded-lg transition-all duration-200;
+@layer utilities {
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 }
 

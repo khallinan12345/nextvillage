@@ -235,7 +235,7 @@ const MarkdownText: React.FC<{
       if (rubricMode === 'compact') {
         const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
         return (
-          <div key={pIndex} className="mt-3 space-y-2">
+          <div key={pIndex} className="mt-3 stack-y-2">
             {suggestion && (
               <div className="rounded-xl border border-hair bg-paper px-3 py-2 text-sm text-body">
                 <span className="font-semibold text-ink">💡 Suggestion:</span>{' '}
@@ -282,13 +282,13 @@ const MarkdownText: React.FC<{
               0 No Evidence · 1 Emerging · <strong>2 Proficient ✓</strong> · <strong>3 Advanced ✓</strong>
             </span>
           </div>
-          <div className="px-3 py-2 space-y-2.5">
+          <div className="px-3 py-2 stack-y-2.5">
             {dimensions.length > 0 ? (
               <>
                 {dimensions.map((sm, li) => {
                   const score = parseInt(sm[2]);
                   return (
-                    <div key={li} className="border-l-2 border-hair pl-2 space-y-0.5">
+                    <div key={li} className="border-l-2 border-hair pl-2 stack-y-0.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-semibold text-ink capitalize">{sm[1].replace(/_/g, ' ').trim()}</span>
                         <span className={`px-1.5 py-0.5 rounded-full border font-bold ${rubricScoreColor(score)}`}>
@@ -334,7 +334,7 @@ const MarkdownText: React.FC<{
     // ── Bullet list ───────────────────────────────────────────────────────
     if (lines.every(l => /^[-*]\s/.test(l))) {
       return (
-        <ul key={pIndex} className="mt-1.5 space-y-1">
+        <ul key={pIndex} className="mt-1.5 stack-y-1">
           {lines.map((line, li) => (
             <li key={li} className="flex items-start gap-1.5 text-base">
               <span className="text-accent mt-0.5 flex-shrink-0 font-bold">•</span>
@@ -348,7 +348,7 @@ const MarkdownText: React.FC<{
     // ── Numbered list ─────────────────────────────────────────────────────
     if (lines.every(l => /^\d+[.)]\s/.test(l))) {
       return (
-        <ol key={pIndex} className="mt-1.5 space-y-1">
+        <ol key={pIndex} className="mt-1.5 stack-y-1">
           {lines.map((line, li) => {
             const nm = line.match(/^(\d+)[.)]\s+(.+)$/);
             return (
@@ -4022,7 +4022,7 @@ Provide assessment now:`;
               </div>
             </div>
 
-            <div className="bg-card border border-hair rounded-2xl shadow-sm p-8 space-y-6">
+            <div className="bg-card border border-hair rounded-2xl shadow-xs p-8 stack-y-6">
 
               {/* Title */}
               <div>
@@ -4030,7 +4030,7 @@ Provide assessment now:`;
                 <input type="text" value={createForm.title}
                   onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
                   placeholder={uiText.titlePlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Skill Category */}
@@ -4038,7 +4038,7 @@ Provide assessment now:`;
                 <label className="block text-base font-semibold text-ink mb-1">{uiText.categoryLabel} <span className="text-red-500">*</span></label>
                 <select value={createForm.category}
                   onChange={e => setCreateForm(f => ({ ...f, category: e.target.value }))}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   {SKILLS_SESSION_CATEGORIES.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.label}</option>
                   ))}
@@ -4052,7 +4052,7 @@ Provide assessment now:`;
                 <textarea value={createForm.description}
                   onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))}
                   rows={3} placeholder={uiText.problemPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Entrepreneurial / Business Angle */}
@@ -4062,7 +4062,7 @@ Provide assessment now:`;
                 <textarea value={createForm.entrepreneurialContext}
                   onChange={e => setCreateForm(f => ({ ...f, entrepreneurialContext: e.target.value }))}
                   rows={3} placeholder={uiText.puePlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base resize-none bg-card focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base resize-none bg-card focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Location */}
@@ -4071,7 +4071,7 @@ Provide assessment now:`;
                 <input type="text" value={createForm.location}
                   onChange={e => setCreateForm(f => ({ ...f, location: e.target.value }))}
                   placeholder={uiText.locationPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Constraints */}
@@ -4080,7 +4080,7 @@ Provide assessment now:`;
                 <textarea value={createForm.constraints}
                   onChange={e => setCreateForm(f => ({ ...f, constraints: e.target.value }))}
                   rows={2} placeholder={uiText.constraintsPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Stakeholders */}
@@ -4089,13 +4089,13 @@ Provide assessment now:`;
                 <textarea value={createForm.stakeholders}
                   onChange={e => setCreateForm(f => ({ ...f, stakeholders: e.target.value }))}
                   rows={2} placeholder={uiText.stakeholdersPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Info box */}
               <div className="bg-surface border border-hair rounded-xl p-4 text-base text-body">
                 <p className="font-semibold text-ink mb-2">{uiText.infoBoxTitle}</p>
-                <ul className="space-y-1 text-sm text-body">
+                <ul className="stack-y-1 text-sm text-body">
                   {uiText.infoBoxItems.map((item, i) => (
                     <li key={i}>{item.icon} <strong className="text-ink">{item.bold}</strong>{item.text}</li>
                   ))}
@@ -4151,7 +4151,7 @@ Provide assessment now:`;
               Back to Overview
             </QuietButton>
 
-            <div className="bg-card border border-hair rounded-2xl shadow-sm p-6">
+            <div className="bg-card border border-hair rounded-2xl shadow-xs p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold text-ink mb-2">
@@ -4160,7 +4160,7 @@ Provide assessment now:`;
                   <p className="text-lg text-body mb-3">
                     {activityDescription || 'Description could not be loaded.'}
                   </p>
-                  <div className="flex items-center space-x-2 text-base text-muted">
+                  <div className="flex items-center stack-x-2 text-base text-muted">
                     <span>{selectedActivity.category_activity}</span>
                     {selectedActivity.sub_category && (
                       <>
@@ -4277,14 +4277,14 @@ Provide assessment now:`;
             )}
             submitting={submitting}
             transcriptRef={chatContainerRef}
-            transcriptHeightClassName="h-[32rem]"
+            transcriptHeightClassName="h-128"
             value={userInput}
             onChange={setUserInput}
             onKeyDown={handleKeyDown}
             onSubmit={handleSubmitMessage}
             disabled={submitting}
             notice={
-              <div className="mb-3 space-y-2">
+              <div className="mb-3 stack-y-2">
                 <p className="text-sm text-muted flex items-center gap-1.5">
                   <span>💡</span>
                   <span>Have a question? Just ask it — the AI will answer you directly before continuing.</span>
@@ -4374,7 +4374,7 @@ Provide assessment now:`;
                   <X size={18} />
                 </button>
               </div>
-              <div className="px-6 py-5 space-y-4">
+              <div className="px-6 py-5 stack-y-4">
                 <p className="text-sm text-body leading-relaxed">
                   Before we save your results, take a moment to reflect on what you've worked through in this session.
                 </p>
@@ -4390,7 +4390,7 @@ Provide assessment now:`;
                     onChange={e => setSessionReflectionInput(e.target.value)}
                     rows={6}
                     placeholder="e.g. I learned how to break down a complex problem into smaller steps and apply the skill of critical thinking to each one. The hardest part was identifying assumptions I hadn't noticed before. Next time I'd start by listing what I don't yet know..."
-                    className="w-full border border-hair rounded-xl px-4 py-3 text-sm bg-paper resize-none leading-relaxed focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+                    className="w-full border border-hair rounded-xl px-4 py-3 text-sm bg-paper resize-none leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"
                     autoFocus
                   />
                   <p className="text-xs text-muted mt-1 text-right">
@@ -4451,7 +4451,7 @@ Provide assessment now:`;
 
                 {renderEvaluationResult()}
 
-                <div className="mt-6 flex justify-end space-x-3">
+                <div className="mt-6 flex justify-end stack-x-3">
                   <QuietButton
                     onClick={() => {
                       setShowEvaluationModal(false);
@@ -4535,9 +4535,9 @@ Provide assessment now:`;
                   key={category.id}
                   onClick={() => handleCategoryChange(category.id)}
                   className={classNames(
-                    'flex flex-col items-start space-y-3 p-6 rounded-xl border transition-colors text-left',
+                    'flex flex-col items-start stack-y-3 p-6 rounded-xl border transition-colors text-left',
                     active
-                      ? 'bg-surface border-accent/40 shadow-sm'
+                      ? 'bg-surface border-accent/40 shadow-xs'
                       : 'bg-card border-hair hover:border-accent/30'
                   )}
                 >
@@ -4556,7 +4556,7 @@ Provide assessment now:`;
                     <p className="text-sm text-body mb-2">
                       {category.description}
                     </p>
-                    <div className="flex items-center space-x-2 text-sm text-muted">
+                    <div className="flex items-center stack-x-2 text-sm text-muted">
                       <span>{stats.total} activities</span>
                       {stats.completed > 0 && (
                         <span>• {stats.completed} completed</span>
@@ -4570,9 +4570,9 @@ Provide assessment now:`;
 
           {/* Selected Category Detail */}
           {currentCategory && (
-            <div className="bg-card border border-hair rounded-2xl shadow-sm p-6 mb-8">
+            <div className="bg-card border border-hair rounded-2xl shadow-xs p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center stack-x-3">
                   <div className="p-3 bg-surface rounded-lg text-accent">
                     {currentCategory.icon}
                   </div>
@@ -4627,7 +4627,7 @@ Provide assessment now:`;
           )}
 
           {/* Activities List */}
-          <div className="bg-card border border-hair rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs overflow-hidden">
             {/* Panel header with Create Your Own button */}
             <div className="px-6 py-4 border-b border-hair bg-surface flex items-center justify-between">
               <div>
@@ -4698,7 +4698,7 @@ Provide assessment now:`;
                   >
                     {/* ── Title row ── */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center stack-x-4">
                         <div className="flex-shrink-0">{getProgressIcon(activity.progress)}</div>
                         <div className="flex-1 min-w-0">
                           <h4 className={classNames('text-lg font-medium',
@@ -4719,7 +4719,7 @@ Provide assessment now:`;
                               <span className="ml-2 text-sm text-muted no-underline font-normal">✓ Completed</span>
                             ) : null}
                           </h4>
-                          <div className="flex items-center space-x-2 text-base text-muted mt-1">
+                          <div className="flex items-center stack-x-2 text-base text-muted mt-1">
                             <span>{activity.category_activity}</span>
                             {activity.sub_category && (<><span>•</span><span>{activity.sub_category}</span></>)}
                           </div>
@@ -4775,7 +4775,7 @@ Provide assessment now:`;
 
                     {/* ── Evidence summary ── */}
                     {activity.certification_evaluation_evidence && (
-                      <div className="mt-2 text-xs text-muted bg-paper rounded px-3 py-1.5 line-clamp-2">
+                      <div className="mt-2 text-xs text-muted bg-paper rounded-sm px-3 py-1.5 line-clamp-2">
                         <strong className="text-body">Evidence:</strong>{' '}
                         {activity.certification_evaluation_evidence}
                       </div>

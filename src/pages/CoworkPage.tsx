@@ -303,7 +303,7 @@ export default function CoworkPage() {
   if (eligible === false) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 max-w-md text-center space-y-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 max-w-md text-center stack-y-4">
           <Lock className="w-12 h-12 text-emerald-500 mx-auto" />
           <h2 className="text-white text-2xl font-semibold">Agent Builder</h2>
           <p className="text-gray-400 text-sm leading-relaxed">
@@ -451,7 +451,7 @@ export default function CoworkPage() {
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+        <div className="max-w-2xl mx-auto px-6 py-8 stack-y-6">
           {/* Name */}
           <Field label="Agent name" hint="What is this agent called?">
             <input
@@ -459,7 +459,7 @@ export default function CoworkPage() {
               onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
               maxLength={80}
               placeholder="e.g. Agriculture Advisor, Code Reviewer, Study Partner"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-hidden focus:border-emerald-500 transition-colors"
             />
           </Field>
 
@@ -471,7 +471,7 @@ export default function CoworkPage() {
               maxLength={300}
               rows={2}
               placeholder="Helps farmers in the Niger Delta identify crop diseases and choose treatments."
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-emerald-500 transition-colors resize-none"
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-hidden focus:border-emerald-500 transition-colors resize-none"
             />
           </Field>
 
@@ -486,7 +486,7 @@ export default function CoworkPage() {
               maxLength={4000}
               rows={10}
               placeholder={`You are an expert agriculture advisor for farmers in the Niger Delta, Bayelsa State, Nigeria.\n\nYou know about:\n- Cassava, yam, plantain, and vegetable farming in tropical climates\n- Common crop diseases and organic treatments\n- Seasonal planting cycles in southern Nigeria\n- Low-cost farming techniques appropriate for smallholder farmers\n\nSpeak clearly and simply. When the farmer describes a problem, ask one clarifying question before giving advice. Always give practical, affordable solutions first.`}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-emerald-500 transition-colors resize-none font-mono"
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-hidden focus:border-emerald-500 transition-colors resize-none font-mono"
             />
             <div className="text-right text-xs text-gray-600 mt-1">
               {draft.system_prompt.length} / 4000
@@ -498,7 +498,7 @@ export default function CoworkPage() {
             <select
               value={draft.model_pref}
               onChange={e => setDraft(d => ({ ...d, model_pref: e.target.value }))}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-hidden focus:border-emerald-500 transition-colors"
             >
               {MODEL_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -603,9 +603,9 @@ export default function CoworkPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
+        <div className="max-w-3xl mx-auto px-4 py-6 stack-y-5">
           {conversation?.messages.length === 0 && (
-            <div className="text-center py-16 space-y-3">
+            <div className="text-center py-16 stack-y-3">
               <Bot className="w-10 h-10 text-emerald-500/40 mx-auto" />
               <p className="text-gray-600 text-sm">
                 {activeAgent?.name} is ready. Send a message to begin.
@@ -640,7 +640,7 @@ export default function CoworkPage() {
             }}
             rows={1}
             placeholder="Message your agent… (Enter to send, Shift+Enter for new line)"
-            className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-emerald-500 transition-colors resize-none"
+            className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-hidden focus:border-emerald-500 transition-colors resize-none"
             style={{ minHeight: '44px', maxHeight: '160px' }}
           />
           <button
@@ -755,7 +755,7 @@ function ChatBubble({ message }: { message: Message }) {
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
+    <div className="stack-y-1.5">
       <label className="text-sm font-medium text-white">{label}</label>
       {hint && <p className="text-xs text-gray-500">{hint}</p>}
       {children}
@@ -765,7 +765,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 function EmptyState({ onNew }: { onNew: () => void }) {
   return (
-    <div className="text-center py-20 space-y-4">
+    <div className="text-center py-20 stack-y-4">
       <Bot className="w-12 h-12 text-gray-700 mx-auto" />
       <div>
         <p className="text-white font-medium">No agents yet</p>

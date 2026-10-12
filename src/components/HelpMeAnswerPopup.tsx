@@ -108,7 +108,7 @@ const HelpMeAnswerPopup: React.FC<HelpMeAnswerPopupProps> = ({
         </div>
 
         {/* ── Conversation messages ─────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3 min-h-0">
+        <div className="flex-1 overflow-y-auto px-5 py-3 stack-y-3 min-h-0">
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -195,7 +195,7 @@ const HelpMeAnswerPopup: React.FC<HelpMeAnswerPopupProps> = ({
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) sendMessage(); }}
             placeholder="Ask me anything, or say 'give me some options'…"
             disabled={isLoading}
-            className="flex-1 rounded-xl px-3 py-2 text-sm outline-none disabled:opacity-50"
+            className="flex-1 rounded-xl px-3 py-2 text-sm outline-hidden disabled:opacity-50"
             style={{
               background: '#2a1845',
               border: '1px solid #6040a0',

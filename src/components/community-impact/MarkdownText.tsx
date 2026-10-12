@@ -16,7 +16,7 @@ export const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const { text: cleanedText, scene } = extractIllustration(text);
 
   return (
-    <div className="space-y-1.5">
+    <div className="stack-y-1.5">
       {cleanedText.split('\n').map((line, i) => {
         if (!line.trim()) return <div key={i} className="h-1.5" />;
         const html = line

@@ -323,7 +323,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
     : pct >= 0.5 ? 'from-amber-400 to-yellow-500 text-yellow-950'
     : 'from-red-400 to-rose-500 text-rose-950';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${color}`}>
       <Star size={12} />{score}/{max}
     </span>
   );
@@ -332,7 +332,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 const WorkflowOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div className="flex-1 overflow-y-auto p-4 stack-y-4">
     <div className="p-4 bg-violet-500/10 border border-violet-500/25 rounded-xl">
       <p className="text-xs font-bold text-violet-400 uppercase mb-3">🤖 Full-Stack App + AI Agent Development</p>
       <p className="text-sm text-gray-300 leading-relaxed mb-3">
@@ -351,7 +351,7 @@ const WorkflowOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
 
     <div className="p-3 bg-gray-800/40 rounded-lg border border-gray-700">
       <p className="text-xs font-bold text-gray-300 mb-2">What you will build:</p>
-      <div className="space-y-2">
+      <div className="stack-y-2">
         {[
           { icon: '🗄️', ex: 'A real PostgreSQL database on Supabase — tables, relationships, indexes, triggers' },
           { icon: '🔐', ex: 'User authentication — sign up, sign in, protected routes, session management' },
@@ -367,7 +367,7 @@ const WorkflowOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
       </div>
     </div>
 
-    <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-1">
+    <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed stack-y-1">
       <div className="text-violet-300 font-bold mb-1">How the agent fits in:</div>
       <div className="text-gray-400">1. <span className="text-cyan-300">Visitor</span> arrives at your app</div>
       <div className="text-gray-400 ml-4">↓</div>
@@ -404,7 +404,7 @@ const WorkflowOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
 // ─── Task stepper ─────────────────────────────────────────────────────────────
 
 const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (i: number) => void }> = ({ tasks, taskIndex, onJump }) => (
-  <div className="px-3 py-3 border-b border-gray-700 space-y-2">
+  <div className="px-3 py-3 border-b border-gray-700 stack-y-2">
     {([1, 2, 3] as const).map(phase => {
       const pm = PHASE_META[phase];
       const phaseTasks = tasks.filter(t => t.phase === phase);
@@ -412,7 +412,7 @@ const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (i: n
       return (
         <div key={phase}>
           <p className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${pm.color}`}>{pm.label}</p>
-          <div className="space-y-0.5">
+          <div className="stack-y-0.5">
             {phaseTasks.map((task, i) => {
               const gi = firstIdx + i;
               const isDone = gi < taskIndex; const isCur = gi === taskIndex; const isFut = gi > taskIndex;
@@ -460,7 +460,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
       <React.Fragment key={node.path}>
         {node.isFolder ? (
           <button onClick={() => toggle(node.path)}
-            className="w-full flex items-center gap-1 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 rounded"
+            className="w-full flex items-center gap-1 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 rounded-sm"
             style={{ paddingLeft: `${8 + depth * 10}px` }}>
             {open.has(node.path) ? <ChevronDown size={10} /> : <ChevronDown size={10} style={{ transform: 'rotate(-90deg)' }} />}
             <span className="text-amber-400 text-[10px]">📁</span>
@@ -478,7 +478,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
         {node.isFolder && open.has(node.path) && renderTree(node.children, depth + 1)}
       </React.Fragment>
     ));
-  return <div className="space-y-0">{renderTree(buildTree(files))}</div>;
+  return <div className="stack-y-0">{renderTree(buildTree(files))}</div>;
 };
 
 // ─── API Credentials panel ────────────────────────────────────────────────────
@@ -489,7 +489,7 @@ const ApiCredentialsPanel: React.FC<{
 }> = ({ creds, onChange, testStatus, testMsg, onTest }) => {
   const [show, setShow] = useState(false);
   return (
-    <div className="p-3 bg-gray-800/60 border border-violet-500/20 rounded-xl space-y-3">
+    <div className="p-3 bg-gray-800/60 border border-violet-500/20 rounded-xl stack-y-3">
       <p className="text-xs font-bold text-violet-400 flex items-center gap-1.5"><Key size={12} /> API Key</p>
       <div>
         <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Anthropic API Key</label>
@@ -498,7 +498,7 @@ const ApiCredentialsPanel: React.FC<{
             type={show ? 'text' : 'password'} value={creds.anthropicKey}
             onChange={e => onChange({ ...creds, anthropicKey: e.target.value })}
             placeholder="sk-ant-…"
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 pr-8 text-xs text-white placeholder-gray-600 outline-none focus:border-violet-500 font-mono"
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 pr-8 text-xs text-white placeholder-gray-600 outline-hidden focus:border-violet-500 font-mono"
           />
           <button onClick={() => setShow(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300 text-[10px]">
             {show ? '🙈' : '👁️'}
@@ -574,12 +574,12 @@ const TestWorkflowPanel: React.FC<{ apiKey: string; projectFiles: ProjectFile[] 
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 stack-y-3">
         {/* System prompt */}
         <div>
           <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">System Prompt (how the AI behaves)</label>
           <textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} rows={3}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-2 text-xs text-gray-200 placeholder-gray-600 resize-y outline-none focus:border-violet-500 font-mono leading-relaxed" />
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-2 text-xs text-gray-200 placeholder-gray-600 resize-y outline-hidden focus:border-violet-500 font-mono leading-relaxed" />
         </div>
 
         {/* User prompt */}
@@ -588,17 +588,17 @@ const TestWorkflowPanel: React.FC<{ apiKey: string; projectFiles: ProjectFile[] 
           <textarea value={userPrompt} onChange={e => setUserPrompt(e.target.value)} rows={4}
             onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleTest(); }}
             placeholder="Type something to test your AI call…"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-2 text-xs text-gray-200 placeholder-gray-600 resize-y outline-none focus:border-violet-500 leading-relaxed" />
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-2 text-xs text-gray-200 placeholder-gray-600 resize-y outline-hidden focus:border-violet-500 leading-relaxed" />
           <p className="text-[9px] text-gray-700 mt-0.5">Ctrl+Enter to run</p>
         </div>
 
         {/* Advanced */}
         {showAdvanced && (
-          <div className="space-y-2 p-2.5 bg-gray-800/60 rounded-lg border border-gray-700">
+          <div className="stack-y-2 p-2.5 bg-gray-800/60 rounded-lg border border-gray-700">
             <div>
               <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Model</label>
               <select value={model} onChange={e => setModel(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200 outline-none">
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200 outline-hidden">
                 <option value="claude-haiku-5-5">Claude Haiku (fast, cheap)</option>
                 <option value="claude-sonnet-4-6">Claude Sonnet (smarter)</option>
               </select>
@@ -633,7 +633,7 @@ const TestWorkflowPanel: React.FC<{ apiKey: string; projectFiles: ProjectFile[] 
 
         {/* Response */}
         {response && (
-          <div className="space-y-1.5">
+          <div className="stack-y-1.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold text-emerald-400 uppercase">AI Response</p>
               <button onClick={() => navigator.clipboard.writeText(response)}
@@ -759,7 +759,7 @@ const AgentPreviewPanel: React.FC<{ projectFiles: ProjectFile[] }> = ({ projectF
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 flex-shrink-0" style={{ background: '#161b22' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0">
             <Bot size={15} className="text-white" />
           </div>
           <div>
@@ -773,7 +773,7 @@ const AgentPreviewPanel: React.FC<{ projectFiles: ProjectFile[] }> = ({ projectF
         </div>
         <div className="flex items-center gap-3">
           <div className={`w-2 h-2 rounded-full ${phase === 'submitted' ? 'bg-emerald-400' : 'bg-violet-400 animate-pulse'}`} />
-          <button onClick={reset} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors px-2 py-1 rounded border border-gray-700 hover:border-gray-600">
+          <button onClick={reset} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors px-2 py-1 rounded-sm border border-gray-700 hover:border-gray-600">
             Reset
           </button>
         </div>
@@ -802,18 +802,18 @@ const AgentPreviewPanel: React.FC<{ projectFiles: ProjectFile[] }> = ({ projectF
 
       /* Draft review */
       ) : phase === 'reviewing' ? (
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 stack-y-4">
           <div className="rounded-xl border border-violet-500/30 overflow-hidden" style={{ background: '#1c2128' }}>
             <div className="px-4 py-2.5 border-b border-gray-700/60 flex items-center gap-2">
               <Sparkles size={12} className="text-violet-400" />
               <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wide">Your story draft — edit freely</p>
             </div>
-            <div className="px-4 py-3 space-y-2">
+            <div className="px-4 py-3 stack-y-2">
               <input value={draftTitle} onChange={e => setDraftTitle(e.target.value)}
-                className="w-full bg-transparent text-white font-bold text-sm border-b border-gray-700 pb-2 mb-1 outline-none focus:border-violet-500 transition-colors"
+                className="w-full bg-transparent text-white font-bold text-sm border-b border-gray-700 pb-2 mb-1 outline-hidden focus:border-violet-500 transition-colors"
                 placeholder="Story title..." />
               <textarea value={draftBody} onChange={e => setDraftBody(e.target.value)}
-                rows={9} className="w-full bg-transparent text-gray-300 text-xs leading-relaxed resize-none outline-none"
+                rows={9} className="w-full bg-transparent text-gray-300 text-xs leading-relaxed resize-none outline-hidden"
                 placeholder="Story content..." />
             </div>
           </div>
@@ -833,11 +833,11 @@ const AgentPreviewPanel: React.FC<{ projectFiles: ProjectFile[] }> = ({ projectF
       /* Conversation */
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          <div className="flex-1 overflow-y-auto px-4 py-4 stack-y-3">
             {messages.map((m, i) => (
               <div key={i} className={`flex gap-2.5 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  m.role === 'agent' ? 'bg-gradient-to-br from-violet-500 to-purple-700' : 'bg-gray-700'}`}>
+                  m.role === 'agent' ? 'bg-linear-to-br from-violet-500 to-purple-700' : 'bg-gray-700'}`}>
                   {m.role === 'agent' ? <Bot size={13} className="text-white" /> : <UserIcon size={13} className="text-gray-300" />}
                 </div>
                 <div className={`max-w-[78%] px-3.5 py-2.5 text-sm leading-relaxed rounded-2xl ${
@@ -848,7 +848,7 @@ const AgentPreviewPanel: React.FC<{ projectFiles: ProjectFile[] }> = ({ projectF
             ))}
             {loading && (
               <div className="flex gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-linear-to-br from-violet-500 to-purple-700 flex items-center justify-center">
                   <Bot size={13} className="text-white" />
                 </div>
                 <div className="bg-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1 items-center">
@@ -865,7 +865,7 @@ const AgentPreviewPanel: React.FC<{ projectFiles: ProjectFile[] }> = ({ projectF
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }}}
                 placeholder="Type your message... (Enter to send)"
                 rows={2}
-                className="flex-1 bg-transparent text-sm text-white placeholder-gray-600 resize-none outline-none leading-relaxed" />
+                className="flex-1 bg-transparent text-sm text-white placeholder-gray-600 resize-none outline-hidden leading-relaxed" />
               <button onClick={send} disabled={loading || !input.trim()}
                 className="flex-shrink-0 w-8 h-8 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-40 flex items-center justify-center transition-colors">
                 <Send size={13} className="text-white" />
@@ -1439,13 +1439,13 @@ const AIWorkflowDevPage: React.FC = () => {
 
       {/* ── Session picker ──────────────────────────────────────────── */}
       {showSessionPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-base font-bold text-white flex items-center gap-2"><FolderOpen size={18} className="text-violet-400" /> Your Workflow Projects</h2>
               <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-2">
               {sessions.map(s => (
                 <button key={s.workflow_session_id} onClick={() => loadSession(s)}
                   className="w-full text-left p-3 bg-gray-700/40 hover:bg-gray-700 border border-gray-600 hover:border-violet-500/40 rounded-xl transition-colors">
@@ -1457,7 +1457,7 @@ const AIWorkflowDevPage: React.FC = () => {
                       </p>
                     </div>
                     <button onClick={e => handleDeleteSession(e, s.workflow_session_id)} disabled={deletingSessionId === s.workflow_session_id}
-                      className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors flex-shrink-0">
+                      className="p-1.5 text-gray-600 hover:text-red-400 rounded-sm transition-colors flex-shrink-0">
                       {deletingSessionId === s.workflow_session_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
                   </div>
@@ -1476,13 +1476,13 @@ const AIWorkflowDevPage: React.FC = () => {
 
       {/* ── Evaluation modal ─────────────────────────────────────────── */}
       {showEvaluation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-lg font-bold text-white flex items-center gap-2"><BarChart3 size={20} className="text-violet-400" /> Workflow Evaluation</h2>
               <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 stack-y-4">
               {isEvaluating && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 size={36} className="animate-spin text-violet-400 mb-3" />
@@ -1526,7 +1526,7 @@ const AIWorkflowDevPage: React.FC = () => {
                     </div>
                   )}
                   {evaluation.detailed_scores && (
-                    <div className="space-y-1">
+                    <div className="stack-y-1">
                       <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Skill Breakdown</p>
                       {Object.entries(evaluation.detailed_scores as Record<string, { score: number; justification: string }>).map(([skill, data]) => (
                         <details key={skill} className="border border-gray-700 rounded-lg overflow-hidden">
@@ -1555,13 +1555,13 @@ const AIWorkflowDevPage: React.FC = () => {
 
       {/* ── StackBlitz modal ─────────────────────────────────────────── */}
       {showStackBlitzModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-[460px] shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
               <h2 className="text-base font-bold text-white flex items-center gap-2"><ExternalLink size={18} className="text-violet-400" /> Open in StackBlitz</h2>
               <button onClick={() => setShowStackBlitzModal(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="p-6 space-y-3">
+            <div className="p-6 stack-y-3">
               <p className="text-sm text-gray-300 leading-relaxed">Your workflow app will open in StackBlitz for live preview. Note that direct Anthropic API calls may not work there without adding your API key as an environment variable.</p>
               <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-300">
                 ⚠️ If AI calls fail in StackBlitz, it's because the API key isn't set. Use the Test Workflow tab here to test AI calls instead.
@@ -1589,7 +1589,7 @@ const AIWorkflowDevPage: React.FC = () => {
               <span className="text-sm font-bold text-white">AI Workflow Builder</span>
             </div>
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
-            <input className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-violet-500 outline-none px-1 py-0.5 w-44"
+            <input className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-violet-500 outline-hidden px-1 py-0.5 w-44"
               value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Workflow name…" />
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -1649,7 +1649,7 @@ const AIWorkflowDevPage: React.FC = () => {
               {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleEvaluate} disabled={isEvaluating || promptHistory.length < 2}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-linear-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50">
               {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <BarChart3 size={12} />} Evaluate
             </button>
           </div>
@@ -1693,11 +1693,11 @@ const AIWorkflowDevPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+                <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
 
                   {/* Supabase credentials panel on supabase_setup task */}
                   {showCredPanel && (
-                    <div className="p-3 bg-gray-800/60 border border-blue-500/20 rounded-xl space-y-3">
+                    <div className="p-3 bg-gray-800/60 border border-blue-500/20 rounded-xl stack-y-3">
                       <p className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
                         <Database size={12} /> Supabase Credentials
                       </p>
@@ -1706,14 +1706,14 @@ const AIWorkflowDevPage: React.FC = () => {
                         <input type="text" value={supaCreds.url}
                           onChange={e => updateSupaCreds({ ...supaCreds, url: e.target.value })}
                           placeholder="https://xxxx.supabase.co"
-                          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 outline-none focus:border-blue-500 font-mono" />
+                          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 outline-hidden focus:border-blue-500 font-mono" />
                       </div>
                       <div>
                         <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Anon Key</label>
                         <input type="password" value={supaCreds.anonKey}
                           onChange={e => updateSupaCreds({ ...supaCreds, anonKey: e.target.value })}
                           placeholder="eyJhbGci…"
-                          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 outline-none focus:border-blue-500 font-mono" />
+                          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 outline-hidden focus:border-blue-500 font-mono" />
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={testSupaConnection} disabled={!supaCreds.url || !supaCreds.anonKey || supaTestStatus === 'testing'}
@@ -1753,11 +1753,11 @@ const AIWorkflowDevPage: React.FC = () => {
                           </p>
                           <div className="flex items-center gap-1.5">
                             <button onClick={handleHelpRequest} title="What does this question mean?"
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[9px] font-bold text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
                               <HelpCircle size={11} /> Help
                             </button>
                             <button onClick={handleSkipSubTask} title="Skip this sub-task"
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/10 transition-colors">
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[9px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/10 transition-colors">
                               <SkipForward size={11} /> Skip
                             </button>
                           </div>
@@ -1829,12 +1829,12 @@ const AIWorkflowDevPage: React.FC = () => {
                       onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleGenerate(); }}
                       placeholder={taskInstruction?.subTasks[subTaskIndex]?.substring(0, 80) + '…' || 'Describe what you want to build…'}
                       style={{ minHeight: '140px' }}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-violet-500 transition-colors leading-relaxed" />
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-violet-500 transition-colors leading-relaxed" />
                     <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 px-4 pb-4 space-y-2">
+                <div className="flex-shrink-0 px-4 pb-4 stack-y-2">
                   <div className="flex gap-2">
                     <button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold bg-violet-600 hover:bg-violet-700 text-white rounded-xl transition-colors disabled:opacity-40">
@@ -1902,7 +1902,7 @@ const AIWorkflowDevPage: React.FC = () => {
               {rightTab === 'code' && (
                 <div className="flex items-center gap-2 pr-3">
                   <span className="text-[10px] text-gray-700">{activeFile?.content.split('\n').length}L</span>
-                  <button onClick={handleCopy} className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                  <button onClick={handleCopy} className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm transition-colors">
                     {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
@@ -1922,7 +1922,7 @@ const AIWorkflowDevPage: React.FC = () => {
                     </div>
                     <p className="text-xs" style={{ color: '#6b5c45' }}>Step {subTaskIndex + 1} of {taskInstruction?.subTasks?.length ?? 1}</p>
                   </div>
-                  <div className="px-6 py-5 space-y-5">
+                  <div className="px-6 py-5 stack-y-5">
                     {aiExplanation ? (
                       <div className="rounded-xl p-4 border" style={{ background: '#fff8ed', borderColor: '#f0c060' }}>
                         <div className="flex items-center gap-2 mb-2">
@@ -2026,7 +2026,7 @@ const AIWorkflowDevPage: React.FC = () => {
                 </div>
                 <button onClick={() => setShowTeachingPopup(false)} className="p-1.5 rounded-lg hover:bg-black/10"><X size={16} style={{ color: '#5a4a30' }} /></button>
               </div>
-              <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+              <div className="flex-1 overflow-y-auto px-5 py-5 stack-y-4">
                 <div className="rounded-xl p-4 border" style={{ background: '#f0f8f0', borderColor: '#7ab87a' }}>
                   <p className="text-sm leading-relaxed italic" style={{ color: '#1a3a1a', lineHeight: '1.75' }}>{taskInstruction.subTaskTeaching[subTaskIndex]}</p>
                 </div>

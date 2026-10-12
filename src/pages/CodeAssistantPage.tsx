@@ -424,8 +424,8 @@ const HTMLPreview: React.FC<{
       )}>
         {/* Preview Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-300 bg-gray-50 rounded-t-lg">
-          <div className="flex items-center space-x-3">
-            <div className="flex space-x-2">
+          <div className="flex items-center stack-x-3">
+            <div className="flex stack-x-2">
               <button
                 onClick={onClose}
                 className="w-3 h-3 bg-red-500 rounded-full hover:bg-red-600 transition-colors cursor-pointer"
@@ -442,15 +442,15 @@ const HTMLPreview: React.FC<{
                 title="Maximize"
               ></button>
             </div>
-            <div className="flex items-center space-x-2 text-gray-700">
-              <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded"></div>
+            <div className="flex items-center stack-x-2 text-gray-700">
+              <div className="w-4 h-4 bg-linear-to-r from-purple-500 to-pink-500 rounded-sm"></div>
               <span className="text-sm font-medium">
                 🎵 Vibing Web Preview
               </span>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center stack-x-2">
             <button
               onClick={() => {
                 const blob = new Blob([code], { type: 'text/html' });
@@ -461,7 +461,7 @@ const HTMLPreview: React.FC<{
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="px-3 py-1 text-xs bg-blue-500 text-white rounded-sm hover:bg-blue-600 transition-colors"
             >
               Download HTML
             </button>
@@ -529,8 +529,8 @@ const ConsoleModal: React.FC<{
       )}>
         {/* Console Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-700 bg-gray-800 rounded-t-lg">
-          <div className="flex items-center space-x-3">
-            <div className="flex space-x-2">
+          <div className="flex items-center stack-x-3">
+            <div className="flex stack-x-2">
               <button
                 onClick={onClose}
                 className="w-3 h-3 bg-red-500 rounded-full hover:bg-red-600 transition-colors cursor-pointer"
@@ -547,7 +547,7 @@ const ConsoleModal: React.FC<{
                 title="Maximize"
               ></button>
             </div>
-            <div className="flex items-center space-x-2 text-gray-300">
+            <div className="flex items-center stack-x-2 text-gray-300">
               <Terminal className="w-4 h-4" />
               <span className="text-sm font-medium">
                 Vibing Console - {selectedExecution.language}
@@ -555,7 +555,7 @@ const ConsoleModal: React.FC<{
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center stack-x-2">
             <button
               onClick={() => setIsMaximized(!isMaximized)}
               className="p-1 text-gray-400 hover:text-white transition-colors"
@@ -578,13 +578,13 @@ const ConsoleModal: React.FC<{
             <div className="p-3 border-b border-gray-700">
               <h3 className="text-sm font-medium text-gray-300">Execution History</h3>
             </div>
-            <div className="p-2 space-y-1">
+            <div className="p-2 stack-y-1">
               {allExecutions.slice().reverse().map((exec, index) => (
                 <button
                   key={exec.id}
                   onClick={() => setSelectedExecution(exec)}
                   className={classNames(
-                    'w-full text-left p-2 rounded text-xs transition-colors',
+                    'w-full text-left p-2 rounded-sm text-xs transition-colors',
                     selectedExecution?.id === exec.id
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-300 hover:bg-gray-700'
@@ -627,7 +627,7 @@ const ConsoleModal: React.FC<{
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="bg-gray-800 p-3 rounded border border-gray-600">
+                <div className="bg-gray-800 p-3 rounded-sm border border-gray-600">
                   <pre className="text-yellow-300 whitespace-pre-wrap">
                     {selectedExecution.code}
                   </pre>
@@ -639,7 +639,7 @@ const ConsoleModal: React.FC<{
                 <div className="text-blue-400 font-medium mb-2">
                   ⚡ Execution Details
                 </div>
-                <div className="bg-gray-800 p-3 rounded border border-gray-600 text-gray-300">
+                <div className="bg-gray-800 p-3 rounded-sm border border-gray-600 text-gray-300">
                   <div>Language: {selectedExecution.language}</div>
                   <div>Time: {selectedExecution.timestamp.toLocaleString()}</div>
                   {selectedExecution.executionTime && (
@@ -662,7 +662,7 @@ const ConsoleModal: React.FC<{
                       <Copy className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="bg-gray-800 p-3 rounded border border-gray-600">
+                  <div className="bg-gray-800 p-3 rounded-sm border border-gray-600">
                     <pre className="text-white whitespace-pre-wrap">
                       {selectedExecution.output}
                     </pre>
@@ -684,7 +684,7 @@ const ConsoleModal: React.FC<{
                       <Copy className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="bg-red-900 bg-opacity-20 p-3 rounded border border-red-600">
+                  <div className="bg-red-900 bg-opacity-20 p-3 rounded-sm border border-red-600">
                     <pre className="text-red-300 whitespace-pre-wrap">
                       {selectedExecution.error}
                     </pre>
@@ -1973,13 +1973,13 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
   const renderCodeExecution = (execution: CodeExecution) => (
     <div className="mt-3 p-3 bg-gray-900 rounded-lg text-sm font-mono">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center stack-x-2">
           <span className="text-green-400">$ {execution.language}</span>
           {execution.isWebCode && (
             <span className="text-purple-400 text-xs">🎮 Web App</span>
           )}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center stack-x-2">
           <span className="text-gray-400 text-xs">
             {execution.executionTime ? `${execution.executionTime}ms` : ''}
           </span>
@@ -1993,7 +1993,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                 }
                 setShowHTMLPreview(true);
               }}
-              className="text-purple-400 hover:text-purple-300 text-xs px-2 py-1 bg-purple-900 bg-opacity-30 rounded"
+              className="text-purple-400 hover:text-purple-300 text-xs px-2 py-1 bg-purple-900 bg-opacity-30 rounded-sm"
             >
               🎮 Preview
             </button>
@@ -2079,7 +2079,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
           <div className="relative z-10 pl-0 pr-6 py-8 -ml-48">
             {/* Header with Back Button */}
             <div className="mb-6 flex items-center justify-between">
-              <div className="inline-flex flex-col items-start gap-1 rounded-lg bg-pink-200 p-4 backdrop-blur-sm">
+              <div className="inline-flex flex-col items-start gap-1 rounded-lg bg-pink-200 p-4 backdrop-blur-xs">
                 <div className="flex items-center gap-2">
                   <Code className="h-8 w-8 text-purple-900" />
                   <h1 className="text-3xl font-extrabold text-gray-900">
@@ -2091,7 +2091,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                 </p>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center stack-x-4">
                 {/* Console Toggle Button */}
                 {codeHistory.length > 0 && (
                   <Button
@@ -2123,7 +2123,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                 <div><strong>Category:</strong> {selectedActivity.sub_category}</div>
                 <div><strong>Status:</strong> 
                   <span className={classNames(
-                    'ml-2 px-2 py-1 rounded text-sm',
+                    'ml-2 px-2 py-1 rounded-sm text-sm',
                     getProgressColor(selectedActivity.progress)
                   )}>
                     {selectedActivity.progress}
@@ -2143,7 +2143,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
               {selectedActivity.evaluation_evidence && (
                 <div className="mt-4">
                   <strong>Last Evaluation:</strong> 
-                  <p className="mt-1 text-gray-700 bg-gray-50 rounded p-2">
+                  <p className="mt-1 text-gray-700 bg-gray-50 rounded-sm p-2">
                     {selectedActivity.evaluation_evidence}
                   </p>
                 </div>
@@ -2189,14 +2189,14 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                 
                 <div 
                   ref={chatContainerRef}
-                  className="p-4 space-y-4 overflow-y-auto h-96"
+                  className="p-4 stack-y-4 overflow-y-auto h-96"
                 >
                   {chatHistory.map((message, index) => (
                     <div
                       key={index}
                       className={classNames(
-                        'flex items-start space-x-3',
-                        message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                        'flex items-start gap-3',
+                        message.role === 'user' ? 'flex-row-reverse' : ''
                       )}
                     >
                       <div className={classNames(
@@ -2248,13 +2248,13 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                   ))}
                   
                   {(submitting || executing) && (
-                    <div className="flex items-start space-x-3">
+                    <div className="flex items-start stack-x-3">
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center">
                         <Bot className="w-4 h-4 text-pink-600" />
                       </div>
                       <div className="bg-gray-100 text-gray-900 p-3 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <div className="flex space-x-1">
+                        <div className="flex items-center stack-x-2">
+                          <div className="flex stack-x-1">
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
@@ -2276,8 +2276,8 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                 )}
 
                 {/* NEW: Voice Controls */}
-                <div className="flex items-center space-x-4 mb-4 p-4 border-t">
-                  <label className="flex items-center space-x-2 bg-purple-100 border border-black px-4 py-2 rounded-md cursor-pointer">
+                <div className="flex items-center stack-x-4 mb-4 p-4 border-t">
+                  <label className="flex items-center stack-x-2 bg-purple-100 border border-black px-4 py-2 rounded-md cursor-pointer">
                     <input
                       type="checkbox"
                       checked={voiceInputEnabled}
@@ -2294,7 +2294,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     <span className="text-black font-medium">Enable Voice Input</span>
                   </label>
 
-                  <label className="flex items-center space-x-2 bg-purple-100 border border-black px-4 py-2 rounded-md cursor-pointer">
+                  <label className="flex items-center stack-x-2 bg-purple-100 border border-black px-4 py-2 rounded-md cursor-pointer">
                     <input
                       type="checkbox"
                       checked={voiceOutputEnabled}
@@ -2305,7 +2305,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                   </label>
 
                   {voiceOutputEnabled && (
-                    <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md text-sm">
+                    <div className="flex items-center stack-x-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md text-sm">
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                       <span className="text-blue-800 font-medium">
                         Voice: {'Ezinne'}
@@ -2319,7 +2319,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                 
                 {/* Enhanced Input Area with Code Execution Buttons and Voice Input */}
                 <div className="p-4 border-t">
-                  <div className="flex items-end space-x-3">
+                  <div className="flex items-end stack-x-3">
                     <SpellCheckTextarea
                       value={userInput}
                       onChange={setUserInput}
@@ -2328,7 +2328,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                       className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-18"
                       disabled={submitting}
                     />
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col stack-y-2">
                       {/* NEW: Voice Input Button */}
                       {voiceInputEnabled && (
                         <Button
@@ -2393,7 +2393,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                   <select
                     value={editorLanguage}
                     onChange={e => setEditorLanguage(e.target.value as 'python' | 'javascript' | 'html')}
-                    className="text-xs bg-gray-700 text-gray-300 border border-gray-600 rounded px-2 py-1 focus:outline-none"
+                    className="text-xs bg-gray-700 text-gray-300 border border-gray-600 rounded-sm px-2 py-1 focus:outline-hidden"
                   >
                     <option value="python">Python</option>
                     <option value="javascript">JavaScript</option>
@@ -2412,7 +2412,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                       finally { setExecuting(false); }
                     }}
                     disabled={executing || !editorCode.trim()}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-pink-600 hover:bg-pink-700 disabled:opacity-40 text-white text-xs font-semibold rounded transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-pink-600 hover:bg-pink-700 disabled:opacity-40 text-white text-xs font-semibold rounded-sm transition-colors"
                   >
                     <Play size={12} /> {executing ? 'Running…' : 'Run'}
                   </button>
@@ -2420,7 +2420,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     onClick={() => {
                       setEditorCode('# Start coding here...\n');
                     }}
-                    className="flex items-center gap-1 px-2 py-1 text-gray-500 hover:text-gray-300 hover:bg-gray-700 text-xs rounded transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-gray-500 hover:text-gray-300 hover:bg-gray-700 text-xs rounded-sm transition-colors"
                     title="Clear editor"
                   >
                     <RefreshCw size={11} /> Clear
@@ -2430,7 +2430,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     <button
                       onClick={handleHostOnStringlet}
                       disabled={hostingToStringlet || !editorCode.trim()}
-                      className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs font-semibold rounded transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs font-semibold rounded-sm transition-colors"
                       title="Host this web page live on Stringlet"
                     >
                       <Globe size={12} />
@@ -2442,7 +2442,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                       href={stringletUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs rounded hover:bg-emerald-500/30 transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs rounded-sm hover:bg-emerald-500/30 transition-colors"
                     >
                       <ExternalLink size={11} /> View Live Site
                     </a>
@@ -2477,7 +2477,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
 
             {/* Vibe Coding Prompt Modal */}
             {showVibePrompt && (
-              <div className="mt-6 bg-gradient-to-br from-purple-900/40 to-pink-900/20 border border-purple-500/30 rounded-xl shadow-lg">
+              <div className="mt-6 bg-linear-to-br from-purple-900/40 to-pink-900/20 border border-purple-500/30 rounded-xl shadow-lg">
                 <div className="p-4 border-b border-purple-500/20 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Wand2 className="w-5 h-5 text-purple-400" />
@@ -2487,7 +2487,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     <X size={18} />
                   </button>
                 </div>
-                <div className="p-4 space-y-3">
+                <div className="p-4 stack-y-3">
                   <p className="text-xs text-purple-300">
                     This prompt captures what you built in this session. Paste it into any AI coding tool — ChatGPT, Claude, Cursor, Replit — to continue building or start fresh.
                   </p>
@@ -2502,7 +2502,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                         value={vibePrompt}
                         onChange={e => setVibePrompt(e.target.value)}
                         rows={6}
-                        className="w-full bg-gray-900/70 border border-purple-500/30 rounded-lg px-4 py-3 text-sm text-gray-100 resize-none focus:outline-none focus:border-purple-400 font-mono leading-relaxed"
+                        className="w-full bg-gray-900/70 border border-purple-500/30 rounded-lg px-4 py-3 text-sm text-gray-100 resize-none focus:outline-hidden focus:border-purple-400 font-mono leading-relaxed"
                       />
                       <div className="flex items-center gap-3 flex-wrap">
                         <button
@@ -2545,11 +2545,11 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                   {codeHistory.slice().reverse().map((execution, index) => (
                     <div key={execution.id} className="border rounded-lg p-3 text-xs">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center stack-x-1">
                           <span className="font-medium text-gray-900">{execution.language}</span>
                           {execution.isWebCode && <span className="text-purple-600">🎮</span>}
                         </div>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center stack-x-1">
                           {execution.error
                             ? <AlertCircle className="w-4 h-4 text-red-500" />
                             : <CheckIcon className="w-4 h-4 text-green-500" />}
@@ -2575,7 +2575,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                           <span className="text-gray-400">{execution.timestamp.toLocaleTimeString()}</span>
                         </div>
                       </div>
-                      <div className="bg-gray-900 rounded p-2 font-mono text-yellow-300 mb-2">
+                      <div className="bg-gray-900 rounded-sm p-2 font-mono text-yellow-300 mb-2">
                         {execution.code.split('\n').slice(0, 3).map((line, i) => (
                           <div key={i} className="truncate">{line}</div>
                         ))}
@@ -2618,7 +2618,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     </button>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="stack-y-4">
                     <div className="text-center">
                       <div className={classNames(
                         "text-3xl font-bold mb-2",
@@ -2706,7 +2706,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
             {/* Header row — Skills Development */}
             <div className="mb-8 flex items-center justify-between">
               {/* Pink info box */}
-              <div className="inline-flex flex-col items-start gap-1 rounded-lg bg-pink-100/75 p-4 backdrop-blur-sm">
+              <div className="inline-flex flex-col items-start gap-1 rounded-lg bg-pink-100/75 p-4 backdrop-blur-xs">
                 <div className="flex items-center gap-2">
                   <Puzzle className="h-8 w-8 text-purple-600" />
                   <h1 className="text-3xl font-extrabold text-gray-900">
@@ -2750,7 +2750,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                     onClick={() => isSelectable && handleCategorySelect(category)}
                     disabled={!isSelectable}
                     className={classNames(
-                      'flex flex-col items-start space-y-4 p-4 rounded-lg border transition-all duration-200 text-left',
+                      'flex flex-col items-start stack-y-4 p-4 rounded-lg border transition-all duration-200 text-left',
                       isAdvancedComplete
                         ? 'bg-green-50/80 border border-green-200 text-green-900 opacity-90 cursor-not-allowed'
                         : isSelectable
@@ -2778,7 +2778,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                       </p>
                       
                       {activity && (
-                        <div className="space-y-2">
+                        <div className="stack-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                               Status
@@ -2851,7 +2851,7 @@ Write ONLY the vibe coding prompt — no explanation, no preamble. Make it speci
                   onClick={refreshDashboard}
                   icon={<RefreshCw size={16} />}
                   isLoading={refreshing}
-                  className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700"
+                  className="bg-linear-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700"
                 >
                   Refresh Activities
                 </Button>

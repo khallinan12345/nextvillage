@@ -243,7 +243,7 @@ const SkillDevelopmentStartPage: React.FC = () => {
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-6">
 
         {/* header */}
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-purple-900 to-slate-800 p-6 text-white">
+        <div className="mb-6 rounded-2xl bg-linear-to-br from-purple-900 to-slate-800 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">Orientation</p>
           <h1 className="mt-1 text-3xl font-extrabold">Start Here: Skill Development</h1>
           <p className="mt-1 max-w-xl text-sm text-slate-300">
@@ -269,7 +269,7 @@ const SkillDevelopmentStartPage: React.FC = () => {
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-700">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-linear-to-r from-amber-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>
@@ -309,7 +309,7 @@ const SkillDevelopmentStartPage: React.FC = () => {
                   ) : (
                     <>
                       <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">Score Proficient to unlock the next one</p>
-                      <ul className="mb-4 space-y-1.5">
+                      <ul className="mb-4 stack-y-1.5">
                         {activities.map((a, i) => {
                           const status = activityStatus(skill, i);
 

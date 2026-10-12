@@ -65,7 +65,7 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const rendered = text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded text-sm">$1</code>')
+    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded-sm text-sm">$1</code>')
     .replace(/\n/g, '<br/>');
   return <span dangerouslySetInnerHTML={{ __html: rendered }} />;
 };
@@ -572,7 +572,7 @@ Respond with ONLY valid JSON:
       <div className="min-h-screen bg-gray-50">
         {/* ── Name Modal ───────────────────────────────────────────────────── */}
         {showNameModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
               <h3 className="text-lg font-bold text-gray-900 mb-1">Name your session</h3>
               <p className="text-sm text-gray-500 mb-4">Give this vibe coding session a memorable name so you can find it later.</p>
@@ -583,7 +583,7 @@ Respond with ONLY valid JSON:
                 onChange={e => setSessionNameInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') commitSaveSession(); if (e.key === 'Escape') setShowNameModal(false); }}
                 placeholder="e.g. Weather App, Quiz Game, Portfolio Site"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-400 mb-4"
               />
               <div className="flex gap-2">
                 <button onClick={() => setShowNameModal(false)} className="flex-1 py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
@@ -594,7 +594,7 @@ Respond with ONLY valid JSON:
         )}
 
         {/* Page header */}
-        <div className="bg-gradient-to-r from-purple-700 to-pink-600 px-6 py-5">
+        <div className="bg-linear-to-r from-purple-700 to-pink-600 px-6 py-5">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <Code className="h-7 w-7 text-white flex-shrink-0" />
@@ -654,7 +654,7 @@ Respond with ONLY valid JSON:
 
         {/* ── Session Bar ──────────────────────────────────────────────────── */}
         {showSessionBar && (
-          <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="bg-white border-b border-gray-200 shadow-xs">
             <div className="max-w-7xl mx-auto px-4 py-3">
               <div className="flex items-center gap-2 mb-2">
                 <FolderOpen size={15} className="text-purple-600" />
@@ -682,7 +682,7 @@ Respond with ONLY valid JSON:
                             value={editingNameValue}
                             onChange={e => setEditingNameValue(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') saveRenameSession(session.id); if (e.key === 'Escape') setEditingSessionId(null); }}
-                            className="text-xs border border-purple-300 rounded px-1.5 py-0.5 outline-none w-32"
+                            className="text-xs border border-purple-300 rounded-sm px-1.5 py-0.5 outline-hidden w-32"
                           />
                           <button onClick={() => saveRenameSession(session.id)} className="text-green-600 hover:text-green-700"><Check size={12} /></button>
                           <button onClick={() => setEditingSessionId(null)} className="text-gray-400 hover:text-gray-600"><X size={12} /></button>
@@ -694,8 +694,8 @@ Respond with ONLY valid JSON:
                             {new Date(session.updated_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                           </span>
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1" onClick={e => e.stopPropagation()}>
-                            <button onClick={e => startRenameSession(session, e)} className="p-0.5 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600" title="Rename"><Edit3 size={11} /></button>
-                            <button onClick={e => handleDeleteSession(session.id, e)} className="p-0.5 rounded hover:bg-red-100 text-gray-400 hover:text-red-500" title="Delete"><X size={11} /></button>
+                            <button onClick={e => startRenameSession(session, e)} className="p-0.5 rounded-sm hover:bg-gray-200 text-gray-400 hover:text-gray-600" title="Rename"><Edit3 size={11} /></button>
+                            <button onClick={e => handleDeleteSession(session.id, e)} className="p-0.5 rounded-sm hover:bg-red-100 text-gray-400 hover:text-red-500" title="Delete"><X size={11} /></button>
                           </div>
                         </>
                       )}
@@ -714,7 +714,7 @@ Respond with ONLY valid JSON:
             <div className="bg-white rounded-xl shadow-md flex flex-col" style={{ height: '700px' }}>
 
               {/* Start Here header */}
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-5 py-4 rounded-t-xl flex-shrink-0">
+              <div className="bg-linear-to-r from-purple-600 to-pink-600 px-5 py-4 rounded-t-xl flex-shrink-0">
                 <p className="text-xs font-bold text-purple-200 uppercase tracking-wider mb-0.5">Start Here</p>
                 <h3 className="text-base font-bold text-white leading-snug">
                   Work with AI to Design Your Vibe Coding Prompt
@@ -725,12 +725,12 @@ Respond with ONLY valid JSON:
               </div>
 
               {/* Chat messages */}
-              <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-5 stack-y-4">
                 {chatHistory.map((message, index) => (
                   <div
                     key={index}
                     className={classNames(
-                      'flex items-start space-x-3',
+                      'flex items-start stack-x-3',
                       message.role === 'assistant' ? 'justify-start' : 'justify-end'
                     )}
                   >
@@ -754,11 +754,11 @@ Respond with ONLY valid JSON:
                   </div>
                 ))}
                 {submitting && (
-                  <div className="flex items-start space-x-3">
+                  <div className="flex items-start stack-x-3">
                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
                       <Bot className="h-5 w-5 text-purple-600" />
                     </div>
-                    <div className="bg-gray-100 rounded-lg px-4 py-3 flex space-x-1">
+                    <div className="bg-gray-100 rounded-lg px-4 py-3 flex stack-x-1">
                       {[0, 150, 300].map(d => (
                         <div key={d} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
                       ))}
@@ -775,13 +775,13 @@ Respond with ONLY valid JSON:
               )}
 
               {/* Input area */}
-              <div className="border-t p-4 flex-shrink-0 space-y-2">
+              <div className="border-t p-4 flex-shrink-0 stack-y-2">
                 <p className="text-xs text-indigo-600 flex items-center gap-1">
                   <span>💡</span>
                   <span>Have a question? Just ask it — the AI will answer you directly.</span>
                 </p>
 
-                <div className="flex items-end space-x-2">
+                <div className="flex items-end stack-x-2">
                   <div className="flex-1">
                     <textarea
                       value={userInput}
@@ -790,10 +790,10 @@ Respond with ONLY valid JSON:
                       placeholder="Describe what you want to build..."
                       rows={2}
                       disabled={submitting}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                     />
                   </div>
-                  <div className="flex flex-col space-y-1.5">
+                  <div className="flex flex-col stack-y-1.5">
                     <Button
                       onClick={toggleVoiceInput}
                       icon={<Mic size={15} className={isListening ? 'text-red-500' : ''} />}
@@ -835,13 +835,13 @@ Respond with ONLY valid JSON:
 
                 {/* Voice controls row */}
                 <div className="flex items-center justify-between text-sm text-gray-600 pt-1">
-                  <div className="flex items-center space-x-3">
-                    <label className="flex items-center space-x-1.5 cursor-pointer">
+                  <div className="flex items-center stack-x-3">
+                    <label className="flex items-center stack-x-1.5 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={voiceOutputEnabled}
                         onChange={toggleVoiceOutput}
-                        className="rounded border-gray-300"
+                        className="rounded-sm border-gray-300"
                       />
                       <span className="text-xs">Voice Output</span>
                     </label>

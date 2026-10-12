@@ -278,7 +278,7 @@ const CreateGamePage: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600">
+            <div className="p-2 rounded-xl bg-linear-to-br from-emerald-600 to-teal-600">
               <Gamepad2 size={22} className="text-white" />
             </div>
             <div>
@@ -343,9 +343,9 @@ const CreateGamePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ── Chat panel ─────────────────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-2xl flex flex-col h-[70vh]">
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-5 py-4 stack-y-3">
               {chatHistory.length === 0 && (
-                <div className="text-sm text-gray-400 space-y-2">
+                <div className="text-sm text-gray-400 stack-y-2">
                   <p>
                     Describe the game you want — for example: "a game where you click a bouncing ball to score points before it escapes the screen."
                   </p>
@@ -356,7 +356,7 @@ const CreateGamePage: React.FC = () => {
               )}
               {chatHistory.map((m, i) => (
                 <div key={i} className="rounded-2xl px-4 py-2.5 bg-purple-600 text-white ml-auto max-w-[85%]">
-                  <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>
+                  <p className="text-sm whitespace-pre-wrap wrap-break-word">{m.content}</p>
                 </div>
               ))}
               {generating && (
@@ -374,12 +374,12 @@ const CreateGamePage: React.FC = () => {
                 rows={1}
                 placeholder={gameCode ? 'Ask for a change, e.g. "make the ball faster"…' : 'Describe your game idea…'}
                 disabled={generating}
-                className="flex-1 resize-none outline-none text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-emerald-100"
+                className="flex-1 resize-none outline-hidden text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-emerald-100"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || generating}
-                className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                className="flex-shrink-0 w-9 h-9 rounded-xl bg-linear-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
               >
                 {generating ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
               </button>
@@ -434,12 +434,12 @@ const CreateGamePage: React.FC = () => {
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Name your game…"
                   maxLength={100}
-                  className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
+                  className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
                 />
                 <button
                   onClick={handleSave}
                   disabled={saving || !effectiveOrgId}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex-shrink-0"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linear-to-br from-emerald-600 to-teal-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex-shrink-0"
                 >
                   {saving ? <Loader2 size={15} className="animate-spin" /> : isExistingGame ? <Save size={15} /> : <Rocket size={15} />}
                   {isExistingGame ? 'Save' : 'Publish'}
@@ -466,7 +466,7 @@ const CreateGamePage: React.FC = () => {
             {verdict.suggestions.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Suggestions</p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                <ul className="list-disc list-inside stack-y-1 text-sm text-gray-700">
                   {verdict.suggestions.map((s, i) => <li key={i}>{s}</li>)}
                 </ul>
               </div>

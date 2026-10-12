@@ -15,7 +15,7 @@ const List: React.FC<{ title: string; items?: string[]; icon?: React.ReactNode; 
   return (
     <section className={classNames('rounded-lg border p-4', tone)}>
       <h3 className="flex items-center gap-2 text-sm font-bold mb-2">{icon}{title}</h3>
-      <ul className="list-disc pl-5 space-y-1 text-sm">
+      <ul className="list-disc pl-5 stack-y-1 text-sm">
         {items.map((it, i) => <li key={i}>{it}</li>)}
       </ul>
     </section>
@@ -46,10 +46,10 @@ const ComparisonModal: React.FC<Props> = ({ open, loading, error, comparison, on
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900"><Scale className="w-5 h-5 text-violet-600" /> Guarded vs. unguarded</h2>
-          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100" aria-label="Close"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-1 rounded-sm hover:bg-gray-100" aria-label="Close"><X className="w-5 h-5" /></button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 stack-y-4">
           {loading && (
             <div className="flex flex-col items-center gap-3 py-12 text-gray-600">
               <Loader2 className="w-8 h-8 animate-spin text-violet-600" />

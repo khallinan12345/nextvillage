@@ -37,13 +37,13 @@ const MARKDOWN_COMPONENTS = {
   p: (props: React.ComponentProps<'p'>) => <p className="mb-2.5 last:mb-0 leading-relaxed" {...props} />,
   strong: (props: React.ComponentProps<'strong'>) => <strong className="font-semibold text-violet-800" {...props} />,
   em: (props: React.ComponentProps<'em'>) => <em className="italic" {...props} />,
-  ul: (props: React.ComponentProps<'ul'>) => <ul className="list-disc pl-5 mb-2.5 space-y-1" {...props} />,
-  ol: (props: React.ComponentProps<'ol'>) => <ol className="list-decimal pl-5 mb-2.5 space-y-1" {...props} />,
+  ul: (props: React.ComponentProps<'ul'>) => <ul className="list-disc pl-5 mb-2.5 stack-y-1" {...props} />,
+  ol: (props: React.ComponentProps<'ol'>) => <ol className="list-decimal pl-5 mb-2.5 stack-y-1" {...props} />,
   li: (props: React.ComponentProps<'li'>) => <li className="leading-relaxed" {...props} />,
   h1: (props: React.ComponentProps<'h1'>) => <h1 className="text-base font-bold mb-1.5 mt-2.5 first:mt-0" {...props} />,
   h2: (props: React.ComponentProps<'h2'>) => <h2 className="text-sm font-bold mb-1.5 mt-2.5 first:mt-0" {...props} />,
   h3: (props: React.ComponentProps<'h3'>) => <h3 className="text-sm font-semibold mb-1 mt-2 first:mt-0" {...props} />,
-  code: (props: React.ComponentProps<'code'>) => <code className="bg-black/5 rounded px-1 py-0.5 text-[0.85em] font-mono" {...props} />,
+  code: (props: React.ComponentProps<'code'>) => <code className="bg-black/5 rounded-sm px-1 py-0.5 text-[0.85em] font-mono" {...props} />,
   blockquote: (props: React.ComponentProps<'blockquote'>) => <blockquote className="border-l-2 border-violet-300 pl-3 italic text-gray-600 mb-2.5" {...props} />,
 };
 
@@ -597,7 +597,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
         {view === 'list' ? (
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600">
+              <div className="p-2 rounded-xl bg-linear-to-br from-purple-600 to-pink-600">
                 <Users size={22} className="text-white" />
               </div>
               <div>
@@ -613,12 +613,12 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                 onKeyDown={e => e.key === 'Enter' && handleCreateRoom()}
                 placeholder="Name a new room, e.g. Our Community Story"
                 maxLength={100}
-                className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm outline-hidden focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
               />
               <button
                 onClick={handleCreateRoom}
                 disabled={!newRoomName.trim() || creatingRoom}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linear-to-br from-purple-600 to-pink-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
               >
                 {creatingRoom ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                 New Room
@@ -635,11 +635,11 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                 <p>No rooms yet — start one above to begin collaborating.</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {rooms.map(room => (
                   <div
                     key={room.id}
-                    className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-sm transition-all flex items-center justify-between gap-2"
+                    className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-2"
                   >
                     {editingRoomId === room.id ? (
                       <>
@@ -653,7 +653,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                           }}
                           maxLength={100}
                           disabled={renaming}
-                          className="flex-1 min-w-0 border border-purple-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-purple-200"
+                          className="flex-1 min-w-0 border border-purple-300 rounded-lg px-3 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-purple-200"
                         />
                         <button
                           onClick={() => handleRenameRoom(room)}
@@ -754,7 +754,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-5 py-4 stack-y-4">
               {loadingMessages ? (
                 <div className="flex justify-center py-8"><Loader2 className="animate-spin text-gray-300" size={22} /></div>
               ) : messages.length === 0 ? (
@@ -784,13 +784,13 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                             {msg.content && (
                               isAssistant
                                 ? <FormattedText content={msg.content} className="text-sm mt-1.5" />
-                                : <p className="text-sm whitespace-pre-wrap break-words mt-1.5">{msg.content}</p>
+                                : <p className="text-sm whitespace-pre-wrap wrap-break-word mt-1.5">{msg.content}</p>
                             )}
                           </div>
                         ) : isAssistant ? (
                           <FormattedText content={msg.content} className="text-sm" />
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          <p className="text-sm whitespace-pre-wrap wrap-break-word">{msg.content}</p>
                         )}
                       </div>
                       {isLeader && !isDeleted && !isAssistant && (
@@ -824,7 +824,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                       <p className="text-xs text-gray-500 mt-1 ml-1">Reported — a leader will look at it. Thank you for speaking up.</p>
                     )}
                     {reportingId === msg.id && (
-                      <div className="mt-2 max-w-[85%] rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
+                      <div className="mt-2 max-w-[85%] rounded-xl border border-red-200 bg-red-50 p-3 stack-y-2">
                         <p className="text-sm text-gray-800">
                           Report this message to your leader? They’ll see who sent it and what it says. The sender isn’t told who reported it.
                         </p>
@@ -834,7 +834,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                           maxLength={500}
                           rows={2}
                           placeholder="What’s wrong? (optional)"
-                          className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300"
+                          className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-red-300"
                         />
                         {reportError && <p className="text-xs text-red-600">{reportError}</p>}
                         <div className="flex gap-2">
@@ -898,12 +898,12 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                   rows={1}
                   placeholder={!quotaExempt && quotaUsed >= QUOTA_TOKENS ? 'Quota reached — please wait for reset' : 'Message the room…'}
                   disabled={sending || (!quotaExempt && quotaUsed >= QUOTA_TOKENS)}
-                  className="flex-1 resize-none outline-none text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-purple-100"
+                  className="flex-1 resize-none outline-hidden text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-purple-100"
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || sending || (!quotaExempt && quotaUsed >= QUOTA_TOKENS)}
-                  className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                  className="flex-shrink-0 w-9 h-9 rounded-xl bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 >
                   {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                 </button>

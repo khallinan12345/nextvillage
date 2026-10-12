@@ -181,7 +181,7 @@ const ImageCard: React.FC<{ entry: ImageEntry; onDelete: (id: string) => void }>
           </div>
         </div>
         {expanded && (
-          <div className="px-3 pb-3 space-y-2 border-t border-hair pt-2">
+          <div className="px-3 pb-3 stack-y-2 border-t border-hair pt-2">
             {entry.status === 'succeeded' && entry.imageUrl && (
               <img src={entry.imageUrl} alt={entry.prompt} className="w-full rounded-lg object-cover max-h-48 cursor-pointer" onClick={() => setLightbox(true)} />
             )}
@@ -191,9 +191,9 @@ const ImageCard: React.FC<{ entry: ImageEntry; onDelete: (id: string) => void }>
               </div>
             )}
             {entry.status === 'failed' && (
-              <p className="text-xs text-red-700 bg-red-50 rounded px-2 py-1.5">Generation failed.</p>
+              <p className="text-xs text-red-700 bg-red-50 rounded-sm px-2 py-1.5">Generation failed.</p>
             )}
-            <div className="space-y-0.5 text-[10px] text-muted">
+            <div className="stack-y-0.5 text-[10px] text-muted">
               <p><span className="text-muted">Prompt:</span> {entry.prompt}</p>
               {entry.negativePrompt && <p><span className="text-muted">Negative:</span> {entry.negativePrompt}</p>}
               {entry.style && <p><span className="text-muted">Style:</span> {entry.style}</p>}
@@ -201,12 +201,12 @@ const ImageCard: React.FC<{ entry: ImageEntry; onDelete: (id: string) => void }>
             <div className="flex gap-2">
               {entry.imageUrl && (
                 <a href={entry.imageUrl} download target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] bg-accent hover:bg-accent/90 text-white rounded px-2 py-1 transition-colors">
+                  className="flex items-center gap-1 text-[10px] bg-accent hover:bg-accent/90 text-white rounded-sm px-2 py-1 transition-colors">
                   <Download size={10} /> Download
                 </a>
               )}
               <button onClick={() => onDelete(entry.id)}
-                className="flex items-center gap-1 text-[10px] bg-red-50 hover:bg-red-100 text-red-700 rounded px-2 py-1 transition-colors">
+                className="flex items-center gap-1 text-[10px] bg-red-50 hover:bg-red-100 text-red-700 rounded-sm px-2 py-1 transition-colors">
                 <Trash2 size={10} /> Remove
               </button>
             </div>
@@ -655,7 +655,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
             {view !== 'overview' && (
               <>
                 <div className="w-px h-5 bg-hair" />
-                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-none px-1 py-0.5 w-44"
+                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-hidden px-1 py-0.5 w-44"
                   value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Portfolio name…" />
               </>
             )}
@@ -680,7 +680,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
             </div>
             {view === 'build' && (
               <button onClick={handleEvaluate} disabled={isEvaluating || succeededImages.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg transition-colors shadow disabled:opacity-50">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50">
                 {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
                 {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
               </button>
@@ -735,12 +735,12 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
 
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-muted uppercase mb-3">📋 Certification Guidelines</p>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {[
                   { icon: '✅', text: lvl <= 1 ? 'Always say WHY you are making each image — for a poster, a story, a project.' : 'State a clear purpose for every image using the Purpose field — this is a scored criterion.' },
                   { icon: '✅', text: lvl <= 1 ? 'Choose a style (like "watercolour" or "photograph") to make your image better.' : 'Select and name a style for each image. Stylistic awareness is evaluated.' },
                   { icon: '✅', text: lvl <= 1 ? 'Try the same idea more than once with more detail to improve it.' : 'Iterate — revisit subjects with refined prompts to demonstrate creative growth.' },
-                  { icon: '✅', text: lvl <= 1 ? 'Use words like "close-up", "wide view", "bright colours", "dark shadow".' : 'Use compositional language: perspective, framing, depth, lighting, colour palette, mood.' },
+                  { icon: '✅', text: lvl <= 1 ? 'Use words like "close-up", "wide view", "bright colours", "dark shadow-sm".' : 'Use compositional language: perspective, framing, depth, lighting, colour palette, mood.' },
                   { icon: '❌', text: lvl <= 1 ? 'Do not write very short prompts like "a cat". Add much more detail.' : 'Short vague prompts (under 10 words) score as No Evidence regardless of output quality.' },
                 ].map((rule, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm">
@@ -754,7 +754,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
             {/* Prompt tip */}
             <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl mb-5">
               <p className="text-xs font-bold text-accent uppercase mb-2">🎨 What makes a great image prompt?</p>
-              <div className="space-y-1.5 text-xs text-muted">
+              <div className="stack-y-1.5 text-xs text-muted">
                 <div className="flex items-start gap-2"><span className="text-red-700 flex-shrink-0 font-bold">✗ Weak:</span><span className="italic">"A woman in a market."</span></div>
                 <div className="flex items-start gap-2"><span className="text-green-700 flex-shrink-0 font-bold">✓ Strong:</span><span className="italic">"A Nigerian market woman in her 40s wearing a vibrant yellow ankara dress, photographed from a low angle, surrounded by colourful produce, golden afternoon light streaming through the stalls, shallow depth of field, photorealistic."</span></div>
                 <p className="text-muted mt-2">Strong prompts include: <span className="text-body">subject · setting · perspective · lighting · colour · mood · style</span></p>
@@ -767,7 +767,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
               {assessments.length === 0 ? (
                 <p className="text-sm text-muted italic">Loading criteria…</p>
               ) : (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const sl = scoreLabel(sc?.score ?? null);
@@ -834,7 +834,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
                 {genError && (
                   <div className="p-2.5 bg-red-100 border border-red-200 rounded-lg flex gap-2">
                     <AlertCircle size={12} className="flex-shrink-0 text-red-700 mt-0.5" />
@@ -855,7 +855,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                   </label>
                   <input type="text" value={purpose} onChange={e => setPurpose(e.target.value)}
                     placeholder={lvl <= 1 ? 'e.g. A poster for our school event' : 'e.g. Cover art for a community newsletter about solar energy'}
-                    className="w-full bg-paper border border-hair rounded-lg px-3 py-2 text-sm text-ink placeholder-muted outline-none focus:border-accent transition-colors" />
+                    className="w-full bg-paper border border-hair rounded-lg px-3 py-2 text-sm text-ink placeholder-muted outline-hidden focus:border-accent transition-colors" />
                   <p className="text-[9px] text-muted mt-0.5">Stating a purpose is part of your evaluation.</p>
                 </div>
 
@@ -870,7 +870,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                     placeholder={lvl <= 1
                       ? 'e.g. A young girl in school uniform reading a book under a mango tree, sunshine, happy, bright colours'
                       : 'e.g. A Nigerian schoolgirl in blue uniform reading under a mango tree, dappled afternoon sunlight, bokeh background, warm colour palette, shallow depth of field, photorealistic'}
-                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-none focus:border-accent transition-colors leading-relaxed" />
+                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-hidden focus:border-accent transition-colors leading-relaxed" />
                   <p className="text-[9px] text-muted mt-0.5">Ctrl+Enter to generate</p>
                 </div>
 
@@ -913,7 +913,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                   </button>
                   {showAdvanced && (
                     <textarea value={negPrompt} onChange={e => setNegPrompt(e.target.value)} rows={2}
-                      className="mt-1.5 w-full bg-paper border border-hair rounded-lg px-2.5 py-2 text-xs text-body placeholder-muted resize-none outline-none focus:border-accent"
+                      className="mt-1.5 w-full bg-paper border border-hair rounded-lg px-2.5 py-2 text-xs text-body placeholder-muted resize-none outline-hidden focus:border-accent"
                       placeholder="blurry, distorted, watermark…" />
                   )}
                 </div>
@@ -923,7 +923,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                   <p className="text-[10px] font-bold text-muted uppercase mb-2 flex items-center gap-1.5">
                     <ClipboardList size={11} /> Rubric Criteria
                   </p>
-                  <div className="space-y-1.5">
+                  <div className="stack-y-1.5">
                     {assessments.map(a => {
                       const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                       const isOpen = expandedCrit === a.certification_id;
@@ -940,9 +940,9 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                             {isOpen ? <ChevronUp size={12} className="text-muted flex-shrink-0" /> : <ChevronDown size={12} className="text-muted flex-shrink-0" />}
                           </button>
                           {isOpen && (
-                            <div className="px-3 py-2.5 bg-paper border-t border-hair space-y-2">
+                            <div className="px-3 py-2.5 bg-paper border-t border-hair stack-y-2">
                               <p className="text-[10px] text-muted leading-relaxed">{a.description}</p>
-                              <div className="space-y-1">
+                              <div className="stack-y-1">
                                 {[
                                   { level: 0, text: a.certification_level0_metric, color: 'text-red-700' },
                                   { level: 1, text: a.certification_level1_metric, color: 'text-yellow-700' },
@@ -996,12 +996,12 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
 
               <div className="flex-1 overflow-y-auto p-3">
                 {images.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-16 space-y-3">
+                  <div className="flex flex-col items-center justify-center h-full text-center py-16 stack-y-3">
                     <ImagePlus size={48} className="text-muted" />
                     <p className="text-muted text-sm font-medium">
                       {lvl <= 1 ? 'Your images will appear here.' : 'Your image portfolio will build up here as you generate.'}
                     </p>
-                    <div className="max-w-xs space-y-1 text-xs text-muted">
+                    <div className="max-w-xs stack-y-1 text-xs text-muted">
                       <p>💡 {lvl <= 1 ? 'Write a description and choose a style, then click Create.' : 'Write a detailed prompt with purpose and style, then generate.'}</p>
                       <p>🔄 {lvl <= 1 ? 'Try the same idea again with more detail.' : 'Iterate — multiple attempts on a theme demonstrate refinement.'}</p>
                       <p>⚡ {lvl <= 1 ? 'Images take 2–5 seconds to make.' : 'FLUX Schnell generates in ~2–5 seconds.'}</p>
@@ -1009,7 +1009,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                   </div>
                 ) : gridView ? (
                   // Grid view — thumbnail gallery
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     {images.length > 1 && (
                       <div className="flex items-center gap-3 p-2.5 bg-surface border border-hair rounded-lg text-xs text-muted">
                         <span className="text-accent font-bold">{succeededImages.length}</span> complete ·
@@ -1041,7 +1041,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                   </div>
                 ) : (
                   // List view
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     {images.length > 1 && (
                       <div className="flex items-center gap-3 p-2.5 bg-surface border border-hair rounded-lg text-xs text-muted">
                         <span className="text-accent font-bold">{succeededImages.length}</span> complete ·
@@ -1070,7 +1070,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
               : 'Submit your image portfolio for evaluation to see results.')}
 
             {!anyScored ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <ClipboardList size={48} className="text-muted mx-auto" />
                 <p className="text-muted">{lvl <= 1 ? 'You have not been evaluated yet. Go to the Build view and create some images first.' : 'No evaluation data yet. Generate images and submit for evaluation.'}</p>
                 <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl">
@@ -1078,7 +1078,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 <div className="flex items-center gap-5 p-5 bg-surface border border-hair rounded-2xl">
                   <Trophy size={40} className="text-yellow-700 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -1096,7 +1096,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const sl = scoreLabel(sc.score);
@@ -1104,7 +1104,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                     return (
                       <div key={sc.assessment_name} className={`rounded-xl border overflow-hidden ${sl.border} ${sl.bg}`}>
                         <button onClick={() => setExpandedCrit(isOpen ? null : sc.assessment_name)}
-                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors">
+                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/2 transition-colors">
                           <ScoreRing score={sc.score} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-ink">{sc.assessment_name}</p>
@@ -1119,7 +1119,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                           {isOpen ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-3">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 stack-y-3">
                             {sc.evidence && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Evidence</p>
@@ -1129,7 +1129,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                             {assessment && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Rubric</p>
-                                <div className="space-y-1">
+                                <div className="stack-y-1">
                                   {[
                                     { level: 0, text: assessment.certification_level0_metric, color: 'text-red-700' },
                                     { level: 1, text: assessment.certification_level1_metric, color: 'text-yellow-700' },
@@ -1179,7 +1179,7 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
         {view === 'certificate' && (
           <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
             {!allProficient ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <XCircle size={48} className="text-yellow-700 mx-auto" />
                 <h2 className="text-lg font-bold text-ink">{lvl <= 1 ? 'Not ready yet.' : 'Certificate Not Yet Available'}</h2>
                 <p className="text-muted text-sm max-w-sm mx-auto">
@@ -1190,13 +1190,13 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 {renderVoiceBar(lvl <= 1
                   ? 'Congratulations! You passed the AI Image Creation Certification. Enter your name to download your certificate.'
                   : 'Congratulations on passing the AI Image Creation Certification.')}
 
                 {/* Preview */}
-                <div className="p-6 bg-surface border border-hair rounded-2xl text-center space-y-4 relative overflow-hidden">
+                <div className="p-6 bg-surface border border-hair rounded-2xl text-center stack-y-4 relative overflow-hidden">
                   <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d946ef 0, #d946ef 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }} />
                   <div className="relative">
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-yellow-700" /></div>
@@ -1223,12 +1223,12 @@ Respond ONLY with a JSON object where each key is the exact criterion name and t
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div>
                     <label className="text-xs font-bold text-muted uppercase block mb-1.5">Full name for the certificate:</label>
                     <input type="text" value={certName} onChange={e => setCertName(e.target.value)}
                       placeholder="e.g. Amara Okoye"
-                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-none focus:border-accent transition-colors" />
+                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-hidden focus:border-accent transition-colors" />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50">

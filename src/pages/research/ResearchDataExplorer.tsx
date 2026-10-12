@@ -354,7 +354,7 @@ const css = `
 
   /* Reasoning composition stacked bars */
   .stk-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .stk-cycle-label { width: 100px; font-size: 11px; color: ${C.muted}; text-align: right; flex-shrink: 0; }
+  .stk-cycle-label { width: 100px; font-size: 11px; color: ${C.muted}; text-align: right; shrink: 0; }
   .stk-bar { flex: 1; height: 22px; display: flex; border-radius: 4px; overflow: hidden; }
   .stk-seg { display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; overflow: hidden; white-space: nowrap; }
   .stk-l0 { background: #E8E2D6; color: ${C.mid}; }
@@ -364,7 +364,7 @@ const css = `
   .stk-l3-hi { background: #1D9E75; color: #E1F5EE; }
   .stk-legend { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
   .stk-leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: ${C.muted}; }
-  .stk-leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .stk-leg-dot { width: 10px; height: 10px; border-radius: 2px; shrink: 0; }
 
   /* Scaffolding bars */
   .scaf-row { margin-bottom: 8px; }
@@ -386,7 +386,7 @@ const css = `
   .nat-sub { font-size: 12px; color: ${C.muted}; margin-top: 4px; line-height: 1.6; }
   .nat-timeline { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
   .nat-event { display: flex; gap: 10px; align-items: flex-start; }
-  .nat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .nat-dot { width: 8px; height: 8px; border-radius: 50%; shrink: 0; margin-top: 4px; }
   .nat-text { font-size: 12px; color: ${C.mid}; line-height: 1.5; }
   .nat-text strong { color: ${C.charcoal}; font-weight: 600; }
 

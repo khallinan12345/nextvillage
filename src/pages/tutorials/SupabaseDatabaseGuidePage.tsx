@@ -382,7 +382,7 @@ const CopyBlock: React.FC<{ text: string; tone?: 'amber' | 'purple' | 'emerald' 
   const btn = tone === 'purple' ? 'bg-purple-600 hover:bg-purple-700' : tone === 'amber' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700';
   return (
     <div className={`relative rounded-xl border ${ring} p-4 pr-32`}>
-      <pre className="whitespace-pre-wrap break-words font-mono text-[13px] leading-relaxed text-gray-800">{text}</pre>
+      <pre className="whitespace-pre-wrap wrap-break-word font-mono text-[13px] leading-relaxed text-gray-800">{text}</pre>
       <button
         onClick={copy}
         className={`absolute right-3 top-3 flex items-center gap-1.5 rounded-lg ${btn} px-3 py-2 text-xs font-bold text-white transition-colors`}
@@ -557,7 +557,7 @@ const SupabaseDatabaseGuidePage: React.FC = () => {
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-6">
 
         {/* header */}
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
+        <div className="mb-6 rounded-2xl bg-linear-to-br from-slate-900 to-slate-800 p-6 text-white">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">Guide</p>
@@ -597,7 +597,7 @@ const SupabaseDatabaseGuidePage: React.FC = () => {
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-700">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-linear-to-r from-emerald-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
             {!userId && (
               <p className="mt-2 text-xs text-slate-400">
@@ -667,7 +667,7 @@ const SupabaseDatabaseGuidePage: React.FC = () => {
                             isDone ? 'bg-green-600 text-white' : unlocked ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
                             {isDone ? <Check className="h-4 w-4" /> : unlocked ? i + 1 : <Lock className="h-3 w-3" />}
                           </div>
-                          <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${st.badge}`}>{st.label}</span>
+                          <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${st.badge}`}>{st.label}</span>
                           <span className={`flex-1 text-sm font-semibold ${isDone ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{step.title}</span>
                           {voiceOn && unlocked && (
                             <span
@@ -675,7 +675,7 @@ const SupabaseDatabaseGuidePage: React.FC = () => {
                               tabIndex={0}
                               onClick={e => { e.stopPropagation(); speakStep(step); }}
                               onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); speakStep(step); } }}
-                              className={`rounded p-1.5 ${speakingStep === step.id ? 'bg-cyan-100 text-cyan-700' : 'text-gray-400 hover:bg-gray-100'}`}
+                              className={`rounded-sm p-1.5 ${speakingStep === step.id ? 'bg-cyan-100 text-cyan-700' : 'text-gray-400 hover:bg-gray-100'}`}
                             >
                               <Volume2 className="h-4 w-4" />
                             </span>
@@ -743,7 +743,7 @@ const SupabaseDatabaseGuidePage: React.FC = () => {
                                     value={gateDraft[step.id] ?? artifacts[step.id] ?? ''}
                                     onChange={e => setGateDraft(p => ({ ...p, [step.id]: e.target.value }))}
                                     placeholder={step.gate.placeholder}
-                                    className="flex-1 rounded-lg border border-cyan-300 px-3 py-2 text-sm outline-none focus:border-cyan-500"
+                                    className="flex-1 rounded-lg border border-cyan-300 px-3 py-2 text-sm outline-hidden focus:border-cyan-500"
                                   />
                                   <button
                                     onClick={() => submitGate(step)}

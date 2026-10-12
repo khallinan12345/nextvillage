@@ -197,7 +197,7 @@ const MarkdownText: React.FC<{
       if (rubricMode === 'compact') {
         const { suggestion, nextQuestion } = extractRubricKeyLines(paragraph);
         return (
-          <div key={pIndex} className="mt-3 space-y-2">
+          <div key={pIndex} className="mt-3 stack-y-2">
             {suggestion && (
               <div className="rounded-xl border border-hair bg-paper px-3 py-2 text-sm text-body">
                 <span className="font-semibold text-ink">💡 Suggestion:</span>{' '}
@@ -243,14 +243,14 @@ const MarkdownText: React.FC<{
               0 No Evidence · 1 Emerging · <strong>2 Proficient ✓</strong> · <strong>3 Advanced ✓</strong>
             </span>
           </div>
-          <div className="px-3 py-2 space-y-2.5">
+          <div className="px-3 py-2 stack-y-2.5">
             {criteria.length > 0 ? (
               <>
                 {criteria.map((sm, li) => {
                   const score = parseInt(sm[3]);
                   const label = sm[2]?.trim() || `Criterion ${sm[1]}`;
                   return (
-                    <div key={li} className="border-l-2 border-hair pl-2 space-y-0.5">
+                    <div key={li} className="border-l-2 border-hair pl-2 stack-y-0.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-semibold text-ink capitalize">{label}</span>
                         <span className={`px-1.5 py-0.5 rounded-full border font-bold ${rubricScoreColor(score)}`}>
@@ -301,7 +301,7 @@ const MarkdownText: React.FC<{
     // ── Bullet list ───────────────────────────────────────────────────────
     if (lines.every(l => /^[-*]\s/.test(l))) {
       return (
-        <ul key={pIndex} className="mt-1.5 space-y-1">
+        <ul key={pIndex} className="mt-1.5 stack-y-1">
           {lines.map((line, li) => (
             <li key={li} className="flex items-start gap-1.5 text-sm">
               <span className="text-accent mt-0.5 flex-shrink-0 font-bold">•</span>
@@ -315,7 +315,7 @@ const MarkdownText: React.FC<{
     // ── Numbered list ─────────────────────────────────────────────────────
     if (lines.every(l => /^\d+[.)]\s/.test(l))) {
       return (
-        <ol key={pIndex} className="mt-1.5 space-y-1">
+        <ol key={pIndex} className="mt-1.5 stack-y-1">
           {lines.map((line, li) => {
             const nm = line.match(/^(\d+)[.)]\s+(.+)$/);
             return (
@@ -3301,21 +3301,21 @@ Respond ONLY with valid JSON:
               </div>
             </div>
 
-            <div className="bg-card border border-hair rounded-2xl shadow-sm p-8 space-y-6">
+            <div className="bg-card border border-hair rounded-2xl shadow-xs p-8 stack-y-6">
 
               {/* Title */}
               <div>
                 <label className="block text-base font-semibold text-ink mb-1">{uiText.titleLabel} <span className="text-red-500">*</span></label>
                 <input type="text" value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
                   placeholder={uiText.titlePlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Category */}
               <div>
                 <label className="block text-base font-semibold text-ink mb-1">{uiText.categoryLabel} <span className="text-red-500">*</span></label>
                 <select value={createForm.category} onChange={e => setCreateForm(f => ({ ...f, category: e.target.value }))}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   {SESSION_CATEGORIES.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.id}) {cat.label}</option>
                   ))}
@@ -3328,7 +3328,7 @@ Respond ONLY with valid JSON:
                 <label className="block text-base font-semibold text-ink mb-1">{uiText.problemLabel} <span className="text-red-500">*</span></label>
                 <textarea value={createForm.description} onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))}
                   rows={3} placeholder={uiText.problemPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Entrepreneurial / Business Angle */}
@@ -3337,7 +3337,7 @@ Respond ONLY with valid JSON:
                 <p className="text-sm text-muted mb-2">{uiText.pueHelp}</p>
                 <textarea value={createForm.entrepreneurialContext} onChange={e => setCreateForm(f => ({ ...f, entrepreneurialContext: e.target.value }))}
                   rows={3} placeholder={uiText.puePlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base resize-none bg-card focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base resize-none bg-card focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Location */}
@@ -3345,7 +3345,7 @@ Respond ONLY with valid JSON:
                 <label className="block text-base font-semibold text-ink mb-1">{uiText.locationLabel}</label>
                 <input type="text" value={createForm.location} onChange={e => setCreateForm(f => ({ ...f, location: e.target.value }))}
                   placeholder={uiText.locationPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Constraints */}
@@ -3353,7 +3353,7 @@ Respond ONLY with valid JSON:
                 <label className="block text-base font-semibold text-ink mb-1">{uiText.constraintsLabel}</label>
                 <textarea value={createForm.constraints} onChange={e => setCreateForm(f => ({ ...f, constraints: e.target.value }))}
                   rows={2} placeholder={uiText.constraintsPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Stakeholders */}
@@ -3361,13 +3361,13 @@ Respond ONLY with valid JSON:
                 <label className="block text-base font-semibold text-ink mb-1">{uiText.stakeholdersLabel}</label>
                 <textarea value={createForm.stakeholders} onChange={e => setCreateForm(f => ({ ...f, stakeholders: e.target.value }))}
                   rows={2} placeholder={uiText.stakeholdersPlaceholder}
-                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                  className="w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </div>
 
               {/* Info box */}
               <div className="bg-surface border border-hair rounded-xl p-4 text-base text-body">
                 <p className="font-semibold text-ink mb-2">{uiText.infoBoxTitle}</p>
-                <ul className="space-y-1 text-sm text-body">
+                <ul className="stack-y-1 text-sm text-body">
                   {uiText.infoBoxItems.map((item, i) => (
                     <li key={i}>{item.icon} <strong className="text-ink">{item.bold}</strong>{item.text}</li>
                   ))}
@@ -3437,13 +3437,13 @@ Respond ONLY with valid JSON:
             </div>
 
             {/* Activity Info Panel */}
-            <div className="bg-card border border-hair rounded-2xl shadow-sm p-6 mb-6">
+            <div className="bg-card border border-hair rounded-2xl shadow-xs p-6 mb-6">
               <h2 className="text-lg font-semibold text-ink mb-3">Activity overview</h2>
-              <div className="space-y-2 text-base text-body">
+              <div className="stack-y-2 text-base text-body">
                 <div><strong className="text-ink">Category:</strong> {selectedActivity.sub_category}</div>
                 <div><strong className="text-ink">Status:</strong>
                   <span className={classNames(
-                    'ml-2 px-2 py-1 rounded text-base',
+                    'ml-2 px-2 py-1 rounded-sm text-base',
                     getProgressColor(selectedActivity.progress)
                   )}>
                     {selectedActivity.progress}
@@ -3458,7 +3458,7 @@ Respond ONLY with valid JSON:
                 )}
                 {selectedActivity.certification_evaluation_evidence && (
                   <div><strong className="text-ink">Last Evaluation:</strong>
-                    <p className="mt-1 text-body bg-paper rounded p-2 text-base">
+                    <p className="mt-1 text-body bg-paper rounded-sm p-2 text-base">
                       {selectedActivity.certification_evaluation_evidence}
                     </p>
                   </div>
@@ -3513,7 +3513,7 @@ Respond ONLY with valid JSON:
                   </div>
 
                   {/* Content */}
-                  <div className="space-y-4">
+                  <div className="stack-y-4">
                     <EvaluationPanel
                       title="Overall Certification Score"
                       overallScore={evaluationResult.score}
@@ -3538,14 +3538,14 @@ Respond ONLY with valid JSON:
                           <Target className="h-4 w-4 text-accent" />
                           Improvement Advice
                         </h4>
-                        <div className="text-body space-y-4">
+                        <div className="text-body stack-y-4">
                           {evaluationResult.improvementAdvice.split('\n\n').map((section, index) => {
                             const headingMatch = section.match(/^\*\*(.+?):\*\*/);
                             if (headingMatch) {
                               const heading = headingMatch[1];
                               const content = section.substring(headingMatch[0].length).trim();
                               return (
-                                <div key={index} className="space-y-2">
+                                <div key={index} className="stack-y-2">
                                   <h5 className="font-semibold text-ink">{heading}:</h5>
                                   <p className="text-body text-sm leading-relaxed pl-4">{content}</p>
                                 </div>
@@ -3673,7 +3673,7 @@ Respond ONLY with valid JSON:
               onSubmit={handleSubmitMessage}
               disabled={submitting}
               notice={
-                <div className="mb-3 space-y-2">
+                <div className="mb-3 stack-y-2">
                   <p className="text-sm text-muted flex items-center gap-1.5">
                     <span>💡</span>
                     <span>Have a question? Just ask it — the AI will answer you directly before continuing.</span>
@@ -3777,7 +3777,7 @@ Respond ONLY with valid JSON:
                   </div>
 
                   {/* Body */}
-                  <div className="px-6 py-5 space-y-4">
+                  <div className="px-6 py-5 stack-y-4">
                     <p className="text-sm text-body leading-relaxed">
                       Before we save your results, take a moment to reflect on what you've worked through in this session.
                     </p>
@@ -3793,7 +3793,7 @@ Respond ONLY with valid JSON:
                         onChange={e => setSessionReflectionInput(e.target.value)}
                         rows={6}
                         placeholder="e.g. I learned that AI models learn patterns from data, not rules — so if the training data has gaps (like no examples from small farms), the AI will perform poorly in those situations. The hardest part was explaining failure modes. Next time I'd try to give more specific examples from my own context..."
-                        className="w-full border border-hair rounded-xl px-4 py-3 text-sm bg-paper resize-none leading-relaxed focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+                        className="w-full border border-hair rounded-xl px-4 py-3 text-sm bg-paper resize-none leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"
                         autoFocus
                       />
                       <p className="text-xs text-muted mt-1 text-right">
@@ -3891,9 +3891,9 @@ Respond ONLY with valid JSON:
                   key={category.id}
                   onClick={() => handleCategoryChange(category.id)}
                   className={classNames(
-                    'flex flex-col items-start space-y-3 p-6 rounded-xl border transition-colors text-left',
+                    'flex flex-col items-start stack-y-3 p-6 rounded-xl border transition-colors text-left',
                     active
-                      ? 'bg-surface border-accent/40 shadow-sm'
+                      ? 'bg-surface border-accent/40 shadow-xs'
                       : 'bg-card border-hair hover:border-accent/30'
                   )}
                 >
@@ -3912,7 +3912,7 @@ Respond ONLY with valid JSON:
                       {category.title}
                     </h3>
                     <p className="text-sm text-body mb-2">{category.description}</p>
-                    <div className="flex items-center space-x-2 text-sm text-muted">
+                    <div className="flex items-center stack-x-2 text-sm text-muted">
                       <span>{stats.total} activities</span>
                       {stats.completed > 0 && (
                         <span>• {stats.completed} completed</span>
@@ -3925,9 +3925,9 @@ Respond ONLY with valid JSON:
           </div>
 
           {currentCategory && (
-            <div className="bg-card border border-hair rounded-2xl shadow-sm p-6 mb-8">
+            <div className="bg-card border border-hair rounded-2xl shadow-xs p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center stack-x-3">
                   <div className="p-3 bg-surface rounded-lg text-accent">
                     {currentCategory.icon}
                   </div>
@@ -3989,7 +3989,7 @@ Respond ONLY with valid JSON:
             </div>
           )}
 
-          <div className="bg-card border border-hair rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs overflow-hidden">
             {/* Panel header with Create Your Own button */}
             <div className="px-6 py-4 border-b border-hair bg-surface flex items-center justify-between">
               <div>
@@ -4060,7 +4060,7 @@ Respond ONLY with valid JSON:
                   >
                     {/* ── Title row ── */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center stack-x-4">
                         <div className="flex-shrink-0">{getProgressIcon(activity.progress)}</div>
                         <div className="flex-1 min-w-0">
                           <h4 className={classNames('text-lg font-medium',
@@ -4084,7 +4084,7 @@ Respond ONLY with valid JSON:
                               <span className="ml-2 text-sm text-accent">(Click to start)</span>
                             )}
                           </h4>
-                          <div className="flex items-center space-x-2 text-base text-muted mt-1">
+                          <div className="flex items-center stack-x-2 text-base text-muted mt-1">
                             <span>{activity.category_activity}</span>
                             {activity.sub_category && (<><span>•</span><span>{activity.sub_category}</span></>)}
                           </div>
@@ -4129,7 +4129,7 @@ Respond ONLY with valid JSON:
 
                     {/* ── Evidence (collapsed to one line) ── */}
                     {activity.certification_evaluation_evidence && (
-                      <div className="mt-2 text-xs text-muted bg-paper rounded px-3 py-1.5 line-clamp-2">
+                      <div className="mt-2 text-xs text-muted bg-paper rounded-sm px-3 py-1.5 line-clamp-2">
                         <strong className="text-body">Evidence:</strong>{' '}
                         {activity.certification_evaluation_evidence}
                       </div>

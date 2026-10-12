@@ -283,7 +283,7 @@ const Sidebar: React.FC = () => {
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="truncate">{item.name}</span>
           {item.path === '/tech-skills' && (
-            <span className="flex-shrink-0 text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+            <span className="flex-shrink-0 text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-700">
               ADVANCED
             </span>
           )}
@@ -295,13 +295,13 @@ const Sidebar: React.FC = () => {
   return (
     <div className="fixed inset-y-0 left-0 z-10 w-56 bg-white shadow-lg hidden md:flex">
       <div className="h-full w-full flex flex-col overflow-y-auto py-4">
-        <nav className="px-3 space-y-1 pt-10">
+        <nav className="px-3 stack-y-1 pt-10">
 
           {mainNavigation.map(item => renderNavItem(item, 'bg-slate-100', 'text-slate-700'))}
 
           <div className="h-px bg-gray-100 my-3" />
 
-          <div className="space-y-3">
+          <div className="stack-y-3">
             {sections.map(section => {
               const isOpen    = openSections[section.id] ?? false;
               const hasActive = section.items.some(item => isActive(item.path));
@@ -324,7 +324,7 @@ const Sidebar: React.FC = () => {
                   </button>
 
                   {isOpen && (
-                    <div className={`space-y-1 ${section.sectionBg} rounded-lg p-1.5`}>
+                    <div className={`stack-y-1 ${section.sectionBg} rounded-lg p-1.5`}>
                       {section.groups ? (
                         section.groups.map(group => {
                           const groupKey  = `${section.id}:${group.id}`;
@@ -343,7 +343,7 @@ const Sidebar: React.FC = () => {
                                   : <ChevronDown size={10} className="text-gray-400 flex-shrink-0" />}
                               </button>
                               {groupOpen && (
-                                <div className="space-y-0.5 mt-0.5">
+                                <div className="stack-y-0.5 mt-0.5">
                                   {group.items.map(item => renderNavItem(item, section.activeBg, section.activeText))}
                                 </div>
                               )}

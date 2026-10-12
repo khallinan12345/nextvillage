@@ -128,7 +128,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
     : pct >= 0.5 ? 'from-amber-400 to-yellow-500 text-yellow-950'
     : 'from-red-400 to-rose-500 text-rose-950';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${color}`}>
       <Star size={12} />{score}/{max}
     </span>
   );
@@ -137,7 +137,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 const ContentOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div className="flex-1 overflow-y-auto p-4 stack-y-4">
     <div className="p-4 bg-violet-500/10 border border-violet-500/25 rounded-xl">
       <p className="text-xs font-bold text-violet-400 uppercase mb-3">💡 Welcome to AI-Assisted Content Creation</p>
       <p className="text-sm text-gray-300 leading-relaxed mb-3">
@@ -178,7 +178,7 @@ const ContentOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete })
 
     <div className="p-3 bg-gray-800/40 rounded-lg border border-gray-700">
       <p className="text-xs font-bold text-gray-300 mb-1.5">🗺️ Your learning path</p>
-      <div className="space-y-1 text-xs text-gray-400">
+      <div className="stack-y-1 text-xs text-gray-400">
         <div className="flex items-center gap-2"><span className="text-blue-400 font-bold">Phase 1 — Understand</span>Choose type · Know your audience · Define purpose</div>
         <div className="flex items-center gap-2"><span className="text-violet-400 font-bold">Phase 2 — Create</span>Research · Draft · Voice · Structure</div>
         <div className="flex items-center gap-2"><span className="text-amber-400 font-bold">Phase 3 — Polish</span>Clarity · Platform adapt · Publish-ready</div>
@@ -195,7 +195,7 @@ const ContentOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete })
 // ─── Task stepper ─────────────────────────────────────────────────────────────
 
 const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (i: number) => void }> = ({ tasks, taskIndex, onJump }) => (
-  <div className="px-3 py-3 border-b border-gray-700 space-y-2">
+  <div className="px-3 py-3 border-b border-gray-700 stack-y-2">
     {([1, 2, 3] as const).map(phase => {
       const pm = PHASE_META[phase];
       const phaseTasks = tasks.filter(t => t.phase === phase);
@@ -203,7 +203,7 @@ const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (i: n
       return (
         <div key={phase}>
           <p className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${pm.color}`}>{pm.label}</p>
-          <div className="space-y-0.5">
+          <div className="stack-y-0.5">
             {phaseTasks.map((task, i) => {
               const gi = firstIdx + i;
               const isDone = gi < taskIndex; const isCur = gi === taskIndex; const isFut = gi > taskIndex;
@@ -794,7 +794,7 @@ const AIContentCreationPage: React.FC = () => {
 
       {/* ── Session picker ──────────────────────────────────────────── */}
       {showSessionPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -802,7 +802,7 @@ const AIContentCreationPage: React.FC = () => {
               </h2>
               <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-2">
               {sessions.map(s => (
                 <button key={s.content_session_id} onClick={() => loadSession(s)}
                   className="w-full text-left p-3 bg-gray-700/40 hover:bg-gray-700 border border-gray-600 hover:border-violet-500/40 rounded-xl transition-colors">
@@ -823,7 +823,7 @@ const AIContentCreationPage: React.FC = () => {
                     </div>
                     <button onClick={e => handleDeleteSession(e, s.content_session_id)}
                       disabled={deletingSessionId === s.content_session_id}
-                      className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors flex-shrink-0">
+                      className="p-1.5 text-gray-600 hover:text-red-400 rounded-sm transition-colors flex-shrink-0">
                       {deletingSessionId === s.content_session_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
                   </div>
@@ -842,7 +842,7 @@ const AIContentCreationPage: React.FC = () => {
 
       {/* ── Evaluation modal ─────────────────────────────────────────── */}
       {showEvaluation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -850,7 +850,7 @@ const AIContentCreationPage: React.FC = () => {
               </h2>
               <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 stack-y-4">
               {isEvaluating && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 size={36} className="animate-spin text-violet-400 mb-3" />
@@ -920,7 +920,7 @@ const AIContentCreationPage: React.FC = () => {
                   )}
 
                   {evaluation.detailed_scores && (
-                    <div className="space-y-1">
+                    <div className="stack-y-1">
                       <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Skill-by-Skill Breakdown</p>
                       {Object.entries(evaluation.detailed_scores as Record<string, { score: number; justification: string }>).map(([skill, data]) => (
                         <details key={skill} className="group border border-gray-700 rounded-lg overflow-hidden">
@@ -960,7 +960,7 @@ const AIContentCreationPage: React.FC = () => {
             </div>
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
             <input
-              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-violet-500 outline-none px-1 py-0.5 w-44"
+              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-violet-500 outline-hidden px-1 py-0.5 w-44"
               value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Project name…"
             />
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
@@ -1038,7 +1038,7 @@ const AIContentCreationPage: React.FC = () => {
               {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleEvaluate} disabled={isEvaluating || promptHistory.length < 2}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-linear-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50">
               {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <BarChart3 size={12} />} Evaluate
             </button>
           </div>
@@ -1075,11 +1075,11 @@ const AIContentCreationPage: React.FC = () => {
                 <TaskStepper tasks={TASKS} taskIndex={taskIndex} onJump={idx => { setTaskIndex(idx); setSubTaskIndex(0); setSubTaskCritique(null); setPrompt(''); setAiResponse(null); setErrorMsg(null); }} />
 
                 {/* Scrollable middle */}
-                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+                <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
 
                   {/* Content type selector on choose_type task */}
                   {currentTask?.id === 'choose_type' && (
-                    <div className="space-y-2">
+                    <div className="stack-y-2">
                       <p className="text-[10px] font-bold text-gray-400 uppercase">Select your content type</p>
                       <ContentTypeSelector selected={contentType} onSelect={handleContentTypeSelect} />
                       {contentType && (
@@ -1171,13 +1171,13 @@ const AIContentCreationPage: React.FC = () => {
                       onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleGenerate(); }}
                       placeholder={taskInstruction?.subTasks[subTaskIndex]?.replace(/^[^:]+:\s*/, '').substring(0, 80) + '…' || 'Type your response here…'}
                       style={{ minHeight: '140px' }}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-violet-500 transition-colors leading-relaxed" />
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-violet-500 transition-colors leading-relaxed" />
                     <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                   </div>
                 </div>
 
                 {/* Fixed bottom buttons */}
-                <div className="flex-shrink-0 px-4 pb-4 space-y-2">
+                <div className="flex-shrink-0 px-4 pb-4 stack-y-2">
                   <div className="flex gap-2">
                     <button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold bg-violet-600 hover:bg-violet-700 text-white rounded-xl transition-colors disabled:opacity-40">
@@ -1232,7 +1232,7 @@ const AIContentCreationPage: React.FC = () => {
                 {activeContent && (
                   <>
                     <button onClick={handleCopy}
-                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm transition-colors">
                       {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? 'Copied' : 'Copy'}
                     </button>
                     {/* Improve English button on the canvas */}
@@ -1252,7 +1252,7 @@ const AIContentCreationPage: React.FC = () => {
                         } catch {} finally { setIsGenerating(false); }
                       }}
                       disabled={isGenerating || !activeContent?.body}
-                      className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-violet-300 hover:text-white bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 rounded transition-colors disabled:opacity-40">
+                      className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-violet-300 hover:text-white bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 rounded-sm transition-colors disabled:opacity-40">
                       <Wand2 size={10} /> Improve English
                     </button>
                   </>
@@ -1302,7 +1302,7 @@ const AIContentCreationPage: React.FC = () => {
                   placeholder={lvl <= 1
                     ? 'Your content will appear here. You can also type directly…'
                     : 'Your content will be generated here as you progress. You can edit it directly at any time…'}
-                  className="w-full h-full bg-gray-900 text-gray-100 px-6 py-5 text-sm leading-relaxed resize-none outline-none placeholder-gray-700 font-mono"
+                  className="w-full h-full bg-gray-900 text-gray-100 px-6 py-5 text-sm leading-relaxed resize-none outline-hidden placeholder-gray-700 font-mono"
                   style={{ fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: '14px', lineHeight: '1.8' }}
                 />
               )}

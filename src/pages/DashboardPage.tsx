@@ -485,7 +485,7 @@ const ScoreBar: React.FC<{
   const displayScore = score != null ? Number(score).toFixed(1) : '—';
 
   return (
-    <div className="space-y-1">
+    <div className="stack-y-1">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-gray-700 flex items-center gap-1.5">
           {icon}
@@ -1790,8 +1790,8 @@ ${prior.impact_arc}
 
     if (monthlyLoading) {
       return (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-cyan-50">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b bg-linear-to-r from-indigo-50 to-cyan-50">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-indigo-500" />
               Monthly Summary
@@ -1806,8 +1806,8 @@ ${prior.impact_arc}
 
     if (!monthlyAssessment) {
       return (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-cyan-50">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b bg-linear-to-r from-indigo-50 to-cyan-50">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-indigo-500" />
               Monthly Summary
@@ -1849,11 +1849,11 @@ ${prior.impact_arc}
     })();
 
     return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {/* Header */}
         <button
           onClick={() => setMonthlySectionExpanded(prev => !prev)}
-          className="w-full px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-cyan-50 flex items-center justify-between cursor-pointer hover:from-indigo-100 hover:to-cyan-100 transition-colors"
+          className="w-full px-6 py-4 border-b bg-linear-to-r from-indigo-50 to-cyan-50 flex items-center justify-between cursor-pointer hover:from-indigo-100 hover:to-cyan-100 transition-colors"
         >
           <div className="flex items-center gap-3">
             <BarChart3 className="h-6 w-6 text-indigo-500" />
@@ -1873,7 +1873,7 @@ ${prior.impact_arc}
         </button>
 
         {monthlySectionExpanded && (
-          <div className="p-6 space-y-6">
+          <div className="p-6 stack-y-6">
 
             {/* ── Row 1: Core Skill Scores ─────────────────────────────── */}
             <div>
@@ -1915,7 +1915,7 @@ ${prior.impact_arc}
                   AI Proficiency
                 </h3>
                 {ma.ai_prof_cert_level ? (
-                  <div className="space-y-3">
+                  <div className="stack-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Certification Level</span>
                       <span className={classNames('inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border', aiCertColor)}>
@@ -1955,7 +1955,7 @@ ${prior.impact_arc}
                   Reasoning Distribution
                 </h3>
                 {reasoningLevels.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     {/* Stacked bar */}
                     <div className="flex h-6 rounded-full overflow-hidden bg-gray-200">
                       {reasoningLevels.map(r => (
@@ -1993,7 +1993,7 @@ ${prior.impact_arc}
                   <TrendingUp className="h-4 w-4" />
                   Scaffolding & Convergence
                 </h3>
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Convergence Trend</span>
                     {trendBadge(ma.scaffold_convergence_trend)}
@@ -2032,7 +2032,7 @@ ${prior.impact_arc}
                     <Brain className="h-4 w-4" />
                     Metacognition
                   </h3>
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     {ma.metacog_verification_rate != null && (
                       <ScoreBar label="Verification Rate" score={Number(ma.metacog_verification_rate)} maxScore={1} colorClass="bg-teal-500" />
                     )}
@@ -2111,7 +2111,7 @@ ${prior.impact_arc}
                     <Zap className="h-4 w-4" />
                     PUE Breakdown
                   </h3>
-                  <div className="space-y-1.5 text-sm">
+                  <div className="stack-y-1.5 text-sm">
                     {[
                       { label: 'Energy Constraint', val: ma.pue_energy_constraint_pct },
                       { label: 'Market Pricing', val: ma.pue_market_pricing_pct },
@@ -2202,7 +2202,7 @@ ${prior.impact_arc}
           </div>
           
           {user?.role === 'student' && (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center stack-x-2">
               <Button onClick={refreshDashboard} variant="outline" size="sm"
                 icon={<RefreshCw size={16} />} isLoading={refreshing}>
                 Refresh Activities
@@ -2217,7 +2217,7 @@ ${prior.impact_arc}
             <p className="text-gray-600">Facilitator features coming soon!</p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="stack-y-8">
 
             {/* ── Safety flags + join requests waiting on this leader ─────── */}
             {['site_leader', 'leader', 'platform_administrator'].includes(user?.role ?? '') && (
@@ -2233,15 +2233,15 @@ ${prior.impact_arc}
             {/* ── Module Progress Ring + Achievements ─────────────────────── */}
             {user?.role === 'student' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6 flex flex-col items-center justify-center">
+                <div className="bg-white rounded-xl shadow-xs border border-purple-100 p-6 flex flex-col items-center justify-center">
                   <CircularProgressRing
                     percentage={completionPct}
                     label="Overall Module Progress"
                     sublabel={`${totalMilestonesCompleted} / ${totalMilestoneTargets} milestones`}
                   />
                 </div>
-                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b bg-gradient-to-r from-amber-50 to-yellow-50">
+                <div className="lg:col-span-2 bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
+                  <div className="px-5 py-4 border-b bg-linear-to-r from-amber-50 to-yellow-50">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                       <Award className="h-5 w-5 text-amber-600" />
                       Achievements
@@ -2258,7 +2258,7 @@ ${prior.impact_arc}
                         className={classNames(
                           'relative flex flex-col items-center text-center rounded-xl border p-4 transition-all',
                           badge.earned
-                            ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-300 shadow-sm'
+                            ? 'bg-linear-to-br from-amber-50 to-yellow-50 border-amber-300 shadow-xs'
                             : 'bg-gray-50 border-gray-200 opacity-50 grayscale',
                         )}
                       >
@@ -2289,7 +2289,7 @@ ${prior.impact_arc}
 
             {/* ── News Banner ─────────────────────────────────────────────── */}
             {!newsDismissed && newsItems.length > 0 && (
-              <div className="rounded-2xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-300 px-5 py-4 shadow-sm">
+              <div className="rounded-2xl bg-linear-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-300 px-5 py-4 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Newspaper size={15} className="text-yellow-600 flex-shrink-0" />
@@ -2335,7 +2335,7 @@ ${prior.impact_arc}
             )}
             {/* ── Weekly Champion Banner ── */}
             {weeklyChampion && (
-              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+              <div className="bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 shadow-xs">
                 <span className="text-2xl leading-none flex-shrink-0">🏆</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-0.5">
@@ -2462,7 +2462,7 @@ ${prior.impact_arc}
 
                     {/* Instructions panel */}
                     {grandShowInstructions && (
-                      <div className="px-4 py-4 bg-amber-50 border-b border-amber-200 text-xs text-gray-700 leading-relaxed space-y-3">
+                      <div className="px-4 py-4 bg-amber-50 border-b border-amber-200 text-xs text-gray-700 leading-relaxed stack-y-3">
                         <div className="bg-amber-100 rounded-lg p-3 border border-amber-300">
                           <p className="font-bold text-amber-900 mb-1">The most important thing</p>
                           <p className="text-amber-800">Help the people you talk with make real change that improves their lives and their work — whether they are a farmer, fisher, animal herder, entrepreneur, or anyone else in your community. The Grand Challenge is not about using AI for its own sake. It is about what actually gets better for a real person because you showed up and helped.</p>
@@ -2563,7 +2563,7 @@ ${prior.impact_arc}
                               value={grandDraftTitle}
                               onChange={e => setGrandDraftTitle(e.target.value)}
                               placeholder="Your story title…"
-                              className="w-full px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
+                              className="w-full px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-hidden focus:ring-1 focus:ring-amber-400"
                             />
                           </div>
 
@@ -2573,7 +2573,7 @@ ${prior.impact_arc}
                               onChange={e => setGrandDraftArc(e.target.value)}
                               rows={3}
                               placeholder="Tell your impact story — what problem did you work on, what did you do with AI, what changed for the community member?"
-                              className="w-full px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-amber-400 resize-none leading-relaxed"
+                              className="w-full px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-hidden focus:ring-1 focus:ring-amber-400 resize-none leading-relaxed"
                             />
                           </div>
 
@@ -2627,8 +2627,8 @@ ${prior.impact_arc}
 
             {/* ── Grand Challenge Leaderboard ──────────────────────────────── */}
             {grandChallenge && (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-50 to-orange-50 flex items-center gap-2">
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b bg-linear-to-r from-amber-50 to-orange-50 flex items-center gap-2">
                   <Trophy className="h-6 w-6 text-amber-600" />
                   <h2 className="text-xl font-bold text-gray-900">Grand Challenge Leaderboard</h2>
                   <span className="text-xs text-gray-400 ml-1">{grandChallenge.quarter}</span>
@@ -2693,8 +2693,8 @@ ${prior.impact_arc}
 
             {/* ── Community Impact Leaderboard ─────────────────────────────── */}
             {weeklyChallenge && (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-6 py-4 border-b bg-gradient-to-r from-emerald-50 to-teal-50 flex items-center justify-between flex-wrap gap-3">
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b bg-linear-to-r from-emerald-50 to-teal-50 flex items-center justify-between flex-wrap gap-3">
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <Globe2 className="h-6 w-6 text-emerald-600" />
                     Community Impact Leaderboard
@@ -2737,7 +2737,7 @@ ${prior.impact_arc}
                 </div>
 
                 {/* ── Tier Legend ── */}
-                <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-emerald-50 border-b border-gray-100">
+                <div className="px-6 py-3 bg-linear-to-r from-gray-50 to-emerald-50 border-b border-gray-100">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Impact Tiers — highest to lowest</p>
                   <div className="flex flex-wrap gap-2">
                     {[
@@ -3035,7 +3035,7 @@ ${prior.impact_arc}
 
                             {/* Expanded: winner reason + leaderboard */}
                             {isExpanded && (
-                              <div className="mt-3 space-y-3">
+                              <div className="mt-3 stack-y-3">
                                 {pc.winner_reason && (
                                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                                     <p className="text-xs font-semibold text-amber-800 mb-1">Why they won:</p>
@@ -3085,8 +3085,8 @@ ${prior.impact_arc}
             {(((userProfile?.role as unknown) as string) === 'platform_administrator'
               || ((userProfile?.role as unknown) as string) === 'leader'
               || (userProfile as any)?.join_code_used) && (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-50 to-yellow-50 flex items-center justify-between flex-wrap gap-3">
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b bg-linear-to-r from-amber-50 to-yellow-50 flex items-center justify-between flex-wrap gap-3">
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <Trophy className="h-6 w-6 text-amber-500" />
                     Cohort Leaderboard
@@ -3106,14 +3106,14 @@ ${prior.impact_arc}
                   <div className="flex items-center gap-2 flex-wrap">
                     {((userProfile?.role as unknown) as string) === 'platform_administrator' && orgOptions.length > 0 && (
                       <select value={selectedOrgJoinCode} onChange={e => setSelectedOrgJoinCode(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white text-gray-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-amber-400">
                         {orgOptions.map(org => (
                           <option key={org.id} value={org.join_code}>{org.name}</option>
                         ))}
                       </select>
                     )}
                     <select value={leaderboardMetric} onChange={e => setLeaderboardMetric(e.target.value as LeaderboardMetric)}
-                      className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                      className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white text-gray-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-amber-400">
                       {LEADERBOARD_OPTIONS.map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
@@ -3225,7 +3225,7 @@ ${prior.impact_arc}
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                       <span className="text-amber-500">📅</span> {board.label}
                                     </h3>
-                                    <div className="space-y-1.5">
+                                    <div className="stack-y-1.5">
                                       {board.entries.map(entry => {
                                         const isMe = entry.user_id === user?.id;
                                         const medal = MEDAL[entry.rank];
@@ -3269,7 +3269,7 @@ ${prior.impact_arc}
 
             {/* Combined Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow p-6 border-2 border-purple-200">
+              <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-lg shadow-sm p-6 border-2 border-purple-200">
                 <div className="flex items-center">
                   <div className="p-3 rounded-full bg-purple-600 text-white mr-4"><Trophy size={24} /></div>
                   <div>
@@ -3281,7 +3281,7 @@ ${prior.impact_arc}
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow p-6 border-2 border-blue-200">
+              <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg shadow-sm p-6 border-2 border-blue-200">
                 <div className="flex items-center">
                   <div className="p-3 rounded-full bg-blue-600 text-white mr-4"><Book size={24} /></div>
                   <div>
@@ -3291,7 +3291,7 @@ ${prior.impact_arc}
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow p-6 border-2 border-yellow-200">
+              <div className="bg-linear-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-sm p-6 border-2 border-yellow-200">
                 <div className="flex items-center">
                   <div className="p-3 rounded-full bg-yellow-600 text-white mr-4"><Clock size={24} /></div>
                   <div>
@@ -3309,8 +3309,8 @@ ${prior.impact_arc}
 
             {/* Certifications Section */}
             {data.certifications.length > 0 && (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b bg-linear-to-r from-purple-50 to-pink-50">
                   <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                     <Trophy className="h-7 w-7 text-purple-600" />
                     Certifications
@@ -3321,7 +3321,7 @@ ${prior.impact_arc}
                   {data.certifications.map((cert) => (
                     <div key={cert.certificationName} className="block p-6 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between">
-                        <Link to={cert.route} className="flex items-center space-x-4 flex-1">
+                        <Link to={cert.route} className="flex items-center stack-x-4 flex-1">
                           <div className="p-3 bg-purple-100 rounded-lg">
                             <GraduationCap className="h-6 w-6 text-purple-600" />
                           </div>
@@ -3338,7 +3338,7 @@ ${prior.impact_arc}
                             )}
                           </div>
                         </Link>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center stack-x-4">
                           <span className={classNames('inline-flex items-center px-3 py-1 rounded-full text-sm font-medium', getProgressColor(cert.progress))}>
                             {cert.progress}
                           </span>
@@ -3348,7 +3348,7 @@ ${prior.impact_arc}
                               <button
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadCertificate(cert.certificationName, cert.displayName); }}
                                 disabled={downloadingCert === cert.certificationName}
-                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Download Certificate">
                                 {downloadingCert === cert.certificationName
                                   ? <RefreshCw className="h-5 w-5 animate-spin" />
@@ -3376,7 +3376,7 @@ ${prior.impact_arc}
                         if (scores.length === 0) return null;
                         
                         return (
-                          <div className="mt-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+                          <div className="mt-4 bg-linear-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
                             <div className="flex items-center justify-between mb-3">
                               <h4 className="text-sm font-semibold text-purple-900 flex items-center gap-2">
                                 <Trophy className="h-4 w-4" />
@@ -3412,7 +3412,7 @@ ${prior.impact_arc}
                                         <div className="text-xs mt-1 font-medium flex items-center gap-1">{icon}{scoreLabel}</div>
                                       </div>
                                       <div className="flex-shrink-0">
-                                        <span className={classNames('inline-flex items-center px-2 py-1 rounded text-xs font-bold', badgeColor)}>
+                                        <span className={classNames('inline-flex items-center px-2 py-1 rounded-sm text-xs font-bold', badgeColor)}>
                                           {score}/{maxScore}
                                         </span>
                                       </div>
@@ -3464,8 +3464,8 @@ ${prior.impact_arc}
               };
 
               return (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-cyan-50 to-blue-50">
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b bg-linear-to-r from-cyan-50 to-blue-50">
                     <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                       <Globe2 className="h-7 w-7 text-cyan-600" />
                       English Skills
@@ -3539,8 +3539,8 @@ ${prior.impact_arc}
 
             {/* Category Filter */}
             {uniqueCategories.length > 1 && (
-              <div className="bg-white rounded-lg shadow p-4">
-                <div className="flex items-center space-x-4">
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <div className="flex items-center stack-x-4">
                   <span className="text-sm font-medium text-gray-700">Filter by category:</span>
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setSelectedCategory('all')}
@@ -3566,7 +3566,7 @@ ${prior.impact_arc}
             )}
 
             {/* Learning Activities */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b">
                 <h2 className="text-lg font-medium text-gray-900">
                   My Learning Activities
@@ -3601,7 +3601,7 @@ ${prior.impact_arc}
                     const content = (
                       <div className="p-6">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4 flex-1">
+                          <div className="flex items-center stack-x-4 flex-1">
                             <div className="p-2 bg-gray-100 rounded-lg">{getCategoryIcon(activity.category_activity)}</div>
                             <div className="flex-1">
                               <h3 className="text-base font-medium text-gray-900">{activity.activity}</h3>
@@ -3611,7 +3611,7 @@ ${prior.impact_arc}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-4">
+                          <div className="flex items-center stack-x-4">
                             <span className={classNames('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getProgressColor(activity.progress))}>
                               {activity.progress}
                             </span>
@@ -3659,7 +3659,7 @@ ${prior.impact_arc}
                                         <div className="text-xs mt-0.5 opacity-75">{scoreLabel}</div>
                                       </div>
                                       <div className="flex-shrink-0">
-                                        <span className={classNames('inline-flex items-center px-2 py-0.5 rounded text-xs font-bold', badgeColor)}>
+                                        <span className={classNames('inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-bold', badgeColor)}>
                                           {score}/{maxScore}
                                         </span>
                                       </div>
@@ -3716,7 +3716,7 @@ ${prior.impact_arc}
             </div>
 
             {/* Projects Section */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b">
                 <h2 className="text-lg font-medium text-gray-900">My Projects</h2>
                 <Link to="/projects/new">
@@ -3786,7 +3786,7 @@ ${prior.impact_arc}
                 </button>
               </div>
 
-              <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b">
+              <div className="px-6 py-4 bg-linear-to-r from-indigo-50 to-purple-50 border-b">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Overall Score</span>
                   <span className={classNames('text-3xl font-bold',
@@ -3799,7 +3799,7 @@ ${prior.impact_arc}
                   <div className="w-full bg-white rounded-full h-3 shadow-inner">
                     <div className={classNames('h-3 rounded-full transition-all',
                       (selectedActivityForDetails.certification_evaluation_score ?? selectedActivityForDetails.evaluation_score) === 100 
-                        ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-indigo-500 to-purple-600')}
+                        ? 'bg-linear-to-r from-green-500 to-green-600' : 'bg-linear-to-r from-indigo-500 to-purple-600')}
                       style={{ width: `${selectedActivityForDetails.certification_evaluation_score ?? selectedActivityForDetails.evaluation_score ?? 0}%` }} />
                   </div>
                 </div>
@@ -3816,7 +3816,7 @@ ${prior.impact_arc}
                   const isCertification = selectedActivityForDetails.category_activity === 'Certification';
                   
                   return (
-                    <div className="space-y-4">
+                    <div className="stack-y-4">
                       {scores.map(({ dimension, score, evidence, maxScore }) => {
                         const colorClass = 
                           score === maxScore ? 'bg-green-100 text-green-800 border-green-300' :
@@ -3832,7 +3832,7 @@ ${prior.impact_arc}
                           <div key={dimension} className="border-l-4 border-indigo-500 pl-4 py-2 bg-gray-50 rounded-r-lg">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="font-medium text-gray-900">{dimension}</h4>
-                              <span className={classNames('px-3 py-1 rounded-full text-sm font-bold border shadow-sm', colorClass)}>
+                              <span className={classNames('px-3 py-1 rounded-full text-sm font-bold border shadow-xs', colorClass)}>
                                 {score ?? 0}/{maxScore} — {getScoreLabel(score, isCertification)}
                               </span>
                             </div>
@@ -3869,7 +3869,7 @@ ${prior.impact_arc}
                   Updated: {new Date(selectedActivityForDetails.updated_at).toLocaleDateString()}
                 </span>
                 <button onClick={() => setShowDetailsModal(false)}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm">
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-xs">
                   Close
                 </button>
               </div>
@@ -3920,7 +3920,7 @@ ${prior.impact_arc}
                     <p>No recorded actions yet.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="stack-y-3">
                     {learnerActionsModal.actions.map((action, i) => {
                       const tier = action.tier_awarded ?? 'seed';
                       const tc = TIER_COLOURS[tier] ?? TIER_COLOURS.seed;
@@ -4004,7 +4004,7 @@ ${prior.impact_arc}
                   <p className="text-sm text-gray-700">Sent to {encourageModal.entry.name}.</p>
                 </div>
               ) : (
-                <div className="px-6 py-4 space-y-3">
+                <div className="px-6 py-4 stack-y-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Subject</label>
                     <input
@@ -4012,7 +4012,7 @@ ${prior.impact_arc}
                       value={encourageSubject}
                       onChange={e => setEncourageSubject(e.target.value)}
                       maxLength={200}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
                     />
                   </div>
                   <div>
@@ -4023,7 +4023,7 @@ ${prior.impact_arc}
                       maxLength={5000}
                       rows={6}
                       placeholder="Share encouragement or a suggestion for how they could grow their impact further…"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-400 resize-none"
                     />
                   </div>
                   {encourageError && (

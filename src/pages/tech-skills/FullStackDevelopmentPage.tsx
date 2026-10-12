@@ -184,7 +184,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
     : pct >= 0.5 ? 'from-amber-400 to-yellow-500 text-yellow-950'
     : 'from-red-400 to-rose-500 text-rose-950';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${color}`}>
       <Star size={12} />{score}/{max}
     </span>
   );
@@ -193,7 +193,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
 // ─── Onboarding card ──────────────────────────────────────────────────────────
 
 const FullStackOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div className="flex-1 overflow-y-auto p-4 stack-y-4">
     <div className="p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-xl">
       <p className="text-xs font-bold text-emerald-400 uppercase mb-3">🏗️ Welcome to Full-Stack Development</p>
       <p className="text-sm text-gray-300 leading-relaxed mb-4">
@@ -205,7 +205,7 @@ const FullStackOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete 
         <AIPidginCoachWrapper englishText="You're going to build a real, database-connected app using React on the front-end and Supabase (PostgreSQL) as your backend — the exact same stack used by startups and professional developers worldwide." />
       </div>
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">Your Full-Stack Architecture</p>
-      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-0.5 mb-3">
+      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed stack-y-0.5 mb-3">
         <div className="text-sky-300">🌐 Browser (React + Vite)</div>
         <div className="ml-3 text-gray-400">├── <span className="text-cyan-300">src/App.jsx</span><span className="text-gray-600 ml-2">← UI components</span></div>
         <div className="ml-3 text-gray-400">└── <span className="text-cyan-300">src/lib/supabase.js</span><span className="text-gray-600 ml-2">← DB client</span></div>
@@ -262,7 +262,7 @@ const FullStackOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete 
 const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (idx: number) => void }> = ({ tasks, taskIndex, onJump }) => {
   const phases = [1, 2, 3] as const;
   return (
-    <div className="px-3 py-3 border-b border-gray-700 space-y-2">
+    <div className="px-3 py-3 border-b border-gray-700 stack-y-2">
       {phases.map(phase => {
         const pm = PHASE_META[phase];
         const phaseTasks = tasks.filter(t => t.phase === phase);
@@ -270,7 +270,7 @@ const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (idx:
         return (
           <div key={phase}>
             <p className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${pm.color}`}>{pm.label}</p>
-            <div className="space-y-0.5">
+            <div className="stack-y-0.5">
               {phaseTasks.map((task, i) => {
                 const globalIdx = firstIdx + i;
                 const isDone = globalIdx < taskIndex;
@@ -326,7 +326,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
       <React.Fragment key={node.path}>
         {node.isFolder ? (
           <button onClick={() => toggleFolder(node.path)}
-            className="w-full flex items-center gap-1 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 rounded transition-colors"
+            className="w-full flex items-center gap-1 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 rounded-sm transition-colors"
             style={{ paddingLeft: `${8 + depth * 10}px` }}>
             {openFolders.has(node.path) ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
             <span className="text-amber-400 text-[10px]">📁</span>
@@ -344,7 +344,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
         {node.isFolder && openFolders.has(node.path) && renderTree(node.children, depth + 1)}
       </React.Fragment>
     ));
-  return <div className="space-y-0">{renderTree(buildTree(files))}</div>;
+  return <div className="stack-y-0">{renderTree(buildTree(files))}</div>;
 };
 
 // ─── Table Viewer panel ───────────────────────────────────────────────────────
@@ -588,12 +588,12 @@ const SqlRunnerPanel: React.FC<{ creds: SupaCredentials | null; generatedSql: st
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">SQL Editor</span>
           <div className="flex items-center gap-1.5">
             <button onClick={handleCopy} disabled={!sql.trim()}
-              className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors disabled:opacity-40">
+              className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm transition-colors disabled:opacity-40">
               {copied ? <Check size={11} /> : <Copy size={11} />} {copied ? 'Copied' : 'Copy'}
             </button>
             {creds?.url && (
               <button onClick={openDashboard}
-                className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-emerald-400 hover:text-white hover:bg-emerald-600/30 border border-emerald-500/30 rounded transition-colors">
+                className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-emerald-400 hover:text-white hover:bg-emerald-600/30 border border-emerald-500/30 rounded-sm transition-colors">
                 <Globe size={11} /> Open Dashboard
               </button>
             )}
@@ -603,7 +603,7 @@ const SqlRunnerPanel: React.FC<{ creds: SupaCredentials | null; generatedSql: st
           value={sql} onChange={e => setSql(e.target.value)}
           rows={8} spellCheck={false}
           placeholder="-- SQL generated by the AI coach will appear here&#10;-- You can also type your own queries&#10;&#10;SELECT * FROM my_table LIMIT 10;"
-          className="w-full bg-gray-900 font-mono text-xs text-gray-200 px-3 py-2.5 outline-none resize-none placeholder-gray-700 leading-relaxed"
+          className="w-full bg-gray-900 font-mono text-xs text-gray-200 px-3 py-2.5 outline-hidden resize-none placeholder-gray-700 leading-relaxed"
           style={{ fontFamily: "'Fira Code', 'Consolas', monospace" }}
         />
       </div>
@@ -641,7 +641,7 @@ const SqlRunnerPanel: React.FC<{ creds: SupaCredentials | null; generatedSql: st
       {!isSelect && sql.trim() && (
         <div className="mx-3 mt-3 p-3 bg-blue-500/10 border border-blue-500/25 rounded-lg text-xs text-gray-300 leading-relaxed flex-shrink-0">
           <p className="font-bold text-blue-400 mb-1">How to run this SQL</p>
-          <ol className="list-decimal ml-4 space-y-1 text-gray-400">
+          <ol className="list-decimal ml-4 stack-y-1 text-gray-400">
             <li>Click <strong className="text-white">Copy SQL</strong> above</li>
             <li>Click <strong className="text-white">Open Dashboard</strong> — your Supabase SQL editor opens</li>
             <li>Paste the SQL and click the green <strong className="text-white">Run</strong> button</li>
@@ -699,17 +699,17 @@ const CredentialsPanel: React.FC<{
 }> = ({ creds, onChange, onTest, testStatus, testMsg }) => {
   const [showKey, setShowKey] = useState(false);
   return (
-    <div className="p-3 bg-gray-800/60 border border-emerald-500/20 rounded-xl space-y-3">
+    <div className="p-3 bg-gray-800/60 border border-emerald-500/20 rounded-xl stack-y-3">
       <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
         <Key size={12} /> Connect Your Supabase Project
       </p>
-      <div className="space-y-2">
+      <div className="stack-y-2">
         <div>
           <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Project URL</label>
           <input
             type="text" value={creds.url} placeholder="https://xxxx.supabase.co"
             onChange={e => onChange({ ...creds, url: e.target.value })}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 outline-none focus:border-emerald-500 transition-colors font-mono"
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 outline-hidden focus:border-emerald-500 transition-colors font-mono"
           />
         </div>
         <div>
@@ -718,7 +718,7 @@ const CredentialsPanel: React.FC<{
             <input
               type={showKey ? 'text' : 'password'} value={creds.anonKey} placeholder="eyJhbGci…"
               onChange={e => onChange({ ...creds, anonKey: e.target.value })}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 pr-8 text-xs text-white placeholder-gray-600 outline-none focus:border-emerald-500 transition-colors font-mono"
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 pr-8 text-xs text-white placeholder-gray-600 outline-hidden focus:border-emerald-500 transition-colors font-mono"
             />
             <button onClick={() => setShowKey(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300">
               {showKey ? <EyeOff size={11} /> : <Eye size={11} />}
@@ -1278,13 +1278,13 @@ const FullStackDevelopmentPage: React.FC = () => {
 
       {/* Session picker */}
       {showSessionPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-base font-bold text-white flex items-center gap-2"><FolderOpen size={18} className="text-emerald-400" /> Your Full-Stack Projects</h2>
               <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-2">
               {sessions.map(s => (
                 <button key={s.fs_session_id} onClick={() => loadSession(s)}
                   className="w-full text-left p-3 bg-gray-700/40 hover:bg-gray-700 border border-gray-600 hover:border-emerald-500/40 rounded-xl transition-colors">
@@ -1297,7 +1297,7 @@ const FullStackDevelopmentPage: React.FC = () => {
                     </div>
                     <button onClick={e => handleDeleteSession(e, s.fs_session_id)}
                       disabled={deletingSessionId === s.fs_session_id}
-                      className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors flex-shrink-0">
+                      className="p-1.5 text-gray-600 hover:text-red-400 rounded-sm transition-colors flex-shrink-0">
                       {deletingSessionId === s.fs_session_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
                   </div>
@@ -1319,7 +1319,7 @@ const FullStackDevelopmentPage: React.FC = () => {
         const scoreColor = (s: number) => s >= 2.5 ? 'text-emerald-400' : s >= 1.5 ? 'text-amber-400' : 'text-red-400';
         const skillLabel = (k: string) => k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
             <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
               <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -1327,7 +1327,7 @@ const FullStackDevelopmentPage: React.FC = () => {
                 </h2>
                 <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 stack-y-4">
                 {isEvaluating && (
                   <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 size={36} className="animate-spin text-purple-400 mb-3" />
@@ -1371,7 +1371,7 @@ const FullStackDevelopmentPage: React.FC = () => {
                       </div>
                     )}
                     {evaluation.detailed_scores && (
-                      <div className="space-y-1">
+                      <div className="stack-y-1">
                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Skill Breakdown</p>
                         {Object.entries(evaluation.detailed_scores as Record<string, { score: number; justification: string }>).map(([skill, data]) => (
                           <details key={skill} className="group border border-gray-700 rounded-lg overflow-hidden">
@@ -1412,7 +1412,7 @@ const FullStackDevelopmentPage: React.FC = () => {
             </div>
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
             <input
-              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-emerald-500 outline-none px-1 py-0.5 w-40"
+              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-emerald-500 outline-hidden px-1 py-0.5 w-40"
               value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="App name…"
             />
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
@@ -1482,7 +1482,7 @@ const FullStackDevelopmentPage: React.FC = () => {
               {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleEvaluate} disabled={isEvaluating}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50">
               {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <BarChart3 size={12} />} Evaluate
             </button>
           </div>
@@ -1548,7 +1548,7 @@ const FullStackDevelopmentPage: React.FC = () => {
                 }} />
 
                 {/* Scrollable middle */}
-                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+                <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
 
                   {/* Credentials panel for setup task */}
                   {showCredPanel && (
@@ -1635,14 +1635,14 @@ const FullStackDevelopmentPage: React.FC = () => {
                       onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleGenerate(); }}
                       placeholder={taskInstruction?.subTasks[subTaskIndex]?.replace(/^[^:]+:\s*/, '').substring(0, 80) + '…' || 'Describe what you want to build…'}
                       style={{ minHeight: '140px' }}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-emerald-500 transition-colors leading-relaxed"
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-emerald-500 transition-colors leading-relaxed"
                     />
                     <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                   </div>
                 </div>
 
                 {/* Fixed bottom buttons */}
-                <div className="flex-shrink-0 px-4 pb-4 space-y-2">
+                <div className="flex-shrink-0 px-4 pb-4 stack-y-2">
                   <div className="flex gap-2">
                     <button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors disabled:opacity-40">
@@ -1702,7 +1702,7 @@ const FullStackDevelopmentPage: React.FC = () => {
                   <span className="text-xs text-gray-400 truncate max-w-40">{activeFilePath}</span>
                   <span className="text-[10px] text-gray-600">{activeFile?.content.split('\n').length}L</span>
                   <button onClick={handleCopy}
-                    className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                    className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm transition-colors">
                     {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
@@ -1726,7 +1726,7 @@ const FullStackDevelopmentPage: React.FC = () => {
                       Step {subTaskIndex + 1} of {taskInstruction?.subTasks?.length ?? 1}
                     </p>
                   </div>
-                  <div className="px-6 py-5 space-y-5">
+                  <div className="px-6 py-5 stack-y-5">
 
                     {/* What was built */}
                     {aiExplanation ? (

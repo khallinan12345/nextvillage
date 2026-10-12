@@ -343,7 +343,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
     : pct >= 0.5 ? 'from-amber-400 to-yellow-500 text-yellow-950'
     : 'from-red-400 to-rose-500 text-rose-950';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${color}`}>
       <Star size={12} />{score}/{max}
     </span>
   );
@@ -352,7 +352,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
 // ─── Onboarding card ─────────────────────────────────────────────────────────
 
 const ReactViteOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div className="flex-1 overflow-y-auto p-4 stack-y-4">
     <div className="p-4 bg-blue-500/10 border border-blue-500/25 rounded-xl">
       <p className="text-xs font-bold text-blue-400 uppercase mb-3">🏗️ Welcome to Vite + React Website Builder</p>
       <p className="text-sm text-gray-300 leading-relaxed mb-4">
@@ -368,7 +368,7 @@ const ReactViteOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete 
       </div>
 
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">Your Project Structure</p>
-      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-0.5">
+      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed stack-y-0.5">
         <div className="text-amber-300">📁 my-site/</div>
         <div className="ml-3 text-gray-400">├── <span className="text-cyan-300">index.html</span><span className="text-gray-600 ml-2">← Browser entry point</span></div>
         <div className="ml-3 text-gray-400">├── <span className="text-cyan-300">package.json</span><span className="text-gray-600 ml-2">← Dependencies &amp; scripts</span></div>
@@ -402,7 +402,7 @@ const ReactViteOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete 
         Describe what you want in plain English — one step at a time. The AI writes the React components
         and updates the right files. When you're done, click{' '}
         <strong className="text-white">Download .zip</strong> and run locally with{' '}
-        <code className="bg-gray-700 px-1 rounded text-emerald-300">npm install && npm run dev</code>.
+        <code className="bg-gray-700 px-1 rounded-sm text-emerald-300">npm install && npm run dev</code>.
         Use <strong className="text-white">Visualize Website</strong> to preview it live in StackBlitz instantly.
       </p>
     </div>
@@ -423,7 +423,7 @@ const TaskStepper: React.FC<{
 }> = ({ tasks, taskIndex, onJump }) => {
   const phases = [1, 2, 3] as const;
   return (
-    <div className="px-3 py-3 border-b border-gray-700 space-y-2">
+    <div className="px-3 py-3 border-b border-gray-700 stack-y-2">
       {phases.map(phase => {
         const pm = PHASE_META[phase];
         const phaseTasks = tasks.filter(t => t.phase === phase);
@@ -431,7 +431,7 @@ const TaskStepper: React.FC<{
         return (
           <div key={phase}>
             <p className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${pm.color}`}>{pm.label}</p>
-            <div className="space-y-0.5">
+            <div className="stack-y-0.5">
               {phaseTasks.map((task, i) => {
                 const globalIdx = firstIdx + i;
                 const isDone = globalIdx < taskIndex;
@@ -498,7 +498,7 @@ const FileTreePanel: React.FC<{
       <React.Fragment key={node.path}>
         {node.isFolder ? (
           <button onClick={() => toggleFolder(node.path)}
-            className="w-full flex items-center gap-1 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 rounded transition-colors"
+            className="w-full flex items-center gap-1 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 rounded-sm transition-colors"
             style={{ paddingLeft: `${8 + depth * 10}px` }}>
             {openFolders.has(node.path) ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
             <span className="text-amber-400 text-[10px]">📁</span>
@@ -517,7 +517,7 @@ const FileTreePanel: React.FC<{
       </React.Fragment>
     ));
 
-  return <div className="space-y-0">{renderTree(buildTree(files))}</div>;
+  return <div className="stack-y-0">{renderTree(buildTree(files))}</div>;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1636,25 +1636,25 @@ Explain what this question is asking in simple terms and give a short example of
 
         {/* ── StackBlitz Confirmation Modal ─────────────────────── */}
         {showStackBlitzModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
             <div className="bg-gray-800 border border-gray-600 rounded-2xl w-[460px] shadow-2xl overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
                 <h2 className="text-base font-bold text-white flex items-center gap-2">
                   <ExternalLink size={18} className="text-blue-400" /> Visualize Your Website
                 </h2>
-                <button onClick={() => setShowStackBlitzModal(false)} className="p-1 text-gray-400 hover:text-white rounded">
+                <button onClick={() => setShowStackBlitzModal(false)} className="p-1 text-gray-400 hover:text-white rounded-sm">
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-6 stack-y-4">
                 <p className="text-sm text-gray-300 leading-relaxed">
                   Your project files will be transferred to{' '}
                   <strong className="text-white">StackBlitz</strong>, an online development
                   environment that can run your React app live in the browser.
                 </p>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div className="flex items-start gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
                     <span className="text-lg flex-shrink-0">📦</span>
                     <div>
@@ -1707,7 +1707,7 @@ Explain what this question is asking in simple terms and give a short example of
 
         {/* ── Session Picker Modal ───────────────────────────────── */}
         {showSessionPicker && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs">
             <div className="bg-gray-800 border border-gray-600 rounded-2xl w-[480px] max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
               <div className="px-6 py-4 border-b border-gray-700">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -1715,7 +1715,7 @@ Explain what this question is asking in simple terms and give a short example of
                 </h2>
                 <p className="text-sm text-gray-400 mt-1">Resume a project or start fresh</p>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              <div className="flex-1 overflow-y-auto p-4 stack-y-2">
                 {sessions.map(s => (
                   <div key={s.web_dev_session_id}
                     className="group relative flex items-stretch gap-2">
@@ -1755,7 +1755,7 @@ Explain what this question is asking in simple terms and give a short example of
                   </div>
                 ))}
               </div>
-              <div className="p-4 border-t border-gray-700 space-y-2">
+              <div className="p-4 border-t border-gray-700 stack-y-2">
                 <button onClick={createNewSession}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors">
                   <Plus size={18} /> Start New Project
@@ -1774,7 +1774,7 @@ Explain what this question is asking in simple terms and give a short example of
         {/* ── Site Feedback Modal ─────────────────────────────────── */}
         {showFeedbackModal && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
             onPaste={handleFeedbackPaste}
           >
             <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
@@ -1786,13 +1786,13 @@ Explain what this question is asking in simple terms and give a short example of
                   Site Feedback
                 </h2>
                 <button onClick={() => setShowFeedbackModal(false)}
-                  className="p-1 text-gray-400 hover:text-white rounded transition-colors">
+                  className="p-1 text-gray-400 hover:text-white rounded-sm transition-colors">
                   <X size={17} />
                 </button>
               </div>
 
               {/* Body */}
-              <div className="p-5 space-y-4">
+              <div className="p-5 stack-y-4">
                 <p className="text-xs text-gray-400 leading-relaxed">
                   Describe what you'd like to improve on your website. Claude will identify the
                   relevant page(s) and make the changes directly — this won't interrupt your
@@ -1847,7 +1847,7 @@ Explain what this question is asking in simple terms and give a short example of
                     onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleFeedbackSubmit(); }}
                     placeholder="e.g. The hero section font feels too small and the button colour doesn't match the rest of the page…"
                     rows={5}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-blue-500 transition-colors leading-relaxed"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-blue-500 transition-colors leading-relaxed"
                   />
                   <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                 </div>
@@ -1904,14 +1904,14 @@ Explain what this question is asking in simple terms and give a short example of
             k.replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase());
 
           return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
             <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
               {/* Header */}
               <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <BarChart3 size={20} className="text-purple-400" /> Session Evaluation
                 </h2>
-                <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white rounded"><X size={18} /></button>
+                <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white rounded-sm"><X size={18} /></button>
               </div>
 
               <div className="flex-1 overflow-y-auto">
@@ -1932,7 +1932,7 @@ Explain what this question is asking in simple terms and give a short example of
                 )}
 
                 {evaluation && !isEvaluating && (
-                  <div className="p-6 space-y-6">
+                  <div className="p-6 stack-y-6">
 
                     {/* Overall score + phase averages */}
                     <div className="grid grid-cols-4 gap-3">
@@ -1960,7 +1960,7 @@ Explain what this question is asking in simple terms and give a short example of
 
                     {/* Module averages bar chart */}
                     {evaluation.module_averages && (
-                      <div className="p-4 bg-gray-700/30 rounded-xl border border-gray-700 space-y-2">
+                      <div className="p-4 bg-gray-700/30 rounded-xl border border-gray-700 stack-y-2">
                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-3">Module Scores</p>
                         {Object.entries(evaluation.module_averages).map(([k, v]) => {
                           const pct = (Number(v) / 3) * 100;
@@ -2002,7 +2002,7 @@ Explain what this question is asking in simple terms and give a short example of
 
                     {/* Detailed skill scores */}
                     {evaluation.detailed_scores && (
-                      <div className="space-y-1">
+                      <div className="stack-y-1">
                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-3">Skill-by-Skill Breakdown</p>
                         {Object.entries(evaluation.detailed_scores as Record<string, { score: number; justification: string }>).map(([skill, data]) => (
                           <details key={skill} className="group border border-gray-700 rounded-lg overflow-hidden">
@@ -2049,7 +2049,7 @@ Explain what this question is asking in simple terms and give a short example of
             </div>
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
             <input
-              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-emerald-500 outline-none px-1 py-0.5 min-w-0 w-40"
+              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-emerald-500 outline-hidden px-1 py-0.5 min-w-0 w-40"
               value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Project name…"
             />
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
@@ -2150,7 +2150,7 @@ Explain what this question is asking in simple terms and give a short example of
               {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleEvaluate} disabled={isEvaluating}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50">
               {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <BarChart3 size={12} />} Evaluate
             </button>
           </div>
@@ -2212,7 +2212,7 @@ Explain what this question is asking in simple terms and give a short example of
                 </div>
 
                 {/* ── Scrollable middle: instruction + textarea together ── */}
-                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+                <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
 
                   {/* Instruction card */}
                   {loadingInstruction ? (
@@ -2247,7 +2247,7 @@ Explain what this question is asking in simple terms and give a short example of
                             <button
                               onClick={handleSkipSubTask}
                               title="Skip this question"
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/10 transition-colors">
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[9px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/10 transition-colors">
                               <SkipForward size={11} />
                               Skip
                             </button>
@@ -2372,7 +2372,7 @@ Explain what this question is asking in simple terms and give a short example of
                           : 'Describe what you want to build in plain English…'
                       }
                       style={{ minHeight: '160px' }}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-purple-500 transition-colors leading-relaxed"
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-purple-500 transition-colors leading-relaxed"
                     />
                     <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                   </div>
@@ -2380,7 +2380,7 @@ Explain what this question is asking in simple terms and give a short example of
                 </div>
 
                 {/* ── Fixed bottom: action buttons + navigation ── */}
-                <div className="flex-shrink-0 px-4 pb-4 space-y-2">
+                <div className="flex-shrink-0 px-4 pb-4 stack-y-2">
                   <div className="flex gap-2">
                     <button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()}
                       title="Submit"
@@ -2507,7 +2507,7 @@ Explain what this question is asking in simple terms and give a short example of
                   <div className="flex items-center gap-2 pr-3 flex-shrink-0">
                     <span className="text-[10px] text-gray-700">{activeFile?.content.split('\n').length}L</span>
                     <button onClick={handleCopy}
-                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm transition-colors">
                       {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
@@ -2530,7 +2530,7 @@ Explain what this question is asking in simple terms and give a short example of
                     </p>
                   </div>
 
-                  <div className="px-6 py-5 space-y-5">
+                  <div className="px-6 py-5 stack-y-5">
 
                     {/* What was built — if explanation exists */}
                     {aiExplanation ? (
@@ -2798,7 +2798,7 @@ Explain what this question is asking in simple terms and give a short example of
                 </button>
               </div>
               {/* Body */}
-              <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+              <div className="flex-1 overflow-y-auto px-5 py-5 stack-y-4">
                 <div className="rounded-xl p-4 border" style={{ background: '#fff8ed', borderColor: '#f0c060' }}>
                   <p className="text-[10px] font-bold uppercase tracking-wide mb-3" style={{ color: '#c07020' }}>
                     AI Explanation
@@ -2813,7 +2813,7 @@ Explain what this question is asking in simple terms and give a short example of
                     <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: '#3a7a3a' }}>
                       Files created or updated
                     </p>
-                    <div className="space-y-1">
+                    <div className="stack-y-1">
                       {promptHistory[promptHistory.length - 1].filesModified!.map((f, i) => (
                         <button
                           key={i}

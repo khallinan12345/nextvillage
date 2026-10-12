@@ -274,7 +274,7 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
   );
 
   // ── Main render ────────────────────────────────────────────────────────────
-  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent bg-white";
+  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-300 focus:border-transparent bg-white";
   const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5";
 
   return (
@@ -313,11 +313,11 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 mb-5">
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-100 p-7 mb-5">
 
           {/* Step 1: Your details */}
           {step === 1 && (
-            <div className="space-y-5">
+            <div className="stack-y-5">
               <h2 className="font-bold text-gray-800 text-lg">Your Details</h2>
               <div>
                 <label className={labelCls}>Your Name</label>
@@ -346,7 +346,7 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
 
           {/* Step 2: The research */}
           {step === 2 && (
-            <div className="space-y-5">
+            <div className="stack-y-5">
               <h2 className="font-bold text-gray-800 text-lg">The Research</h2>
               <div>
                 <label className={labelCls}>Research Title</label>
@@ -380,13 +380,13 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
 
           {/* Step 3: Communities */}
           {step === 3 && (
-            <div className="space-y-5">
+            <div className="stack-y-5">
               <h2 className="font-bold text-gray-800 text-lg">Target Communities</h2>
               <p className="text-sm text-gray-500 leading-relaxed">
                 Which communities would participate? Remember — communities choose to join approved studies.
                 They are never assigned.
               </p>
-              <div className="space-y-2.5">
+              <div className="stack-y-2.5">
                 {proposal.sites.map((site, i) => (
                   <div key={i} className="flex gap-2">
                     <input className={`${inputCls} flex-1`} value={site}
@@ -420,7 +420,7 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
 
           {/* Step 4: Guiding questions */}
           {step === 4 && (
-            <div className="space-y-5">
+            <div className="stack-y-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-gray-800 text-lg">Guiding Questions</h2>
                 <button onClick={suggestQuestions} disabled={hintLoading}
@@ -432,10 +432,10 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
               <p className="text-sm text-gray-500">
                 What specific questions will the research answer? Each should be answerable through community participation.
               </p>
-              <div className="space-y-4">
+              <div className="stack-y-4">
                 {proposal.guiding_questions.map((q, i) => (
                   <div key={i} style={{ borderLeft: `3px solid ${q.color_hex}` }}
-                    className="pl-4 space-y-2.5 pb-4 border-b border-gray-50 last:border-0">
+                    className="pl-4 stack-y-2.5 pb-4 border-b border-gray-50 last:border-0">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-gray-400">Question {i + 1}</span>
                       {proposal.guiding_questions.length > 1 && (
@@ -470,7 +470,7 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
 
           {/* Step 5: Equity review */}
           {step === 5 && (
-            <div className="space-y-5">
+            <div className="stack-y-5">
               <h2 className="font-bold text-gray-800 text-lg">Equity Pre-Screen</h2>
               <p className="text-sm text-gray-500 leading-relaxed">
                 Before your proposal goes to the board, Claude reviews it for youth empowerment,
@@ -505,7 +505,7 @@ End your response with exactly one line: VERDICT: READY FOR BOARD or VERDICT: NE
                   </div>
 
                   {!reviewPassed && (
-                    <div className="space-y-3">
+                    <div className="stack-y-3">
                       <p className="text-xs text-gray-500">
                         Revise your description or questions based on the feedback above, then re-run the review.
                       </p>

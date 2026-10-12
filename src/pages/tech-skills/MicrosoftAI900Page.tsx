@@ -222,7 +222,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
     : pct >= 0.5 ? 'from-amber-400 to-yellow-500 text-yellow-950'
     : 'from-red-400 to-rose-500 text-rose-950';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${color}`}>
       <Star size={12} />{score}/{max}
     </span>
   );
@@ -231,7 +231,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
 // ─── Onboarding card ──────────────────────────────────────────────────────────
 
 const AI900Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div className="flex-1 overflow-y-auto p-4 stack-y-4">
     <div className="p-4 bg-blue-500/10 border border-blue-500/25 rounded-xl">
       <p className="text-xs font-bold text-blue-400 uppercase mb-3">🎓 Welcome to AI-900 Certification Prep</p>
       <p className="text-sm text-gray-300 leading-relaxed mb-3">
@@ -253,7 +253,7 @@ const AI900Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
       </div>
 
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">What the AI-900 Covers</p>
-      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-1 mb-3">
+      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed stack-y-1 mb-3">
         {[
           ['🛡️', 'D1', 'AI Workloads & Responsible AI', '15–20%', 'text-blue-300'],
           ['🧠', 'D2', 'Machine Learning Principles',   '15–20%', 'text-purple-300'],
@@ -355,7 +355,7 @@ const TopicStepper: React.FC<{
   const onboarding = topics.find(t => t.isOnboarding && t.id === 'intro_ai900');
 
   return (
-    <div className="px-3 py-3 border-b border-gray-700 space-y-2 overflow-y-auto flex-shrink-0" style={{ maxHeight: '45vh' }}>
+    <div className="px-3 py-3 border-b border-gray-700 stack-y-2 overflow-y-auto flex-shrink-0" style={{ maxHeight: '45vh' }}>
       {/* Intro */}
       {onboarding && (() => {
         const idx = topics.findIndex(t => t.id === onboarding.id);
@@ -384,7 +384,7 @@ const TopicStepper: React.FC<{
               {dm.icon}{dm.shortLabel}
               {domainTopics[0].weight && <span className="text-gray-600 font-normal normal-case tracking-normal">{domainTopics[0].weight}</span>}
             </div>
-            <div className="space-y-0.5">
+            <div className="stack-y-0.5">
               {domainTopics.map(topic => {
                 const globalIdx = topics.findIndex(t => t.id === topic.id);
                 const isDone = globalIdx < topicIndex;
@@ -453,7 +453,7 @@ const ServiceReferencePanel: React.FC<{ topic: TopicDef }> = ({ topic }) => {
   if (relevantServices.length === 0) return null;
 
   return (
-    <div className="p-3 bg-gray-800/40 border border-gray-700 rounded-xl space-y-2">
+    <div className="p-3 bg-gray-800/40 border border-gray-700 rounded-xl stack-y-2">
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
         <Cpu size={11} className="text-blue-400" /> Azure Services — This Topic
       </p>
@@ -851,7 +851,7 @@ const MicrosoftAI900Page: React.FC = () => {
 
       {/* Session picker */}
       {showSessionPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -859,7 +859,7 @@ const MicrosoftAI900Page: React.FC = () => {
               </h2>
               <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-2">
               {sessions.map(s => (
                 <button key={s.ai900_session_id} onClick={() => loadSession(s)}
                   className="w-full text-left p-3 bg-gray-700/40 hover:bg-gray-700 border border-gray-600 hover:border-blue-500/40 rounded-xl transition-colors">
@@ -872,7 +872,7 @@ const MicrosoftAI900Page: React.FC = () => {
                     </div>
                     <button onClick={e => handleDeleteSession(e, s.ai900_session_id)}
                       disabled={deletingSessionId === s.ai900_session_id}
-                      className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors flex-shrink-0">
+                      className="p-1.5 text-gray-600 hover:text-red-400 rounded-sm transition-colors flex-shrink-0">
                       {deletingSessionId === s.ai900_session_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
                   </div>
@@ -894,7 +894,7 @@ const MicrosoftAI900Page: React.FC = () => {
         const scoreColor = (s: number) => s >= 2.5 ? 'text-emerald-400' : s >= 1.5 ? 'text-amber-400' : 'text-red-400';
         const skillLabel = (k: string) => k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
             <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
               <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -902,7 +902,7 @@ const MicrosoftAI900Page: React.FC = () => {
                 </h2>
                 <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 stack-y-4">
                 {isEvaluating && (
                   <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 size={36} className="animate-spin text-blue-400 mb-3" />
@@ -946,7 +946,7 @@ const MicrosoftAI900Page: React.FC = () => {
                       </div>
                     )}
                     {evaluation.detailed_scores && (
-                      <div className="space-y-1">
+                      <div className="stack-y-1">
                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Domain Breakdown</p>
                         {Object.entries(evaluation.detailed_scores as Record<string, { score: number; justification: string }>).map(([skill, data]) => (
                           <details key={skill} className="group border border-gray-700 rounded-lg overflow-hidden">
@@ -983,7 +983,7 @@ const MicrosoftAI900Page: React.FC = () => {
               <Brain size={14} className="text-blue-400" />
               <span className="text-xs font-bold text-white truncate">AI-900 Prep</span>
               <button onClick={() => setVoiceOutputEnabled(v => !v)} title="Toggle voice"
-                className={`ml-auto p-1 rounded transition-colors ${voiceOutputEnabled ? 'text-blue-400 hover:text-blue-300' : 'text-gray-600 hover:text-gray-400'}`}>
+                className={`ml-auto p-1 rounded-sm transition-colors ${voiceOutputEnabled ? 'text-blue-400 hover:text-blue-300' : 'text-gray-600 hover:text-gray-400'}`}>
                 {voiceOutputEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
               </button>
             </div>
@@ -1000,7 +1000,7 @@ const MicrosoftAI900Page: React.FC = () => {
           </div>
 
           {/* Session controls */}
-          <div className="px-3 py-3 border-t border-gray-700 space-y-1.5 flex-shrink-0">
+          <div className="px-3 py-3 border-t border-gray-700 stack-y-1.5 flex-shrink-0">
             <button onClick={() => setShowSessionPicker(true)}
               className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors">
               <FolderOpen size={11} /> Sessions
@@ -1033,7 +1033,7 @@ const MicrosoftAI900Page: React.FC = () => {
             {isOnboarding ? (
               <AI900Onboarding onComplete={handleCompleteTopic} />
             ) : (
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 stack-y-4">
 
                 {/* Topic headline */}
                 <div>
@@ -1071,7 +1071,7 @@ const MicrosoftAI900Page: React.FC = () => {
 
                 {/* Answer history for this topic */}
                 {answerHistory.filter(e => e.topicId === currentTopic?.id).length > 0 && (
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     <p className="text-[10px] font-bold text-gray-500 uppercase">Your Answers — This Topic</p>
                     {answerHistory.filter(e => e.topicId === currentTopic?.id).slice(-3).map((entry, i) => (
                       <div key={entry.id} className="p-2 bg-gray-800/50 border border-gray-700 rounded-lg">
@@ -1111,7 +1111,7 @@ const MicrosoftAI900Page: React.FC = () => {
               </div>
 
               {/* Scrollable middle: feedback + explanation */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+              <div className="flex-1 overflow-y-auto px-5 py-4 stack-y-3">
 
                 {/* AI explanation after submission */}
                 {aiExplanation && (
@@ -1157,14 +1157,14 @@ const MicrosoftAI900Page: React.FC = () => {
                     onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSubmit(); }}
                     placeholder={taskInstruction?.subTasks[subTaskIndex]?.replace(/^[^:]+:\s*/, '').substring(0, 80) + '…' || 'Type your answer here…'}
                     style={{ minHeight: '140px' }}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-blue-500 transition-colors leading-relaxed"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-blue-500 transition-colors leading-relaxed"
                   />
                   <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                 </div>
               </div>
 
               {/* Fixed bottom buttons */}
-              <div className="flex-shrink-0 px-5 pb-5 space-y-2">
+              <div className="flex-shrink-0 px-5 pb-5 stack-y-2">
                 <div className="flex gap-2">
                   {/* Submit answer */}
                   <button onClick={handleSubmit} disabled={isSubmitting || !answer.trim() || !taskInstruction}
@@ -1207,7 +1207,7 @@ const MicrosoftAI900Page: React.FC = () => {
                 {/* Finished all topics */}
                 {topicIndex >= TOPICS.length - 1 && topicHasAnswer && (
                   <button onClick={handleEvaluate}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white transition-all">
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white transition-all">
                     <Award size={15} /> Get Exam Readiness Report
                   </button>
                 )}

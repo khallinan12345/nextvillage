@@ -509,7 +509,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   if (mergedAndRedirected) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 text-center space-y-4">
+        <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 text-center stack-y-4">
           <h2 className="text-lg font-semibold text-gray-900">Check your email</h2>
           <p className="text-gray-600 text-sm">
             We sent a password reset link to your original account. Click the
@@ -532,7 +532,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 space-y-3">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 stack-y-3">
             <div className="flex items-start gap-3">
               <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
               <div>
@@ -594,7 +594,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   // ── Join code + next steps ─────────────────────────────────────────────────
   if (newOrgJoinCode && newOrgName) {
     return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center max-h-[95vh] overflow-y-auto">
           <div className="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-5">
             <Building2 className="w-8 h-8 text-indigo-600" />
@@ -620,7 +620,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
             </button>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-4 text-left space-y-3 mb-4">
+          <div className="bg-gray-50 rounded-xl p-4 text-left stack-y-3 mb-4">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Next steps</p>
             <div className="flex gap-2">
               <span className="text-lg leading-none">1️⃣</span>
@@ -652,7 +652,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
             </div>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left space-y-1.5 mb-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left stack-y-1.5 mb-6">
             <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">Recommended first activity</p>
             <p className="text-sm text-gray-700">
               🚀 Have every new learner start with <span className="font-semibold">AI Discovery</span> —
@@ -710,7 +710,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">{error}</div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="stack-y-5">
 
             {/* ── Role picker ─────────────────────────────────────────────── */}
             <div>
@@ -803,7 +803,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                 {!orgCtx && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Level *</label>
-                    <div className="space-y-2">
+                    <div className="stack-y-2">
                       {[
                         { v: '1', label: 'Elementary (Ages 8–11)' },
                         { v: '2', label: 'Middle School (Ages 11–14)' },
@@ -905,7 +905,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
 
                   {/* ── Join existing org ────────────────────────────────── */}
                   {leaderOrgMode === 'join' && (
-                    <div className="space-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <div className="stack-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
                       <p className="text-xs text-indigo-700 font-medium">
                         Enter a join code from the primary leader of the organization you are co-facilitating.
                         Your view will be scoped to learners who joined using this specific code.
@@ -941,7 +941,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
 
                   {/* ── Create new org ────────────────────────────────────── */}
                   {leaderOrgMode === 'create' && (
-                    <div className="space-y-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <div className="stack-y-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
                       <div className="text-xs font-semibold text-indigo-800 flex items-center gap-2">
                         <Building2 size={13} /> New Organization Details
                       </div>
@@ -990,7 +990,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                   </div>
 
                   {/* ── Community Context ──────────────────────────────────── */}
-                  <div className="space-y-3 pt-1">
+                  <div className="stack-y-3 pt-1">
                     <p className="text-xs font-semibold text-indigo-700">
                       Community Context <span className="font-normal text-gray-400">(optional — helps personalize learning activities)</span>
                     </p>
@@ -1060,7 +1060,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                   </div>
 
                   {/* ── Data Protection ────────────────────────────────────── */}
-                  <div className="space-y-2 pt-1">
+                  <div className="stack-y-2 pt-1">
                     <p className="text-xs font-semibold text-indigo-700">
                       Data Protection <span className="font-normal text-gray-400">(optional — you can decide this later)</span>
                     </p>
@@ -1077,12 +1077,12 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                   </div>
 
                   {/* ── Tools ───────────────────────────────────────────────── */}
-                  <div className="space-y-2 pt-1">
+                  <div className="stack-y-2 pt-1">
                     <p className="text-xs font-semibold text-indigo-700">
                       Which tools would you like your learners to use?
                       <span className="font-normal text-gray-400 ml-1">(optional — all are enabled by default)</span>
                     </p>
-                    <div className="space-y-1.5">
+                    <div className="stack-y-1.5">
                       {TOOL_OPTIONS.map(opt => (
                         <label key={opt.value} className="flex items-start gap-2 cursor-pointer">
                           <input type="checkbox"

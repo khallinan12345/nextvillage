@@ -304,7 +304,7 @@ const WebsiteBuilderPage: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600">
+            <div className="p-2 rounded-xl bg-linear-to-br from-sky-600 to-indigo-600">
               <Globe size={22} className="text-white" />
             </div>
             <div>
@@ -361,9 +361,9 @@ const WebsiteBuilderPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ── Chat panel ─────────────────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-2xl flex flex-col h-[70vh]">
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-5 py-4 stack-y-3">
               {chatHistory.length === 0 && (
-                <div className="text-sm text-gray-400 space-y-2">
+                <div className="text-sm text-gray-400 stack-y-2">
                   <p>
                     Describe the website you want — for example: "a website for my dog-walking business, with a Home page, an About page, and a Contact page."
                   </p>
@@ -377,7 +377,7 @@ const WebsiteBuilderPage: React.FC = () => {
               )}
               {chatHistory.map((m, i) => (
                 <div key={i} className="rounded-2xl px-4 py-2.5 bg-purple-600 text-white ml-auto max-w-[85%]">
-                  <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>
+                  <p className="text-sm whitespace-pre-wrap wrap-break-word">{m.content}</p>
                 </div>
               ))}
               {uploadedImages.length > 0 && (
@@ -419,12 +419,12 @@ const WebsiteBuilderPage: React.FC = () => {
                 rows={1}
                 placeholder={pages ? 'Ask for a change, e.g. "use the logo image as the header background"…' : 'Describe your website idea…'}
                 disabled={generating}
-                className="flex-1 resize-none outline-none text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-sky-100"
+                className="flex-1 resize-none outline-hidden text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-sky-100"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || generating}
-                className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                className="flex-shrink-0 w-9 h-9 rounded-xl bg-linear-to-br from-sky-600 to-indigo-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
               >
                 {generating ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
               </button>
@@ -469,12 +469,12 @@ const WebsiteBuilderPage: React.FC = () => {
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Name your website…"
                   maxLength={100}
-                  className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400"
+                  className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-sky-200 focus:border-sky-400"
                 />
                 <button
                   onClick={handleSave}
                   disabled={saving || !effectiveOrgId}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex-shrink-0"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linear-to-br from-sky-600 to-indigo-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex-shrink-0"
                 >
                   {saving ? <Loader2 size={15} className="animate-spin" /> : isExistingSite ? <Save size={15} /> : <Rocket size={15} />}
                   {isExistingSite ? 'Save' : 'Publish'}

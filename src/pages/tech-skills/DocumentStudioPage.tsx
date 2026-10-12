@@ -1154,7 +1154,7 @@ const DocumentStudioPage: React.FC = () => {
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 py-3 bg-slate-900 border-b border-slate-700/60 shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600">
+            <div className="p-2 rounded-lg bg-linear-to-br from-violet-500 to-indigo-600">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -1182,7 +1182,7 @@ const DocumentStudioPage: React.FC = () => {
             {/* Project name */}
             <input
               type="text" value={projectName} onChange={e => setProjectName(e.target.value)}
-              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-40 focus:outline-none focus:border-violet-400 placeholder-slate-500"
+              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-40 focus:outline-hidden focus:border-violet-400 placeholder-slate-500"
               placeholder="Document name…"
             />
             {/* Undo / Redo */}
@@ -1208,7 +1208,7 @@ const DocumentStudioPage: React.FC = () => {
               value={trimSizeIdx}
               onChange={e => setTrimSizeIdx(Number(e.target.value))}
               title="Amazon KDP trim size"
-              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
+              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-violet-400">
               {KDP_TRIM_SIZES.map((t, i) => (
                 <option key={i} value={i}>{t.label} — {t.description}</option>
               ))}
@@ -1228,7 +1228,7 @@ const DocumentStudioPage: React.FC = () => {
             </button>
             {/* Collaborator avatars */}
             {collaborators.length > 0 && (
-              <div className="flex -space-x-1">
+              <div className="flex -stack-x-1">
                 {collaborators.map(c => (
                   <div key={c.userId} title={c.name}
                     className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-slate-900"
@@ -1284,10 +1284,10 @@ const DocumentStudioPage: React.FC = () => {
                         <p className="text-[11px] text-slate-500 mt-0.5">
                           {new Date(p.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
                           {p.ownerId && p.ownerId !== user?.id && (
-                            <span className="ml-1.5 px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded text-[9px] font-medium">shared</span>
+                            <span className="ml-1.5 px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded-sm text-[9px] font-medium">shared</span>
                           )}
                           {p.ownerId && p.ownerId === user?.id && (
-                            <span className="ml-1.5 px-1.5 py-0.5 bg-violet-900/50 text-violet-300 rounded text-[9px] font-medium">yours</span>
+                            <span className="ml-1.5 px-1.5 py-0.5 bg-violet-900/50 text-violet-300 rounded-sm text-[9px] font-medium">yours</span>
                           )}
                         </p>
                       </div>
@@ -1332,7 +1332,7 @@ const DocumentStudioPage: React.FC = () => {
               </div>
 
               {/* Page thumbnails */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              <div className="flex-1 overflow-y-auto p-3 stack-y-2">
                 {pages.map((page, idx) => {
                   const collabsHere = collaborators.filter(c => c.activePage === idx);
                   return (
@@ -1343,9 +1343,9 @@ const DocumentStudioPage: React.FC = () => {
                       <div className="p-2" style={{ aspectRatio: '210/297' }}>
                         <div className="w-full h-full flex gap-0.5">
                           {page.frames.map((f, fi) => (
-                            <div key={f.id} className="flex-1 bg-slate-100 rounded-sm p-0.5">
+                            <div key={f.id} className="flex-1 bg-slate-100 rounded-xs p-0.5">
                               {f.blocks.slice(0, 3).map(b => (
-                                <div key={b.id} className={classNames('mb-0.5 rounded-sm', b.type === 'text' ? 'bg-slate-200 h-1.5' : 'bg-blue-200 h-3')} />
+                                <div key={b.id} className={classNames('mb-0.5 rounded-xs', b.type === 'text' ? 'bg-slate-200 h-1.5' : 'bg-blue-200 h-3')} />
                               ))}
                             </div>
                           ))}
@@ -1369,7 +1369,7 @@ const DocumentStudioPage: React.FC = () => {
                       </div>
                       {/* Collaborator indicators */}
                       {collabsHere.length > 0 && (
-                        <div className="absolute top-1 right-1 flex -space-x-1">
+                        <div className="absolute top-1 right-1 flex -stack-x-1">
                           {collabsHere.map(c => (
                             <div key={c.userId} className="w-4 h-4 rounded-full text-[8px] font-bold text-white flex items-center justify-center border border-white"
                               style={{ backgroundColor: c.color }}>
@@ -1404,7 +1404,7 @@ const DocumentStudioPage: React.FC = () => {
             {/* ── Center: page canvas ───────────────────────────────────────── */}
             <div className="flex-1 overflow-auto bg-slate-800/40 p-8 flex justify-center">
               <div ref={canvasRef}
-                className="page-canvas rounded-sm"
+                className="page-canvas rounded-xs"
                 style={{
                   width: PAGE_CANVAS_WIDTH,
                   minHeight: PAGE_CANVAS_WIDTH * (297 / 210),
@@ -1416,7 +1416,7 @@ const DocumentStudioPage: React.FC = () => {
                 <div className="flex gap-0" style={{ gap: activePage.gapPx }}>
                   {activePage.frames.map(frame => (
                     <div key={frame.id}
-                      className={classNames('frame-column flex-1 rounded-sm relative')}
+                      className={classNames('frame-column flex-1 rounded-xs relative')}
                       onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
                       onDragLeave={e => e.currentTarget.classList.remove('drag-over')}
                       onDrop={e => { e.currentTarget.classList.remove('drag-over'); handleFrameDrop(e, frame.id); }}
@@ -1501,7 +1501,7 @@ const DocumentStudioPage: React.FC = () => {
                                 }
                               }}
                               data-placeholder="Start typing…"
-                              className="p-2 min-h-[40px] max-h-[500px] overflow-y-auto outline-none cursor-text rich-text-block"
+                              className="p-2 min-h-[40px] max-h-[500px] overflow-y-auto outline-hidden cursor-text rich-text-block"
                               style={{
                                 fontFamily: block.fontFamily,
                                 fontSize: block.fontSize,
@@ -1518,7 +1518,7 @@ const DocumentStudioPage: React.FC = () => {
                               <img
                                 src={block.src}
                                 alt={block.alt}
-                                className="w-full rounded-sm"
+                                className="w-full rounded-xs"
                                 style={{ objectFit: block.fit, maxHeight: 400 }}
                               />
                               {selectedBlockId === block.id && (
@@ -1528,7 +1528,7 @@ const DocumentStudioPage: React.FC = () => {
                                   onChange={e => updateBlock(block.id, b => ({ ...b, caption: e.target.value } as ImageBlock))}
                                   onBlur={() => pushUndo()}
                                   placeholder="Add caption…"
-                                  className="w-full mt-1 bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded outline-none"
+                                  className="w-full mt-1 bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded-sm outline-hidden"
                                 />
                               )}
                               {block.caption && selectedBlockId !== block.id && (
@@ -1543,12 +1543,12 @@ const DocumentStudioPage: React.FC = () => {
                       {studioView === 'edit' && (
                         <div className="flex gap-1 mt-2 pt-2 border-t border-dashed border-slate-200">
                           <button onClick={e => { e.stopPropagation(); addTextBlock(frame.id); }}
-                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-sm text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
                             <Type size={11} /> Text
                           </button>
                           <label
                             onMouseDown={e => e.preventDefault()}
-                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors cursor-pointer">
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-sm text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors cursor-pointer">
                             <ImageIcon size={11} /> Image
                             <input type="file" accept="image/*" className="hidden"
                               onChange={e => handleImageUpload(e, frame.id)} />
@@ -1569,7 +1569,7 @@ const DocumentStudioPage: React.FC = () => {
               </div>
 
               {selectedBlock && selectedBlock.type === 'text' ? (
-                <div className="p-3 space-y-3">
+                <div className="p-3 stack-y-3">
                   {/* Font family */}
                   <div>
                     <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Font</label>
@@ -1584,7 +1584,7 @@ const DocumentStudioPage: React.FC = () => {
                           updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontFamily: val } as TextBlock));
                         }
                       }}
-                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
+                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-violet-400">
                       {FONT_FAMILIES.map(f => (
                         <option key={f} value={f} style={{ fontFamily: f }}>{f.split(',')[0]}</option>
                       ))}
@@ -1605,7 +1605,7 @@ const DocumentStudioPage: React.FC = () => {
                           updateBlockWithUndo(selectedBlockId!, b => ({ ...b, fontSize: val } as TextBlock));
                         }
                       }}
-                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400">
+                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-violet-400">
                       {FONT_SIZES.map(s => (
                         <option key={s} value={s}>{s}px</option>
                       ))}
@@ -1694,7 +1694,7 @@ const DocumentStudioPage: React.FC = () => {
                           const val = e.target.value;
                           updateBlockWithUndo(selectedBlockId!, b => ({ ...b, color: val } as TextBlock));
                         }}
-                        className="flex-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400"
+                        className="flex-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-violet-400"
                       />
                     </div>
                   </div>
@@ -1729,7 +1729,7 @@ const DocumentStudioPage: React.FC = () => {
                   </div>
                 </div>
               ) : selectedBlock && selectedBlock.type === 'image' ? (
-                <div className="p-3 space-y-3">
+                <div className="p-3 stack-y-3">
                   {/* Image fit */}
                   <div>
                     <label className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Fit</label>
@@ -1752,7 +1752,7 @@ const DocumentStudioPage: React.FC = () => {
                       value={(selectedBlock as ImageBlock).alt}
                       onChange={e => updateBlockWithUndo(selectedBlockId!, b => ({ ...b, alt: e.target.value } as ImageBlock))}
                       placeholder="Describe this image…"
-                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-400 placeholder-slate-500"
+                      className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-hidden focus:border-violet-400 placeholder-slate-500"
                     />
                   </div>
                 </div>
@@ -1765,7 +1765,7 @@ const DocumentStudioPage: React.FC = () => {
               )}
 
               {/* Page properties */}
-              <div className="mt-auto px-3 py-3 border-t border-slate-700/50 space-y-2">
+              <div className="mt-auto px-3 py-3 border-t border-slate-700/50 stack-y-2">
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Page Settings</p>
                 <div>
                   <label className="text-[10px] text-slate-500">Background</label>
@@ -1780,7 +1780,7 @@ const DocumentStudioPage: React.FC = () => {
                         setPages(updated);
                         broadcastPageUpdate(updated);
                       }}
-                      className="w-6 h-6 rounded border border-slate-700 cursor-pointer bg-transparent"
+                      className="w-6 h-6 rounded-sm border border-slate-700 cursor-pointer bg-transparent"
                     />
                     <span className="text-[10px] text-slate-400">{activePage.backgroundColor}</span>
                   </div>

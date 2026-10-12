@@ -166,7 +166,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
       <React.Fragment key={node.path}>
         {node.isFolder ? (
           <button onClick={() => toggle(node.path)}
-            className="w-full flex items-center gap-1 py-0.5 text-xs text-muted hover:text-body hover:bg-paper rounded"
+            className="w-full flex items-center gap-1 py-0.5 text-xs text-muted hover:text-body hover:bg-paper rounded-sm"
             style={{ paddingLeft: `${8 + depth * 10}px` }}>
             {open.has(node.path) ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
             <span className="text-yellow-700 text-[10px]">📁</span>
@@ -184,7 +184,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
         {node.isFolder && open.has(node.path) && renderTree(node.children, depth + 1)}
       </React.Fragment>
     ));
-  return <div className="space-y-0">{renderTree(buildTree(files))}</div>;
+  return <div className="stack-y-0">{renderTree(buildTree(files))}</div>;
 };
 
 // ─── Table Viewer ─────────────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ const TableViewerPanel: React.FC<{ creds: SupaCreds | null }> = ({ creds }) => {
           {loading && !tables.length && <div className="flex items-center gap-1.5 px-3 py-2"><Loader2 size={11} className="animate-spin text-accent" /><span className="text-[10px] text-muted">Loading…</span></div>}
           {tables.map(t => (
             <button key={t} onClick={() => setSelected(t)}
-              className={`w-full text-left flex items-center gap-1.5 px-3 py-1 text-[11px] rounded transition-colors ${selected === t ? 'bg-accent/10 text-accent font-semibold' : 'text-muted hover:text-body hover:bg-paper'}`}>
+              className={`w-full text-left flex items-center gap-1.5 px-3 py-1 text-[11px] rounded-sm transition-colors ${selected === t ? 'bg-accent/10 text-accent font-semibold' : 'text-muted hover:text-body hover:bg-paper'}`}>
               <Table2 size={10} className="flex-shrink-0" /><span className="truncate">{t}</span>
             </button>
           ))}
@@ -332,16 +332,16 @@ const SqlRunnerPanel: React.FC<{ creds: SupaCreds | null; generatedSql: string }
       <div className="flex items-center justify-between px-3 py-2 border-b border-hair flex-shrink-0 bg-surface">
         <span className="text-[10px] font-bold text-muted uppercase">SQL</span>
         <div className="flex items-center gap-2">
-          <button onClick={handleCopy} className="flex items-center gap-1 text-[10px] text-muted hover:text-ink transition-colors px-1.5 py-0.5 rounded">
+          <button onClick={handleCopy} className="flex items-center gap-1 text-[10px] text-muted hover:text-ink transition-colors px-1.5 py-0.5 rounded-sm">
             {copied ? <><Check size={10} /> Copied</> : <><Copy size={10} /> Copy</>}
           </button>
-          {creds?.url && <button onClick={openDashboard} className="flex items-center gap-1 text-[10px] text-accent hover:text-accent transition-colors px-1.5 py-0.5 rounded"><ExternalLink size={10} /> Open Dashboard</button>}
+          {creds?.url && <button onClick={openDashboard} className="flex items-center gap-1 text-[10px] text-accent hover:text-accent transition-colors px-1.5 py-0.5 rounded-sm"><ExternalLink size={10} /> Open Dashboard</button>}
         </div>
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden p-3 space-y-2">
+      <div className="flex-1 flex flex-col overflow-hidden p-3 stack-y-2">
         <textarea value={sql} onChange={e => setSql(e.target.value)} rows={8}
           placeholder="-- SQL will appear here as the AI generates it.\n-- Copy and paste into your Supabase Dashboard SQL Editor."
-          className="w-full bg-card border border-hair rounded-lg px-3 py-2 text-xs text-body font-mono resize-none outline-none focus:border-accent leading-relaxed flex-shrink-0" />
+          className="w-full bg-card border border-hair rounded-lg px-3 py-2 text-xs text-body font-mono resize-none outline-hidden focus:border-accent leading-relaxed flex-shrink-0" />
         <div className="flex gap-2">
           <button onClick={handleRunSelect} disabled={loading || !sql.trim()}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-ink rounded-lg disabled:opacity-40 transition-colors">
@@ -808,13 +808,13 @@ Respond ONLY in this JSON format:
 
       {/* ── StackBlitz modal ──────────────────────────────────────────── */}
       {showSBModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-card border border-hair rounded-2xl w-[460px] shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-hair flex justify-between items-center">
               <h2 className="text-base font-bold text-ink flex items-center gap-2"><ExternalLink size={16} className="text-accent" /> Open in StackBlitz</h2>
               <button onClick={() => setShowSBModal(false)} className="p-1 text-muted hover:text-ink"><X size={16} /></button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-5 stack-y-3">
               <p className="text-sm text-body">Your project will open in StackBlitz for live preview. Note: Supabase integration requires adding your env variables there too.</p>
               <div className="p-3 bg-yellow-100 border border-yellow-200 rounded-lg text-xs text-amber-300">⚠️ Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in StackBlitz settings for the DB connection to work.</div>
             </div>
@@ -839,7 +839,7 @@ Respond ONLY in this JSON format:
             {view !== 'overview' && (
               <>
                 <div className="w-px h-5 bg-hair" />
-                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-none px-1 py-0.5 w-44"
+                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-hidden px-1 py-0.5 w-44"
                   value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="App name…" />
               </>
             )}
@@ -884,7 +884,7 @@ Respond ONLY in this JSON format:
                   {downloading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} .zip
                 </button>
                 <button onClick={handleEvaluate} disabled={isEvaluating || !hasSubstantialCode}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow disabled:opacity-50 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow-sm disabled:opacity-50 transition-colors">
                   {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
                   {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
                 </button>
@@ -901,14 +901,14 @@ Respond ONLY in this JSON format:
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Supabase Project URL</label>
                 <input type="text" value={creds.url} onChange={e => updateCreds({ ...creds, url: e.target.value })}
                   placeholder="https://xxxx.supabase.co"
-                  className="w-full bg-paper border border-hair rounded-lg px-3 py-1.5 text-xs text-ink placeholder-gray-600 outline-none focus:border-accent font-mono" />
+                  className="w-full bg-paper border border-hair rounded-lg px-3 py-1.5 text-xs text-ink placeholder-gray-600 outline-hidden focus:border-accent font-mono" />
               </div>
               <div className="flex-1 min-w-[220px]">
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Anon Key</label>
                 <div className="relative">
                   <input type={showKey ? 'text' : 'password'} value={creds.anonKey} onChange={e => updateCreds({ ...creds, anonKey: e.target.value })}
                     placeholder="eyJhbGciOiJ…"
-                    className="w-full bg-paper border border-hair rounded-lg px-3 py-1.5 pr-8 text-xs text-ink placeholder-gray-600 outline-none focus:border-accent font-mono" />
+                    className="w-full bg-paper border border-hair rounded-lg px-3 py-1.5 pr-8 text-xs text-ink placeholder-gray-600 outline-hidden focus:border-accent font-mono" />
                   <button onClick={() => setShowKey(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-body text-[10px]">
                     {showKey ? <EyeOff size={12} /> : <Eye size={12} />}
                   </button>
@@ -981,7 +981,7 @@ Respond ONLY in this JSON format:
             {/* Rules */}
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-muted uppercase mb-3">📋 Certification Requirements</p>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {[
                   { icon: '✅', text: lvl <= 1 ? 'Create a free Supabase account and a new project.' : 'Create a Supabase project and connect it using your URL and Anon Key in the Credentials panel.' },
                   { icon: '✅', text: lvl <= 1 ? 'Design and create at least one database table.' : 'Design a meaningful database schema with at least one table. SQL for table creation will appear in the SQL tab.' },
@@ -1004,7 +1004,7 @@ Respond ONLY in this JSON format:
               {assessments.length === 0 ? (
                 <p className="text-sm text-muted italic">Loading criteria…</p>
               ) : (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const sl = scoreLabel(sc?.score ?? null);
@@ -1069,7 +1069,7 @@ Respond ONLY in this JSON format:
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
                 {genError && <div className="p-2.5 bg-red-100 border border-red-200 rounded-lg flex gap-2"><AlertCircle size={12} className="flex-shrink-0 text-red-700 mt-0.5" /><p className="text-xs text-red-300">{genError}</p></div>}
                 {evalError && <div className="p-2.5 bg-red-100 border border-red-200 rounded-lg flex gap-2"><AlertCircle size={12} className="flex-shrink-0 text-red-700 mt-0.5" /><p className="text-xs text-red-300">{evalError}</p></div>}
 
@@ -1087,14 +1087,14 @@ Respond ONLY in this JSON format:
                       ? 'e.g. Create a table to store student names and scores. Show them in a list.'
                       : 'e.g. Create a posts table with id, user_id, title, content, created_at. Add RLS so users can only see their own posts. Show posts in a React component with an insert form.'}
                     rows={7}
-                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-gray-600 resize-y outline-none focus:border-accent transition-colors leading-relaxed" />
+                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-gray-600 resize-y outline-hidden focus:border-accent transition-colors leading-relaxed" />
                   <p className="text-[9px] text-muted mt-0.5">Ctrl+Enter to generate · SQL appears in SQL tab · Code appears in Code tab</p>
                 </div>
 
                 {/* Criteria accordion */}
                 <div>
                   <p className="text-[10px] font-bold text-muted uppercase mb-2 flex items-center gap-1.5"><ClipboardList size={11} /> Rubric Criteria</p>
-                  <div className="space-y-1.5">
+                  <div className="stack-y-1.5">
                     {assessments.map(a => {
                       const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                       const isOpen = expandedCrit === a.certification_id;
@@ -1111,9 +1111,9 @@ Respond ONLY in this JSON format:
                             {isOpen ? <ChevronDown size={12} className="text-muted flex-shrink-0" /> : <ChevronRight size={12} className="text-muted flex-shrink-0" />}
                           </button>
                           {isOpen && (
-                            <div className="px-3 py-2.5 bg-paper border-t border-hair space-y-2">
+                            <div className="px-3 py-2.5 bg-paper border-t border-hair stack-y-2">
                               <p className="text-[10px] text-muted leading-relaxed">{a.description}</p>
-                              <div className="space-y-1">
+                              <div className="stack-y-1">
                                 {[
                                   { level: 0, text: a.certification_level0_metric, color: 'text-red-700' },
                                   { level: 1, text: a.certification_level1_metric, color: 'text-yellow-700' },
@@ -1165,7 +1165,7 @@ Respond ONLY in this JSON format:
                     <FileCode size={12} className="text-accent" />
                     <span className="text-xs text-muted truncate max-w-36">{activeFilePath}</span>
                     <button onClick={() => navigator.clipboard.writeText(activeFile?.content || '').then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}
-                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-muted hover:text-ink hover:bg-hair rounded">
+                      className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-muted hover:text-ink hover:bg-hair rounded-sm">
                       {copied ? <><Check size={11} /> Copied</> : <><Copy size={11} /> Copy</>}
                     </button>
                   </div>
@@ -1211,7 +1211,7 @@ Respond ONLY in this JSON format:
               : 'Submit your project for evaluation to see results.')}
 
             {!anyScored ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <Database size={48} className="text-muted mx-auto" />
                 <p className="text-muted">{lvl <= 1 ? 'You have not been evaluated yet. Go to Build and create your app first.' : 'No evaluation data yet. Build your app and submit for evaluation.'}</p>
                 <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-ink font-bold rounded-xl">
@@ -1219,7 +1219,7 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 <div className="flex items-center gap-5 p-5 bg-surface border border-hair rounded-2xl">
                   <Trophy size={40} className="text-yellow-700 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -1237,7 +1237,7 @@ Respond ONLY in this JSON format:
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const sl = scoreLabel(sc.score);
@@ -1245,7 +1245,7 @@ Respond ONLY in this JSON format:
                     return (
                       <div key={sc.assessment_name} className={`rounded-xl border overflow-hidden ${sl.border} ${sl.bg}`}>
                         <button onClick={() => setExpandedCrit(isOpen ? null : sc.assessment_name)}
-                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors">
+                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/2 transition-colors">
                           <ScoreRing score={sc.score} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-ink">{sc.assessment_name}</p>
@@ -1260,12 +1260,12 @@ Respond ONLY in this JSON format:
                           {isOpen ? <ChevronDown size={14} className="text-muted flex-shrink-0" /> : <ChevronRight size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-3">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 stack-y-3">
                             {sc.evidence && <div><p className="text-[10px] font-bold text-muted uppercase mb-1">Evidence</p><p className="text-xs text-body leading-relaxed">{sc.evidence}</p></div>}
                             {assessment && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Rubric</p>
-                                <div className="space-y-1">
+                                <div className="stack-y-1">
                                   {[
                                     { level: 0, text: assessment.certification_level0_metric, color: 'text-red-700' },
                                     { level: 1, text: assessment.certification_level1_metric, color: 'text-yellow-700' },
@@ -1315,7 +1315,7 @@ Respond ONLY in this JSON format:
         {view === 'certificate' && (
           <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
             {!allProficient ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <XCircle size={48} className="text-yellow-700 mx-auto" />
                 <h2 className="text-lg font-bold text-ink">{lvl <= 1 ? 'Not ready yet.' : 'Certificate Not Yet Available'}</h2>
                 <p className="text-muted text-sm max-w-sm mx-auto">
@@ -1326,13 +1326,13 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 {renderVoiceBar(lvl <= 1
                   ? 'Congratulations! You passed the Full-Stack Development Certification.'
                   : 'Congratulations on passing the Full-Stack Development Certification.')}
 
                 {/* Preview */}
-                <div className="p-6 bg-surface border border-hair rounded-2xl text-center space-y-4 relative overflow-hidden">
+                <div className="p-6 bg-surface border border-hair rounded-2xl text-center stack-y-4 relative overflow-hidden">
                   <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #14b8a6 0, #14b8a6 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }} />
                   <div className="relative">
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-yellow-700" /></div>
@@ -1359,12 +1359,12 @@ Respond ONLY in this JSON format:
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div>
                     <label className="text-xs font-bold text-muted uppercase block mb-1.5">Full name for the certificate:</label>
                     <input type="text" value={certName} onChange={e => setCertName(e.target.value)}
                       placeholder="e.g. Amara Okoye"
-                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-gray-600 text-sm outline-none focus:border-accent" />
+                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-gray-600 text-sm outline-hidden focus:border-accent" />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 hover:scale-[1.01] transition-all">

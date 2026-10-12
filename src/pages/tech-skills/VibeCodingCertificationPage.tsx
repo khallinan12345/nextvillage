@@ -61,10 +61,10 @@ const markdownComponents = {
     <em className="italic text-muted">{children}</em>
   ),
   ul: ({ children }: any) => (
-    <ul className="list-disc list-inside space-y-1 mb-2 text-body ml-2 text-xs">{children}</ul>
+    <ul className="list-disc list-inside stack-y-1 mb-2 text-body ml-2 text-xs">{children}</ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="list-decimal list-inside space-y-1 mb-2 text-body ml-2 text-xs">{children}</ol>
+    <ol className="list-decimal list-inside stack-y-1 mb-2 text-body ml-2 text-xs">{children}</ol>
   ),
   li: ({ children }: any) => (
     <li className="leading-relaxed">{children}</li>
@@ -80,10 +80,10 @@ const markdownComponents = {
     </a>
   ),
   code: ({ children }: any) => (
-    <code className="bg-paper text-accent px-1 py-0.5 rounded text-[10px] font-mono border border-hair">{children}</code>
+    <code className="bg-paper text-accent px-1 py-0.5 rounded-sm text-[10px] font-mono border border-hair">{children}</code>
   ),
   pre: ({ children }: any) => (
-    <pre className="bg-surface text-ink p-2 rounded text-[10px] font-mono overflow-x-auto mb-2 border border-hair">{children}</pre>
+    <pre className="bg-surface text-ink p-2 rounded-sm text-[10px] font-mono overflow-x-auto mb-2 border border-hair">{children}</pre>
   ),
 };
 
@@ -642,7 +642,7 @@ Respond ONLY in this JSON format:
             {/* How it works */}
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-muted uppercase mb-3">🗺️ How the Certification Works</p>
-              <div className="space-y-2.5">
+              <div className="stack-y-2.5">
                 {[
                   { step: '1', icon: '✍️', label: 'Write Your Instructions', desc: lvl <= 1 ? 'Describe what you want the code to do in plain English.' : 'Write clear, specific instructions describing the program you want to build.' },
                   { step: '2', icon: '🔍', label: 'Get a Critique', desc: lvl <= 1 ? 'AI will score your instructions and tell you how to improve them.' : 'AI evaluates your instructions against a rubric and gives targeted improvement suggestions.' },
@@ -667,7 +667,7 @@ Respond ONLY in this JSON format:
               {assessments.length === 0 ? (
                 <p className="text-sm text-muted italic">Loading criteria…</p>
               ) : (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const sl = scoreLabel(sc?.score ?? null);
@@ -757,7 +757,7 @@ Respond ONLY in this JSON format:
                   <div className="flex items-center gap-2">
                     {isWebViewable && certCode && (
                       <button onClick={handleOpenAsWebPage}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-card border border-hair hover:border-accent/40 text-ink text-xs font-semibold rounded transition-colors">
+                        className="flex items-center gap-1 px-2.5 py-1 bg-card border border-hair hover:border-accent/40 text-ink text-xs font-semibold rounded-sm transition-colors">
                         <Globe size={11} /> Open as Web Page
                       </button>
                     )}
@@ -808,7 +808,7 @@ Respond ONLY in this JSON format:
                   <p className="text-[10px] text-muted">Ask anything to improve your prompt or fix your code</p>
                 </div>
 
-                <div ref={coachRef} className="flex-1 overflow-y-auto p-3 space-y-3">
+                <div ref={coachRef} className="flex-1 overflow-y-auto p-3 stack-y-3">
                   {coachHistory.map((msg, i) => (
                     <div key={i} className={`flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                       {msg.role === 'assistant' && (
@@ -852,7 +852,7 @@ Respond ONLY in this JSON format:
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCoachSubmit(); } }}
                     placeholder="Ask the coach…"
                     disabled={coachSubmitting}
-                    className="flex-1 bg-paper border border-hair rounded-full px-3 py-1.5 text-xs text-ink placeholder-muted outline-none focus:border-accent transition-colors"
+                    className="flex-1 bg-paper border border-hair rounded-full px-3 py-1.5 text-xs text-ink placeholder-muted outline-hidden focus:border-accent transition-colors"
                   />
                   <button onClick={handleCoachSubmit} disabled={!coachInput.trim() || coachSubmitting}
                     className="flex items-center gap-1 px-3 py-1.5 bg-accent hover:bg-accent/90 disabled:opacity-40 text-white text-xs font-semibold rounded-full transition-colors">
@@ -874,7 +874,7 @@ Respond ONLY in this JSON format:
               : 'Submit your project for evaluation to see your results here.')}
 
             {!anyScored ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <ClipboardList size={48} className="text-muted mx-auto" />
                 <p className="text-muted">{lvl <= 1
                   ? 'You have not been evaluated yet. Go to Build and submit your code.'
@@ -884,7 +884,7 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 <div className="flex items-center gap-5 p-5 bg-surface border border-hair rounded-2xl">
                   <Trophy size={40} className="text-accent flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -904,7 +904,7 @@ Respond ONLY in this JSON format:
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const sl = scoreLabel(sc.score);
@@ -912,7 +912,7 @@ Respond ONLY in this JSON format:
                     return (
                       <div key={sc.assessment_name} className={`rounded-xl border overflow-hidden ${sl.border} ${sl.bg}`}>
                         <button onClick={() => setExpandedCrit(isOpen ? null : sc.assessment_name)}
-                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors">
+                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/2 transition-colors">
                           <ScoreRing score={sc.score} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-ink">{sc.assessment_name}</p>
@@ -927,7 +927,7 @@ Respond ONLY in this JSON format:
                           {isOpen ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-2">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 stack-y-2">
                             {sc.evidence && (
                               <ReactMarkdown components={markdownComponents}>{sc.evidence}</ReactMarkdown>
                             )}
@@ -970,7 +970,7 @@ Respond ONLY in this JSON format:
             CERTIFICATE
         ═══════════════════════════════════════════════════════════════ */}
         {view === 'certificate' && (
-          <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full space-y-5">
+          <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full stack-y-5">
             {renderVoiceBar('Enter your name to generate your Vibe Coding Certificate.')}
 
             {!allProficient && (
@@ -984,7 +984,7 @@ Respond ONLY in this JSON format:
 
             {allProficient && (
               <>
-                <div className="p-6 bg-surface border border-hair rounded-2xl text-center space-y-4">
+                <div className="p-6 bg-surface border border-hair rounded-2xl text-center stack-y-4">
                   <Trophy size={48} className="text-accent mx-auto" />
                   <div>
                     <h2 className="text-xl font-bold text-ink">🎓 Certification Achieved!</h2>
@@ -1007,7 +1007,7 @@ Respond ONLY in this JSON format:
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div>
                     <label className="block text-sm font-semibold text-ink mb-1.5">
                       {lvl <= 1 ? 'Your full name (for the certificate):' : 'Full name as it should appear on the certificate:'}
@@ -1015,7 +1015,7 @@ Respond ONLY in this JSON format:
                     <input
                       type="text" value={certName} onChange={e => setCertName(e.target.value)}
                       placeholder="e.g. Amara Johnson"
-                      className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-none focus:border-accent text-base"
+                      className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-hidden focus:border-accent text-base"
                     />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}

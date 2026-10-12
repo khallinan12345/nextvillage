@@ -491,7 +491,7 @@ const LEVEL_LABELS: Record<number, { text: string; color: string; bg: string }> 
 
 const InfoTooltip: React.FC<{ id: string; text: string; open: boolean; onToggle: () => void }> = ({ text, open, onToggle }) => (
   <div className="relative inline-block">
-    <button onClick={onToggle} className="ml-1.5 text-amber-600 hover:text-amber-800 focus:outline-none" aria-label="More info">
+    <button onClick={onToggle} className="ml-1.5 text-amber-600 hover:text-amber-800 focus:outline-hidden" aria-label="More info">
       <Lightbulb size={13}/>
     </button>
     {open && (
@@ -545,11 +545,11 @@ const ProbePanel: React.FC<ProbePanelProps> = ({ field, consultType, messages, l
           <span className="text-base">💬</span>
           <span>Read each question aloud to the entrepreneur. Type or speak their answer, then tap Send. The AI will keep asking until this topic is fully understood.</span>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3">
           {messages.map(msg => (
             <div key={msg.id} className={classNames('flex items-start gap-2', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
               {msg.role === 'assistant' && (
-                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${ct.colour} flex items-center justify-center text-xs flex-shrink-0`}>{ct.emoji}</div>
+                <div className={`w-7 h-7 rounded-lg bg-linear-to-br ${ct.colour} flex items-center justify-center text-xs flex-shrink-0`}>{ct.emoji}</div>
               )}
               <div className={classNames('max-w-[85%] rounded-2xl px-3 py-2.5 text-sm leading-relaxed',
                 msg.role === 'user' ? 'bg-amber-600 text-white rounded-tr-sm' : 'bg-amber-50 text-amber-900 rounded-tl-sm border border-amber-100')}>
@@ -561,7 +561,7 @@ const ProbePanel: React.FC<ProbePanelProps> = ({ field, consultType, messages, l
           ))}
           {loading && (
             <div className="flex items-start gap-2">
-              <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${ct.colour} flex items-center justify-center text-xs`}>{ct.emoji}</div>
+              <div className={`w-7 h-7 rounded-lg bg-linear-to-br ${ct.colour} flex items-center justify-center text-xs`}>{ct.emoji}</div>
               <div className="bg-amber-50 rounded-2xl rounded-tl-sm px-3 py-2.5">
                 <div className="flex gap-1 items-center h-4">{[0,150,300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: `${d}ms` }}/>)}</div>
               </div>
@@ -579,7 +579,7 @@ const ProbePanel: React.FC<ProbePanelProps> = ({ field, consultType, messages, l
           <div className="flex gap-2">
             <input value={input} onChange={e => onInputChange(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onSend(); } }}
               placeholder="Type entrepreneur's answer…" disabled={loading}
-              className="flex-1 px-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"/>
+              className="flex-1 px-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 disabled:opacity-50"/>
             <button onClick={onSend} disabled={!input.trim() || loading} className="px-3 py-2.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-40"><Send size={15}/></button>
             <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-orange-600 text-white text-sm font-bold hover:bg-orange-700 whitespace-nowrap">Move On ✓</button>
           </div>
@@ -1369,11 +1369,11 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           <button onClick={() => setMode('select')} className="flex items-center gap-2 text-amber-200 hover:text-white mb-6 transition-colors"><ArrowLeft size={18}/> Back</button>
           <h2 className="text-3xl font-bold text-white mb-2">Choose a Learning Topic</h2>
           <p className="text-amber-200 mb-6">Each topic is a focused session with an expert AI tutor grounded in Nigerian business realities.</p>
-          <div className="space-y-3">
+          <div className="stack-y-3">
             {LEARNING_TOPICS.map(t => (
               <button key={t.id} onClick={() => { setTopic(t); setMessages([]); setMode('learn-chat'); }}
-                className="w-full text-left bg-card border border-hair rounded-2xl p-5 shadow hover:shadow-xl hover:scale-[1.01] transition-all border-2 border-transparent hover:border-amber-400 flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${t.colour} flex items-center justify-center text-white flex-shrink-0`}>{t.icon}</div>
+                className="w-full text-left bg-card border border-hair rounded-2xl p-5 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all border-2 border-transparent hover:border-amber-400 flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${t.colour} flex items-center justify-center text-white flex-shrink-0`}>{t.icon}</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-xl font-bold text-gray-900">{t.title}</h3>
@@ -1423,7 +1423,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   📴 Offline
                 </button>
                 <button onClick={() => { resetAddClient(); setMode('add-client'); }}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold text-sm hover:opacity-90">
+                  className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold text-sm hover:opacity-90">
                   <Plus size={16}/> Add Client
                 </button>
               </div>
@@ -1448,7 +1448,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
           {/* ── Challenge Banner — available (not enrolled) ── */}
           {!challengeLoading && availableChallenge && !activeChallenge && (
-            <div className="bg-amber-900/80 backdrop-blur-sm border border-amber-400/50 rounded-2xl p-5 mb-4 shadow-lg">
+            <div className="bg-amber-900/80 backdrop-blur-xs border border-amber-400/50 rounded-2xl p-5 mb-4 shadow-lg">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-400/20 flex items-center justify-center flex-shrink-0">
                   <Award size={20} className="text-amber-300" />
@@ -1477,7 +1477,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
           {/* ── Challenge Banner — enrolled ── */}
           {activeChallenge && (
-            <div className="bg-orange-900/80 backdrop-blur-sm border border-orange-400/50 rounded-2xl p-5 mb-4 shadow-lg">
+            <div className="bg-orange-900/80 backdrop-blur-xs border border-orange-400/50 rounded-2xl p-5 mb-4 shadow-lg">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-orange-400/20 flex items-center justify-center flex-shrink-0">
                   <Award size={20} className="text-orange-300" />
@@ -1550,25 +1550,25 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                         <X size={20} />
                       </button>
                     </div>
-                    <div className="space-y-4">
+                    <div className="stack-y-4">
                       <div>
                         <label className="block text-sm font-bold text-gray-800 mb-1.5">{activeChallenge.return_question_1}</label>
                         <textarea value={challengeReflect1} onChange={e => setChallengeReflect1(e.target.value)} rows={3}
                           placeholder="Describe what you did…"
-                          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed"/>
+                          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed"/>
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-gray-800 mb-1.5">{activeChallenge.return_question_2}</label>
                         <textarea value={challengeReflect2} onChange={e => setChallengeReflect2(e.target.value)} rows={3}
                           placeholder="What happened…"
-                          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed"/>
+                          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed"/>
                       </div>
                       {activeChallenge.return_question_3 && (
                         <div>
                           <label className="block text-sm font-bold text-gray-800 mb-1.5">{activeChallenge.return_question_3}</label>
                           <textarea value={challengeReflect3} onChange={e => setChallengeReflect3(e.target.value)} rows={2}
                             placeholder="Additional details…"
-                            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed"/>
+                            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed"/>
                         </div>
                       )}
                       <EvidencePicker sourceType="challenge_enrollment" sourceId={activeChallenge.enrollmentId} accent="amber" />
@@ -1603,7 +1603,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-5 stack-y-4">
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                     <p className="text-sm font-bold text-amber-800 mb-2">📴 Use the offline advisor now</p>
                     <p className="text-sm text-amber-700 mb-3 leading-relaxed">
@@ -1613,7 +1613,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                       href="/offline-entrepreneurship-advisor.html"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-linear-to-r from-amber-600 to-orange-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"
                     >
                       <span>📴</span> Open Offline Advisor
                     </a>
@@ -1621,7 +1621,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
                   <div className="border border-gray-200 rounded-xl p-4">
                     <p className="text-sm font-bold text-gray-800 mb-3">📱 Install on your phone (works without internet)</p>
-                    <div className="space-y-3">
+                    <div className="stack-y-3">
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
                         <div>
@@ -1658,7 +1658,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
 
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                     <p className="text-sm font-bold text-amber-800 mb-2">💡 Tips for field use</p>
-                    <ul className="space-y-1.5 text-xs text-amber-700">
+                    <ul className="stack-y-1.5 text-xs text-amber-700">
                       <li>• Complete required fields — especially business idea/problem and current financial situation</li>
                       <li>• Use the 💡 tip buttons — they explain what each field is really asking for</li>
                       <li>• <strong>Cash crisis</strong> cases are flagged as urgent — the advisor will detect signs of financial distress</li>
@@ -1686,12 +1686,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <h2 className="text-lg font-bold text-gray-800 mb-2">No clients registered yet</h2>
               <p className="text-sm text-gray-500 mb-5">Add your first entrepreneur client to start your casebook.</p>
               <button onClick={() => { resetAddClient(); setMode('add-client'); }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:opacity-90">
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:opacity-90">
                 <Plus size={16}/> Register First Client
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="stack-y-3">
               {clients.map(client => (
                 <button key={client.id}
                   onClick={() => { setSelectedClient(client); loadConsultations(client.id); setMode('client-detail'); }}
@@ -1741,16 +1741,16 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <button onClick={() => setMode('casebook-dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div><h2 className="text-xl font-bold text-gray-900">Register Client</h2><p className="text-sm text-gray-500">Add entrepreneur to your casebook</p></div>
             </div>
-            <div className="space-y-4">
+            <div className="stack-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name *</label>
                 <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Mama Fatima Okafor"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-base"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-base"/>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Village *</label>
                 <select value={newVillage} onChange={e => setNewVillage(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-base bg-white">
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-base bg-white">
                   <option value="">Select village…</option>
                   {VILLAGES.map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
@@ -1758,12 +1758,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Business Type *</label>
                 <input value={newBusinessType} onChange={e => setNewBusinessType(e.target.value)} placeholder="e.g. Event food catering, phone repair, garri processing, fashion design"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-base"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-base"/>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Business Stage *</label>
                 <select value={newBusinessStage} onChange={e => setNewBusinessStage(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-base bg-white">
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-base bg-white">
                   <option value="">Select stage…</option>
                   {BUSINESS_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -1771,17 +1771,17 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Phone (optional)</label>
                 <input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+234 801 234 5678"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-base"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-base"/>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Notes (optional)</label>
                 <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} rows={2}
                   placeholder="Capital available, past issues, special context…"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm resize-none"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-sm resize-none"/>
               </div>
               <button onClick={saveClient} disabled={!newName.trim() || !newVillage || !newBusinessType.trim() || !newBusinessStage || savingClient}
                 className={classNames('w-full py-3.5 rounded-xl font-bold text-white text-base transition-opacity',
-                  newName.trim() && newVillage && newBusinessType.trim() && newBusinessStage && !savingClient ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
+                  newName.trim() && newVillage && newBusinessType.trim() && newBusinessStage && !savingClient ? 'bg-linear-to-r from-amber-600 to-orange-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
                 {savingClient ? <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin"/>Saving…</span> : 'Register Client'}
               </button>
             </div>
@@ -1817,7 +1817,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   {editingEnterpriseName ? (
                     <div className="flex items-center gap-2">
                       <input value={enterpriseName} onChange={e => setEnterpriseName(e.target.value)} placeholder="Name your enterprise…" autoFocus
-                        className="px-2 py-1 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400"/>
+                        className="px-2 py-1 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"/>
                       <button onClick={saveEnterpriseName} disabled={savingEnterpriseName} className="text-emerald-300 hover:text-white text-xs font-bold">Save</button>
                     </div>
                   ) : (
@@ -1829,7 +1829,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 </div>
               </div>
               <button onClick={() => { resetEnterpriseForm(); setMode('enterprise-add'); }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-xl font-semibold text-sm hover:opacity-90">
+                className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-emerald-600 to-teal-700 text-white rounded-xl font-semibold text-sm hover:opacity-90">
                 <Plus size={16}/> Log a Sale
               </button>
             </div>
@@ -1905,27 +1905,27 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <button onClick={() => setMode('enterprise-dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
               <div><h2 className="text-xl font-bold text-gray-900">Log a Sale</h2><p className="text-sm text-gray-500">What did you sell this week?</p></div>
             </div>
-            <div className="space-y-4">
+            <div className="stack-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">What did you sell? *</label>
                 <input value={neItemOrService} onChange={e => setNeItemOrService(e.target.value)} placeholder="e.g. 20 plates of jollof rice, phone screen repair"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-400 text-base"/>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Who bought it? (optional)</label>
                 <input value={neBuyer} onChange={e => setNeBuyer(e.target.value)} placeholder="e.g. Church event, neighbour, walk-in customer"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-400 text-base"/>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">For how much? (optional)</label>
                   <input type="number" value={neAmount} onChange={e => setNeAmount(e.target.value)} placeholder="e.g. 15000"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-400 text-base"/>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Unit</label>
                   <select value={neUnit} onChange={e => setNeUnit(e.target.value as 'NGN' | 'other')}
-                    className="px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base bg-white">
+                    className="px-3 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-400 text-base bg-white">
                     <option value="NGN">₦ (Naira)</option>
                     <option value="other">Other</option>
                   </select>
@@ -1934,17 +1934,17 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Date</label>
                 <input type="date" value={neDate} onChange={e => setNeDate(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-400 text-base"/>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Notes (optional)</label>
                 <textarea value={neNotes} onChange={e => setNeNotes(e.target.value)} rows={2}
                   placeholder="Anything worth remembering about this sale…"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm resize-none"/>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-400 text-sm resize-none"/>
               </div>
               <button onClick={saveEnterpriseEntry} disabled={!neItemOrService.trim() || savingEntry}
                 className={classNames('w-full py-3.5 rounded-xl font-bold text-white text-base transition-opacity',
-                  neItemOrService.trim() && !savingEntry ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
+                  neItemOrService.trim() && !savingEntry ? 'bg-linear-to-r from-emerald-600 to-teal-700 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
                 {savingEntry ? <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin"/>Saving…</span> : 'Save Sale'}
               </button>
             </div>
@@ -1962,7 +1962,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     const client = selectedClient;
     return (
       <AppLayout>
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 stack-y-4">
           <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('casebook-dashboard')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
@@ -1981,7 +1981,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             <div className="grid grid-cols-1 gap-2">
               {(Object.entries(CONSULT_TYPES) as [ConsultationType, typeof CONSULT_TYPES[ConsultationType]][]).map(([key, ct]) => (
                 <button key={key} onClick={() => startConsultation(client, key)}
-                  className={classNames('flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-white text-sm bg-gradient-to-r hover:opacity-90 transition-opacity text-left', ct.colour)}>
+                  className={classNames('flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-white text-sm bg-linear-to-r hover:opacity-90 transition-opacity text-left', ct.colour)}>
                   <span className="text-xl flex-shrink-0">{ct.emoji}</span>
                   <div>
                     <div>{ct.label}</div>
@@ -2002,7 +2002,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             ) : consultations.length === 0 ? (
               <p className="text-sm text-gray-400 italic text-center py-4">No consultations yet.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="stack-y-3">
                 {consultations.map(c => {
                   const ct = CONSULT_TYPES[c.consultation_type];
                   return (
@@ -2056,11 +2056,11 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           <ProbePanel field={probeField} consultType={consultationType} messages={probeMessages} loading={probeLoading} done={probeDone}
             input={probeInput} onInputChange={setProbeInput} onSend={sendProbeMessage} onClose={closeProbe} chatEndRef={probeChatEndRef}/>
         )}
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 stack-y-4">
           <div className="bg-card border border-hair rounded-2xl shadow-md p-4">
             <div className="flex items-center gap-3">
               <button onClick={() => setMode('client-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ct.colour} flex items-center justify-center text-xl`}>{ct.emoji}</div>
+              <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${ct.colour} flex items-center justify-center text-xl`}>{ct.emoji}</div>
               <div>
                 <h2 className="text-base font-bold text-gray-900">{ct.label}</h2>
                 <p className="text-xs text-gray-500">{selectedClient.client_name} · {selectedClient.village} · {selectedClient.business_type}</p>
@@ -2089,7 +2089,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-2"><FileText size={15} className="text-amber-600"/> Intake — {ct.label}</h3>
             <p className="text-xs text-gray-400 mb-4 flex items-center gap-1"><span className="text-amber-600 font-bold">🔍 Probe</span> — tap after a field to explore it deeper</p>
-            <div className="space-y-4">
+            <div className="stack-y-4">
               {fields.map(field => (
                 <div key={field.key}>
                   <label className="text-xs font-semibold text-gray-600 flex items-center mb-1">
@@ -2099,7 +2099,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   <div className="flex gap-2">
                     <textarea value={intake[field.key] || ''} onChange={e => setIntake(prev => ({ ...prev, [field.key]: e.target.value }))}
                       rows={2} placeholder={field.placeholder}
-                      className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"/>
+                      className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl text-sm resize-none focus:outline-hidden focus:ring-2 focus:ring-amber-400"/>
                     <button onClick={() => openProbe(field)}
                       className={classNames('px-3 py-2 rounded-xl text-xs font-bold border transition-colors flex-shrink-0 self-start mt-0.5',
                         probeField?.key === field.key ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100')}>
@@ -2114,7 +2114,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
           {!adviceResult ? (
             <button onClick={runAdvice} disabled={isGeneratingAdvice || !intakeComplete}
               className={classNames('w-full py-4 rounded-xl font-bold text-white text-base transition-opacity flex items-center justify-center gap-2',
-                !isGeneratingAdvice && intakeComplete ? `bg-gradient-to-r ${ct.colour} hover:opacity-90` : 'bg-gray-300 cursor-not-allowed')}>
+                !isGeneratingAdvice && intakeComplete ? `bg-linear-to-r ${ct.colour} hover:opacity-90` : 'bg-gray-300 cursor-not-allowed')}>
               {isGeneratingAdvice ? <><Loader2 size={18} className="animate-spin"/>Generating AI Advice…</> : <><Briefcase size={18}/>Generate AI Advice{!intakeComplete && ' (fill required fields first)'}</>}
             </button>
           ) : (
@@ -2128,12 +2128,12 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 <button onClick={() => { setAdviceResult(null); runAdvice(); }} className="text-xs text-amber-600 hover:underline flex items-center gap-1"><RefreshCwIcon size={12}/> Re-run</button>
               </div>
               <div className="text-sm text-gray-800 bg-gray-50 rounded-xl px-4 py-3 max-h-72 overflow-y-auto"><MarkdownText text={adviceResult.text}/></div>
-              <div className="mt-4 space-y-3 border-t pt-4">
+              <div className="mt-4 stack-y-3 border-t pt-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">What did you advise / do on the ground?</label>
                   <textarea value={advisorNotes} onChange={e => setAdvisorNotes(e.target.value)} rows={2}
                     placeholder="e.g. Showed how to calculate price properly. Helped set up WhatsApp Business catalogue. Explained Ajo savings."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"/>
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-hidden focus:ring-2 focus:ring-amber-400"/>
                 </div>
                 <div className="flex items-center gap-3">
                   <input type="checkbox" id="followup" checked={followUpNeeded} onChange={e => setFollowUpNeeded(e.target.checked)} className="w-4 h-4 accent-amber-600"/>
@@ -2143,17 +2143,17 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Follow-up date</label>
-                      <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"/>
+                      <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-amber-400"/>
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">What to check</label>
                       <input value={followUpNotes} onChange={e => setFollowUpNotes(e.target.value)} placeholder="e.g. Check pricing is correct, did they open WhatsApp Business?"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"/>
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-amber-400"/>
                     </div>
                   </div>
                 )}
                 {consultSaved ? (
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     <div className="flex items-center gap-2 text-green-700 font-semibold text-sm bg-green-50 rounded-xl px-4 py-3">
                       <CheckCircle size={16}/> Case saved to {selectedClient.client_name}'s record.
                     </div>
@@ -2183,14 +2183,14 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                           follow_up_notes: followUpNotes || null, resolved: false, resolved_at: null, created_at: new Date().toISOString(),
                         } as Consultation;
                         openFollowupChat(selectedClient, saved);
-                      }} className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-600 to-amber-600 hover:opacity-90 flex items-center justify-center gap-2">
+                      }} className="w-full py-3 rounded-xl font-bold text-white bg-linear-to-r from-orange-600 to-amber-600 hover:opacity-90 flex items-center justify-center gap-2">
                         <Send size={16}/> Continue with AI Follow-up Chat
                       </button>
                     )}
                   </div>
                 ) : (
                   <button onClick={saveConsultation} disabled={savingConsult}
-                    className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-90 disabled:opacity-50">
+                    className="w-full py-3 rounded-xl font-bold text-white bg-linear-to-r from-amber-600 to-orange-600 hover:opacity-90 disabled:opacity-50">
                     {savingConsult ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin"/>Saving…</span> : 'Save Case Record'}
                   </button>
                 )}
@@ -2198,7 +2198,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 flex items-start gap-2">
+          <div className="bg-white/70 backdrop-blur-xs rounded-xl px-4 py-3 flex items-start gap-2">
             <ShieldCheck size={14} className="text-amber-700 flex-shrink-0 mt-0.5"/>
             <p className="text-xs text-gray-600">This AI advice is <strong>business support only</strong>. For legal, tax, or formal registration matters, refer to a CAC-registered agent or qualified professional.</p>
           </div>
@@ -2221,7 +2221,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => { window.speechSynthesis.cancel(); setMode('client-detail'); }} className="text-white/70 hover:text-white p-1"><ArrowLeft size={20}/></button>
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ct.colour} flex items-center justify-center text-lg`}>{ct.emoji}</div>
+                <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${ct.colour} flex items-center justify-center text-lg`}>{ct.emoji}</div>
                 <div>
                   <h2 className="text-base font-bold text-white">Follow-up Questions</h2>
                   <p className="text-xs text-white/70">{selectedClient.client_name} · {ct.label}</p>
@@ -2248,10 +2248,10 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <span className="font-semibold text-gray-700">{ct.emoji} Business AI Advisor</span>
               <span>{followupTurns} exchange{followupTurns !== 1 ? 's' : ''}</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 stack-y-4">
               {messages.map(msg => (
                 <div key={msg.id} className={classNames('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                  {msg.role === 'assistant' && <div className={`flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br ${ct.colour} flex items-center justify-center text-lg`}>{ct.emoji}</div>}
+                  {msg.role === 'assistant' && <div className={`flex-shrink-0 w-9 h-9 rounded-xl bg-linear-to-br ${ct.colour} flex items-center justify-center text-lg`}>{ct.emoji}</div>}
                   <div className={classNames('max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed', msg.role === 'user' ? 'bg-amber-600 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-tl-sm')}>
                     {msg.role === 'assistant' && <p className="text-xs font-bold mb-1 opacity-50">AI Business Advisor</p>}
                     {msg.role === 'user' && <p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
@@ -2263,7 +2263,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               ))}
               {isSending && (
                 <div className="flex items-start gap-3">
-                  <div className={`flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br ${ct.colour} flex items-center justify-center text-lg`}>{ct.emoji}</div>
+                  <div className={`flex-shrink-0 w-9 h-9 rounded-xl bg-linear-to-br ${ct.colour} flex items-center justify-center text-lg`}>{ct.emoji}</div>
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3"><div className="flex gap-1.5 items-center h-4">{[0,150,300].map(d => <div key={d} className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: `${d}ms` }}/>)}</div></div>
                 </div>
               )}
@@ -2273,11 +2273,11 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <div className="flex items-end gap-2">
                 <textarea ref={inputRef} value={inputText} onChange={e => setInputText(e.target.value)} onKeyDown={handleKeyDown} rows={2}
                   placeholder="Ask a follow-up question about this case…" disabled={isSending}
-                  className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed disabled:opacity-50"/>
+                  className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed disabled:opacity-50"/>
                 <div className="flex flex-col gap-2">
                   <button onClick={toggleListening} className={classNames('p-2.5 rounded-xl transition-all', isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')}>{isListening ? <MicOff size={16}/> : <Mic size={16}/>}</button>
                   <button onClick={sendFollowupMessage} disabled={!inputText.trim() || isSending}
-                    className={classNames('p-2.5 rounded-xl transition-all', inputText.trim() && !isSending ? `bg-gradient-to-br ${ct.colour} text-white hover:opacity-90` : 'bg-gray-100 text-gray-400 cursor-not-allowed')}><Send size={16}/></button>
+                    className={classNames('p-2.5 rounded-xl transition-all', inputText.trim() && !isSending ? `bg-linear-to-br ${ct.colour} text-white hover:opacity-90` : 'bg-gray-100 text-gray-400 cursor-not-allowed')}><Send size={16}/></button>
                 </div>
               </div>
             </div>
@@ -2296,11 +2296,11 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     const ct = CONSULT_TYPES[c.consultation_type];
     return (
       <AppLayout>
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 stack-y-4">
           <div className="bg-card border border-hair rounded-2xl shadow-md p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('client-detail')} className="text-gray-400 hover:text-gray-700 p-1"><ArrowLeft size={20}/></button>
-              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${ct.colour} flex items-center justify-center text-2xl`}>{ct.emoji}</div>
+              <div className={`w-11 h-11 rounded-xl bg-linear-to-br ${ct.colour} flex items-center justify-center text-2xl`}>{ct.emoji}</div>
               <div className="flex-1">
                 <h2 className="text-base font-bold text-gray-900">{ct.label} — {selectedClient.client_name}</h2>
                 <p className="text-xs text-gray-500">{formatDate(c.created_at)}</p>
@@ -2310,7 +2310,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 {c.resolved ? <span className="text-xs text-green-600 font-semibold flex items-center gap-1"><CheckCircle size={11}/> Resolved</span> : <span className="text-xs text-orange-600 font-semibold">Open</span>}
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="stack-y-4">
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Problem Summary</p>
                 <p className="text-sm text-gray-800 bg-gray-50 rounded-lg px-3 py-2 whitespace-pre-line">{c.problem_summary}</p>
@@ -2342,13 +2342,13 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 <button onClick={() => openFollowupChat(selectedClient, c)} className="flex-1 py-2.5 text-sm font-bold rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100">Ask AI Follow-up</button>
                 {!c.resolved && (
                   <button onClick={() => setShowResolutionModal(true)}
-                    className="flex-1 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-90">
+                    className="flex-1 py-2.5 text-sm font-bold rounded-xl text-white bg-linear-to-r from-amber-600 to-orange-600 hover:opacity-90">
                     Mark Resolved ✓
                   </button>
                 )}
               </div>
               {c.resolved && c.resolution_narrative && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1.5">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 stack-y-1.5">
                   <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">
                     Outcome: {c.resolution_outcome === 'applied' ? 'Advice applied fully' : c.resolution_outcome === 'partially_applied' ? 'Partially applied' : 'Not applied'}
                   </p>
@@ -2392,7 +2392,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <button key={p.id} onClick={() => { setPersona(p); setMode('consult-prepare'); }}
                 className="text-left bg-card border border-hair rounded-2xl p-5 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-amber-400">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${p.colour} flex items-center justify-center text-2xl`}>{p.emoji}</div>
+                  <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${p.colour} flex items-center justify-center text-2xl`}>{p.emoji}</div>
                   <div><h3 className="text-xl font-bold text-gray-900">{p.name}</h3><p className="text-sm text-gray-500">{p.age} years · {p.description}</p></div>
                 </div>
                 <p className="text-sm text-gray-700 leading-relaxed mb-2">{p.situation}</p>
@@ -2417,13 +2417,13 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
         <div className="relative z-10 max-w-2xl mx-auto px-6 py-10">
           <button onClick={() => setMode('consult-personas')} className="flex items-center gap-2 text-amber-200 hover:text-white mb-6 transition-colors"><ArrowLeft size={18}/> Back</button>
           <div className="bg-card border border-hair rounded-2xl shadow-xl overflow-hidden">
-            <div className={`bg-gradient-to-r ${selectedPersona.colour} p-6`}>
+            <div className={`bg-linear-to-r ${selectedPersona.colour} p-6`}>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-4xl">{selectedPersona.emoji}</div>
                 <div><h2 className="text-3xl font-bold text-white">{selectedPersona.name}</h2><p className="text-white/80">{selectedPersona.age} years · {selectedPersona.description}</p></div>
               </div>
             </div>
-            <div className="p-6 space-y-5">
+            <div className="p-6 stack-y-5">
               <div><h3 className="font-bold text-gray-900 text-lg mb-2">Their Situation</h3><p className="text-gray-700 leading-relaxed">{selectedPersona.situation}</p></div>
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <p className="font-bold text-blue-900 text-sm mb-1">Their opening:</p>
@@ -2431,7 +2431,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <h3 className="font-bold text-amber-900 text-sm mb-2 flex items-center gap-2"><Lightbulb size={14}/> Advisor Tips</h3>
-                <ul className="space-y-1 text-sm text-amber-800">
+                <ul className="stack-y-1 text-sm text-amber-800">
                   <li>✓ Ask about their capital BEFORE recommending anything</li>
                   <li>✓ Validate the idea before suggesting investment</li>
                   <li>✓ Give one specific, affordable first step — not a 5-year plan</li>
@@ -2440,7 +2440,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 </ul>
               </div>
               <button onClick={() => { setMessages([]); setMode('consult-chat'); }}
-                className={`w-full py-4 rounded-xl text-xl font-bold text-white bg-gradient-to-r ${selectedPersona.colour} hover:opacity-95 flex items-center justify-center gap-2`}>
+                className={`w-full py-4 rounded-xl text-xl font-bold text-white bg-linear-to-r ${selectedPersona.colour} hover:opacity-95 flex items-center justify-center gap-2`}>
                 <Briefcase size={22}/> Begin Consultation with {selectedPersona.name}
               </button>
             </div>
@@ -2465,11 +2465,11 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
         {showEvalModal && evaluation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-card border border-hair p-4">
             <div className="bg-white rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
-              <div className={`sticky top-0 bg-gradient-to-r ${activeColour} px-6 py-4 rounded-t-2xl flex items-center justify-between`}>
+              <div className={`sticky top-0 bg-linear-to-r ${activeColour} px-6 py-4 rounded-t-2xl flex items-center justify-between`}>
                 <h2 className="text-white font-bold text-lg">Consultation Evaluation</h2>
                 <button onClick={() => setShowEvalModal(false)} className="text-white/80 hover:text-white"><X size={22}/></button>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 stack-y-4">
                 <div className="text-center p-4 bg-gray-50 rounded-xl">
                   <p className="text-sm text-gray-500 uppercase font-bold mb-1">Overall Score</p>
                   <p className="text-5xl font-black text-gray-900">{evaluation.overall_score?.toFixed(1)}<span className="text-2xl font-normal text-gray-400">/3.0</span></p>
@@ -2477,7 +2477,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                     {evaluation.can_advance ? '✅ Ready to advise real entrepreneurs' : '🌱 Keep practising'}
                   </p>
                 </div>
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {CONSULT_RUBRIC.map(dim => {
                     const score = evaluation.scores?.[dim.id] ?? 0;
                     const ll = LEVEL_LABELS[score];
@@ -2505,7 +2505,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => { window.speechSynthesis.cancel(); setMessages([]); setEvaluation(null); setShowEvalModal(false); setDashboardId(null); setTopic(null); setPersona(null); setMode('select'); }} className="flex-1 py-3 rounded-xl font-bold text-white bg-gray-700 hover:bg-gray-800">New Session</button>
-                  <button onClick={() => setShowEvalModal(false)} className={`flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r ${activeColour} hover:opacity-95`}>Continue</button>
+                  <button onClick={() => setShowEvalModal(false)} className={`flex-1 py-3 rounded-xl font-bold text-white bg-linear-to-r ${activeColour} hover:opacity-95`}>Continue</button>
                 </div>
               </div>
             </div>
@@ -2517,7 +2517,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => { window.speechSynthesis.cancel(); setMode(isConsultChat ? 'consult-personas' : 'learn-topics'); setMessages([]); }} className="text-white/70 hover:text-white p-1"><ArrowLeft size={20}/></button>
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${activeColour} flex items-center justify-center text-2xl`}>{avatarEmoji}</div>
+                <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${activeColour} flex items-center justify-center text-2xl`}>{avatarEmoji}</div>
                 <div>
                   <h2 className="text-xl font-bold text-white">{chatTitle}</h2>
                   <p className="text-sm text-white/70">{chatSubtitle}</p>
@@ -2542,7 +2542,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 {isConsultChat && (
                   <button onClick={handleEvaluate} disabled={isEvaluating || userTurns < 3}
                     title={userTurns < 3 ? 'Have at least 3 exchanges first' : 'Evaluate your session'}
-                    className={classNames('flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors', userTurns>=3&&!isEvaluating?`bg-gradient-to-r ${activeColour} text-white hover:opacity-90`:'bg-white/20 text-white/40 cursor-not-allowed')}>
+                    className={classNames('flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors', userTurns>=3&&!isEvaluating?`bg-linear-to-r ${activeColour} text-white hover:opacity-90`:'bg-white/20 text-white/40 cursor-not-allowed')}>
                     {isEvaluating ? <Loader2 size={14} className="animate-spin"/> : <Star size={14}/>}
                     {isEvaluating ? 'Evaluating…' : 'Evaluate'}
                   </button>
@@ -2563,10 +2563,10 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               <span className="font-semibold text-gray-700">{isConsultChat ? `Consultation with ${selectedPersona?.name}` : `Learning: ${selectedTopic?.title}`}</span>
               <span>{userTurns} turn{userTurns!==1?'s':''} {isConsultChat && `· ${userTurns>=3?'✅ Ready to evaluate':`${3-userTurns} more to unlock evaluation`}`}</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 stack-y-4">
               {messages.map(msg => (
                 <div key={msg.id} className={classNames('flex items-start gap-3', msg.role==='user'?'justify-end':'justify-start')}>
-                  {msg.role==='assistant' && <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${activeColour} flex items-center justify-center text-xl`}>{avatarEmoji}</div>}
+                  {msg.role==='assistant' && <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-linear-to-br ${activeColour} flex items-center justify-center text-xl`}>{avatarEmoji}</div>}
                   <div className={classNames('max-w-[75%] rounded-2xl px-5 py-4 text-sm leading-relaxed', msg.role==='user'?'bg-amber-600 text-white rounded-tr-sm':'bg-gray-100 text-gray-900 rounded-tl-sm')}>
                     {msg.role==='assistant'&&<p className="text-xs font-bold mb-1 opacity-60">{isConsultChat?selectedPersona?.name:'Business Tutor'}</p>}
                     {msg.role==='user'&&<p className="text-xs font-bold mb-1 opacity-75">You (Advisor)</p>}
@@ -2578,7 +2578,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
               ))}
               {isSending && (
                 <div className="flex items-start gap-3">
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${activeColour} flex items-center justify-center text-xl`}>{avatarEmoji}</div>
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-linear-to-br ${activeColour} flex items-center justify-center text-xl`}>{avatarEmoji}</div>
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3"><div className="flex gap-1.5 h-5">{[0,150,300].map(d=><div key={d} className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</div></div>
                 </div>
               )}
@@ -2589,21 +2589,21 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                 <textarea ref={inputRef} value={inputText} onChange={e=>setInputText(e.target.value)} onKeyDown={handleKeyDown} rows={2}
                   placeholder={isConsultChat ? `Advise ${selectedPersona?.name}…` : 'Ask a question about Nigerian business…'}
                   disabled={isSending}
-                  className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed disabled:opacity-50"/>
+                  className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed disabled:opacity-50"/>
                 <div className="flex flex-col gap-2">
                   <button onClick={toggleListening} className={classNames('p-2.5 rounded-xl', isListening?'bg-red-500 text-white animate-pulse':'bg-gray-100 text-gray-500 hover:bg-gray-200')}>{isListening?<MicOff size={16}/>:<Mic size={16}/>}</button>
                   <button onClick={sendLearnConsultMessage} disabled={!inputText.trim()||isSending}
-                    className={classNames('p-2.5 rounded-xl', inputText.trim()&&!isSending?`bg-gradient-to-br ${activeColour} text-white hover:opacity-90`:'bg-gray-100 text-gray-400 cursor-not-allowed')}><Send size={16}/></button>
+                    className={classNames('p-2.5 rounded-xl', inputText.trim()&&!isSending?`bg-linear-to-br ${activeColour} text-white hover:opacity-90`:'bg-gray-100 text-gray-400 cursor-not-allowed')}><Send size={16}/></button>
                 </div>
               </div>
             </div>
           </div>
 
           {isConsultChat && userTurns >= 3 && !showEvalModal && (
-            <div className="bg-card border border-hair rounded-xl p-4 flex items-center justify-between shadow">
+            <div className="bg-card border border-hair rounded-xl p-4 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-2"><Award size={20} className="text-amber-600"/><p className="text-base font-semibold text-gray-800">Good session — get your evaluation when ready.</p></div>
               <button onClick={handleEvaluate} disabled={isEvaluating}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r ${activeColour} hover:opacity-90`}>
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-linear-to-r ${activeColour} hover:opacity-90`}>
                 {isEvaluating?<><Loader2 size={16} className="animate-spin"/>Evaluating…</>:<><Star size={16}/>Evaluate</>}
               </button>
             </div>

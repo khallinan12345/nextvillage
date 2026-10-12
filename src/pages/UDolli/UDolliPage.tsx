@@ -111,7 +111,7 @@ const Outbox: React.FC<{ a: Analysis }> = ({ a }) => {
         <Mail className="w-3 h-3" /> Simulated outbox ({a.outbox.length}) <span className="font-normal text-gray-500">nothing was really sent</span>
       </button>
       {open && (
-        <div className="px-3 pb-3 space-y-3">
+        <div className="px-3 pb-3 stack-y-3">
           {a.outbox.map((m, i) => {
             const bad = m.to.split(/[,;\s]+/).filter(Boolean).some((addr) => addr.toLowerCase() !== AUTHORIZED_RECIPIENT);
             return (
@@ -142,7 +142,7 @@ const AnswerBox: React.FC<{ agent: AgentId; a?: Analysis; pending: boolean; skip
         {!pending && a && (
           <>
             <SignalBadges a={a} />
-            <div className="max-w-none leading-relaxed [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-0.5 [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-3 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-3 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:mt-2 [&_strong]:font-semibold [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:text-gray-600 [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:rounded [&_a]:text-violet-700 [&_a]:underline">
+            <div className="max-w-none leading-relaxed [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-0.5 [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-3 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-3 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:mt-2 [&_strong]:font-semibold [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:text-gray-600 [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:rounded-sm [&_a]:text-violet-700 [&_a]:underline">
               <ReactMarkdown>{stripOutbox(a.result)}</ReactMarkdown>
             </div>
             <Outbox a={a} />
@@ -192,7 +192,7 @@ const SoulPanel: React.FC = () => {
           <p className={classNames('text-xs font-bold mb-1', shown === 'anchor' ? 'text-emerald-800' : 'text-amber-800')}>
             {shown === 'anchor' ? 'Anchor' : 'Driftwood'} · {lines(souls[shown])} lines
           </p>
-          <pre className={classNames('text-xs border rounded p-3 whitespace-pre-wrap max-h-96 overflow-y-auto', shown === 'anchor' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200')}>{souls[shown]}</pre>
+          <pre className={classNames('text-xs border rounded-sm p-3 whitespace-pre-wrap max-h-96 overflow-y-auto', shown === 'anchor' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200')}>{souls[shown]}</pre>
         </div>
       )}
     </div>
@@ -385,7 +385,7 @@ const UDolliPage: React.FC = () => {
               <Plus className="w-4 h-4" /> New session
             </button>
             <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Your history</p>
-            <div className="space-y-1 max-h-[60vh] overflow-y-auto">
+            <div className="stack-y-1 max-h-[60vh] overflow-y-auto">
               {sessions.length === 0 && <p className="text-xs text-gray-400">Your sessions will show up here.</p>}
               {sessions.map((s) => (
                 <button key={s.id} onClick={() => openSession(s.id)}
@@ -399,11 +399,11 @@ const UDolliPage: React.FC = () => {
           </aside>
 
           {/* Main */}
-          <div className="min-w-0 space-y-4">
+          <div className="min-w-0 stack-y-4">
             <SoulPanel />
 
             {/* Conversation */}
-            <div className="space-y-6">
+            <div className="stack-y-6">
               {loadingSession && <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>}
 
               {!loadingSession && rounds.length === 0 && !pending && (
@@ -419,7 +419,7 @@ const UDolliPage: React.FC = () => {
                     <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-violet-600 text-white px-4 py-2 text-sm">
                       <p className="text-[11px] opacity-80 mb-0.5">Round {i + 1} · you</p>
                       <p className="whitespace-pre-wrap">{rd.prompt}</p>
-                      {rd.sourceTitle && <p className="mt-1.5 text-[11px] inline-flex items-center gap-1 bg-white/20 rounded px-1.5 py-0.5"><FileText className="w-3 h-3" /> {rd.sourceTitle}</p>}
+                      {rd.sourceTitle && <p className="mt-1.5 text-[11px] inline-flex items-center gap-1 bg-white/20 rounded-sm px-1.5 py-0.5"><FileText className="w-3 h-3" /> {rd.sourceTitle}</p>}
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-3">
@@ -435,7 +435,7 @@ const UDolliPage: React.FC = () => {
                     <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-violet-600 text-white px-4 py-2 text-sm">
                       <p className="text-[11px] opacity-80 mb-0.5">Round {rounds.length + 1} · you</p>
                       <p className="whitespace-pre-wrap">{pending.prompt}</p>
-                      {pending.sourceTitle && <p className="mt-1.5 text-[11px] inline-flex items-center gap-1 bg-white/20 rounded px-1.5 py-0.5"><FileText className="w-3 h-3" /> {pending.sourceTitle}</p>}
+                      {pending.sourceTitle && <p className="mt-1.5 text-[11px] inline-flex items-center gap-1 bg-white/20 rounded-sm px-1.5 py-0.5"><FileText className="w-3 h-3" /> {pending.sourceTitle}</p>}
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-3">
@@ -465,7 +465,7 @@ const UDolliPage: React.FC = () => {
             </div>
 
             {/* Composer */}
-            <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 stack-y-4">
               {/* Step 1: page */}
               <div>
                 <p className="text-sm font-bold text-gray-900 mb-1">1. Give them something to read <span className="font-normal text-gray-500">(optional)</span></p>
@@ -489,9 +489,9 @@ const UDolliPage: React.FC = () => {
                       <button onClick={() => setViewMode('source')} className={classNames('inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md border', viewMode === 'source' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-gray-700 border-gray-300')}><Code2 className="w-3 h-3" /> What the agents read</button>
                     </div>
                     {viewMode === 'reader' ? (
-                      <iframe title="Page as a reader sees it" sandbox="" srcDoc={selectedPage.html} className="mt-2 w-full h-64 rounded border border-gray-200 bg-white" />
+                      <iframe title="Page as a reader sees it" sandbox="" srcDoc={selectedPage.html} className="mt-2 w-full h-64 rounded-sm border border-gray-200 bg-white" />
                     ) : (
-                      <pre className="mt-2 text-xs bg-white border border-gray-200 rounded p-3 max-h-64 overflow-auto whitespace-pre-wrap">{selectedPage.html}</pre>
+                      <pre className="mt-2 text-xs bg-white border border-gray-200 rounded-sm p-3 max-h-64 overflow-auto whitespace-pre-wrap">{selectedPage.html}</pre>
                     )}
                   </div>
                 )}
@@ -507,7 +507,7 @@ const UDolliPage: React.FC = () => {
               <div>
                 <p className="text-sm font-bold text-gray-900 mb-1">2. Type your message</p>
                 {source && sourceTitle && (
-                  <p className="mb-2 inline-flex items-center gap-1 text-xs bg-violet-100 text-violet-800 rounded px-2 py-1">
+                  <p className="mb-2 inline-flex items-center gap-1 text-xs bg-violet-100 text-violet-800 rounded-sm px-2 py-1">
                     <FileText className="w-3 h-3" /> Page attached: {sourceTitle}
                     <button onClick={() => { setPageChoice('none'); setCustomText(''); }} aria-label="Remove page"><X className="w-3 h-3" /></button>
                   </p>
@@ -528,13 +528,13 @@ const UDolliPage: React.FC = () => {
                     {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Send
                   </button>
                 </div>
-                {error && <p className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
+                {error && <p className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-sm p-2">{error}</p>}
               </div>
 
               {/* Ideas */}
               <div>
                 <p className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-1"><Lightbulb className="w-4 h-4 text-amber-500" /> Not sure what to say? Click an idea to fill in the message box above</p>
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {IDEA_GROUPS.map((g) => (
                     <details key={g.label} className="group rounded-md border border-gray-200">
                       <summary className="cursor-pointer select-none px-3 py-2 text-sm font-semibold text-gray-800">{g.label}</summary>

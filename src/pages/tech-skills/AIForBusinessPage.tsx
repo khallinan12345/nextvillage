@@ -157,7 +157,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
     : pct >= 0.5 ? 'from-amber-400 to-yellow-500 text-yellow-950'
     : 'from-red-400 to-rose-500 text-rose-950';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${color}`}>
       <Star size={12} />{score}/{max}
     </span>
   );
@@ -166,7 +166,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 const BusinessOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div className="flex-1 overflow-y-auto p-4 stack-y-4">
     <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl">
       <p className="text-xs font-bold text-amber-400 uppercase mb-2">💡 Turn your AI skills into income.</p>
       <p className="text-sm text-white font-semibold leading-relaxed mb-2">
@@ -187,7 +187,7 @@ const BusinessOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
 
     <div className="p-3 bg-gray-800/40 rounded-lg border border-gray-700">
       <p className="text-xs font-bold text-gray-300 mb-2">🌍 What people in your community are already paying for:</p>
-      <div className="space-y-1.5">
+      <div className="stack-y-1.5">
         {[
           { service: 'WhatsApp product descriptions',  tool: 'AI Content Creation', naira: '₦500–₦2,000 per business' },
           { service: 'Social media posts for a shop',  tool: 'AI Content Creation', naira: '₦3,000–₦10,000/month' },
@@ -231,7 +231,7 @@ const BusinessOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
     </div>
 
     <button onClick={onComplete}
-      className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all hover:scale-[1.01]">
+      className="w-full flex items-center justify-center gap-2 py-3 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all hover:scale-[1.01]">
       Let's build my business! <ArrowRight size={16} />
     </button>
   </div>
@@ -240,7 +240,7 @@ const BusinessOnboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }
 // ─── Task stepper ─────────────────────────────────────────────────────────────
 
 const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (i: number) => void }> = ({ tasks, taskIndex, onJump }) => (
-  <div className="px-3 py-3 border-b border-gray-700 space-y-2">
+  <div className="px-3 py-3 border-b border-gray-700 stack-y-2">
     {([1, 2, 3] as const).map(phase => {
       const pm = PHASE_META[phase];
       const phaseTasks = tasks.filter(t => t.phase === phase);
@@ -248,7 +248,7 @@ const TaskStepper: React.FC<{ tasks: TaskDef[]; taskIndex: number; onJump: (i: n
       return (
         <div key={phase}>
           <p className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${pm.color}`}>{pm.label}</p>
-          <div className="space-y-0.5">
+          <div className="stack-y-0.5">
             {phaseTasks.map((task, i) => {
               const gi = firstIdx + i;
               const isDone = gi < taskIndex; const isCur = gi === taskIndex; const isFut = gi > taskIndex;
@@ -277,7 +277,7 @@ const BusinessCanvasPanel: React.FC<{
   onChange: (key: keyof BusinessCanvas, value: string) => void;
   activeSection: keyof BusinessCanvas | null;
 }> = ({ canvas, onChange, activeSection }) => (
-  <div className="h-full overflow-y-auto p-3 space-y-2.5">
+  <div className="h-full overflow-y-auto p-3 stack-y-2.5">
     <div className="flex items-center justify-between mb-1">
       <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Business Canvas</p>
       <p className="text-[10px] text-gray-600">
@@ -303,7 +303,7 @@ const BusinessCanvasPanel: React.FC<{
             onChange={e => onChange(section.key, e.target.value)}
             rows={3}
             placeholder={section.placeholder}
-            className="w-full bg-transparent text-xs text-gray-200 placeholder-gray-600 resize-none outline-none leading-relaxed"
+            className="w-full bg-transparent text-xs text-gray-200 placeholder-gray-600 resize-none outline-hidden leading-relaxed"
           />
         </div>
       );
@@ -785,7 +785,7 @@ const AIForBusinessPage: React.FC = () => {
 
       {/* ── Session picker ──────────────────────────────────────────── */}
       {showSessionPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -793,7 +793,7 @@ const AIForBusinessPage: React.FC = () => {
               </h2>
               <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-2">
               {sessions.map(s => (
                 <button key={s.business_session_id} onClick={() => loadSession(s)}
                   className="w-full text-left p-3 bg-gray-700/40 hover:bg-gray-700 border border-gray-600 hover:border-amber-500/40 rounded-xl transition-colors">
@@ -806,7 +806,7 @@ const AIForBusinessPage: React.FC = () => {
                       </p>
                     </div>
                     <button onClick={e => handleDeleteSession(e, s.business_session_id)} disabled={deletingSessionId === s.business_session_id}
-                      className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors flex-shrink-0">
+                      className="p-1.5 text-gray-600 hover:text-red-400 rounded-sm transition-colors flex-shrink-0">
                       {deletingSessionId === s.business_session_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
                   </div>
@@ -815,7 +815,7 @@ const AIForBusinessPage: React.FC = () => {
             </div>
             <div className="px-5 pb-4 flex-shrink-0">
               <button onClick={createNewSession}
-                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-colors">
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-colors">
                 <Plus size={15} /> Start New Business Idea
               </button>
             </div>
@@ -825,7 +825,7 @@ const AIForBusinessPage: React.FC = () => {
 
       {/* ── Evaluation modal ─────────────────────────────────────────── */}
       {showEvaluation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -833,7 +833,7 @@ const AIForBusinessPage: React.FC = () => {
               </h2>
               <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 stack-y-4">
               {isEvaluating && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 size={36} className="animate-spin text-amber-400 mb-3" />
@@ -890,7 +890,7 @@ const AIForBusinessPage: React.FC = () => {
                     </div>
                   )}
                   {evaluation.detailed_scores && (
-                    <div className="space-y-1">
+                    <div className="stack-y-1">
                       <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Skill Breakdown</p>
                       {Object.entries(evaluation.detailed_scores as Record<string, { score: number; justification: string }>).map(([skill, data]) => (
                         <details key={skill} className="border border-gray-700 rounded-lg overflow-hidden">
@@ -930,7 +930,7 @@ const AIForBusinessPage: React.FC = () => {
             </div>
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
             <input
-              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-amber-500 outline-none px-1 py-0.5 w-44"
+              className="text-sm text-gray-300 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-amber-500 outline-hidden px-1 py-0.5 w-44"
               value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Business name…" />
             <div className="w-px h-5 bg-gray-600 flex-shrink-0" />
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -984,7 +984,7 @@ const AIForBusinessPage: React.FC = () => {
               {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleEvaluate} disabled={isEvaluating || promptHistory.length < 2}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg transition-colors shadow disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50">
               {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <BarChart3 size={12} />} Evaluate
             </button>
           </div>
@@ -1019,7 +1019,7 @@ const AIForBusinessPage: React.FC = () => {
 
                 <TaskStepper tasks={TASKS} taskIndex={taskIndex} onJump={idx => { setTaskIndex(idx); setSubTaskIndex(0); setSubTaskCritique(null); setPrompt(''); setAiResponse(null); setErrorMsg(null); }} />
 
-                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+                <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
 
                   {/* Instruction card */}
                   {loadingInstruction ? (
@@ -1091,15 +1091,15 @@ const AIForBusinessPage: React.FC = () => {
                       onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleGenerate(); }}
                       placeholder={taskInstruction?.subTasks[subTaskIndex]?.substring(0, 80) + '…' || 'Share your thinking here…'}
                       style={{ minHeight: '140px' }}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-amber-500 transition-colors leading-relaxed" />
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-amber-500 transition-colors leading-relaxed" />
                     <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 px-4 pb-4 space-y-2">
+                <div className="flex-shrink-0 px-4 pb-4 stack-y-2">
                   <div className="flex gap-2">
                     <button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-colors disabled:opacity-40">
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-colors disabled:opacity-40">
                       {isGenerating ? <Loader2 size={15} className="animate-spin" /> : <ArrowUpCircle size={18} />}
                       {isGenerating && <span className="text-sm">Working…</span>}
                     </button>
@@ -1145,7 +1145,7 @@ const AIForBusinessPage: React.FC = () => {
                 <span className="text-xs font-semibold text-gray-300">{sessionName} — Business Canvas</span>
                 <div className="flex items-center gap-1 ml-1">
                   <div className="h-1.5 w-20 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all"
+                    <div className="h-full bg-linear-to-r from-amber-500 to-orange-500 rounded-full transition-all"
                       style={{ width: `${(canvasFilled / CANVAS_SECTIONS.length) * 100}%` }} />
                   </div>
                   <span className="text-[10px] text-gray-500">{canvasFilled}/{CANVAS_SECTIONS.length}</span>
@@ -1153,11 +1153,11 @@ const AIForBusinessPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={handleCopy}
-                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm transition-colors">
                   {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? 'Copied' : 'Copy all'}
                 </button>
                 <button onClick={handleDownload} disabled={downloading}
-                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-amber-400 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded transition-colors">
+                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-amber-400 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-sm transition-colors">
                   <Download size={10} /> Download
                 </button>
               </div>

@@ -130,8 +130,8 @@ const BusinessCanvasPanel: React.FC<{
   activeSection: keyof BusinessCanvas | null;
   showTips: boolean;
 }> = ({ canvas, onChange, activeSection, showTips }) => (
-  <div className="h-full overflow-y-auto p-3 space-y-2.5">
-    <div className="flex items-center justify-between mb-1 sticky top-0 bg-paper backdrop-blur-sm py-1 z-10">
+  <div className="h-full overflow-y-auto p-3 stack-y-2.5">
+    <div className="flex items-center justify-between mb-1 sticky top-0 bg-paper backdrop-blur-xs py-1 z-10">
       <p className="text-[10px] font-bold text-muted uppercase tracking-wide">Business Canvas</p>
       <p className="text-[10px] text-muted">
         {canvasFilled(canvas)}/{CANVAS_SECTIONS.length} sections filled
@@ -159,7 +159,7 @@ const BusinessCanvasPanel: React.FC<{
             onChange={e => onChange(section.key, e.target.value)}
             rows={3}
             placeholder={section.placeholder}
-            className="w-full bg-transparent text-xs text-body placeholder-muted resize-none outline-none leading-relaxed" />
+            className="w-full bg-transparent text-xs text-body placeholder-muted resize-none outline-hidden leading-relaxed" />
         </div>
       );
     })}
@@ -579,7 +579,7 @@ Respond ONLY in this JSON format:
             {view !== 'overview' && (
               <>
                 <div className="w-px h-5 bg-hair" />
-                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-none px-1 py-0.5 w-44"
+                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-hidden px-1 py-0.5 w-44"
                   value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Business name…" />
               </>
             )}
@@ -617,7 +617,7 @@ Respond ONLY in this JSON format:
                   💾 Save
                 </button>
                 <button onClick={handleEvaluate} disabled={isEvaluating || !canvasReady}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow disabled:opacity-50 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-accent hover:bg-accent/90 text-white rounded-lg shadow-sm disabled:opacity-50 transition-colors">
                   {isEvaluating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
                   {isEvaluating ? evalProgress || 'Evaluating…' : 'Submit for Evaluation'}
                 </button>
@@ -662,7 +662,7 @@ Respond ONLY in this JSON format:
             {/* Nigerian context panel */}
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-accent uppercase mb-2">🌍 What people in your community are already paying for</p>
-              <div className="space-y-1.5">
+              <div className="stack-y-1.5">
                 {[
                   { service: 'WhatsApp product descriptions',  tool: 'AI Content Creation', naira: '₦500–₦2,000 per business' },
                   { service: 'Social media posts for a shop',  tool: 'AI Content Creation', naira: '₦3,000–₦10,000/month'     },
@@ -681,7 +681,7 @@ Respond ONLY in this JSON format:
             {/* Rules */}
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-muted uppercase mb-3">📋 Certification Requirements</p>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {[
                   { icon: '✅', text: lvl <= 1 ? 'Fill at least 5 of the 8 Business Canvas sections before submitting.' : 'Complete a minimum of 5/8 Business Canvas sections with substantive content (>20 words each) before evaluation.' },
                   { icon: '✅', text: lvl <= 1 ? 'Be specific — write real names, real places, real prices in Naira.' : 'Specificity is scored — use real customer descriptions, realistic Nigerian pricing (₦), and concrete action steps.' },
@@ -701,7 +701,7 @@ Respond ONLY in this JSON format:
             <div className="p-4 bg-card border border-hair rounded-xl mb-6">
               <p className="text-xs font-bold text-muted uppercase mb-3">🎯 What You Will Be Evaluated On</p>
               {assessments.length === 0 ? <p className="text-sm text-muted italic">Loading criteria…</p> : (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const sl = scoreLabel(sc?.score ?? null);
@@ -766,7 +766,7 @@ Respond ONLY in this JSON format:
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
                 {genError && <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-2"><AlertCircle size={12} className="flex-shrink-0 text-red-400 mt-0.5" /><p className="text-xs text-red-300">{genError}</p></div>}
                 {evalError && <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-2"><AlertCircle size={12} className="flex-shrink-0 text-red-400 mt-0.5" /><p className="text-xs text-red-300">{evalError}</p></div>}
 
@@ -775,7 +775,7 @@ Respond ONLY in this JSON format:
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Which section are you working on?</label>
                   <select value={activeKey}
                     onChange={e => { setActiveKey(e.target.value as keyof BusinessCanvas); setActiveSection(e.target.value as keyof BusinessCanvas); setAiSuggestion(null); }}
-                    className="w-full bg-paper border border-hair rounded-lg px-2.5 py-1.5 text-xs text-ink outline-none focus:border-accent transition-colors">
+                    className="w-full bg-paper border border-hair rounded-lg px-2.5 py-1.5 text-xs text-ink outline-hidden focus:border-accent transition-colors">
                     {CANVAS_SECTIONS.map(s => (
                       <option key={s.key} value={s.key}>{s.label}</option>
                     ))}
@@ -793,13 +793,13 @@ Respond ONLY in this JSON format:
                     placeholder={lvl <= 1
                       ? 'e.g. I want to help market traders make better WhatsApp posts for their products'
                       : 'e.g. My customer is a market trader, 30s–40s, sells cloth in Oloibiri market, needs help writing product descriptions for WhatsApp that will attract buyers'}
-                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-none focus:border-accent transition-colors leading-relaxed" />
+                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-hidden focus:border-accent transition-colors leading-relaxed" />
                   <p className="text-[9px] text-muted mt-0.5">Ctrl+Enter to generate</p>
                 </div>
 
                 {/* AI suggestion */}
                 {aiSuggestion && (
-                  <div className="p-3 bg-accent/10 border border-accent/30 rounded-xl space-y-2">
+                  <div className="p-3 bg-accent/10 border border-accent/30 rounded-xl stack-y-2">
                     <p className="text-[9px] font-bold text-accent uppercase">AI suggestion for {CANVAS_SECTIONS.find(s => s.key === activeKey)?.label}</p>
                     <p className="text-xs text-body leading-relaxed whitespace-pre-wrap">{aiSuggestion}</p>
                     <div className="flex gap-2">
@@ -830,7 +830,7 @@ Respond ONLY in this JSON format:
                 {/* Criteria accordion */}
                 <div>
                   <p className="text-[10px] font-bold text-muted uppercase mb-2 flex items-center gap-1.5"><ClipboardList size={11} /> Rubric Criteria</p>
-                  <div className="space-y-1.5">
+                  <div className="stack-y-1.5">
                     {assessments.map(a => {
                       const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                       const isOpen = expandedCrit === a.certification_id;
@@ -847,9 +847,9 @@ Respond ONLY in this JSON format:
                             {isOpen ? <ChevronUp size={12} className="text-muted flex-shrink-0" /> : <ChevronDown size={12} className="text-muted flex-shrink-0" />}
                           </button>
                           {isOpen && (
-                            <div className="px-3 py-2.5 bg-paper border-t border-hair space-y-2">
+                            <div className="px-3 py-2.5 bg-paper border-t border-hair stack-y-2">
                               <p className="text-[10px] text-muted leading-relaxed">{a.description}</p>
-                              <div className="space-y-1">
+                              <div className="stack-y-1">
                                 {[
                                   { level: 0, text: a.certification_level0_metric, color: 'text-red-400' },
                                   { level: 1, text: a.certification_level1_metric, color: 'text-yellow-400' },
@@ -916,7 +916,7 @@ Respond ONLY in this JSON format:
               : 'Submit your Business Canvas for evaluation to see results.')}
 
             {!anyScored ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <Briefcase size={48} className="text-muted mx-auto" />
                 <p className="text-muted">{lvl <= 1 ? 'You have not been evaluated yet. Go to Build and fill your Business Canvas.' : 'No evaluation data yet. Complete your Business Canvas and submit for evaluation.'}</p>
                 <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl">
@@ -924,7 +924,7 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 <div className="flex items-center gap-5 p-5 bg-surface border border-accent/30 rounded-2xl">
                   <Trophy size={40} className="text-accent flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -942,7 +942,7 @@ Respond ONLY in this JSON format:
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const sl = scoreLabel(sc.score);
@@ -965,12 +965,12 @@ Respond ONLY in this JSON format:
                           {isOpen ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-3">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 stack-y-3">
                             {sc.evidence && <div><p className="text-[10px] font-bold text-muted uppercase mb-1">Evidence</p><p className="text-xs text-body leading-relaxed">{sc.evidence}</p></div>}
                             {assessment && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Rubric</p>
-                                <div className="space-y-1">
+                                <div className="stack-y-1">
                                   {[
                                     { level: 0, text: assessment.certification_level0_metric, color: 'text-red-400' },
                                     { level: 1, text: assessment.certification_level1_metric, color: 'text-yellow-400' },
@@ -1020,7 +1020,7 @@ Respond ONLY in this JSON format:
         {view === 'certificate' && (
           <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
             {!allProficient ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <XCircle size={48} className="text-accent mx-auto" />
                 <h2 className="text-lg font-bold text-ink">{lvl <= 1 ? 'Not ready yet.' : 'Certificate Not Yet Available'}</h2>
                 <p className="text-muted text-sm max-w-sm mx-auto">
@@ -1031,13 +1031,13 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 {renderVoiceBar(lvl <= 1
                   ? 'Congratulations! You passed the AI for Business Certification.'
                   : 'Congratulations on passing the AI for Business Certification.')}
 
                 {/* Preview */}
-                <div className="p-6 bg-surface border-2 border-accent/40 rounded-2xl text-center space-y-4 relative overflow-hidden">
+                <div className="p-6 bg-surface border-2 border-accent/40 rounded-2xl text-center stack-y-4 relative overflow-hidden">
                   <div className="relative">
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-accent" /></div>
                     <p className="text-xs font-bold text-accent uppercase tracking-widest">Certificate of Achievement</p>
@@ -1066,11 +1066,11 @@ Respond ONLY in this JSON format:
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div>
                     <label className="text-xs font-bold text-muted uppercase block mb-1.5">Full name for the certificate:</label>
                     <input type="text" value={certName} onChange={e => setCertName(e.target.value)} placeholder="e.g. Amara Okoye"
-                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-none focus:border-accent transition-colors" />
+                      className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-hidden focus:border-accent transition-colors" />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 hover:scale-[1.01] transition-all">

@@ -129,7 +129,7 @@ const AudioPlayer: React.FC<{ src: string; label?: string }> = ({ src, label }) 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
   return (
-    <div className="bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 space-y-2">
+    <div className="bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 stack-y-2">
       {label && <p className="text-xs text-slate-400 truncate">{label}</p>}
       <audio ref={audioRef}
         src={src}
@@ -150,7 +150,7 @@ const AudioPlayer: React.FC<{ src: string; label?: string }> = ({ src, label }) 
               const a = audioRef.current;
               if (a && duration) { a.currentTime = pct * duration; setProgress(pct * duration); }
             }}>
-            <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all"
+            <div className="h-full bg-linear-to-r from-emerald-500 to-teal-400 rounded-full transition-all"
               style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }} />
           </div>
         </div>
@@ -170,7 +170,7 @@ const VoiceCard: React.FC<{ job: VoiceJob; onReuse: (s: string) => void }> = ({ 
   const preset = VOICE_PRESETS.find(v => v.id === job.voice_id);
   const displayUrl = job.saved_audio_url ?? job.audio_url;
   return (
-    <div className={classNames('rounded-xl border backdrop-blur-sm overflow-hidden', cfg.border, 'bg-slate-900/60')}>
+    <div className={classNames('rounded-xl border backdrop-blur-xs overflow-hidden', cfg.border, 'bg-slate-900/60')}>
       <button onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors">
         <span className={classNames('text-sm font-semibold shrink-0', cfg.color)}>{cfg.icon}</span>
@@ -180,7 +180,7 @@ const VoiceCard: React.FC<{ job: VoiceJob; onReuse: (s: string) => void }> = ({ 
         {expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
       </button>
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
+        <div className="px-4 pb-4 stack-y-3 border-t border-white/10 pt-3">
           {displayUrl && <AudioPlayer src={displayUrl} label={job.script.slice(0, 60) + '…'} />}
           {job.status === 'failed' && (
             <p className="text-sm text-red-400 bg-red-900/20 rounded-lg px-3 py-2">{job.error_message ?? 'Generation failed.'}</p>
@@ -650,9 +650,9 @@ const VoiceCreationPage: React.FC = () => {
     return (
       <AppLayout>
         <div className="fixed top-14 left-0 right-0 bottom-0 bg-slate-950 flex items-center justify-center p-8">
-          <div className="max-w-md text-center space-y-6">
+          <div className="max-w-md text-center stack-y-6">
             <div className="text-6xl">🌍</div>
-            <div className="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-8 backdrop-blur-sm">
+            <div className="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-8 backdrop-blur-xs">
               <h2 className="text-xl font-bold text-white mb-3">
                 Region Not Yet Available
               </h2>
@@ -686,10 +686,10 @@ const VoiceCreationPage: React.FC = () => {
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="mb-6">
-          <div className="bg-slate-900/80 border border-slate-700/60 backdrop-blur-sm rounded-xl p-5 mb-4">
+          <div className="bg-slate-900/80 border border-slate-700/60 backdrop-blur-xs rounded-xl p-5 mb-4">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+                <div className="p-2 rounded-lg bg-linear-to-br from-emerald-500 to-teal-600">
                   <Mic className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -738,7 +738,7 @@ const VoiceCreationPage: React.FC = () => {
             {(['generate', 'history'] as ViewMode[]).map(v => (
               <button key={v} onClick={() => { setView(v); if (v === 'history') loadHistory(); }}
                 className={classNames('px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize',
-                  view === v ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow'
+                  view === v ? 'bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
                              : 'text-slate-400 hover:text-slate-200')}>
                 {v === 'history' ? `${lvl <= 1 ? 'My Voices' : 'History'} (${history.length})` : (lvl <= 1 ? 'Make Voice' : v)}
               </button>
@@ -748,7 +748,7 @@ const VoiceCreationPage: React.FC = () => {
 
         {/* ── Generate view ───────────────────────────────────────────────── */}
         {view === 'generate' && (
-          <div className="space-y-4">
+          <div className="stack-y-4">
 
             {/* Weekly usage */}
             {weeklyCount > 0 && (
@@ -766,13 +766,13 @@ const VoiceCreationPage: React.FC = () => {
             )}
 
             {/* Script card */}
-            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
+            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-xs">
               <label className="block text-sm font-semibold text-slate-300 mb-2">{uiText.scriptLabel}</label>
               <textarea
                 value={script} onChange={e => setScript(e.target.value)}
                 rows={5} maxLength={2000} disabled={isGenerating}
                 placeholder={uiText.scriptPlaceholder}
-                className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition disabled:opacity-50"
+                className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-hidden transition disabled:opacity-50"
               />
               <div className="flex items-center justify-between mt-1 mb-3">
                 <p className="text-xs text-slate-500">{uiText.scriptHint}</p>
@@ -813,7 +813,7 @@ const VoiceCreationPage: React.FC = () => {
 
             {/* Critique / Step panel */}
             {showCritique && (
-              <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5 backdrop-blur-xs">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-amber-300 flex items-center gap-2">
                     <Lightbulb size={16} />
@@ -827,7 +827,7 @@ const VoiceCreationPage: React.FC = () => {
                   isCritiquing
                     ? <div className="flex items-center gap-3 text-slate-400 text-sm"><div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /> {lvl <= 1 ? 'Checking your script…' : 'Analysing your script…'}</div>
                     : critiqueText && (
-                      <div className="space-y-2">
+                      <div className="stack-y-2">
                         <button onClick={() => isSpeaking ? stopSpeaking() : speakText(critiqueText)}
                           className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300 hover:text-emerald-200">
                           {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />} {isSpeaking ? 'Stop' : 'Listen'}
@@ -837,8 +837,8 @@ const VoiceCreationPage: React.FC = () => {
                     )
                 )}
                 {critiqueStep === 'step' && (
-                  <div className="space-y-3">
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  <div className="stack-y-3">
+                    <div className="stack-y-2 max-h-64 overflow-y-auto pr-1">
                       {stepMessages.map((m, i) => (
                         <div key={i} className={classNames('rounded-lg px-3 py-2 text-sm',
                           m.role === 'coach' ? 'bg-teal-900/40 border border-teal-500/30 text-teal-100' : 'bg-slate-700/60 text-slate-200 ml-6')}>
@@ -860,7 +860,7 @@ const VoiceCreationPage: React.FC = () => {
                       <input type="text" value={stepInput} onChange={e => setStepInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStepSend(); } }}
                         placeholder={lvl <= 1 ? 'Type your answer…' : 'Type your response…'}
-                        className="flex-1 bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:ring-1 focus:ring-teal-500/50" />
+                        className="flex-1 bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-hidden focus:ring-1 focus:ring-teal-500/50" />
                       <button onClick={handleImproveStep} disabled={!stepInput.trim() || isImprovingStep || isStepSending}
                         className="flex items-center gap-1.5 bg-violet-700 hover:bg-violet-600 disabled:opacity-40 text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
                         {isImprovingStep ? <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -877,7 +877,7 @@ const VoiceCreationPage: React.FC = () => {
             )}
 
             {/* Voice + Emotion + Speed */}
-            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm space-y-5">
+            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-xs stack-y-5">
 
               {/* Voice preset selector */}
               <div>
@@ -941,7 +941,7 @@ const VoiceCreationPage: React.FC = () => {
 
             {/* Active job result */}
             {activeJob && (
-              <div className={classNames('rounded-2xl border backdrop-blur-sm p-5 space-y-4',
+              <div className={classNames('rounded-2xl border backdrop-blur-xs p-5 stack-y-4',
                 activeJob.status === 'succeeded' ? 'bg-green-950/30 border-green-500/30'
                 : activeJob.status === 'failed'  ? 'bg-red-950/30 border-red-500/30'
                 : 'bg-emerald-950/30 border-emerald-500/30')}>
@@ -969,7 +969,7 @@ const VoiceCreationPage: React.FC = () => {
 
                 {/* Audio player */}
                 {(audioUrl || savedUrl) && (
-                  <div className="space-y-3">
+                  <div className="stack-y-3">
                     <AudioPlayer src={savedUrl ?? audioUrl ?? ''} label={activeJob.script.slice(0, 80) + '…'} />
 
                     {/* Save to bucket */}
@@ -1040,7 +1040,7 @@ const VoiceCreationPage: React.FC = () => {
               <button onClick={handleGenerate} disabled={!script.trim() || isGenerating || weeklyCount >= WEEKLY_LIMIT}
                 className={classNames('w-full flex items-center justify-center gap-3 rounded-xl py-3.5 font-semibold text-base transition-all',
                   script.trim() && !isGenerating && weeklyCount < WEEKLY_LIMIT
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg hover:scale-[1.01]'
+                    ? 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg hover:scale-[1.01]'
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed')}>
                 {isGenerating
                   ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {lvl <= 1 ? 'Making your voice…' : 'Generating…'}</>
@@ -1052,7 +1052,7 @@ const VoiceCreationPage: React.FC = () => {
 
         {/* ── History view ─────────────────────────────────────────────────── */}
         {view === 'history' && (
-          <div className="space-y-3">
+          <div className="stack-y-3">
             {loadingHist ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />

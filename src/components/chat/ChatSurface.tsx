@@ -55,7 +55,7 @@ const ChatSurface: React.FC<ChatSurfaceProps> = ({
   sessionActions,
 }) => {
   return (
-    <div className="rounded-2xl border border-hair bg-surface shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-hair bg-surface shadow-xs overflow-hidden">
       {(title || legend) && (
         <div className="px-5 py-3 border-b border-hair flex items-center justify-between flex-wrap gap-2">
           {title && <h3 className="text-base font-semibold text-ink">{title}</h3>}
@@ -65,7 +65,7 @@ const ChatSurface: React.FC<ChatSurfaceProps> = ({
 
       <div
         ref={transcriptRef}
-        className={classNames('px-5 py-5 space-y-7 overflow-y-auto', transcriptHeightClassName)}
+        className={classNames('px-5 py-5 stack-y-7 overflow-y-auto', transcriptHeightClassName)}
       >
         {messages.map((message, index) => (
           <div
@@ -76,11 +76,11 @@ const ChatSurface: React.FC<ChatSurfaceProps> = ({
               {message.role === 'user' ? 'You' : 'AI Coach'}
             </span>
             {message.role === 'user' ? (
-              <div className="max-w-[42rem] rounded-xl bg-card border border-hair px-4 py-3 text-body text-[15px] leading-[1.7]">
+              <div className="max-w-2xl rounded-xl bg-card border border-hair px-4 py-3 text-body text-[15px] leading-[1.7]">
                 {message.content}
               </div>
             ) : (
-              <div className="max-w-[42rem] w-full text-body text-[15px] leading-[1.7]">
+              <div className="max-w-2xl w-full text-body text-[15px] leading-[1.7]">
                 {renderAssistant(message.content, index)}
               </div>
             )}
@@ -109,13 +109,13 @@ const ChatSurface: React.FC<ChatSurfaceProps> = ({
             placeholder={placeholder}
             disabled={disabled}
             showTips={false}
-            className="w-full bg-transparent text-body text-[15px] leading-[1.7] resize-none h-24 pr-28 focus:outline-none placeholder:text-muted"
+            className="w-full bg-transparent text-body text-[15px] leading-[1.7] resize-none h-24 pr-28 focus:outline-hidden placeholder:text-muted"
           />
           <button
             type="button"
             onClick={onSubmit}
             disabled={disabled || !value.trim()}
-            className="absolute bottom-2.5 right-1 inline-flex items-center gap-1.5 rounded-full bg-accent text-white px-4 py-2 text-sm font-semibold hover:bg-accent/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40"
+            className="absolute bottom-2.5 right-1 inline-flex items-center gap-1.5 rounded-full bg-accent text-white px-4 py-2 text-sm font-semibold hover:bg-accent/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-hidden focus:ring-2 focus:ring-accent/40"
           >
             <Send size={14} />
             Submit

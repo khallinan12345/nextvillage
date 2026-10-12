@@ -528,7 +528,7 @@ const SkillDevelopmentCategoryGuidePage: React.FC = () => {
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-6">
 
         {/* header */}
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
+        <div className="mb-6 rounded-2xl bg-linear-to-br from-slate-900 to-slate-800 p-6 text-white">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300">
               <content.Icon className="h-6 w-6" />
@@ -551,7 +551,7 @@ const SkillDevelopmentCategoryGuidePage: React.FC = () => {
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-700">
-              <div className="h-full rounded-full bg-gradient-to-r from-teal-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-linear-to-r from-teal-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
             {!userId && (
               <p className="mt-2 text-xs text-slate-400">
@@ -588,7 +588,7 @@ const SkillDevelopmentCategoryGuidePage: React.FC = () => {
                   isDone ? 'bg-green-600 text-white' : unlocked ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
                   {isDone ? <Check className="h-4 w-4" /> : unlocked ? i + 1 : <Lock className="h-3 w-3" />}
                 </div>
-                <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${st.badge}`}>{st.label}</span>
+                <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${st.badge}`}>{st.label}</span>
                 <span className={`flex-1 text-sm font-semibold ${isDone ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{step.title}</span>
                 {unlocked && (isOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />)}
               </button>
@@ -600,7 +600,7 @@ const SkillDevelopmentCategoryGuidePage: React.FC = () => {
                   ))}
 
                   {step.criteriaList && (
-                    <dl className="mb-3 space-y-2">
+                    <dl className="mb-3 stack-y-2">
                       {step.criteriaList.map(cr => (
                         <div key={cr.name} className="rounded-lg border border-gray-200 p-3">
                           <dt className="text-sm font-bold text-gray-900">{cr.name}</dt>
@@ -615,7 +615,7 @@ const SkillDevelopmentCategoryGuidePage: React.FC = () => {
                       <div className="border-b border-gray-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
                         AI asks: “{step.caseStudy.question}”
                       </div>
-                      <div className="space-y-3 p-4">
+                      <div className="stack-y-3 p-4">
                         {step.caseStudy.attempts.map((a, idx) => {
                           const tone = idx === 0 ? 'red' : idx === step.caseStudy!.attempts.length - 1 ? 'green' : 'amber';
                           const toneClasses = tone === 'red'
@@ -633,7 +633,7 @@ const SkillDevelopmentCategoryGuidePage: React.FC = () => {
                               <div className={`rounded-lg border p-3 ${toneClasses}`}>
                                 <p className="mb-1 text-xs font-bold uppercase tracking-wide">{a.label}</p>
                                 <p className="mb-2 text-sm italic text-gray-800">“{a.answer}”</p>
-                                <pre className="whitespace-pre-wrap break-words font-mono text-[12px] leading-relaxed">{a.critique}</pre>
+                                <pre className="whitespace-pre-wrap wrap-break-word font-mono text-[12px] leading-relaxed">{a.critique}</pre>
                               </div>
                             </div>
                           );
@@ -668,7 +668,7 @@ const SkillDevelopmentCategoryGuidePage: React.FC = () => {
                           value={gateDraft[step.id] ?? artifacts[step.id] ?? ''}
                           onChange={e => setGateDraft(p => ({ ...p, [step.id]: e.target.value }))}
                           placeholder={step.gate.placeholder}
-                          className="flex-1 rounded-lg border border-cyan-300 px-3 py-2 text-sm outline-none focus:border-cyan-500"
+                          className="flex-1 rounded-lg border border-cyan-300 px-3 py-2 text-sm outline-hidden focus:border-cyan-500"
                         />
                         <button
                           onClick={() => submitGate(step)}

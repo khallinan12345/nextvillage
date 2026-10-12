@@ -111,7 +111,7 @@ export const ResolutionModal: React.FC<ResolutionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -127,10 +127,10 @@ export const ResolutionModal: React.FC<ResolutionModalProps> = ({
             </p>
           )}
 
-          <div className="space-y-4">
+          <div className="stack-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">What happened? *</label>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {OUTCOME_OPTIONS.map(opt => (
                   <label
                     key={opt.value}
@@ -160,7 +160,7 @@ export const ResolutionModal: React.FC<ResolutionModalProps> = ({
                 rows={3}
                 maxLength={600}
                 placeholder="e.g. The farmer applied the recommended spray and the outbreak stopped spreading within a week."
-                className={classNames('w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 text-sm resize-none', colors.ring)}
+                className={classNames('w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 text-sm resize-none', colors.ring)}
               />
             </div>
 
@@ -174,12 +174,12 @@ export const ResolutionModal: React.FC<ResolutionModalProps> = ({
                   value={valueAmount}
                   onChange={e => setValueAmount(e.target.value)}
                   placeholder="e.g. 15000"
-                  className={classNames('flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 text-sm', colors.ring)}
+                  className={classNames('flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 text-sm', colors.ring)}
                 />
                 <select
                   value={valueUnit}
                   onChange={e => setValueUnit(e.target.value as ResolutionValueUnit)}
-                  className={classNames('px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 text-sm bg-white', colors.ring)}
+                  className={classNames('px-3 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 text-sm bg-white', colors.ring)}
                 >
                   {(Object.keys(UNIT_LABELS) as ResolutionValueUnit[]).map(u => (
                     <option key={u} value={u}>{UNIT_LABELS[u]}</option>

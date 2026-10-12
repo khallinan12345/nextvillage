@@ -12,7 +12,7 @@ const ConfirmationPage: React.FC = () => {
       </div>
       
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+        <div className="bg-white py-8 px-4 shadow-sm sm:rounded-lg sm:px-10 text-center">
           <div className="rounded-full bg-green-100 p-3 mx-auto w-16 h-16 flex items-center justify-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +38,7 @@ const ConfirmationPage: React.FC = () => {
             We've sent a confirmation email to your address. Please check your inbox and click the confirmation link to activate your account.
           </p>
           
-          <div className="space-y-4">
+          <div className="stack-y-4">
             <p className="text-sm text-gray-500">
               Didn't receive the email? Check your spam folder or try signing in - you might already be confirmed.
             </p>

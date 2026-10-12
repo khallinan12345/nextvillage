@@ -750,9 +750,9 @@ const ProfilePage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Profile Info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 stack-y-6">
             {/* Personal Information */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
                 {!editing ? (
@@ -765,7 +765,7 @@ const ProfilePage: React.FC = () => {
                     Edit
                   </Button>
                 ) : (
-                  <div className="flex space-x-2">
+                  <div className="flex stack-x-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -780,7 +780,7 @@ const ProfilePage: React.FC = () => {
 
               <div className="p-6">
                 {editing ? (
-                  <form onSubmit={handleSaveProfile} className="space-y-6">
+                  <form onSubmit={handleSaveProfile} className="stack-y-6">
                     {/* Full Name Field */}
                     <div className="w-full">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -859,7 +859,7 @@ const ProfilePage: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Grade Level *
                         </label>
-                        <div className="space-y-2">
+                        <div className="stack-y-2">
                           {(['1', '2', '3', '4'] as const).map((grade) => (
                             <label key={grade} className="flex items-start">
                               <input
@@ -890,7 +890,7 @@ const ProfilePage: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Gender *
                       </label>
-                      <div className="space-y-2">
+                      <div className="stack-y-2">
                         {(['female', 'male', 'other'] as const).map((gender) => (
                           <label key={gender} className="flex items-center">
                             <input
@@ -921,7 +921,7 @@ const ProfilePage: React.FC = () => {
                           setCityChoice('');
                           setSchoolChoice('');
                         }}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                         required
                       >
                         <option value="">-- Select a continent --</option>
@@ -944,7 +944,7 @@ const ProfilePage: React.FC = () => {
                             setFormData(prev => ({ ...prev, country: e.target.value, state: '', city: '' }));
                             setCityChoice('');
                           }}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                         >
                           <option value="">-- Select a country --</option>
                           {(COUNTRIES_BY_CONTINENT[formData.continent] ?? []).map((country) => (
@@ -969,7 +969,7 @@ const ProfilePage: React.FC = () => {
                             setFormData(prev => ({ ...prev, state: selectedState, city: autoCity }));
                             setCityChoice('');
                           }}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                         >
                           <option value="">-- Select a state --</option>
                           {NIGERIA_STATES.map((s) => (
@@ -1030,7 +1030,7 @@ const ProfilePage: React.FC = () => {
                                 }));
                               }
                             }}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white mb-2"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white mb-2"
                           >
                             <option value="">-- Select a city --</option>
                             {CITY_OPTIONS[formData.continent].map((opt) => (
@@ -1077,7 +1077,7 @@ const ProfilePage: React.FC = () => {
                                 setFormData(prev => ({ ...prev, school_name: '' }));
                               }
                             }}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white mb-2"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white mb-2"
                           >
                             <option value="">Select a school or organization</option>
                             {AFRICA_SCHOOL_OPTIONS.map((opt) => (
@@ -1116,7 +1116,7 @@ const ProfilePage: React.FC = () => {
                     </div>
 
                     {/* School/Organization */}
-                    <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <div className="flex justify-end stack-x-3 pt-4 border-t border-gray-200">
                       <Button
                         type="button"
                         variant="outline"
@@ -1136,7 +1136,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </form>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="stack-y-6">
                     {/* Profile Header */}
                     <div className="flex items-center">
                       <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mr-4">
@@ -1241,7 +1241,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Team Information */}
             {teamInfo && (
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-lg shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h2 className="text-xl font-semibold text-gray-900 flex items-center">
                     <Users className="h-5 w-5 mr-2" />
@@ -1249,7 +1249,7 @@ const ProfilePage: React.FC = () => {
                   </h2>
                 </div>
                 <div className="p-6">
-                  <div className="space-y-3">
+                  <div className="stack-y-3">
                     <div>
                       <h3 className="font-medium text-gray-900">{teamInfo.name}</h3>
                       <p className="text-sm text-gray-600">Your current team</p>
@@ -1267,13 +1267,13 @@ const ProfilePage: React.FC = () => {
 
             {/* Organization Info (for leaders and learners linked to an org) */}
             {(orgInfo || savedJoinCode) && (
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-lg shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <span>🏢</span> Organization
                   </h2>
                 </div>
-                <div className="p-6 space-y-4">
+                <div className="p-6 stack-y-4">
                   {orgInfo && (
                     <>
                       <div>
@@ -1286,7 +1286,7 @@ const ProfilePage: React.FC = () => {
 
                       {/* Join codes — leaders only */}
                       {(profile?.role === 'leader' || profile?.role === 'platform_administrator') && (
-                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-3">
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 stack-y-3">
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">
@@ -1319,7 +1319,7 @@ const ProfilePage: React.FC = () => {
                               <div key={code} className="flex items-center gap-2 bg-white border border-indigo-200 rounded-lg px-3 py-2">
                                 <span className="text-lg font-black text-indigo-900 tracking-widest font-mono">{code}</span>
                                 {i === 0 && (
-                                  <span className="text-[10px] font-medium text-indigo-500 bg-indigo-100 rounded px-1.5 py-0.5">primary</span>
+                                  <span className="text-[10px] font-medium text-indigo-500 bg-indigo-100 rounded-sm px-1.5 py-0.5">primary</span>
                                 )}
                                 <button
                                   onClick={() => navigator.clipboard.writeText(code)}
@@ -1343,7 +1343,7 @@ const ProfilePage: React.FC = () => {
 
                       {/* Community profile — primary leader only, editable any time */}
                       {profile?.is_primary_leader && (
-                        <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+                        <div className="border border-gray-200 rounded-xl p-4 stack-y-4">
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Community Profile</p>
                             {!editingOrg && (
@@ -1361,7 +1361,7 @@ const ProfilePage: React.FC = () => {
                           )}
 
                           {!editingOrg ? (
-                            <div className="space-y-3 text-sm text-gray-600">
+                            <div className="stack-y-3 text-sm text-gray-600">
                               {[
                                 { label: '🎯 Educational goals',   value: orgInfo.educational_goals },
                                 { label: '🏗️ Community assets',    value: orgInfo.community_assets },
@@ -1393,7 +1393,7 @@ const ProfilePage: React.FC = () => {
                               </div>
                             </div>
                           ) : (
-                            <div className="space-y-3">
+                            <div className="stack-y-3">
                               <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">🎯 Educational goals</label>
                                 <textarea rows={2} value={orgFormData.educational_goals}
@@ -1447,7 +1447,7 @@ const ProfilePage: React.FC = () => {
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-2">🧰 Which tools should your learners use?</label>
-                                <div className="space-y-1.5">
+                                <div className="stack-y-1.5">
                                   {TOOL_OPTIONS.map(opt => (
                                     <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
                                       <input type="checkbox"
@@ -1486,7 +1486,7 @@ const ProfilePage: React.FC = () => {
 
                       {/* Student list — leaders only */}
                       {(profile?.role === 'leader' || profile?.role === 'platform_administrator') && (
-                        <div className="space-y-2">
+                        <div className="stack-y-2">
                           <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                             <Users className="h-4 w-4 text-indigo-500" />
                             {profile?.is_primary_leader ? 'All Enrolled Learners' : 'Learners in Your Cohort'}
@@ -1544,12 +1544,12 @@ const ProfilePage: React.FC = () => {
             )}
 
             {/* Account Settings */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900">Account Settings</h2>
               </div>
               <div className="p-6">
-                <div className="space-y-4">
+                <div className="stack-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-gray-900 flex items-center">
@@ -1572,9 +1572,9 @@ const ProfilePage: React.FC = () => {
           </div>
 
           {/* Progress Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 stack-y-6">
             {/* Learning Progress */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 flex items-center">
                   <Award className="h-5 w-5 mr-2" />
@@ -1610,7 +1610,7 @@ const ProfilePage: React.FC = () => {
                   <p className="text-sm text-gray-600">Overall Progress</p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="stack-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Skills Completed</span>
                     <span className="text-sm font-medium text-gray-900">
@@ -1618,7 +1618,7 @@ const ProfilePage: React.FC = () => {
                     </span>
                   </div>
                   
-                  <div className="space-y-3">
+                  <div className="stack-y-3">
                     {skillsProgress.length > 0 ? (
                       skillsProgress.map((skill) => (
                         <div key={skill.skill} className="flex items-center justify-between">
@@ -1648,14 +1648,14 @@ const ProfilePage: React.FC = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 flex items-center">
                   <TrendingUp className="h-5 w-5 mr-2" />
                   Quick Stats
                 </h3>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 stack-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Account Age</span>
                   <span className="text-sm font-medium text-gray-900">
@@ -1680,7 +1680,7 @@ const ProfilePage: React.FC = () => {
             </div>
 
             {/* Achievement Badges (Placeholder for future) */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">Achievements</h3>
               </div>
@@ -1697,7 +1697,7 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Recent Activity (Placeholder) */}
-        <div className="mt-8 bg-white rounded-lg shadow">
+        <div className="mt-8 bg-white rounded-lg shadow-sm">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
           </div>
