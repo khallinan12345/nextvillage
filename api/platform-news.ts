@@ -9,7 +9,7 @@
 //   VITE_SUPABASE_URL
 //   SUPABASE_SERVICE_ROLE_KEY   (server-side only — NOT the anon key)
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(

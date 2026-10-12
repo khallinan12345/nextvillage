@@ -3,7 +3,7 @@
 // history from the AI for Business workshop, and returns a score + coaching
 // advice. Response shape is consumed directly by AIForBusinessPage.tsx.
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';

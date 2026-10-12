@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const SPEECHGEN_API_URL = 'https://speechgen.io/index.php?r=api/text';

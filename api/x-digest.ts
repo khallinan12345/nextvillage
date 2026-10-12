@@ -1,5 +1,5 @@
 // /api/x-digest.ts
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { Resend } from 'resend';
 import Groq from 'groq-sdk';
 

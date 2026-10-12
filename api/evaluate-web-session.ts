@@ -1,5 +1,5 @@
 // api/evaluate-web-session.ts — Session evaluation + improvement advice using OpenAI
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';

@@ -38,7 +38,7 @@ function sanitize(t: string): string {
  */
 
 import { createClient } from "@supabase/supabase-js";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { logApiCost } from "../lib/api-cost-logger.js";
 
 // ─── Excluded Users (admins / facilitators — never assessed or reported) ─────

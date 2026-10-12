@@ -14,7 +14,7 @@
 //   RESEND_ALERTS_FROM_EMAIL — a verified sender, e.g. alerts@nextvillage.community
 //   TRIAGE_ALERT_EMAIL     — where alerts are delivered, e.g. khallinan1@udayton.edu
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 

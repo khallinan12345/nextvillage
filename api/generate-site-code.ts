@@ -37,7 +37,7 @@
 // The splitter uses labelled-section detection (lines starting with a known label
 // followed by ":" or "—") so it handles the natural free-text format learners use.
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { logApiCost } from '../lib/api-cost-logger.js';
 import { requireUser } from './_lib/requireUser.js';
 

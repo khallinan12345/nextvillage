@@ -11,7 +11,7 @@
 // Environment variables required: E2B_API_KEY, SUPABASE_URL,
 // SUPABASE_SERVICE_ROLE_KEY
 
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { Sandbox } from '@e2b/code-interpreter';
 import { createClient } from '@supabase/supabase-js';
 

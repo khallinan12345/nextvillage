@@ -6,7 +6,7 @@
 //   3. Context caps: pageContext snippets 200 chars, existingCode 3000 chars in generate, 4000 in iterate
 //   4. critique uses claude-haiku-5-5 (Sonnet is overkill for prompt feedback)
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 interface ImageMeta {

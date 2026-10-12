@@ -18,7 +18,7 @@
 // If the response needs improvement → hasSuggestions: true,
 //   feedback: specific, encouraging suggestions tied to the teaching concept
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 // Migrated from OpenAI → Anthropic direct fetch
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';

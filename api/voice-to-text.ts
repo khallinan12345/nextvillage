@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { Buffer } from 'buffer';
 import { requireUser } from './_lib/requireUser.js';
 

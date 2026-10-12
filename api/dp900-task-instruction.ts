@@ -4,7 +4,7 @@
 //   mode=evaluate → evaluate a learner's answer and return feedback
 //   mode=hint   → give a nudge without revealing the full answer
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';

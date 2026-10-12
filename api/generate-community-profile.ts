@@ -12,7 +12,7 @@
 // tagged with organization_id, not just city/state/country, so two
 // organizations sharing a town never share content.
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { getRequestUser } from './_lib/requireUser.js';

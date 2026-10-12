@@ -10,7 +10,7 @@
 // English" button in AIContentCreationPage.tsx), which always rewrites
 // `existingContent` for clarity and returns the full revision as `content`.
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';
