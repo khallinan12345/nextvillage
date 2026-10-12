@@ -54,7 +54,7 @@ jobs:
           echo "payload=$PAYLOAD" >> $GITHUB_OUTPUT
 
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.TRIAGE_GITHUB_TOKEN }}
           fetch-depth: 0
