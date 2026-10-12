@@ -1826,6 +1826,42 @@ ${prior.impact_arc}
     const measuredDate = new Date(ma.measured_at);
     const monthLabel = measuredDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+    // Usage-only row: too little observable activity to score fairly (e.g. an
+    // advanced learner who works with AI mostly outside the platform). Show
+    // activity counts, not skill scores.
+    if (ma.assessment_version === 'usage-v1') {
+      return (
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b bg-linear-to-r from-indigo-50 to-cyan-50">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <BarChart3 className="h-6 w-6 text-indigo-500" />
+              Monthly Usage
+            </h2>
+            <p className="text-sm text-gray-500">{monthLabel}</p>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-gray-900">{ma.session_count ?? 0}</div>
+                <div className="text-xs text-gray-500">Learning sessions</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900">{ma.ai_playground_session_count ?? 0}</div>
+                <div className="text-xs text-gray-500">Playground chats</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900">{(ma.ai_playground_word_count ?? 0).toLocaleString()}</div>
+                <div className="text-xs text-gray-500">Words written to AI</div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-4">
+              There wasn't enough activity on the platform this month to measure your skills fairly, so we're only showing usage. Your growth with AI tools outside the platform isn't captured here.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     // Engagement rate
     const engagementRate = ma.session_count && ma.session_count > 0
       ? Math.round(((ma.engaged_session_count ?? 0) / ma.session_count) * 100)
