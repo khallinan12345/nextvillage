@@ -12,7 +12,7 @@
 // 2. mode: 'critique' — evaluates the learner's response to the current
 //    sub-task question and returns { hasSuggestions, feedback }.
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';

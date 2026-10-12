@@ -4,7 +4,7 @@
 //   - canvasContent: a clean, canvas-ready version of their answer for the
 //     Business Canvas section tied to the current task
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';

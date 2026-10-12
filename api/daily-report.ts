@@ -28,7 +28,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 
 // ─── Excluded Users (admins / facilitators) ───────────────────────────────────
 const EXCLUDED_USER_IDS = new Set([

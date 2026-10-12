@@ -24,7 +24,7 @@
 // vercel.json cron entry:
 //   { "crons": [{ "path": "/api/bluesky-digest", "schedule": "0 7 * * *" }] }
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 
 // ============================================================
 // CONFIGURATION

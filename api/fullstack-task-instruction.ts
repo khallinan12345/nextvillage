@@ -3,7 +3,7 @@
 // Each instruction has 3 sequential sub-tasks, each paired with a
 // "why this matters" teaching commentary shown before the question.
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 
 const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages';

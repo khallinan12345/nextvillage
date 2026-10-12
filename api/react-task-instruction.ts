@@ -12,7 +12,7 @@
 // Response:
 //   { headline: string, context: string, subTasks: string[], examplePrompt: string }
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import OpenAI from 'openai';
 import { requireUser } from './_lib/requireUser.js';
 
