@@ -80,7 +80,7 @@ export default function AnchorPromptCard() {
         type="button"
         onClick={() => void go()}
         disabled={busy}
-        className="mt-3 px-4 py-2 rounded-md bg-emerald-700 text-white font-medium hover:bg-emerald-800 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+        className="mt-3 px-4 py-2 rounded-md bg-emerald-700 text-white font-medium hover:bg-emerald-800 disabled:opacity-60 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500"
       >
         {busy ? 'Opening…' : text.action}
       </button>

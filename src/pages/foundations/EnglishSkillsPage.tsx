@@ -499,7 +499,7 @@ const EvaluationModal: React.FC<{
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
       <div className="bg-card border border-hair rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
 
         {/* Header */}
@@ -516,7 +516,7 @@ const EvaluationModal: React.FC<{
         </div>
 
         {/* Sub-categories */}
-        <div className="px-6 py-5 space-y-3">
+        <div className="px-6 py-5 stack-y-3">
           <h3 className="text-muted font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
           {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
@@ -533,7 +533,7 @@ const EvaluationModal: React.FC<{
                 </div>
                 <div className="h-1.5 bg-slate-700/60 rounded-full mb-3 overflow-hidden">
                   <div
-                    className={`h-full rounded-full bg-gradient-to-r ${stage.gradient} transition-all duration-700`}
+                    className={`h-full rounded-full bg-linear-to-r ${stage.gradient} transition-all duration-700`}
                     style={{ width: `${sub.score}%` }}
                   />
                 </div>
@@ -564,7 +564,7 @@ const EvaluationModal: React.FC<{
                 <p className="text-amber-800 text-xs font-semibold uppercase tracking-wider mb-2">
                   🎯 Focus here next to improve the most
                 </p>
-                <ul className="space-y-1">
+                <ul className="stack-y-1">
                   {growthSkills.map((s, i) => (
                     <li key={i} className="text-body text-sm flex items-start gap-2">
                       <span className="text-amber-600 mt-0.5">•</span>
@@ -622,7 +622,7 @@ const EvaluationModal: React.FC<{
           </button>
           <button
             onClick={onClose}
-            className={`flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r ${stage.gradient} hover:opacity-90 transition-opacity`}
+            className={`flex-1 py-3 rounded-xl font-bold text-white bg-linear-to-r ${stage.gradient} hover:opacity-90 transition-opacity`}
           >
             Continue Practising
           </button>
@@ -1158,7 +1158,7 @@ Respond ONLY with valid JSON:
       <AppLayout>
           <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10">
             <div className="text-center mb-10">
-              <div className="bg-gradient-to-r from-teal-600 to-blue-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
+              <div className="bg-linear-to-r from-teal-600 to-blue-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <Globe2 className="h-12 w-12 animate-pulse" />
                   <h1 className="text-4xl font-bold">
@@ -1262,7 +1262,7 @@ Respond ONLY with valid JSON:
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-400" />
               </div>
             ) : (
-              <div className="max-w-3xl mx-auto space-y-4">
+              <div className="max-w-3xl mx-auto stack-y-4">
                 {(STAGES || []).map((stage, idx) => {
                   const stageLevels = progress?.stageLevels ?? [];
                   const unlockedUpTo = progress?.unlockedUpTo ?? 0;
@@ -1294,13 +1294,13 @@ Respond ONLY with valid JSON:
                       }}
                       className={`relative rounded-2xl border-2 p-5 transition-all duration-200
                         ${isCompleted
-                          ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
+                          ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-xs pointer-events-none'
                           : isActive
-                            ? `${stage.glowBg} ${stage.border} backdrop-blur-sm cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-                            : 'bg-surface/80 border-hair backdrop-blur-sm cursor-not-allowed opacity-70'}`}
+                            ? `${stage.glowBg} ${stage.border} backdrop-blur-xs cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+                            : 'bg-surface/80 border-hair backdrop-blur-xs cursor-not-allowed opacity-70'}`}
                     >
                       <div className="flex items-start gap-5">
-                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-hair/80'}`}>
+                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-linear-to-br ${stage.gradient}` : 'bg-hair/80'}`}>
                           {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-muted" />}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1348,7 +1348,7 @@ Respond ONLY with valid JSON:
 
               <div className="bg-card border-2 border-hair rounded-2xl p-8 mb-6">
                 <div className="text-center mb-7">
-                  <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
+                  <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-linear-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                     <Icon className="h-10 w-10 text-white" />
                   </div>
                   <div className="text-base font-semibold text-muted uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
@@ -1404,7 +1404,7 @@ Respond ONLY with valid JSON:
                     onChange={e => setTopicInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') startSession(); }}
                     placeholder="e.g. My village, A business idea, Football, My family..."
-                    className="w-full bg-card border border-hair text-ink text-base rounded-xl px-4 py-3 focus:outline-none focus:border-teal-400 placeholder-gray-400 transition-colors"
+                    className="w-full bg-card border border-hair text-ink text-base rounded-xl px-4 py-3 focus:outline-hidden focus:border-teal-400 placeholder-gray-400 transition-colors"
                   />
                 </div>
 
@@ -1412,7 +1412,7 @@ Respond ONLY with valid JSON:
                   onClick={startSession}
                   disabled={!topicInput.trim()}
                   className={`w-full py-3.5 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2 transition-all
-                    ${topicInput.trim() ? `bg-gradient-to-r ${selectedStage.gradient} hover:opacity-90 hover:scale-[1.02]` : 'bg-slate-700 cursor-not-allowed opacity-50'}`}
+                    ${topicInput.trim() ? `bg-linear-to-r ${selectedStage.gradient} hover:opacity-90 hover:scale-[1.02]` : 'bg-slate-700 cursor-not-allowed opacity-50'}`}
                 >
                   <Mic size={20} /> Start New Session
                 </button>
@@ -1426,7 +1426,7 @@ Respond ONLY with valid JSON:
                   <h3 className="text-ink font-semibold mb-3 flex items-center gap-2 text-lg">
                     <Clock size={18} className="text-teal-700" /> Active Sessions
                   </h3>
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     {(activeSessions ?? []).map(s => {
                       const ev = s.english_skills_evaluation;
                       const lc = ev ? LEVEL_CONFIG[ev.overall_level] : null;
@@ -1439,7 +1439,7 @@ Respond ONLY with valid JSON:
                               {lc && ev ? <span className={`ml-2 ${lc.color}`}>{lc.emoji} {ev.overall_level}</span> : <span className="ml-2 text-slate-500">No evaluation yet</span>}
                             </p>
                           </div>
-                          <button onClick={() => resumeSession(s)} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-base font-semibold bg-gradient-to-r ${selectedStage.gradient} text-white hover:opacity-90 flex-shrink-0`}>
+                          <button onClick={() => resumeSession(s)} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-base font-semibold bg-linear-to-r ${selectedStage.gradient} text-white hover:opacity-90 flex-shrink-0`}>
                             <PlayCircle size={16} /> Resume
                           </button>
                         </div>
@@ -1455,7 +1455,7 @@ Respond ONLY with valid JSON:
                     <CheckCircle size={18} className="text-green-600" /> Finished Sessions
                     <span className="text-muted text-base font-normal">(all sub-categories Advanced)</span>
                   </h3>
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     {(finishedSessions ?? []).map(s => (
                       <div key={s.id} className="bg-green-100 border border-green-300 rounded-xl p-4 flex items-center justify-between">
                         <div>
@@ -1551,7 +1551,7 @@ Respond ONLY with valid JSON:
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-5">
-              <div className="max-w-3xl mx-auto space-y-6">
+              <div className="max-w-3xl mx-auto stack-y-6">
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                     <span className="text-xs font-medium text-muted mb-1.5">{msg.role === 'user' ? 'You' : 'AI Coach'}</span>
@@ -1601,7 +1601,7 @@ Respond ONLY with valid JSON:
                     rows={3}
                     disabled={isSending || isImproving}
                     className="w-full bg-transparent text-body rounded-xl px-1 py-1
-                      focus:outline-none placeholder:text-muted resize-none text-lg
+                      focus:outline-hidden placeholder:text-muted resize-none text-lg
                       leading-relaxed disabled:opacity-50 transition-colors"
                   />
                 </div>

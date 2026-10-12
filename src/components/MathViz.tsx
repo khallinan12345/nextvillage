@@ -126,7 +126,7 @@ const Frame: React.FC<{ label?: string; children: React.ReactNode; color?: numbe
   const c = color % PALETTE.length;
   return (
     <div
-      className="my-2 rounded-xl p-3 shadow-sm"
+      className="my-2 rounded-xl p-3 shadow-xs"
       style={{ background: PALETTE_LIGHT[c], border: `2px solid ${PALETTE_MID[c]}` }}
     >
       {label && (
@@ -147,7 +147,7 @@ const Counters: React.FC<{ spec: Extract<VizSpec, { type: 'counters' }> }> = ({ 
       {spec.groups.map((g, i) => (
         <div
           key={i}
-          className="rounded-xl px-3 py-2 shadow-sm"
+          className="rounded-xl px-3 py-2 shadow-xs"
           style={{ background: PALETTE_LIGHT[i % PALETTE.length], border: `2px solid ${PALETTE_MID[i % PALETTE.length]}` }}
         >
           <div className="flex flex-wrap gap-1 max-w-[220px] text-2xl leading-none">

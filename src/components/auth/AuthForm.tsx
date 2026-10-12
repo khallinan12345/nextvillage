@@ -180,7 +180,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   // ─── Magic link sent confirmation ─────────────────────────────────────────
   if (view === 'magic-link-sent') {
     return (
-      <div className="text-center space-y-4">
+      <div className="text-center stack-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Check your email</h3>
         <p className="text-gray-600 text-sm">
           We sent a password reset link to <strong>{email}</strong>.<br />
@@ -196,8 +196,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   // ─── Similar account warning ──────────────────────────────────────────────
   if (mode === 'signup' && similarMatch) {
     return (
-      <div className="max-w-md w-full space-y-6">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 space-y-3">
+      <div className="max-w-md w-full stack-y-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 stack-y-3">
           <div className="flex items-start gap-3">
             <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
             <div>
@@ -258,7 +258,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
 
   // ─── Main form ────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-md w-full space-y-8">
+    <div className="max-w-md w-full stack-y-8">
       <div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {mode === 'login' ? 'Sign in to your account' : 'Create a new account'}
@@ -296,7 +296,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         </div>
       )}
 
-      <form className="mt-8 space-y-6" onSubmit={handleAuth}>
+      <form className="mt-8 stack-y-6" onSubmit={handleAuth}>
         {mode === 'signup' && (
           <Input
             label="Username"

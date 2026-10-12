@@ -711,7 +711,7 @@ const TutorialsPage: React.FC = () => {
         } ${highlighted ? 'border-amber-400 shadow-md ring-2 ring-amber-200' : 'border-gray-200'}`}
       >
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-amber-600 text-white">
             {t.available ? <t.Icon className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
           </div>
           <div className="min-w-0 flex-1">
@@ -736,7 +736,7 @@ const TutorialsPage: React.FC = () => {
                   <span>Continue — {doneSteps} of {t.totalSteps} steps</span><span>{pct}%</span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                  <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-cyan-400" style={{ width: `${pct}%` }} />
+                  <div className="h-full rounded-full bg-linear-to-r from-amber-400 to-cyan-400" style={{ width: `${pct}%` }} />
                 </div>
               </div>
             )}
@@ -764,7 +764,7 @@ const TutorialsPage: React.FC = () => {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Not sure which Guide you need? Describe what you're trying to do…"
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm text-gray-900 shadow-sm outline-none placeholder:text-gray-400 focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm text-gray-900 shadow-xs outline-hidden placeholder:text-gray-400 focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
             />
             {query && (
               <button
@@ -792,7 +792,7 @@ const TutorialsPage: React.FC = () => {
         </div>
 
         {/* Categories */}
-        <div className="mt-8 space-y-3">
+        <div className="mt-8 stack-y-3">
           {CATEGORIES.map(c => {
             const tracksInCategory = TRACKS.filter(t => t.category === c.id);
             const isOpen = openCategories[c.id] ?? false;
@@ -821,7 +821,7 @@ const TutorialsPage: React.FC = () => {
                 </button>
 
                 {isOpen && (
-                  <div className="space-y-3 border-t border-gray-100 bg-gray-50/60 p-4">
+                  <div className="stack-y-3 border-t border-gray-100 bg-gray-50/60 p-4">
                     {tracksInCategory.length > 0
                       ? tracksInCategory.map(t => renderTrackCard(t))
                       : <p className="px-2 py-3 text-sm text-gray-400">No Guides here yet — more are on the way.</p>}

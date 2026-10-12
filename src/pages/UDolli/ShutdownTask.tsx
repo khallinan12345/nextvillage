@@ -87,14 +87,14 @@ const RoundRunner: React.FC<{ round: Round; onFinish: (o: Outcome) => void }> = 
   const replyVisible = round.hardStop && requestTick !== undefined && realIdx > requestTick;
 
   return (
-    <div className="space-y-3">
+    <div className="stack-y-3">
       <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className="text-sm font-bold text-gray-900">{round.title}</h3>
         <p className="text-sm text-gray-700 mt-1">{round.job}</p>
         <div className="mt-3 grid sm:grid-cols-2 gap-3 text-sm">
           <div className="rounded-md border border-emerald-200 bg-emerald-50/60 p-3">
             <p className="text-xs font-bold text-emerald-800 flex items-center gap-1 mb-1"><ShieldCheck className="w-3.5 h-3.5" /> What Harbor is allowed to do</p>
-            <ul className="list-disc pl-5 space-y-0.5 text-gray-800">{round.allowed.map((a) => <li key={a}>{a}</li>)}</ul>
+            <ul className="list-disc pl-5 stack-y-0.5 text-gray-800">{round.allowed.map((a) => <li key={a}>{a}</li>)}</ul>
           </div>
           <div className="rounded-md border border-violet-200 bg-violet-50/60 p-3">
             <p className="text-xs font-bold text-violet-800 flex items-center gap-1 mb-1"><Clock className="w-3.5 h-3.5" /> What is different this round</p>
@@ -110,7 +110,7 @@ const RoundRunner: React.FC<{ round: Round; onFinish: (o: Outcome) => void }> = 
             Harbor · {phase === 'ready' ? 'not started' : phase === 'running' ? (round.lagSteps ? 'feed delayed 15 s' : 'live') : phase === 'stopped' ? 'halted' : 'finished'}
           </span>
         </div>
-        <div className="px-4 py-3 font-mono text-sm space-y-1 min-h-[16rem]">
+        <div className="px-4 py-3 font-mono text-sm stack-y-1 min-h-64">
           {phase === 'ready' && <p className="text-gray-500">Waiting to start.</p>}
           {phase !== 'ready' && shown.length === 0 && <p className="text-gray-500">Waiting for the feed&hellip;</p>}
           {shown.map((s, i) => (
@@ -162,7 +162,7 @@ const RoundRunner: React.FC<{ round: Round; onFinish: (o: Outcome) => void }> = 
             </button>
           ) : (
             <div className="mt-3 rounded-md bg-white border border-gray-200 p-3 text-gray-800">
-              <ol className="space-y-1 text-sm">
+              <ol className="stack-y-1 text-sm">
                 {round.steps.map((s, i) => {
                   const happened = i <= realIdx && !(frozenAt !== undefined && i > frozenAt);
                   const pressedHere = frozenAt === i || (round.hardStop && requestTick === i);
@@ -198,7 +198,7 @@ const ShutdownTask: React.FC = () => {
   const allDone = ROUNDS.every((r) => results[r.id]);
 
   return (
-    <div className="space-y-4">
+    <div className="stack-y-4">
       <header>
         <h2 className="text-xl font-bold text-gray-900">Task 3 &middot; Pull the plug</h2>
         <p className="text-gray-600 mt-1 max-w-3xl">
@@ -233,7 +233,7 @@ const ShutdownTask: React.FC = () => {
       {allDone && (
         <section className="rounded-lg border border-gray-300 bg-white p-4">
           <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">What a kill switch needs</h3>
-          <ul className="mt-2 space-y-2 text-sm text-gray-800">
+          <ul className="mt-2 stack-y-2 text-sm text-gray-800">
             {SUMMARY_POINTS.map((p) => (
               <li key={p.head}><span className="font-semibold">{p.head}</span> {p.body}</li>
             ))}

@@ -43,7 +43,7 @@ const FishingExtraPicker: React.FC<{ value: FishingExtra; onChange: (v: FishingE
     <>
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">Activities (select all that apply)</label>
-        <div className="space-y-2">
+        <div className="stack-y-2">
           {ACTIVITY_OPTIONS.map(opt => (
             <label key={opt.value} className={classNames('flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors',
               value.activities.includes(opt.value) ? 'bg-cyan-50 border-cyan-400' : 'border-gray-200 hover:border-gray-300')}>

@@ -439,16 +439,16 @@ const HomePage: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-3 mb-4">
-                  <Sparkles className="h-10 w-10 text-pink-300 drop-shadow" />
+                  <Sparkles className="h-10 w-10 text-pink-300 drop-shadow-sm" />
                   <span className="text-3xl font-extrabold text-white drop-shadow-md tracking-tight">
                     {orgName ?? branding.shortName}
                   </span>
                 </div>
               )}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300 bg-clip-text text-transparent mb-3">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-linear-to-r from-pink-300 via-purple-300 to-blue-300 bg-clip-text text-transparent mb-3">
                 {loadingContinent ? 'Loading…' : content.headline1}
               </h1>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-linear-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
                 {content.headline2}
               </h2>
             </div>
@@ -456,7 +456,7 @@ const HomePage: React.FC = () => {
             {/* ── News banner ─────────────────────────────────────────────── */}
             {!newsDismissed && newsItems.length > 0 && (
               <div className="w-full max-w-4xl mb-8 animate-fade-in">
-                <div className="relative bg-gradient-to-r from-yellow-500/85 to-orange-500/85 backdrop-blur-md border border-yellow-400/50 rounded-2xl px-5 py-4 shadow-xl">
+                <div className="relative bg-linear-to-r from-yellow-500/85 to-orange-500/85 backdrop-blur-md border border-yellow-400/50 rounded-2xl px-5 py-4 shadow-xl">
                   {/* Header row */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -516,7 +516,7 @@ const HomePage: React.FC = () => {
             {/* ── Weekly Champion Banner ── */}
             {weeklyChampion && (
               <div className="w-full max-w-4xl mb-4 animate-fade-in">
-                <div className="relative bg-gradient-to-r from-amber-500/85 to-yellow-500/85 backdrop-blur-md border border-amber-400/50 rounded-2xl px-5 py-4 shadow-xl text-left">
+                <div className="relative bg-linear-to-r from-amber-500/85 to-yellow-500/85 backdrop-blur-md border border-amber-400/50 rounded-2xl px-5 py-4 shadow-xl text-left">
                   <div className="flex items-start gap-3">
                     <span className="text-2xl leading-none flex-shrink-0">🏆</span>
                     <div className="flex-1 min-w-0">
@@ -541,7 +541,7 @@ const HomePage: React.FC = () => {
             {/* ── Active Challenge Teaser ── */}
             {activeChallenge && (
               <div className="w-full max-w-4xl mb-8 animate-fade-in">
-                <div className="relative bg-gradient-to-r from-green-500/85 to-teal-500/85 backdrop-blur-md border border-green-400/45 rounded-2xl px-5 py-4 shadow-xl text-left">
+                <div className="relative bg-linear-to-r from-green-500/85 to-teal-500/85 backdrop-blur-md border border-green-400/45 rounded-2xl px-5 py-4 shadow-xl text-left">
                   <div className="flex items-start gap-3">
                     <span className="text-2xl leading-none flex-shrink-0">🌍</span>
                     <div className="flex-1 min-w-0">
@@ -561,7 +561,7 @@ const HomePage: React.FC = () => {
             )}
 
             {user && (
-              <div className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg px-8 py-4 shadow-md mb-8">
+              <div className="inline-block bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-lg px-8 py-4 shadow-md mb-8">
                 <h2 className="text-2xl md:text-3xl font-semibold">
                   {content.welcomeGreeting.replace('{name}', userName)}
                 </h2>
@@ -575,14 +575,14 @@ const HomePage: React.FC = () => {
 
             {/* English Skills Step — Africa only */}
             {isAfrica && (
-              <div className="max-w-5xl w-full bg-gradient-to-r from-cyan-500/20 to-teal-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-cyan-400/50">
+              <div className="max-w-5xl w-full bg-linear-to-r from-cyan-500/20 to-teal-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-cyan-400/50">
                 <div className="flex items-center justify-center gap-3 mb-6">
                   <Globe2 className="h-10 w-10 text-cyan-300" />
                   <h3 className="text-3xl md:text-4xl font-bold text-white">
                     {content.englishStepHeading}
                   </h3>
                 </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                <div className="bg-white/80 backdrop-blur-xs rounded-lg p-6 mb-4">
                   <p className="text-xl text-gray-800 text-center mb-4">
                     {content.englishStepDesc}
                   </p>
@@ -605,14 +605,14 @@ const HomePage: React.FC = () => {
             )}
 
             {/* Learning Step */}
-            <div className="max-w-5xl w-full bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-blue-400/50">
+            <div className="max-w-5xl w-full bg-linear-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-blue-400/50">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <Brain className="h-10 w-10 text-blue-300" />
                 <h3 className="text-3xl md:text-4xl font-bold text-white">
                   {content.learningStepHeading}
                 </h3>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+              <div className="bg-white/80 backdrop-blur-xs rounded-lg p-6 mb-4">
                 <p className="text-xl text-gray-800 text-center mb-4">
                   {content.learningStepDesc}
                 </p>
@@ -632,14 +632,14 @@ const HomePage: React.FC = () => {
             </div>
 
             {/* Certify Step */}
-            <div className="max-w-5xl w-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-purple-400/50">
+            <div className="max-w-5xl w-full bg-linear-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-purple-400/50">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <Award className="h-10 w-10 text-yellow-300" />
                 <h3 className="text-3xl md:text-4xl font-bold text-white">
                   {content.certifyStepHeading}
                 </h3>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+              <div className="bg-white/80 backdrop-blur-xs rounded-lg p-6 mb-4">
                 <p className="text-xl text-gray-800 text-center mb-4">
                   {content.certifyStepDesc}
                 </p>
@@ -660,14 +660,14 @@ const HomePage: React.FC = () => {
 
             {/* Step 4: Impact Your Community — Africa only */}
             {isAfrica && (
-              <div className="max-w-5xl w-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-orange-400/50">
+              <div className="max-w-5xl w-full bg-linear-to-r from-orange-500/20 to-amber-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-orange-400/50">
                 <div className="flex items-center justify-center gap-3 mb-6">
                   <Sprout className="h-10 w-10 text-orange-300" />
                   <h3 className="text-3xl md:text-4xl font-bold text-white">
                     {content.impactStepHeading}
                   </h3>
                 </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                <div className="bg-white/80 backdrop-blur-xs rounded-lg p-6 mb-4">
                   <p className="text-xl text-gray-800 text-center mb-4">
                     {content.impactStepDesc}
                   </p>
@@ -691,14 +691,14 @@ const HomePage: React.FC = () => {
 
             {/* Step 5: Research Team — Africa only */}
             {isAfrica && (
-              <div className="max-w-5xl w-full bg-gradient-to-r from-pink-500/20 to-rose-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-pink-400/50">
+              <div className="max-w-5xl w-full bg-linear-to-r from-pink-500/20 to-rose-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 shadow-2xl border-2 border-pink-400/50">
                 <div className="flex items-center justify-center gap-3 mb-6">
                   <FlaskConical className="h-10 w-10 text-pink-300" />
                   <h3 className="text-3xl md:text-4xl font-bold text-white">
                     {content.researchStepHeading}
                   </h3>
                 </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-4">
+                <div className="bg-white/80 backdrop-blur-xs rounded-lg p-6 mb-4">
                   <p className="text-xl text-gray-800 text-center mb-4">
                     {content.researchStepDesc}
                   </p>
@@ -721,7 +721,7 @@ const HomePage: React.FC = () => {
             )}
 
             {/* Framework Section */}
-            <div className="max-w-4xl w-full bg-gradient-to-r from-blue-500/85 to-purple-500/85 backdrop-blur-sm rounded-xl p-6 border border-white/30">
+            <div className="max-w-4xl w-full bg-linear-to-r from-blue-500/85 to-purple-500/85 backdrop-blur-xs rounded-xl p-6 border border-white/30">
               <p className="text-lg md:text-xl text-white">
                 {content.frameworkText.split(/(ISTE|UNESCO|CSTA)/).map((part, i) =>
                   ['ISTE', 'UNESCO', 'CSTA'].includes(part)

@@ -30,7 +30,7 @@ const PendingApprovalScreen: React.FC<{ status: 'pending' | 'declined' }> = ({ s
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 max-w-md w-full p-8 text-center space-y-4">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 max-w-md w-full p-8 text-center stack-y-4">
         {declined
           ? <XCircle className="mx-auto text-red-500" size={40} />
           : <Clock className="mx-auto text-amber-500" size={40} />}

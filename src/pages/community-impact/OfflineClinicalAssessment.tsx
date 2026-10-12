@@ -775,7 +775,7 @@ const OfflineClinicalAssessment: React.FC = () => {
   }[level]);
 
   const SectionCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-    <div className={`bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5 ${className}`}>
+    <div className={`bg-white rounded-2xl shadow-xs border border-gray-200 p-4 sm:p-5 ${className}`}>
       {children}
     </div>
   );
@@ -788,7 +788,7 @@ const OfflineClinicalAssessment: React.FC = () => {
   );
 
   const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
-    <input {...props} className={`w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 ${props.className || ''}`} />
+    <input {...props} className={`w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent/40 ${props.className || ''}`} />
   );
 
   const Toggle: React.FC<{ label: string; checked: boolean; onChange: (v: boolean) => void; danger?: boolean; hint?: string }> = ({ label, checked, onChange, danger, hint }) => (
@@ -834,7 +834,7 @@ const OfflineClinicalAssessment: React.FC = () => {
       : visibleQuestions.slice(0, firstUnanswered + 1);
 
     return (
-      <div className="mt-3 ml-2 pl-3 border-l-2 border-teal-300 space-y-3">
+      <div className="mt-3 ml-2 pl-3 border-l-2 border-teal-300 stack-y-3">
         <p className="text-xs font-bold text-teal-700 uppercase tracking-wide">
           📋 {config.label} — Clinical Interview
         </p>
@@ -866,7 +866,7 @@ const OfflineClinicalAssessment: React.FC = () => {
                 </div>
               )}
               {q.type === 'choice' && q.choices && (
-                <div className="space-y-1.5">
+                <div className="stack-y-1.5">
                   {q.choices.map(opt => (
                     <button key={opt} type="button" onClick={() => onAnswer(q.key, opt)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all active:scale-[0.98] ${
@@ -908,7 +908,7 @@ const OfflineClinicalAssessment: React.FC = () => {
       <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
         <User size={20} className="text-accent"/> Patient Information
       </h2>
-      <div className="space-y-4">
+      <div className="stack-y-4">
         <div>
           <Label required>Patient Name</Label>
           <Input value={patient.name} onChange={e => setPatient({ ...patient, name: e.target.value })}
@@ -980,7 +980,7 @@ const OfflineClinicalAssessment: React.FC = () => {
         <Activity size={20} className="text-accent"/> Vital Signs
       </h2>
       <p className="text-xs text-gray-400 mb-4">Measure carefully. Record what you can — leave blank if equipment not available.</p>
-      <div className="space-y-4">
+      <div className="stack-y-4">
         <div>
           <Label hint="Normal axillary: 36.0–37.4°C. Fever ≥38°C.">Temperature (°C)</Label>
           <div className="flex gap-2">
@@ -1052,7 +1052,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             </div>
           </div>
         )}
-        <div className="space-y-2">
+        <div className="stack-y-2">
           <Toggle danger label="Convulsions (seizures) — now or recently" hint="Ask: has the patient been shaking or jerking uncontrollably?"
             checked={dangerSigns.convulsions} onChange={v => setDangerSigns({ ...dangerSigns, convulsions: v })} />
           <Toggle danger label="Unconscious or cannot be woken" hint="Try to wake the patient. Can they respond to voice or touch?"
@@ -1073,19 +1073,19 @@ const OfflineClinicalAssessment: React.FC = () => {
       </h2>
       <p className="text-xs text-gray-400 mb-4">Tick symptoms present. For key symptoms, a clinical interview will guide you through the right questions.</p>
 
-      <div className="space-y-4">
+      <div className="stack-y-4">
         <div>
           <Label required>Chief Complaint</Label>
           <textarea value={symptoms.chiefComplaint}
             onChange={e => setSymptoms({ ...symptoms, chiefComplaint: e.target.value })}
             rows={2} placeholder="In the patient's own words, what is the main problem?"
-            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none" />
+            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 resize-none" />
         </div>
 
         {/* Main symptoms with structured interviews */}
         <div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Main Symptoms — with clinical interview</p>
-          <div className="space-y-2">
+          <div className="stack-y-2">
             {(['fever', 'cough', 'diarrhoea', 'vomiting'] as const).map(key => {
               const config = SYMPTOM_INTERVIEWS[key];
               const data = symptoms[key] as SymptomData;
@@ -1127,7 +1127,7 @@ const OfflineClinicalAssessment: React.FC = () => {
         {/* Additional signs */}
         <div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Additional Signs</p>
-          <div className="space-y-2">
+          <div className="stack-y-2">
             <Toggle label="Chest indrawing" hint="Watch lower chest during breathing. Pulls INWARD on inspiration = danger sign."
               checked={symptoms.chestIndrawing} danger={symptoms.chestIndrawing}
               onChange={v => setSymptoms({ ...symptoms, chestIndrawing: v })} />
@@ -1152,7 +1152,7 @@ const OfflineClinicalAssessment: React.FC = () => {
         {/* Malaria section */}
         <div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Malaria Assessment</p>
-          <div className="space-y-2">
+          <div className="stack-y-2">
             <Toggle label="Malaria suspected"
               checked={symptoms.malariaSuspected}
               onChange={v => setSymptoms({ ...symptoms, malariaSuspected: v })} />
@@ -1186,7 +1186,7 @@ const OfflineClinicalAssessment: React.FC = () => {
         <ClipboardList size={20} className="text-accent"/> Physical Observations
       </h2>
       <p className="text-xs text-gray-400 mb-4">Describe what you SEE. Use your own words.</p>
-      <div className="space-y-4">
+      <div className="stack-y-4">
         {[
           { key: 'appearance' as const, label: 'General Appearance', placeholder: 'Alert? Lethargic? Distressed? Comfortable? Well-nourished?' },
           { key: 'breathing' as const, label: 'Breathing Pattern', placeholder: 'Normal? Fast? Laboured? Wheezing? Grunting?' },
@@ -1198,7 +1198,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             <textarea value={observations[field.key]}
               onChange={e => setObservations({ ...observations, [field.key]: e.target.value })}
               rows={2} placeholder={field.placeholder}
-              className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none" />
+              className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 resize-none" />
           </div>
         ))}
         <div>
@@ -1206,7 +1206,7 @@ const OfflineClinicalAssessment: React.FC = () => {
           <textarea value={observations.additionalNotes}
             onChange={e => setObservations({ ...observations, additionalNotes: e.target.value })}
             rows={3} placeholder="Anything else relevant — medications patient is taking, recent travel, contacts who are sick, etc."
-            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none" />
+            className="w-full px-3.5 py-2.5 text-base border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 resize-none" />
         </div>
       </div>
     </SectionCard>
@@ -1220,7 +1220,7 @@ const OfflineClinicalAssessment: React.FC = () => {
       : '';
 
     return (
-      <div className="space-y-4">
+      <div className="stack-y-4">
         {/* Triage Classification Banner */}
         <div className={`rounded-2xl border-2 p-5 ${tc.bg} ${tc.border}`}>
           <div className="flex items-center gap-3 mb-3">
@@ -1238,7 +1238,7 @@ const OfflineClinicalAssessment: React.FC = () => {
               <p className="text-sm text-gray-600">{patient.name} — {PATIENT_GROUPS[patient.group].emoji} {PATIENT_GROUPS[patient.group].label}</p>
             </div>
           </div>
-          <div className="space-y-1">
+          <div className="stack-y-1">
             {triage.reasons.map((r, i) => (
               <p key={i} className={`text-sm font-medium ${tc.text}`}>• {r}</p>
             ))}
@@ -1251,7 +1251,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
               <AlertTriangle size={16} className="text-red-500"/> Immediate Actions
             </h3>
-            <div className="space-y-2">
+            <div className="stack-y-2">
               {triage.actions.map((a, i) => (
                 <div key={i} className="flex items-start gap-2 bg-red-50 rounded-lg px-3 py-2">
                   <span className="text-red-600 font-bold text-sm mt-0.5">{i + 1}.</span>
@@ -1268,7 +1268,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
               💊 Medications / Treatment
             </h3>
-            <div className="space-y-2">
+            <div className="stack-y-2">
               {triage.medications.map((m, i) => (
                 <p key={i} className="text-sm text-gray-800 bg-blue-50 rounded-lg px-3 py-2">{m}</p>
               ))}
@@ -1283,7 +1283,7 @@ const OfflineClinicalAssessment: React.FC = () => {
               🏠 Home Care Instructions
             </h3>
             <p className="text-xs text-gray-400 mb-2">Read these to the patient or caregiver:</p>
-            <div className="space-y-1.5">
+            <div className="stack-y-1.5">
               {triage.homeCare.map((h, i) => (
                 <p key={i} className="text-sm text-gray-800 bg-emerald-50 rounded-lg px-3 py-2">✓ {h}</p>
               ))}
@@ -1297,7 +1297,7 @@ const OfflineClinicalAssessment: React.FC = () => {
             <h3 className="text-sm font-bold text-red-700 mb-2 flex items-center gap-2">
               ⚠️ Warning Signs — Return Immediately If:
             </h3>
-            <div className="space-y-1.5">
+            <div className="stack-y-1.5">
               {triage.warningSigns.map((w, i) => (
                 <p key={i} className="text-sm text-red-800 bg-red-50 rounded-lg px-3 py-2 font-medium">🚨 {w}</p>
               ))}
@@ -1325,7 +1325,7 @@ const OfflineClinicalAssessment: React.FC = () => {
 
         {/* Save / Actions */}
         <SectionCard>
-          <div className="space-y-3">
+          <div className="stack-y-3">
             {!saved ? (
               <button type="button" onClick={saveAssessment}
                 className="w-full py-3 rounded-xl text-white font-bold text-base bg-accent active:scale-[0.98] transition-all flex items-center justify-center gap-2">
@@ -1410,7 +1410,7 @@ const OfflineClinicalAssessment: React.FC = () => {
                   <span className="hidden sm:inline">{s.label}</span>
                   <span className="sm:hidden">{i + 1}</span>
                 </button>
-                {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 rounded ${i < stepIndex ? 'bg-emerald-300' : 'bg-gray-200'}`}/>}
+                {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 rounded-sm ${i < stepIndex ? 'bg-emerald-300' : 'bg-gray-200'}`}/>}
               </React.Fragment>
             ))}
           </div>
@@ -1421,7 +1421,7 @@ const OfflineClinicalAssessment: React.FC = () => {
       <div className="max-w-lg mx-auto px-3 py-4">
         {/* Online mode link */}
         <Link to="/community-impact/healthcare"
-          className="flex items-center justify-between gap-3 bg-white rounded-xl px-4 py-3 mb-3 border border-gray-200 shadow-sm hover:bg-teal-50 transition-colors group">
+          className="flex items-center justify-between gap-3 bg-white rounded-xl px-4 py-3 mb-3 border border-gray-200 shadow-xs hover:bg-teal-50 transition-colors group">
           <div className="flex items-center gap-2.5">
             <Wifi size={16} className="text-teal-500" />
             <div>

@@ -56,10 +56,10 @@ const markdownComponents = {
     <em className="italic text-muted">{children}</em>
   ),
   ul: ({ children }: any) => (
-    <ul className="list-disc list-inside space-y-1 mb-2 text-body ml-2 text-xs">{children}</ul>
+    <ul className="list-disc list-inside stack-y-1 mb-2 text-body ml-2 text-xs">{children}</ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="list-decimal list-inside space-y-1 mb-2 text-body ml-2 text-xs">{children}</ol>
+    <ol className="list-decimal list-inside stack-y-1 mb-2 text-body ml-2 text-xs">{children}</ol>
   ),
   li: ({ children }: any) => (
     <li className="leading-relaxed">{children}</li>
@@ -75,10 +75,10 @@ const markdownComponents = {
     </a>
   ),
   code: ({ children }: any) => (
-    <code className="bg-paper text-accent px-1 py-0.5 rounded text-[10px] font-mono border border-hair">{children}</code>
+    <code className="bg-paper text-accent px-1 py-0.5 rounded-sm text-[10px] font-mono border border-hair">{children}</code>
   ),
   pre: ({ children }: any) => (
-    <pre className="bg-surface text-ink p-2 rounded text-[10px] font-mono overflow-x-auto mb-2 border border-hair">{children}</pre>
+    <pre className="bg-surface text-ink p-2 rounded-sm text-[10px] font-mono overflow-x-auto mb-2 border border-hair">{children}</pre>
   ),
 };
 
@@ -233,13 +233,13 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
     nodes.map(node => (
       <React.Fragment key={node.path}>
         {node.isFolder ? (
-          <button onClick={() => toggle(node.path)} className="w-full flex items-center gap-1 py-0.5 text-xs text-muted hover:text-ink hover:bg-paper rounded" style={{ paddingLeft: `${8 + depth * 10}px` }}>
+          <button onClick={() => toggle(node.path)} className="w-full flex items-center gap-1 py-0.5 text-xs text-muted hover:text-ink hover:bg-paper rounded-sm" style={{ paddingLeft: `${8 + depth * 10}px` }}>
             {open.has(node.path) ? <ChevronDown size={10} /> : <ChevronDown size={10} style={{ transform: 'rotate(-90deg)' }} />}
             <span className="text-yellow-600 text-[10px]">📁</span>
             <span className="font-medium text-[11px]">{node.name}</span>
           </button>
         ) : (
-          <button onClick={() => onSelect(node.path)} className={`w-full flex items-center gap-1.5 py-0.5 text-[11px] rounded transition-colors ${activeFile === node.path ? 'bg-accent/10 text-accent font-semibold' : 'text-muted hover:text-ink hover:bg-paper'}`} style={{ paddingLeft: `${8 + depth * 10}px` }}>
+          <button onClick={() => onSelect(node.path)} className={`w-full flex items-center gap-1.5 py-0.5 text-[11px] rounded-sm transition-colors ${activeFile === node.path ? 'bg-accent/10 text-accent font-semibold' : 'text-muted hover:text-ink hover:bg-paper'}`} style={{ paddingLeft: `${8 + depth * 10}px` }}>
             <FileCode size={10} className="flex-shrink-0" />
             <span className="truncate">{node.name}</span>
           </button>
@@ -247,7 +247,7 @@ const FileTreePanel: React.FC<{ files: ProjectFile[]; activeFile: string; onSele
         {node.isFolder && open.has(node.path) && renderTree(node.children, depth + 1)}
       </React.Fragment>
     ));
-  return <div className="space-y-0">{renderTree(buildTree(files))}</div>;
+  return <div className="stack-y-0">{renderTree(buildTree(files))}</div>;
 };
 
 // ─── Score ring ───────────────────────────────────────────────────────────────
@@ -625,7 +625,7 @@ Respond ONLY in this JSON format:
       <div className="flex flex-col h-screen bg-paper">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-3">
+          <div className="text-center stack-y-3">
             <Loader2 size={32} className="animate-spin text-accent mx-auto" />
             <p className="text-muted text-sm">Loading certification…</p>
           </div>
@@ -652,7 +652,7 @@ Respond ONLY in this JSON format:
               <h2 className="text-base font-bold text-ink flex items-center gap-2"><ExternalLink size={16} className="text-accent" /> Preview in StackBlitz</h2>
               <button onClick={() => setShowSBModal(false)} className="p-1 text-muted hover:text-ink"><X size={16} /></button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-5 stack-y-3">
               <p className="text-sm text-body">Your project will open in StackBlitz as a live preview. All {projectFiles.length} files will be transferred as a one-time snapshot.</p>
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-800">
                 ⚠️ This is for preview only. Your progress and evaluation live here — keep this tab open.
@@ -681,7 +681,7 @@ Respond ONLY in this JSON format:
             {view !== 'overview' && (
               <>
                 <div className="w-px h-5 bg-hair flex-shrink-0" />
-                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-none px-1 py-0.5 w-44"
+                <input className="text-sm text-body bg-transparent border-b border-transparent hover:border-hair focus:border-accent outline-hidden px-1 py-0.5 w-44"
                   value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Project name…" />
               </>
             )}
@@ -762,7 +762,7 @@ Respond ONLY in this JSON format:
             {/* Rules */}
             <div className="p-4 bg-card border border-hair rounded-xl mb-5">
               <p className="text-xs font-bold text-muted uppercase mb-3">📋 Certification Rules</p>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {[
                   { icon: '✅', text: lvl <= 1 ? 'You CAN use vibe coding — describe what you want and let AI build it.' : 'Vibe coding is permitted — prompt AI to generate, modify, and extend code.' },
                   { icon: '✅', text: lvl <= 1 ? 'You CAN test and fix your website in the preview.' : 'You may iterate freely: preview, identify issues, and prompt improvements.' },
@@ -784,7 +784,7 @@ Respond ONLY in this JSON format:
               {assessments.length === 0 ? (
                 <p className="text-sm text-muted italic">Loading criteria…</p>
               ) : (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                     const sl = scoreLabel(sc?.score ?? null);
@@ -859,7 +859,7 @@ Respond ONLY in this JSON format:
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 py-3 stack-y-3 min-h-0">
 
                 {explanation && (
                   <div className="p-2.5 bg-accent/5 border border-accent/20 rounded-lg">
@@ -892,7 +892,7 @@ Respond ONLY in this JSON format:
                       ? 'e.g. Make the background blue and add a welcome message with my name'
                       : 'e.g. Add a responsive navbar with links to Home, About, and Contact. Use a purple gradient background.'}
                     rows={6}
-                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-none focus:border-accent transition-colors leading-relaxed" />
+                    className="w-full bg-paper border border-hair rounded-xl px-3 py-2.5 text-sm text-ink placeholder-muted resize-y outline-hidden focus:border-accent transition-colors leading-relaxed" />
                   <p className="text-[9px] text-muted mt-0.5">Ctrl+Enter to generate</p>
                 </div>
 
@@ -901,7 +901,7 @@ Respond ONLY in this JSON format:
                   <p className="text-[10px] font-bold text-muted uppercase mb-2 flex items-center gap-1.5">
                     <ClipboardList size={11} /> Rubric Criteria
                   </p>
-                  <div className="space-y-1.5">
+                  <div className="stack-y-1.5">
                     {assessments.map(a => {
                       const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
                       const isOpen = expandedCrit === a.certification_id;
@@ -920,9 +920,9 @@ Respond ONLY in this JSON format:
                             {isOpen ? <ChevronUp size={12} className="text-muted flex-shrink-0" /> : <ChevronDown size={12} className="text-muted flex-shrink-0" />}
                           </button>
                           {isOpen && (
-                            <div className="px-3 py-2.5 bg-paper border-t border-hair space-y-2">
+                            <div className="px-3 py-2.5 bg-paper border-t border-hair stack-y-2">
                               <p className="text-[10px] text-muted leading-relaxed">{a.description}</p>
-                              <div className="space-y-1">
+                              <div className="stack-y-1">
                                 {[
                                   { level: 0, text: a.certification_level0_metric, color: 'text-red-700' },
                                   { level: 1, text: a.certification_level1_metric, color: 'text-yellow-700' },
@@ -961,7 +961,7 @@ Respond ONLY in this JSON format:
                 <span className="text-xs text-muted truncate flex-1">{activeFilePath}</span>
                 <span className="text-[10px] text-muted">{activeFile?.content.split('\n').length}L</span>
                 <button onClick={() => navigator.clipboard.writeText(activeFile?.content || '').then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}
-                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-muted hover:text-ink hover:bg-paper rounded transition-colors">
+                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-muted hover:text-ink hover:bg-paper rounded-sm transition-colors">
                   {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? 'Copied' : 'Copy'}
                 </button>
               </div>
@@ -998,7 +998,7 @@ Respond ONLY in this JSON format:
             )}
 
             {!anyScored ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <ClipboardList size={48} className="text-muted mx-auto" />
                 <p className="text-muted">{lvl <= 1 ? 'You have not been evaluated yet. Go to the Build view and submit your project.' : 'No evaluation data yet. Build your project and click Submit for Evaluation.'}</p>
                 <button onClick={() => setView('build')} className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors">
@@ -1006,7 +1006,7 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 {/* Overall score card */}
                 <div className="flex items-center gap-5 p-5 bg-surface border border-hair rounded-2xl">
                   <Trophy size={40} className="text-accent flex-shrink-0" />
@@ -1026,7 +1026,7 @@ Respond ONLY in this JSON format:
                 </div>
 
                 {/* Per-criterion results */}
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const sl = scoreLabel(sc.score);
@@ -1034,7 +1034,7 @@ Respond ONLY in this JSON format:
                     return (
                       <div key={sc.assessment_name} className={`rounded-xl border overflow-hidden ${sl.border} ${sl.bg}`}>
                         <button onClick={() => setExpandedCrit(isOpen ? null : sc.assessment_name)}
-                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors">
+                          className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-black/2 transition-colors">
                           <ScoreRing score={sc.score} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-ink">{sc.assessment_name}</p>
@@ -1050,7 +1050,7 @@ Respond ONLY in this JSON format:
                         </button>
 
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-hair pt-3 space-y-3">
+                          <div className="px-4 pb-4 border-t border-hair pt-3 stack-y-3">
                             {/* ── Evidence — rendered as markdown ── */}
                             {sc.evidence && (
                               <div>
@@ -1065,7 +1065,7 @@ Respond ONLY in this JSON format:
                             {assessment && (
                               <div>
                                 <p className="text-[10px] font-bold text-muted uppercase mb-1">Rubric</p>
-                                <div className="space-y-1.5">
+                                <div className="stack-y-1.5">
                                   {[
                                     { level: 0, text: assessment.certification_level0_metric, color: 'text-red-700',    activeColor: 'bg-red-50 border border-red-200'    },
                                     { level: 1, text: assessment.certification_level1_metric, color: 'text-yellow-700', activeColor: 'bg-yellow-50 border border-yellow-200' },
@@ -1129,7 +1129,7 @@ Respond ONLY in this JSON format:
           <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
 
             {!allProficient ? (
-              <div className="text-center py-16 space-y-4">
+              <div className="text-center py-16 stack-y-4">
                 <XCircle size={48} className="text-yellow-600 mx-auto" />
                 <h2 className="text-lg font-bold text-ink">
                   {lvl <= 1 ? 'Not ready for the certificate yet.' : 'Certificate Not Yet Available'}
@@ -1144,13 +1144,13 @@ Respond ONLY in this JSON format:
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="stack-y-5">
                 {renderVoiceBar(lvl <= 1
                   ? 'Congratulations! You passed the Web Development Certification. Enter your name to download your certificate.'
                   : 'Congratulations on passing the Web Development Certification. Enter your full name to generate and download your certificate.')}
 
                 {/* Certificate preview */}
-                <div className="p-6 bg-surface border border-hair rounded-2xl text-center space-y-4 relative overflow-hidden">
+                <div className="p-6 bg-surface border border-hair rounded-2xl text-center stack-y-4 relative overflow-hidden">
                   <div className="relative">
                     <div className="flex justify-center mb-3"><Trophy size={44} className="text-accent" /></div>
                     <p className="text-xs font-bold text-accent uppercase tracking-widest">Certificate of Achievement</p>
@@ -1177,14 +1177,14 @@ Respond ONLY in this JSON format:
                 </div>
 
                 {/* Name input + download */}
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   <div>
                     <label className="text-xs font-bold text-muted uppercase block mb-1.5">
                       {lvl <= 1 ? 'Your full name (will appear on the certificate):' : 'Full name for the certificate:'}
                     </label>
                     <input type="text" value={certName} onChange={e => setCertName(e.target.value)}
                       placeholder="e.g. Amara Okoye"
-                      className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-none focus:border-accent transition-colors" />
+                      className="w-full bg-paper border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted text-sm outline-hidden focus:border-accent transition-colors" />
                   </div>
                   <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold bg-accent hover:bg-accent/90 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">

@@ -80,7 +80,7 @@ interface ChallengeEvalResult {
 
 const InfoTooltip: React.FC<{ text: string; open: boolean; onToggle: () => void; accent: string }> = ({ text, open, onToggle, accent }) => (
   <div className="relative inline-block">
-    <button onClick={onToggle} className={`ml-1.5 ${accent} hover:opacity-70 focus:outline-none`} aria-label="More info">
+    <button onClick={onToggle} className={`ml-1.5 ${accent} hover:opacity-70 focus:outline-hidden`} aria-label="More info">
       <Lightbulb size={13}/>
     </button>
     {open && (
@@ -129,7 +129,7 @@ const ProbePanel: React.FC<ProbePanelProps> = ({
           <span>Read each question aloud. Type or speak the answer, then tap Send. The AI will keep asking until this topic is fully characterised.</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 stack-y-4">
           {messages.map(msg => (
             <div key={msg.id} className={classNames('flex flex-col', msg.role === 'user' ? 'items-end' : 'items-start')}>
               <span className="text-xs font-medium text-muted mb-1">
@@ -170,7 +170,7 @@ const ProbePanel: React.FC<ProbePanelProps> = ({
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onSend(); } }}
               placeholder="Type the answer…"
               disabled={loading}
-              className="flex-1 px-3 py-2.5 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50"
+              className="flex-1 px-3 py-2.5 text-sm border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50"
             />
             <button onClick={onSend} disabled={!input.trim() || loading}
               className="px-3 py-2.5 rounded-xl text-white bg-accent hover:bg-accent/90 disabled:opacity-40">
@@ -882,25 +882,25 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                         <X size={20} />
                       </button>
                     </div>
-                    <div className="space-y-4">
+                    <div className="stack-y-4">
                       <div>
                         <label className="block text-sm font-bold text-ink mb-1.5">{activeChallenge.return_question_1}</label>
                         <textarea value={challengeReflect1} onChange={e => setChallengeReflect1(e.target.value)} rows={3}
                           placeholder="Describe what you did…"
-                          className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
+                          className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-ink mb-1.5">{activeChallenge.return_question_2}</label>
                         <textarea value={challengeReflect2} onChange={e => setChallengeReflect2(e.target.value)} rows={3}
                           placeholder="What happened…"
-                          className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
+                          className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
                       </div>
                       {activeChallenge.return_question_3 && (
                         <div>
                           <label className="block text-sm font-bold text-ink mb-1.5">{activeChallenge.return_question_3}</label>
                           <textarea value={challengeReflect3} onChange={e => setChallengeReflect3(e.target.value)} rows={2}
                             placeholder="Additional details…"
-                            className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
+                            className="w-full px-4 py-3 text-sm border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent resize-none leading-relaxed"/>
                         </div>
                       )}
                       <EvidencePicker sourceType="challenge_enrollment" sourceId={activeChallenge.enrollmentId} accent="violet" />
@@ -935,7 +935,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                   </button>
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-5 stack-y-4">
                   <div className="border border-hair bg-paper rounded-xl p-4">
                     <p className="text-sm font-bold text-ink mb-2">📴 Use the offline advisor now</p>
                     <p className="text-sm text-body mb-3 leading-relaxed">{config.offlineToolDescription}</p>
@@ -951,7 +951,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
                   <div className="bg-paper border border-hair rounded-xl p-4">
                     <p className="text-sm font-bold text-ink mb-2">💡 Tips for field use</p>
-                    <ul className="space-y-1.5 text-xs text-body">
+                    <ul className="stack-y-1.5 text-xs text-body">
                       {config.offlineTips.map((tip, i) => <li key={i}>• {tip}</li>)}
                     </ul>
                   </div>
@@ -979,7 +979,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
               </QuietButton>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="stack-y-3">
               {entities.map(entity => (
                 <button key={entity.id}
                   onClick={() => { setSelectedEntity(entity); loadConsultations(entity.id); setMode('entity-detail'); }}
@@ -1026,21 +1026,21 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
     return (
       <AppLayout>
         <div className="max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-5">
             <div className="flex items-center gap-3 mb-5">
               <button onClick={() => setMode('dashboard')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
               <div><h2 className="text-xl font-bold text-ink">Register {config.entityNounSingular}</h2><p className="text-sm text-muted">Add to your casebook</p></div>
             </div>
-            <div className="space-y-4">
+            <div className="stack-y-4">
               <div>
                 <label className="block text-sm font-semibold text-ink mb-1">{config.entityNounSingular} Name *</label>
                 <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={config.registerNamePlaceholder}
-                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-base"/>
+                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent text-base"/>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-ink mb-1">Village *</label>
                 <select value={newVillage} onChange={e => setNewVillage(e.target.value)}
-                  className="w-full px-4 py-3 border border-hair rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-base bg-paper">
+                  className="w-full px-4 py-3 border border-hair rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent text-base bg-paper">
                   <option value="">Select village…</option>
                   {config.villages.map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
@@ -1048,7 +1048,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
               <div>
                 <label className="block text-sm font-semibold text-ink mb-1">Phone (optional)</label>
                 <input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+234 801 234 5678"
-                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-base"/>
+                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent text-base"/>
               </div>
 
               {config.renderExtraFields(newExtra, setNewExtra)}
@@ -1057,7 +1057,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 <label className="block text-sm font-semibold text-ink mb-1">Notes (optional)</label>
                 <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} rows={2}
                   placeholder="Past problems, special concerns…"
-                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-sm resize-none"/>
+                  className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent text-sm resize-none"/>
               </div>
               <QuietButton
                 onClick={saveEntity}
@@ -1084,8 +1084,8 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
     const consultOptions = config.getConsultationOptions(entity);
     return (
       <AppLayout>
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
+        <div className="max-w-2xl mx-auto px-4 py-6 stack-y-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('dashboard')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
               <div className="w-12 h-12 rounded-xl bg-surface flex items-center justify-center text-2xl">{config.entityCardEmoji}</div>
@@ -1121,7 +1121,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
           </div>
 
           {/* Case history */}
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-ink flex items-center gap-2">
                 <ClipboardList size={16} className="text-accent"/> Case History
@@ -1133,7 +1133,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
             ) : consultations.length === 0 ? (
               <p className="text-sm text-muted italic text-center py-4">No consultations yet.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="stack-y-3">
                 {consultations.map(c => {
                   const cc = config.categoryConfig[c.categoryValue];
                   return (
@@ -1205,9 +1205,9 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
           />
         )}
 
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-2xl mx-auto px-4 py-6 stack-y-4">
 
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-4">
             <div className="flex items-center gap-3">
               <button onClick={() => setMode('entity-detail')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
               <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-xl">{cc.emoji}</div>
@@ -1235,14 +1235,14 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
             </p>
           </div>
 
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-5">
             <h3 className="text-sm font-bold text-ink mb-1 flex items-center gap-2">
               <ClipboardList size={15} className="text-accent"/> Intake — {cc.label}
             </h3>
             <p className="text-xs text-muted mb-4 flex items-center gap-1">
               <span className="font-bold text-accent">🔍 Probe</span> — tap after a field to explore it deeper with AI interview coaching
             </p>
-            <div className="space-y-4">
+            <div className="stack-y-4">
               {fields.map(field => (
                 <div key={field.key}>
                   <label className="text-xs font-semibold text-ink flex items-center mb-1">
@@ -1263,7 +1263,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                       rows={2}
                       placeholder={field.placeholder}
                       className={classNames(
-                        'flex-1 px-3 py-2.5 border rounded-xl text-sm bg-paper resize-none focus:outline-none focus:ring-2',
+                        'flex-1 px-3 py-2.5 border rounded-xl text-sm bg-paper resize-none focus:outline-hidden focus:ring-2',
                         field.danger && intake[field.key]?.trim()
                           ? 'border-red-300 focus:ring-red-400 bg-red-50'
                           : 'border-hair focus:ring-accent/40 focus:border-accent'
@@ -1294,7 +1294,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
               {isGeneratingAdvice ? 'Generating AI Advice…' : `Generate AI Advice${!intakeComplete ? ' (fill required fields first)' : ''}`}
             </QuietButton>
           ) : (
-            <div className={classNames('bg-card rounded-2xl shadow-sm p-5 border-2', config.urgencyConfig[adviceResult.urgency]?.border)}>
+            <div className={classNames('bg-card rounded-2xl shadow-xs p-5 border-2', config.urgencyConfig[adviceResult.urgency]?.border)}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-xs font-bold text-muted uppercase tracking-wide mb-1">AI Advisory Result</p>
@@ -1318,12 +1318,12 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 <MarkdownText text={adviceResult.text}/>
               </div>
 
-              <div className="mt-4 space-y-3 border-t border-hair pt-4">
+              <div className="mt-4 stack-y-3 border-t border-hair pt-4">
                 <div>
                   <label className="block text-xs font-semibold text-ink mb-1">What did you advise / do?</label>
                   <textarea value={youthActionsTaken} onChange={e => setYouthActionsTaken(e.target.value)} rows={2}
                     placeholder="e.g. Advised on next steps and referred to the appropriate contact."
-                    className="w-full px-3 py-2 border border-hair bg-paper rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
+                    className="w-full px-3 py-2 border border-hair bg-paper rounded-xl text-sm resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
                 </div>
                 <div className="flex items-center gap-3">
                   <input type="checkbox" id="followup" checked={followUpNeeded} onChange={e => setFollowUpNeeded(e.target.checked)} className="w-4 h-4 accent-accent"/>
@@ -1334,18 +1334,18 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                     <div>
                       <label className="block text-xs font-semibold text-ink mb-1">Follow-up date</label>
                       <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-hair bg-paper rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
+                        className="w-full px-3 py-2 border border-hair bg-paper rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-ink mb-1">What to check</label>
                       <input value={followUpNotes} onChange={e => setFollowUpNotes(e.target.value)} placeholder="e.g. Check status and progress"
-                        className="w-full px-3 py-2 border border-hair bg-paper rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
+                        className="w-full px-3 py-2 border border-hair bg-paper rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"/>
                     </div>
                   </div>
                 )}
 
                 {consultSaved ? (
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     <div className="flex items-center gap-2 text-green-800 font-semibold text-sm bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                       <CheckCircle size={16}/> Case saved to {selectedEntity.name}'s record.
                     </div>
@@ -1430,7 +1430,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
     return (
       <AppLayout>
         <div className="max-w-2xl mx-auto px-4 py-6">
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-4 mb-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-4 mb-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3">
                 <button onClick={() => { window.speechSynthesis.cancel(); setMode('entity-detail'); }} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
@@ -1471,7 +1471,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
             )}
             submitting={isSending}
             transcriptRef={chatEndRef}
-            transcriptHeightClassName="h-[28rem]"
+            transcriptHeightClassName="h-112"
             value={inputText}
             onChange={setInputText}
             onKeyDown={handleKeyDown}
@@ -1508,8 +1508,8 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
     const cc = config.categoryConfig[c.categoryValue];
     return (
       <AppLayout>
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-5">
+        <div className="max-w-2xl mx-auto px-4 py-6 stack-y-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-5">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => setMode('entity-detail')} className="text-muted hover:text-ink p-1"><ArrowLeft size={20}/></button>
               <div className="w-11 h-11 rounded-xl bg-surface flex items-center justify-center text-2xl">{cc.emoji}</div>
@@ -1524,7 +1524,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                   : <span className="text-xs text-yellow-700 font-semibold">Open</span>}
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="stack-y-4">
               <div>
                 <p className="text-xs font-bold text-muted uppercase tracking-wide mb-1">Intake Summary</p>
                 <p className="text-sm text-body bg-paper rounded-lg px-3 py-2">{c.summary}</p>
@@ -1565,7 +1565,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                 )}
               </div>
               {c.resolved && c.resolution_narrative && (
-                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 space-y-1.5">
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 stack-y-1.5">
                   <p className="text-xs font-bold text-green-800 uppercase tracking-wide">
                     Outcome: {c.resolution_outcome === 'applied' ? 'Advice applied fully' : c.resolution_outcome === 'partially_applied' ? 'Partially applied' : 'Not applied'}
                   </p>

@@ -37,7 +37,7 @@ function MixBar({ by }: { by: LearnerGrowth['by_area'] }) {
   if (total === 0) return <span className="text-gray-400">–</span>;
   return (
     <div>
-      <div className="flex h-2.5 w-36 overflow-hidden rounded bg-gray-100" aria-hidden="true">
+      <div className="flex h-2.5 w-36 overflow-hidden rounded-sm bg-gray-100" aria-hidden="true">
         {AREAS.filter((a) => (by[a] ?? 0) > 0).map((a) => (
           <div key={a} className={AREA_COLORS[a]} style={{ width: `${((by[a] ?? 0) / total) * 100}%` }} />
         ))}
@@ -57,7 +57,7 @@ function MixShift({ l }: { l: LearnerGrowth }) {
   }
   const shown: Area[] = ['learning', 'tech_skills', 'community_impact'];
   return (
-    <ul className="space-y-0.5">
+    <ul className="stack-y-0.5">
       {shown.map((a) => (
         <li key={a} className="whitespace-nowrap">
           {AREA_LABELS[a]} {early[a] ?? 0}% → {recent[a] ?? 0}%
@@ -169,7 +169,7 @@ export default function LearnerGrowthPage() {
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
         {AREAS.map((a) => (
           <span key={a} className="inline-flex items-center gap-1.5">
-            <span className={`inline-block h-2.5 w-2.5 rounded-sm ${AREA_COLORS[a]}`} aria-hidden="true" />{AREA_LABELS[a]}
+            <span className={`inline-block h-2.5 w-2.5 rounded-xs ${AREA_COLORS[a]}`} aria-hidden="true" />{AREA_LABELS[a]}
           </span>
         ))}
       </div>
@@ -212,7 +212,7 @@ export default function LearnerGrowthPage() {
                   <td className="px-3 py-2 text-xs"><MixShift l={l} /></td>
                   <td className="px-3 py-2 text-xs">
                     {hasProgression(l) ? (
-                      <ul className="space-y-0.5">
+                      <ul className="stack-y-0.5">
                         {skills.map((s) => (
                           <li key={s.key} className="whitespace-nowrap">
                             {s.label}: {s.first ?? '–'} → {s.latest ?? '–'} <span className="text-gray-600">({describeChange(s.delta)})</span>

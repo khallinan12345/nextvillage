@@ -367,7 +367,7 @@ const WebProjectLoader: React.FC<{
         phaseLabel="Phase 0 — Data Planning"
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 stack-y-4">
 
         {/* Header */}
         <div className="p-4 bg-blue-500/10 border border-blue-500/25 rounded-xl">
@@ -393,7 +393,7 @@ const WebProjectLoader: React.FC<{
                 <p className="text-xs text-gray-400">Complete the Web Development track first.</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
                   Your completed web projects
                 </p>
@@ -421,11 +421,11 @@ const WebProjectLoader: React.FC<{
 
         {/* Planning tasks */}
         {phase === 'plan' && selected && (
-          <div className="space-y-4">
+          <div className="stack-y-4">
 
             {/* Completed tasks summary */}
             {taskIndex > 0 && (
-              <div className="space-y-1">
+              <div className="stack-y-1">
                 {PLANNING_TASKS.slice(0, taskIndex).map((t, i) => (
                   <div
                     key={t.id}
@@ -504,7 +504,7 @@ const WebProjectLoader: React.FC<{
                     }}
                     placeholder={currentTask.placeholder}
                     rows={5}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 pr-12 text-sm text-white placeholder-gray-600 resize-none outline-none focus:border-emerald-500 transition-colors leading-relaxed"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 pr-12 text-sm text-white placeholder-gray-600 resize-none outline-hidden focus:border-emerald-500 transition-colors leading-relaxed"
                   />
                   <button
                     onClick={handleSubmitAnswer}
@@ -553,7 +553,7 @@ const WebProjectLoader: React.FC<{
 
             {/* Revision area — shown after feedback */}
             {feedback && !feedbackLoading && (
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 <p className="text-xs text-gray-400 leading-relaxed">
                   Want to improve your answer based on the feedback? Write your revision below — or click Next Step if you are happy with it.
                 </p>
@@ -569,7 +569,7 @@ const WebProjectLoader: React.FC<{
                     }}
                     placeholder="Revise your answer here..."
                     rows={3}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 pr-12 text-sm text-white placeholder-gray-600 resize-none outline-none focus:border-blue-500 transition-colors leading-relaxed"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 pr-12 text-sm text-white placeholder-gray-600 resize-none outline-hidden focus:border-blue-500 transition-colors leading-relaxed"
                   />
                   <button
                     onClick={handleRevision}

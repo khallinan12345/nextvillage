@@ -250,7 +250,7 @@ const PublishWebsiteGuidePage: React.FC = () => {
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-6">
 
         {/* header */}
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
+        <div className="mb-6 rounded-2xl bg-linear-to-br from-slate-900 to-slate-800 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">Tech-Skills</p>
           <h1 className="mt-1 text-3xl font-extrabold">Publish Your Website: GitHub &amp; Vercel</h1>
           <p className="mt-1 max-w-xl text-sm text-slate-300">
@@ -268,7 +268,7 @@ const PublishWebsiteGuidePage: React.FC = () => {
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-700">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-linear-to-r from-amber-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>
@@ -300,7 +300,7 @@ const PublishWebsiteGuidePage: React.FC = () => {
 
               {open && (
                 <div className="border-t border-gray-100 p-5">
-                  <div className="mb-4 space-y-2.5 text-sm leading-relaxed text-gray-700">
+                  <div className="mb-4 stack-y-2.5 text-sm leading-relaxed text-gray-700">
                     {step.body.map((p, i) => <p key={i}>{p}</p>)}
                   </div>
 
@@ -320,7 +320,7 @@ const PublishWebsiteGuidePage: React.FC = () => {
                         <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700">{cb.label}</span>
                         <CopyButton text={cb.text} />
                       </div>
-                      <pre className="whitespace-pre-wrap break-words px-3 pb-3 font-mono text-[13px] leading-relaxed text-gray-800">{cb.text}</pre>
+                      <pre className="whitespace-pre-wrap wrap-break-word px-3 pb-3 font-mono text-[13px] leading-relaxed text-gray-800">{cb.text}</pre>
                     </div>
                   ))}
 

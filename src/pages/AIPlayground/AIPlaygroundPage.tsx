@@ -195,7 +195,7 @@ const InlineCode: React.FC<{ code: string }> = ({ code }) => {
     <button
       onClick={handleCopy}
       title="Click to copy"
-      className="inline-flex items-center gap-1 bg-gray-100 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 text-purple-800 font-mono text-sm px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1 bg-gray-100 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 text-purple-800 font-mono text-sm px-1.5 py-0.5 rounded-sm transition-colors cursor-pointer"
     >
       <span>{code}</span>
       <Copy size={10} className={`flex-shrink-0 ${copied ? 'text-green-500' : 'text-gray-400'}`} />
@@ -239,11 +239,11 @@ const InChatCodeBlock: React.FC<{
           {block.label || `${block.language} code`}
         </span>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded font-mono">{block.language}</span>
-          <button onClick={handleCopy} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors">
+          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-sm font-mono">{block.language}</span>
+          <button onClick={handleCopy} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white px-2 py-1 rounded-sm hover:bg-gray-700 transition-colors">
             <Copy size={11} />{copied ? 'Copied!' : 'Copy'}
           </button>
-          <button onClick={onOpenPanel} className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-200 px-2 py-1 rounded hover:bg-gray-700 transition-colors" title="Open in code panel">
+          <button onClick={onOpenPanel} className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-200 px-2 py-1 rounded-sm hover:bg-gray-700 transition-colors" title="Open in code panel">
             <Code2 size={11} />Panel
           </button>
         </div>
@@ -289,7 +289,7 @@ const InChatCodeBlock: React.FC<{
           <Search size={11} className="text-yellow-400 flex-shrink-0" />
           <span className="text-xs text-yellow-300">
             <span className="font-semibold">Cursor search: </span>
-            <span className="font-mono bg-gray-800 px-1.5 py-0.5 rounded">{block.cursorHint}</span>
+            <span className="font-mono bg-gray-800 px-1.5 py-0.5 rounded-sm">{block.cursorHint}</span>
           </span>
           <button onClick={() => navigator.clipboard.writeText(block.cursorHint!)} className="ml-auto text-xs text-gray-500 hover:text-yellow-300 transition-colors" title="Copy search term">
             <Copy size={10} />
@@ -378,7 +378,7 @@ const MessageContent: React.FC<{
   };
 
   return (
-    <div className="space-y-1 text-base leading-relaxed">
+    <div className="stack-y-1 text-base leading-relaxed">
       {segments.map((seg, i) => {
         if (seg.type === 'text') return <React.Fragment key={i}>{renderTextSegment(seg.content)}</React.Fragment>;
         const block = parsedBlocks[seg.index];
@@ -465,13 +465,13 @@ const ArtifactPanelView: React.FC<{
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200 px-2 py-1 rounded-sm hover:bg-gray-700 transition-colors"
           >
             <Copy size={12} />{copied ? 'Copied!' : 'Copy'}
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
+            className="p-1.5 rounded-sm hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
             title="Close panel"
           >
             <X size={15} />
@@ -509,7 +509,7 @@ const ArtifactPanelView: React.FC<{
                   className={`w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-0 ${block.id === artifact.historyId ? 'bg-gray-700' : ''}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono bg-gray-900 text-purple-300 px-1.5 py-0.5 rounded flex-shrink-0">{block.language}</span>
+                    <span className="text-xs font-mono bg-gray-900 text-purple-300 px-1.5 py-0.5 rounded-sm flex-shrink-0">{block.language}</span>
                     <span className="text-xs text-gray-200 truncate font-medium">
                       {block.label || `Block ${idx + 1}`}
                     </span>
@@ -533,7 +533,7 @@ const ArtifactPanelView: React.FC<{
           <Search size={11} className="text-yellow-400 flex-shrink-0" />
           <span className="text-xs text-yellow-300">
             <span className="font-semibold">Cursor search: </span>
-            <span className="font-mono bg-gray-800 px-1.5 py-0.5 rounded">{currentHistoryBlock.cursorHint}</span>
+            <span className="font-mono bg-gray-800 px-1.5 py-0.5 rounded-sm">{currentHistoryBlock.cursorHint}</span>
           </span>
           <button
             onClick={() => navigator.clipboard.writeText(currentHistoryBlock.cursorHint!)}
@@ -559,7 +559,7 @@ const ArtifactPanelView: React.FC<{
         {artifact.type === 'code' ? (
           <pre className="text-xs font-mono text-green-300 whitespace-pre-wrap leading-relaxed">{artifact.content}</pre>
         ) : (
-          <div className="space-y-1">
+          <div className="stack-y-1">
             {artifact.content.split('\n').map((line, i) => {
               if (line.startsWith('#### ')) return <h4 key={i} className="text-gray-100 font-bold text-sm mt-3 mb-1">{renderInlineText(line.slice(5))}</h4>;
               if (line.startsWith('### ')) return <h3 key={i} className="text-gray-100 font-bold text-base mt-4 mb-1">{renderInlineText(line.slice(4))}</h3>;
@@ -599,12 +599,12 @@ const ArtifactPanelView: React.FC<{
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onEdit(); } }}
             placeholder={artifact.type === 'code' ? 'Edit this code… (e.g. add error handling, rename function)' : 'Edit this document… (e.g. add a section, shorten it)'}
             disabled={isEditing}
-            className="flex-1 bg-transparent text-xs text-gray-200 placeholder-gray-500 outline-none"
+            className="flex-1 bg-transparent text-xs text-gray-200 placeholder-gray-500 outline-hidden"
           />
           <button
             onClick={onEdit}
             disabled={!editInput.trim() || isEditing}
-            className="flex-shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            className="flex-shrink-0 w-7 h-7 rounded-lg bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             title="Apply edit"
           >
             {isEditing ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
@@ -1758,7 +1758,7 @@ const AIPlaygroundPage: React.FC = () => {
           <div className="px-3 py-2 border-b border-gray-100">
             <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
               <Search size={13} className="text-gray-400 flex-shrink-0" />
-              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search chats..." className="bg-transparent text-xs text-gray-700 placeholder-gray-400 outline-none w-full" />
+              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search chats..." className="bg-transparent text-xs text-gray-700 placeholder-gray-400 outline-hidden w-full" />
             </div>
           </div>
         )}
@@ -1780,7 +1780,7 @@ const AIPlaygroundPage: React.FC = () => {
                         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                           <input autoFocus value={editingTitleValue} onChange={e => setEditingTitleValue(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') saveTitle(chat.id); if (e.key === 'Escape') setEditingTitleId(null); }}
-                            className="text-xs border border-purple-300 rounded px-1 py-0.5 w-full outline-none" />
+                            className="text-xs border border-purple-300 rounded-sm px-1 py-0.5 w-full outline-hidden" />
                           <button onClick={() => saveTitle(chat.id)} className="text-green-600"><Check size={11} /></button>
                           <button onClick={() => setEditingTitleId(null)} className="text-gray-400"><X size={11} /></button>
                         </div>
@@ -1789,8 +1789,8 @@ const AIPlaygroundPage: React.FC = () => {
                     </div>
                     {editingTitleId !== chat.id && (
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <button onClick={e => startEditTitle(chat, e)} className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600" title="Rename"><Edit3 size={11} /></button>
-                        <button onClick={e => handleDeleteChat(chat.id, e)} className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500" title="Delete"><Trash2 size={11} /></button>
+                        <button onClick={e => startEditTitle(chat, e)} className="p-1 rounded-sm hover:bg-gray-200 text-gray-400 hover:text-gray-600" title="Rename"><Edit3 size={11} /></button>
+                        <button onClick={e => handleDeleteChat(chat.id, e)} className="p-1 rounded-sm hover:bg-red-100 text-gray-400 hover:text-red-500" title="Delete"><Trash2 size={11} /></button>
                       </div>
                     )}
                   </>
@@ -1820,7 +1820,7 @@ const AIPlaygroundPage: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"><Bot size={13} className="text-white" /></div>
+              <div className="w-7 h-7 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center"><Bot size={13} className="text-white" /></div>
               <div>
                 <p className="text-sm font-semibold text-gray-800 leading-tight">
                   {activeChat?.title ?? (profileName
@@ -1861,11 +1861,11 @@ const AIPlaygroundPage: React.FC = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+          <div className="flex-1 overflow-y-auto px-6 py-6 stack-y-5">
 
             {messages.length === 0 && !sending && (
               <div className="flex flex-col items-center justify-center h-full text-center pb-20">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 shadow-lg"><Bot size={28} className="text-white" /></div>
+                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 shadow-lg"><Bot size={28} className="text-white" /></div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {profileName
                     ? `Welcome, ${profileName.split(' ')[0]} to the AI Playground`
@@ -1896,7 +1896,7 @@ const AIPlaygroundPage: React.FC = () => {
               return (
                 <div key={msgIdx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 mt-1"><Bot size={13} className="text-white" /></div>
+                    <div className="w-7 h-7 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 mt-1"><Bot size={13} className="text-white" /></div>
                   )}
                   <div className={`${artifact ? 'max-w-md' : 'max-w-2xl'}`}>
                     {msg.attachment && msg.attachment.length > 0 && (
@@ -1908,7 +1908,7 @@ const AIPlaygroundPage: React.FC = () => {
                         ))}
                       </div>
                     )}
-                    <div className={`rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'}`}>
+                    <div className={`rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-linear-to-br from-purple-600 to-pink-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-xs'}`}>
                       {msg.role === 'assistant'
                         ? (
                           isDocument ? (
@@ -1956,7 +1956,7 @@ const AIPlaygroundPage: React.FC = () => {
             {/* Compression banner */}
             {compressionActive && (
               <div className="flex justify-center sticky bottom-2 z-10 pointer-events-none">
-                <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-xl px-4 py-2.5 shadow-sm pointer-events-auto">
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-xl px-4 py-2.5 shadow-xs pointer-events-auto">
                   <span className="text-amber-500 text-base">⚠️</span>
                   <p className="text-xs text-amber-800 leading-snug">
                     <span className="font-semibold">Earlier code blocks have been compressed</span> to manage context length.
@@ -1974,7 +1974,7 @@ const AIPlaygroundPage: React.FC = () => {
             {/* Reflection prompt */}
             {showReflection && !sending && (
               <div className="flex justify-center">
-                <div className="bg-purple-50 border border-purple-200 rounded-2xl px-5 py-4 max-w-sm text-center shadow-sm">
+                <div className="bg-purple-50 border border-purple-200 rounded-2xl px-5 py-4 max-w-sm text-center shadow-xs">
                   <p className="text-sm font-semibold text-purple-700 mb-1">🌱 Pause and reflect</p>
                   <p className="text-xs text-purple-600 leading-relaxed">You've had a good session. Before you continue — what's one thing you got out of this conversation, or something you want to remember?</p>
                   <button onClick={() => setShowReflection(false)} className="mt-3 text-xs text-purple-500 hover:text-purple-700 underline">Dismiss</button>
@@ -1985,8 +1985,8 @@ const AIPlaygroundPage: React.FC = () => {
             {/* Typing indicator */}
             {sending && (
               <div className="flex gap-3 justify-start">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 mt-1"><Bot size={13} className="text-white" /></div>
-                <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 mt-1"><Bot size={13} className="text-white" /></div>
+                <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-xs">
                   <div className="flex gap-1.5 items-center h-5">
                     <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -2039,7 +2039,7 @@ const AIPlaygroundPage: React.FC = () => {
                 <span>Loading your model settings — please wait a moment before sending.</span>
               </div>
             )}
-            <div className="flex items-end gap-2 bg-white border border-gray-300 rounded-2xl px-4 py-3 shadow-sm focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
+            <div className="flex items-end gap-2 bg-white border border-gray-300 rounded-2xl px-4 py-3 shadow-xs focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
               <button onClick={() => fileInputRef.current?.click()} className="flex-shrink-0 p-1 text-gray-400 hover:text-purple-600 transition-colors mb-0.5" title="Attach file (inline — included in this message only)"><Paperclip size={17} /></button>
               <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" accept=".txt,.md,.csv,.json,.py,.js,.ts,.tsx,.jsx,.html,.css,.pdf,.doc,.docx,.xls,.xlsx" multiple />
               <button onClick={() => contextFileInputRef.current?.click()} disabled={contextUploading} className="flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition-colors mb-0.5" title="Pin file to context (stays in system prompt for entire chat — ideal for large code files)">
@@ -2048,7 +2048,7 @@ const AIPlaygroundPage: React.FC = () => {
               <input ref={contextFileInputRef} type="file" onChange={handleContextFileAttach} className="hidden" accept=".txt,.md,.csv,.json,.py,.js,.ts,.tsx,.jsx,.html,.css,.sh,.yaml,.yml,.toml,.env" multiple />
               <textarea ref={textareaRef} value={userInput} onChange={e => setUserInput(e.target.value)} onKeyDown={handleKeyDown}
                 placeholder={quotaUsed >= QUOTA_TOKENS && !quotaExempt ? 'Quota reached — please wait for reset' : 'Message Claude...'} rows={1} disabled={sending || !modelLoaded || (quotaUsed >= QUOTA_TOKENS && !quotaExempt)}
-                className="flex-1 resize-none outline-none text-base text-gray-800 placeholder-gray-400 bg-transparent min-h-[24px] max-h-[200px] leading-6" />
+                className="flex-1 resize-none outline-hidden text-base text-gray-800 placeholder-gray-400 bg-transparent min-h-[24px] max-h-[200px] leading-6" />
               <span
                 className={`flex-shrink-0 text-xs mb-0.5 pr-1 font-medium transition-colors ${
                   (activeModel || playgroundModel) === 'claude-sonnet-4-6' || (activeModel || playgroundModel) === 'claude-sonnet-5-5'
@@ -2073,7 +2073,7 @@ const AIPlaygroundPage: React.FC = () => {
                 {isListening ? <MicOff size={13} /> : <Mic size={13} />}
               </button>
               <button onClick={handleSend} disabled={(!userInput.trim() && !attachments.length) || sending || !modelLoaded || (quotaUsed >= QUOTA_TOKENS && !quotaExempt)}
-                className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity mb-0.5">
+                className="flex-shrink-0 w-8 h-8 rounded-xl bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity mb-0.5">
                 {sending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               </button>
             </div>

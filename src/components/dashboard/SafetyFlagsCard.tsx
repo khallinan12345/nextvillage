@@ -96,8 +96,8 @@ const SafetyFlagsCard: React.FC = () => {
   if (flags.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
-      <div className="px-5 py-4 border-b bg-gradient-to-r from-red-50 to-orange-50">
+    <div className="bg-white rounded-xl shadow-xs border border-red-200 overflow-hidden">
+      <div className="px-5 py-4 border-b bg-linear-to-r from-red-50 to-orange-50">
         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
           <ShieldAlert size={20} className="text-red-600" />
           Safety flags in Together rooms ({flags.length})
@@ -132,7 +132,7 @@ const SafetyFlagsCard: React.FC = () => {
               </span>
             </div>
             {f.report_reason && <p className="text-sm text-gray-700">Reason: “{f.report_reason}”</p>}
-            <blockquote className="border-l-2 border-gray-300 pl-3 text-sm text-gray-800 whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
+            <blockquote className="border-l-2 border-gray-300 pl-3 text-sm text-gray-800 whitespace-pre-wrap wrap-break-word max-h-32 overflow-y-auto">
               {f.excerpt}
             </blockquote>
             <div className="flex flex-wrap gap-2">

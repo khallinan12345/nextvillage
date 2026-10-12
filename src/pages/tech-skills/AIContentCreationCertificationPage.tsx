@@ -177,8 +177,8 @@ const ContentPortfolioPanel: React.FC<{
   activeSection: keyof ContentPortfolio | null;
   showTips: boolean;
 }> = ({ portfolio, onChange, activeSection, showTips }) => (
-  <div className="h-full overflow-y-auto p-3 space-y-2.5">
-    <div className="flex items-center justify-between mb-1 sticky top-0 bg-paper backdrop-blur-sm py-1 z-10">
+  <div className="h-full overflow-y-auto p-3 stack-y-2.5">
+    <div className="flex items-center justify-between mb-1 sticky top-0 bg-paper backdrop-blur-xs py-1 z-10">
       <p className="text-[10px] font-bold text-muted uppercase tracking-wide">Content Portfolio</p>
       <p className="text-[10px] text-muted">
         {portfolioFilled(portfolio)}/{PORTFOLIO_SECTIONS.length} sections filled
@@ -232,7 +232,7 @@ const ContentPortfolioPanel: React.FC<{
             onChange={e => onChange(section.key, e.target.value)}
             rows={section.rows}
             placeholder={section.placeholder}
-            className="w-full bg-transparent text-xs text-body placeholder-muted resize-none outline-none leading-relaxed" />
+            className="w-full bg-transparent text-xs text-body placeholder-muted resize-none outline-hidden leading-relaxed" />
         </div>
       );
     })}
@@ -682,7 +682,7 @@ Respond ONLY in this JSON format:
         {/* ── Overview ────────────────────────────────────────────────── */}
         {view === 'overview' && (
           <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-4xl mx-auto stack-y-6">
 
               {renderVoiceBar(lvl <= 1
                 ? 'Welcome to the AI Content Creation Certification! You will create a real piece of content and be assessed on your skills.'
@@ -741,7 +741,7 @@ Respond ONLY in this JSON format:
 
               {/* Assessments list */}
               {assessments.length > 0 && (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   <h2 className="text-sm font-bold text-body">Certification Criteria</h2>
                   {assessments.map(a => {
                     const sc = assessmentScores.find(s => s.assessment_name === a.assessment_name);
@@ -760,7 +760,7 @@ Respond ONLY in this JSON format:
                           {isExpanded ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
                         </button>
                         {isExpanded && (
-                          <div className="px-4 pb-4 space-y-2 border-t border-hair pt-3">
+                          <div className="px-4 pb-4 stack-y-2 border-t border-hair pt-3">
                             <p className="text-xs text-body leading-relaxed">{a.certification_prompt}</p>
                             <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                               {[
@@ -828,7 +828,7 @@ Respond ONLY in this JSON format:
                 <select
                   value={activeKey}
                   onChange={e => setActiveKey(e.target.value as keyof ContentPortfolio)}
-                  className="w-full bg-card border border-hair rounded-lg px-2 py-1.5 text-xs text-body outline-none focus:border-accent">
+                  className="w-full bg-card border border-hair rounded-lg px-2 py-1.5 text-xs text-body outline-hidden focus:border-accent">
                   {PORTFOLIO_SECTIONS.map(s => (
                     <option key={s.key} value={s.key}>{s.label}</option>
                   ))}
@@ -836,8 +836,8 @@ Respond ONLY in this JSON format:
               </div>
 
               {/* Prompt input */}
-              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-                <div className="space-y-2">
+              <div className="flex-1 overflow-y-auto px-3 py-3 stack-y-3 min-h-0">
+                <div className="stack-y-2">
                   <p className="text-[10px] font-bold text-muted uppercase">Your prompt</p>
                   <textarea
                     value={prompt}
@@ -847,7 +847,7 @@ Respond ONLY in this JSON format:
                     placeholder={lvl <= 1
                       ? 'Tell me what you want to write or what help you need…'
                       : 'Describe what you need for this section, or paste content to improve…'}
-                    className="w-full bg-card border border-hair rounded-lg px-3 py-2 text-xs text-body placeholder-muted resize-none outline-none focus:border-accent leading-relaxed"
+                    className="w-full bg-card border border-hair rounded-lg px-3 py-2 text-xs text-body placeholder-muted resize-none outline-hidden focus:border-accent leading-relaxed"
                   />
                   <button onClick={handleAIAssist} disabled={!prompt.trim() || isGenerating}
                     className="w-full flex items-center justify-center gap-2 py-2 bg-accent hover:bg-accent disabled:opacity-40 text-ink text-xs font-bold rounded-lg transition-colors">
@@ -860,7 +860,7 @@ Respond ONLY in this JSON format:
 
                 {/* AI suggestion */}
                 {aiSuggestion && (
-                  <div className="p-3 bg-accent/10 border border-accent/30 rounded-xl space-y-2">
+                  <div className="p-3 bg-accent/10 border border-accent/30 rounded-xl stack-y-2">
                     <p className="text-[9px] font-bold text-accent uppercase">AI Suggestion</p>
                     <p className="text-xs text-body leading-relaxed whitespace-pre-wrap">{aiSuggestion}</p>
                     <button
@@ -873,7 +873,7 @@ Respond ONLY in this JSON format:
 
                 {/* Section tips */}
                 {showTips && (
-                  <div className="space-y-1.5">
+                  <div className="stack-y-1.5">
                     <p className="text-[9px] font-bold text-muted uppercase">Section guidance</p>
                     {(() => {
                       const s = PORTFOLIO_SECTIONS.find(s => s.key === activeKey);
@@ -887,7 +887,7 @@ Respond ONLY in this JSON format:
                 )}
 
                 {/* Quick tips */}
-                <div className="space-y-1.5">
+                <div className="stack-y-1.5">
                   <p className="text-[9px] font-bold text-muted uppercase">Content creation tips</p>
                   {[
                     'Know your audience before writing a single word.',
@@ -904,7 +904,7 @@ Respond ONLY in this JSON format:
               </div>
 
               {/* Bottom actions */}
-              <div className="flex-shrink-0 px-3 py-3 border-t border-hair space-y-2">
+              <div className="flex-shrink-0 px-3 py-3 border-t border-hair stack-y-2">
                 <button onClick={handleSavePortfolio}
                   className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-accent bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-lg transition-colors">
                   💾 Save Portfolio
@@ -940,7 +940,7 @@ Respond ONLY in this JSON format:
         {/* ── Results ─────────────────────────────────────────────────── */}
         {view === 'results' && (
           <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-3xl mx-auto space-y-5">
+            <div className="max-w-3xl mx-auto stack-y-5">
 
               {renderVoiceBar(allProficient
                 ? 'Congratulations! You have achieved certification level in AI Content Creation.'
@@ -971,7 +971,7 @@ Respond ONLY in this JSON format:
 
               {/* Per-criterion scores */}
               {assessmentScores.length > 0 && (
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {assessmentScores.map(sc => {
                     const assessment = assessments.find(a => a.assessment_name === sc.assessment_name);
                     const { text, color, bg, border } = scoreLabel(sc.score);
@@ -1028,7 +1028,7 @@ Respond ONLY in this JSON format:
         {/* ── Certificate ──────────────────────────────────────────────── */}
         {view === 'certificate' && (
           <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-2xl mx-auto space-y-5">
+            <div className="max-w-2xl mx-auto stack-y-5">
 
               {renderVoiceBar('Enter your name to generate your AI Content Creation Certificate.')}
 
@@ -1043,7 +1043,7 @@ Respond ONLY in this JSON format:
 
               {allProficient && (
                 <>
-                  <div className="p-6 bg-surface border border-accent/25 rounded-2xl text-center space-y-4">
+                  <div className="p-6 bg-surface border border-accent/25 rounded-2xl text-center stack-y-4">
                     <Trophy size={48} className="text-accent mx-auto" />
                     <div>
                       <h2 className="text-xl font-bold text-ink">🎓 Certification Achieved!</h2>
@@ -1066,7 +1066,7 @@ Respond ONLY in this JSON format:
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="stack-y-3">
                     <div>
                       <label className="block text-sm font-semibold text-body mb-1.5">
                         {lvl <= 1 ? 'Your full name (for the certificate):' : 'Full name as it should appear on the certificate:'}
@@ -1076,7 +1076,7 @@ Respond ONLY in this JSON format:
                         value={certName}
                         onChange={e => setCertName(e.target.value)}
                         placeholder="e.g. Amara Johnson"
-                        className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-none focus:border-accent text-base"
+                        className="w-full bg-card border border-hair rounded-xl px-4 py-3 text-ink placeholder-muted outline-hidden focus:border-accent text-base"
                       />
                     </div>
                     <button onClick={generateCertificate} disabled={!certName.trim() || isGenCert}

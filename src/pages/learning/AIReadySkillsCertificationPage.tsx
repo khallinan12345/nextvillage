@@ -58,10 +58,10 @@ const markdownComponents = {
     <em className="italic text-body">{children}</em>
   ),
   ul: ({ children }: any) => (
-    <ul className="list-disc list-inside space-y-1 mb-3 text-ink ml-2">{children}</ul>
+    <ul className="list-disc list-inside stack-y-1 mb-3 text-ink ml-2">{children}</ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="list-decimal list-inside space-y-2 mb-3 text-ink ml-2">{children}</ol>
+    <ol className="list-decimal list-inside stack-y-2 mb-3 text-ink ml-2">{children}</ol>
   ),
   li: ({ children }: any) => (
     <li className="leading-relaxed">{children}</li>
@@ -304,7 +304,7 @@ Return ONLY valid JSON: { "improved_text": "..." }`
       <span className="text-sm font-semibold text-body flex items-center gap-1.5">
         <Volume2 className="h-4 w-4 text-accent" /> Coach voice:
       </span>
-      <div className="flex rounded-lg overflow-hidden border border-hair shadow-sm">
+      <div className="flex rounded-lg overflow-hidden border border-hair shadow-xs">
         <button
           onClick={() => { stopSpeaking(); setVoiceMode('english'); }}
           title="British English — Google UK English Female"
@@ -1290,7 +1290,7 @@ Return ONLY the description, nothing else.`
                   const cert = certifications.find(c => c.certification_name === e.target.value);
                   if (cert) handleCertificationSelect(cert);
                 }}
-                className="w-full px-4 py-2 border border-hair bg-card text-ink rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+                className="w-full px-4 py-2 border border-hair bg-card text-ink rounded-lg font-semibold focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"
               >
                 {certifications.map(cert => (
                   <option key={cert.certification_name} value={cert.certification_name}>
@@ -1303,7 +1303,7 @@ Return ONLY the description, nothing else.`
         </div>
 
         {/* Why This Matters */}
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
           <h2 className="text-3xl font-bold text-ink mb-6">Why {selectedCertification.certification_name} Matters</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-paper rounded-xl p-6 border border-hair">
@@ -1334,13 +1334,13 @@ Return ONLY the description, nothing else.`
 
         {/* Progress Section */}
         {selectedCertification.assessments.length > 0 && (
-          <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+          <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
             <h2 className="text-2xl font-bold text-ink mb-6 flex items-center gap-3">
               <Trophy className="h-8 w-8 text-yellow-500" />
               Your Progress in {selectedCertification.certification_name}
             </h2>
             
-            <div className="space-y-4 mb-6">
+            <div className="stack-y-4 mb-6">
               {selectedCertification.assessments.map((assessment) => {
                 const score = assessmentScores.find(s => s.assessment_name === assessment.assessment_name);
                 const isPassed = score?.score !== null && score?.score !== undefined && score.score >= 2;
@@ -1415,7 +1415,7 @@ Return ONLY the description, nothing else.`
         )}
 
         {/* How Certification Works */}
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
           <h2 className="text-3xl font-bold text-ink mb-6">How Certification Works</h2>
           
           <div className="mb-8">
@@ -1467,7 +1467,7 @@ Return ONLY the description, nothing else.`
         </div>
 
         {/* Framework Section */}
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
           <h2 className="text-2xl font-bold text-ink mb-4">Backed by Global Frameworks</h2>
           <p className="text-lg text-body mb-4">Our certifications are aligned with internationally recognized standards:</p>
           <div className="flex flex-wrap gap-6 items-center justify-center">
@@ -1502,11 +1502,11 @@ Return ONLY the description, nothing else.`
           Back to Overview
         </button>
 
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
           <h2 className="text-3xl font-bold text-ink mb-2">{selectedCertification.certification_name}</h2>
           <p className="text-body mb-6">Select an assessment to begin</p>
 
-          <div className="space-y-4">
+          <div className="stack-y-4">
             {selectedCertification.assessments.map((assessment) => {
               const score = assessmentScores.find(s => s.assessment_name === assessment.assessment_name);
               const isPassed = score?.score !== null && score?.score !== undefined && score.score >= 2;
@@ -1559,7 +1559,7 @@ Return ONLY the description, nothing else.`
         Back to Selection
       </button>
 
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
         <h2 className="text-3xl font-bold text-ink mb-2">{selectedAssessment?.assessment_name}</h2>
         <p className="text-body mb-6">{selectedAssessment?.description}</p>
 
@@ -1576,7 +1576,7 @@ Return ONLY the description, nothing else.`
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="stack-y-6">
           <div>
             <label className="block text-sm font-semibold text-body mb-2">
               Topic <span className="text-red-500">*</span>
@@ -1586,7 +1586,7 @@ Return ONLY the description, nothing else.`
               value={learnerContext.topic}
               onChange={(e) => setLearnerContext({...learnerContext, topic: e.target.value})}
               placeholder="e.g. Solar-powered cold storage for fish, AI crop disease detection, Mobile money for market traders"
-              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-hidden"
             />
             <p className="text-sm text-muted mt-1">What real-world subject, challenge, or project will your assessment focus on?</p>
           </div>
@@ -1600,7 +1600,7 @@ Return ONLY the description, nothing else.`
               value={learnerContext.setting}
               onChange={(e) => setLearnerContext({...learnerContext, setting: e.target.value})}
               placeholder="e.g. Rural farming community in Bayelsa, Small market stall in Oloibiri, School in a town with unreliable electricity"
-              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-hidden"
             />
             <p className="text-sm text-muted mt-1">Where does this challenge occur? Be as specific as possible.</p>
           </div>
@@ -1614,7 +1614,7 @@ Return ONLY the description, nothing else.`
               value={learnerContext.constraints}
               onChange={(e) => setLearnerContext({...learnerContext, constraints: e.target.value})}
               placeholder="e.g. Limited budget, no reliable internet, low digital literacy in the community, seasonal income, language barriers"
-              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none resize-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-hidden resize-none"
             />
             <p className="text-sm text-muted mt-1">What limits what you can do? Budget, infrastructure, time, skills, access to technology?</p>
           </div>
@@ -1628,7 +1628,7 @@ Return ONLY the description, nothing else.`
               value={learnerContext.audience}
               onChange={(e) => setLearnerContext({...learnerContext, audience: e.target.value})}
               placeholder="e.g. Smallholder farmers aged 35–60, market traders with low digital skills, cooperative members, local school students"
-              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-hidden"
             />
             <p className="text-sm text-muted mt-1">Who is this for? Describe the people who will be affected or who need to understand your solution.</p>
           </div>
@@ -1682,7 +1682,7 @@ Return ONLY the description, nothing else.`
         Back to Context
       </button>
 
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
         <h2 className="text-3xl font-bold text-ink mb-4">{selectedAssessment?.assessment_name}</h2>
 
         <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 mb-6 flex items-start gap-3">
@@ -1735,7 +1735,7 @@ Return ONLY the description, nothing else.`
         <div className="bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
           <h3 className="text-lg font-bold text-ink mb-3">Scoring Rubric</h3>
           <p className="text-sm text-body mb-3">Your response will be evaluated on a 0-3 scale:</p>
-          <ul className="space-y-2 text-sm">
+          <ul className="stack-y-2 text-sm">
             <li><strong>0 (No Evidence):</strong> {selectedAssessment?.certification_level0_metric}</li>
             <li><strong>1 (Emerging):</strong> {selectedAssessment?.certification_level1_metric}</li>
             <li><strong>2 (Proficient):</strong> {selectedAssessment?.certification_level2_metric}</li>
@@ -1750,7 +1750,7 @@ Return ONLY the description, nothing else.`
           <textarea
             value={userResponse}
             onChange={(e) => setUserResponse(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-none min-h-[300px] font-mono text-sm"
+            className="w-full px-4 py-3 border-2 border-hair rounded-lg focus:border-accent focus:outline-hidden min-h-[300px] font-mono text-sm"
           />
           <p className="text-sm text-muted mt-2">
             This is your own work — no AI help during the attempt. Address all parts of the challenge above and connect your answer to your real-world context.
@@ -1797,7 +1797,7 @@ Return ONLY the description, nothing else.`
 
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-surface rounded-full mb-4">
               {evaluationScore !== null && evaluationScore >= 2 ? (
@@ -1896,7 +1896,7 @@ Return ONLY the description, nothing else.`
               <p className="text-body mb-4">
                 You still need to achieve Proficient or higher in {remaining.length} assessment{remaining.length !== 1 ? 's' : ''}:
               </p>
-              <ul className="list-disc list-inside space-y-1 text-body">
+              <ul className="list-disc list-inside stack-y-1 text-body">
                 {remaining.map(r => (
                   <li key={r.assessment_name}>{r.assessment_name}</li>
                 ))}
@@ -1941,7 +1941,7 @@ Return ONLY the description, nothing else.`
 
   const renderCertificate = () => (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm text-center">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs text-center">
         <div className="flex justify-center mb-6">
           <Award className="h-24 w-24 text-accent" />
         </div>
@@ -1962,7 +1962,7 @@ Return ONLY the description, nothing else.`
             value={certificateName}
             onChange={(e) => setCertificateName(e.target.value)}
             placeholder="Enter your full name"
-            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg focus:border-accent focus:outline-none text-center text-lg"
+            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg focus:border-accent focus:outline-hidden text-center text-lg"
           />
         </div>
 

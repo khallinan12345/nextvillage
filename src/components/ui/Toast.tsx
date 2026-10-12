@@ -31,7 +31,7 @@ const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismiss }) =>
 
   return (
     <div
-      className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none max-w-sm w-full sm:w-96"
+      className="fixed top-4 right-4 z-9999 flex flex-col gap-2 pointer-events-none max-w-sm w-full sm:w-96"
       aria-live="polite"
       aria-label="Notifications"
     >

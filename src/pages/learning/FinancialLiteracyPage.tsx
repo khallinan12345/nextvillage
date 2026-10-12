@@ -109,8 +109,8 @@ const parseHistory = (raw: unknown): ChatMessage[] => {
 
 const markdown = {
   p: ({ children }: any) => <p className="mb-2 leading-relaxed">{children}</p>,
-  ul: ({ children }: any) => <ul className="list-disc ml-5 mb-2 space-y-1">{children}</ul>,
-  ol: ({ children }: any) => <ol className="list-decimal ml-5 mb-2 space-y-1">{children}</ol>,
+  ul: ({ children }: any) => <ul className="list-disc ml-5 mb-2 stack-y-1">{children}</ul>,
+  ol: ({ children }: any) => <ol className="list-decimal ml-5 mb-2 stack-y-1">{children}</ol>,
   strong: ({ children }: any) => <strong className="font-semibold text-ink">{children}</strong>,
 };
 
@@ -683,7 +683,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
 
   // ── Create view ──────────────────────────────────────────────────────────
   if (!session && showCreate) {
-    const fieldCls = 'w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent';
+    const fieldCls = 'w-full border border-hair rounded-lg px-4 py-2.5 text-base bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent';
     const area = getFinLitArea(form.areaId) ?? FINLIT_AREAS[0];
     return (
       <AppLayout>
@@ -710,7 +710,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
             </p>
           </div>
 
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-8 space-y-5">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-8 stack-y-5">
             <div>
               <label className="block font-semibold text-ink mb-1">{simple ? 'Name of your activity' : 'Activity title'} <span className="text-red-500">*</span></label>
               <input className={fieldCls} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
@@ -773,7 +773,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
         <div className="max-w-5xl mx-auto px-6 py-8">
           <QuietButton onClick={closeSession} icon={<ArrowLeft size={16} />} className="mb-4">Back to activities</QuietButton>
 
-          <div className="bg-card border border-hair rounded-2xl shadow-sm p-6 mb-4 flex items-start justify-between gap-4">
+          <div className="bg-card border border-hair rounded-2xl shadow-xs p-6 mb-4 flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-accent mb-1">{AREA_ICONS[sessionArea.icon]}<span className="text-sm font-semibold">{sessionArea.title}</span></div>
               <h1 className="text-2xl font-bold text-ink">{session.title}</h1>
@@ -822,7 +822,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
                 <>
                   <div className="text-base"><ReactMarkdown components={markdown}>{text}</ReactMarkdown></div>
                   {rubric && (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 stack-y-2">
                       <div className="flex flex-wrap gap-1.5">
                         {sessionArea.criteria.map(c => {
                           const s = rubric.scores[c.key];
@@ -849,14 +849,14 @@ Return ONLY JSON: {"improved_text": "..."}`,
             }}
             submitting={submitting}
             transcriptRef={transcriptRef}
-            transcriptHeightClassName="h-[32rem]"
+            transcriptHeightClassName="h-128"
             value={input}
             onChange={setInput}
             onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             onSubmit={sendMessage}
             disabled={submitting}
             notice={
-              <div className="mb-3 space-y-2">
+              <div className="mb-3 stack-y-2">
                 <p className="text-sm text-muted">💡 Show your working when you calculate — your coach checks the numbers. Ask any question anytime.</p>
                 {allAdvanced ? (
                   <div className="rounded-xl border border-hair border-l-4 border-l-green-500 bg-paper px-4 py-3 text-sm">
@@ -926,14 +926,14 @@ Return ONLY JSON: {"improved_text": "..."}`,
                 <h3 className="font-semibold text-ink flex items-center gap-2"><BookOpen className="h-5 w-5 text-accent" /> Complete your session</h3>
                 <button onClick={() => setShowComplete(false)} className="text-muted hover:text-ink"><X size={18} /></button>
               </div>
-              <div className="px-6 py-5 space-y-3">
+              <div className="px-6 py-5 stack-y-3">
                 <p className="text-sm text-body">
                   {simple
                     ? 'Tell us: What did you learn about money today? What was hard? What will you do with real money this week?'
                     : 'Reflect before we score: what did you figure out, what was hardest, and what will you do differently with real money this week?'}
                 </p>
                 <textarea rows={6} autoFocus value={reflection} onChange={e => setReflection(e.target.value)}
-                  className="w-full border border-hair rounded-xl px-4 py-3 text-sm bg-paper resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  className="w-full border border-hair rounded-xl px-4 py-3 text-sm bg-paper resize-none focus:outline-hidden focus:ring-2 focus:ring-accent/40"
                   placeholder={`e.g. I learned that my profit is much smaller than I thought once I count transport. Next week I will write down every ${locale.symbol} I spend on the business.`} />
                 <p className="text-xs text-muted">You pass the session when every criterion is Proficient (2) or higher.</p>
               </div>
@@ -1053,7 +1053,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
             return (
               <button key={area.id} onClick={() => setActiveAreaId(area.id)}
                 className={classNames('flex flex-col items-start gap-3 p-5 rounded-xl border text-left transition-colors',
-                  active ? 'bg-surface border-accent/40 shadow-sm' : 'bg-card border-hair hover:border-accent/30')}>
+                  active ? 'bg-surface border-accent/40 shadow-xs' : 'bg-card border-hair hover:border-accent/30')}>
                 <div className={classNames('p-2 rounded-lg text-accent', active ? 'bg-accent/10' : 'bg-paper')}>{AREA_ICONS[area.icon]}</div>
                 <div>
                   <h3 className="font-semibold text-ink">{area.title}</h3>
@@ -1065,7 +1065,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
           })}
         </div>
 
-        <div className="bg-card border border-hair rounded-2xl shadow-sm p-6 mb-8">
+        <div className="bg-card border border-hair rounded-2xl shadow-xs p-6 mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-surface rounded-lg text-accent">{AREA_ICONS[activeArea.icon]}</div>
             <div>
@@ -1085,7 +1085,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
           </div>
         </div>
 
-        <div className="bg-card border border-hair rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-hair rounded-2xl shadow-xs overflow-hidden">
           <div className="px-6 py-4 border-b border-hair bg-surface flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-ink">Activities — {activeArea.title}</h3>

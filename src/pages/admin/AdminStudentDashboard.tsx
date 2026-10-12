@@ -325,7 +325,7 @@ const ScorePill: React.FC<{ score: number | null }> = ({ score }) => (
 const ProviderBadge: React.FC<{ provider: string }> = ({ provider }) => {
   const c = getProviderColor(provider);
   return (
-    <span className={classNames('text-[10px] px-1.5 py-0.5 rounded border font-semibold', c.bg, c.text, c.border)}>
+    <span className={classNames('text-[10px] px-1.5 py-0.5 rounded-sm border font-semibold', c.bg, c.text, c.border)}>
       {provider.charAt(0).toUpperCase() + provider.slice(1)}
     </span>
   );
@@ -357,7 +357,7 @@ const OrgSelectorGrid: React.FC<{
   }
 
   return (
-    <div className="space-y-4">
+    <div className="stack-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <h2 className="text-base font-bold text-gray-800">Select an Organization</h2>
         <button
@@ -374,7 +374,7 @@ const OrgSelectorGrid: React.FC<{
           placeholder="Search by org name, country, or city…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -388,7 +388,7 @@ const OrgSelectorGrid: React.FC<{
               <Building2 size={16} className="text-purple-500" />
               <span className="font-semibold text-gray-900 group-hover:text-purple-700 truncate">{org.name}</span>
             </div>
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs text-gray-500 stack-y-1">
               {(org.country || org.city) && (
                 <div className="flex items-center gap-1">
                   <Globe size={11} className="text-gray-400" />
@@ -423,7 +423,7 @@ const OrgBanner: React.FC<{
     <span className="text-sm font-semibold text-indigo-800">Viewing: {orgName}</span>
     <button
       onClick={onBack}
-      className="ml-auto text-xs text-indigo-600 hover:text-indigo-900 border border-indigo-300 rounded px-2.5 py-1 font-semibold"
+      className="ml-auto text-xs text-indigo-600 hover:text-indigo-900 border border-indigo-300 rounded-sm px-2.5 py-1 font-semibold"
     >
       {backLabel}
     </button>
@@ -493,13 +493,13 @@ const ActivityCard: React.FC<{ row: ActivityRow }> = ({ row }) => {
       </div>
 
       {open && hasDetail && (
-        <div className="px-4 pb-4 pt-3 border-t border-gray-100 bg-gray-50 space-y-3">
+        <div className="px-4 pb-4 pt-3 border-t border-gray-100 bg-gray-50 stack-y-3">
           {certScores.length > 0 && (
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Certification Scores</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {certScores.map(({ label, score }) => (
-                  <div key={label} className="flex items-center justify-between bg-white rounded px-3 py-1.5 border border-gray-100">
+                  <div key={label} className="flex items-center justify-between bg-white rounded-sm px-3 py-1.5 border border-gray-100">
                     <span className="text-xs text-gray-700 truncate pr-2">{label}</span>
                     <ScorePill score={score} />
                   </div>
@@ -510,9 +510,9 @@ const ActivityCard: React.FC<{ row: ActivityRow }> = ({ row }) => {
           {webDevScores.length > 0 && (
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Web Dev Cert Scores</p>
-              <div className="space-y-1.5">
+              <div className="stack-y-1.5">
                 {webDevScores.map(([name, val]) => (
-                  <div key={name} className="bg-white rounded px-3 py-2 border border-gray-100">
+                  <div key={name} className="bg-white rounded-sm px-3 py-2 border border-gray-100">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold text-gray-700">{name}</span>
                       <ScorePill score={val.score ?? null} />
@@ -526,9 +526,9 @@ const ActivityCard: React.FC<{ row: ActivityRow }> = ({ row }) => {
           {vibeCertScores.length > 0 && (
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Vibe Coding Cert Scores</p>
-              <div className="space-y-1.5">
+              <div className="stack-y-1.5">
                 {vibeCertScores.map(([name, val]) => (
-                  <div key={name} className="bg-white rounded px-3 py-2 border border-gray-100">
+                  <div key={name} className="bg-white rounded-sm px-3 py-2 border border-gray-100">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold text-gray-700">{name}</span>
                       <ScorePill score={val.score ?? null} />
@@ -544,7 +544,7 @@ const ActivityCard: React.FC<{ row: ActivityRow }> = ({ row }) => {
               <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Learning Scores</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {evalScores.map(({ label, score }) => (
-                  <div key={label} className="flex items-center justify-between bg-white rounded px-3 py-1.5 border border-gray-100">
+                  <div key={label} className="flex items-center justify-between bg-white rounded-sm px-3 py-1.5 border border-gray-100">
                     <span className="text-xs text-gray-700 truncate pr-2">{label}</span>
                     <ScorePill score={score} />
                   </div>
@@ -692,7 +692,7 @@ const StudentLearnerTable: React.FC<{
   const timeFrameLabel = timeFrame === 7 ? 'Last Week' : timeFrame === 30 ? 'Last Month' : 'Since Beginning';
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3 flex-wrap">
           <h2 className="text-sm font-bold text-gray-800">Student Learner Overview</h2>
@@ -705,20 +705,20 @@ const StudentLearnerTable: React.FC<{
               { val: 0 as const, label: 'Since Beginning' },
             ]).map(({ val, label }) => (
               <button key={val} onClick={() => setTimeFrame(val)}
-                className={classNames('px-2.5 py-1 rounded text-xs font-semibold transition-colors whitespace-nowrap',
-                  timeFrame === val ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                className={classNames('px-2.5 py-1 rounded-sm text-xs font-semibold transition-colors whitespace-nowrap',
+                  timeFrame === val ? 'bg-white text-purple-700 shadow-xs' : 'text-gray-500 hover:text-gray-700')}>
                 {label}
               </button>
             ))}
           </div>
           <input type="text" placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="ml-auto w-full sm:w-60 border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+            className="ml-auto w-full sm:w-60 border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-purple-500" />
         </div>
       </div>
 
       {/* Cohort summary banner — shown after time frame selection (always visible) */}
       {!loading && summaries.length > 0 && (
-        <div className="px-5 py-3 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100 flex flex-wrap gap-5">
+        <div className="px-5 py-3 bg-linear-to-r from-purple-50 to-indigo-50 border-b border-purple-100 flex flex-wrap gap-5">
           <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide self-center">{timeFrameLabel}</div>
           {[
             { label: 'Learners', value: cohortUsers, icon: <Users size={13} className="text-purple-500" /> },
@@ -784,7 +784,7 @@ const StudentLearnerTable: React.FC<{
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
                         {allCategoryNames.map((cat) => (
-                          <span key={`${s.id}-${cat}`} className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">
+                          <span key={`${s.id}-${cat}`} className="px-1.5 py-0.5 rounded-sm bg-gray-100 text-gray-700 border border-gray-200">
                             {cat}: {s.byCategory[cat] || 0}
                           </span>
                         ))}
@@ -922,7 +922,7 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="stack-y-6">
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-center">
         {/* Community selector */}
@@ -930,7 +930,7 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
           <select
             value={selectedCommunity}
             onChange={e => setSelectedCommunity(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="appearance-none pl-3 pr-8 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-purple-500"
           >
             <option value="__all__">All Communities</option>
             {communities.filter(c => c !== '__all__').map(c => (
@@ -943,8 +943,8 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           {([1, 7, 30, 90] as const).map(d => (
             <button key={d} onClick={() => { console.log(`[CostOverview] setDays(${d}) called`); setDays(d); }}
-              className={classNames('px-3 py-1.5 rounded text-xs font-semibold transition-colors',
-                days === d ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+              className={classNames('px-3 py-1.5 rounded-sm text-xs font-semibold transition-colors',
+                days === d ? 'bg-white text-purple-700 shadow-xs' : 'text-gray-500 hover:text-gray-700')}>
               {d === 1 ? '1d' : d === 7 ? 'Week' : d === 30 ? 'Month' : '3 Month'}
             </button>
           ))}
@@ -953,8 +953,8 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           {(['page', 'model', 'provider'] as const).map(g => (
             <button key={g} onClick={() => setGroupBy(g)}
-              className={classNames('px-3 py-1.5 rounded text-xs font-semibold transition-colors capitalize',
-                groupBy === g ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+              className={classNames('px-3 py-1.5 rounded-sm text-xs font-semibold transition-colors capitalize',
+                groupBy === g ? 'bg-white text-purple-700 shadow-xs' : 'text-gray-500 hover:text-gray-700')}>
               {g}
             </button>
           ))}
@@ -971,7 +971,7 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
           { label: 'Free-tier reqs', value: freeCalls.toLocaleString(), sub: '$0 — free providers', icon: <TrendingUp size={16} className="text-emerald-500" />, bg: 'bg-emerald-50' },
           { label: 'Paid reqs', value: paidCalls.toLocaleString(), sub: `${fmtTokens(totalInTok)} tokens in`, icon: <Activity size={16} className="text-purple-500" />, bg: 'bg-purple-50' },
         ].map(({ label, value, sub, icon, bg }) => (
-          <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-sm`}>
+          <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-xs`}>
             {icon}
             <div>
               <p className="text-xl font-black text-gray-900">{value}</p>
@@ -982,7 +982,7 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
         ))}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xs">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
           <DollarSign size={14} className="text-gray-400" />
           <span className="text-sm font-bold text-gray-700">Cost by {groupBy}</span>
@@ -991,7 +991,7 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
         {grouped.length === 0 ? (
           <div className="py-12 text-center text-sm text-gray-400">No cost data yet</div>
         ) : (
-          <div className="p-5 space-y-3">
+          <div className="p-5 stack-y-3">
             {grouped.map(([key, val]) => {
               const pc = getProviderColor(val.provider);
               return (
@@ -1017,13 +1017,13 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
 
       {/* Daily cost plot — all models, from April 1, 2025 */}
       {dayEntries.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
             <span className="text-sm font-bold text-gray-700">Daily cost — all models (from Apr 1)</span>
             <div className="flex flex-wrap gap-2">
               {allModelsInChart.map((m, i) => (
                 <span key={m} className="flex items-center gap-1 text-[10px] text-gray-500">
-                  <span className={classNames('w-2.5 h-2.5 rounded-sm', MODEL_BAR_COLORS[i % MODEL_BAR_COLORS.length])} />
+                  <span className={classNames('w-2.5 h-2.5 rounded-xs', MODEL_BAR_COLORS[i % MODEL_BAR_COLORS.length])} />
                   {modelLabel(m)}
                 </span>
               ))}
@@ -1036,7 +1036,7 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
                 const maxDayTotal = Math.max(...dayEntries.map(([, dm]) => [...dm.values()].reduce((s, n) => s + n, 0)), 0.0001);
                 return (
                   <div key={day} className="flex-shrink-0 w-5 flex flex-col items-center gap-1 group relative">
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
                       {day}: {fmtCost(dayTotal)}
                     </div>
                     <div className="w-full flex flex-col-reverse rounded-t overflow-hidden" style={{ height: `${Math.max((dayTotal / maxDayTotal) * 100, 2)}%` }}>
@@ -1066,13 +1066,13 @@ const CostOverviewPanel: React.FC<CostOverviewProps> = ({
           const pc = getProviderColor(provider);
           const isFree = (PRICING[pRows[0]?.model]?.input ?? 0) === 0;
           return (
-            <div key={provider} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div key={provider} className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
               <div className="flex items-center gap-2 mb-3">
                 <span className={classNames('text-[11px] px-2 py-0.5 rounded-full border font-bold', pc.bg, pc.text, pc.border)}>
                   {provider.charAt(0).toUpperCase() + provider.slice(1)} · {isFree ? 'Free' : 'Paid'}
                 </span>
               </div>
-              <div className="space-y-1.5 text-xs">
+              <div className="stack-y-1.5 text-xs">
                 <div className="flex justify-between"><span className="text-gray-500">Total cost</span><span className="font-semibold text-gray-800">{fmtCost(pCost)}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">Requests</span><span className="font-semibold text-gray-800">{pRows.length.toLocaleString()}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">Input tokens</span><span className="font-semibold text-gray-800">{fmtTokens(pInTok)}</span></div>
@@ -1197,13 +1197,13 @@ const ModelOverviewPanel: React.FC<{
   );
 
   return (
-    <div className="space-y-6">
+    <div className="stack-y-6">
       <div className="flex flex-wrap gap-3 items-center">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           {([1, 7, 30, 90] as const).map(d => (
             <button key={d} onClick={() => { console.log(`[ModelOverview] setDays(${d}) called`); setDays(d); }}
-              className={classNames('px-3 py-1.5 rounded text-xs font-semibold transition-colors',
-                days === d ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+              className={classNames('px-3 py-1.5 rounded-sm text-xs font-semibold transition-colors',
+                days === d ? 'bg-white text-purple-700 shadow-xs' : 'text-gray-500 hover:text-gray-700')}>
               {d === 1 ? '1d' : d === 7 ? 'Week' : d === 30 ? 'Month' : '3 Month'}
             </button>
           ))}
@@ -1220,7 +1220,7 @@ const ModelOverviewPanel: React.FC<{
           { label: 'Free-tier %', value: `${freePct.toFixed(0)}%`, sub: `${freeRequests.toLocaleString()} free reqs`, icon: <TrendingUp size={16} className="text-emerald-500" />, bg: 'bg-emerald-50' },
           { label: 'Total cost', value: `$${totalCost.toFixed(2)}`, sub: 'all providers', icon: <DollarSign size={16} className="text-amber-500" />, bg: 'bg-amber-50' },
         ].map(({ label, value, sub, icon, bg }) => (
-          <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-sm`}>
+          <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-xs`}>
             {icon}
             <div>
               <p className="text-xl font-black text-gray-900">{value}</p>
@@ -1231,7 +1231,7 @@ const ModelOverviewPanel: React.FC<{
         ))}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
           <Server size={14} className="text-gray-400" />
           <span className="text-sm font-bold text-gray-700">Requests by Model</span>
@@ -1284,7 +1284,7 @@ const ModelOverviewPanel: React.FC<{
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {m.topPages.map(p => (
-                            <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200 truncate max-w-[100px]">{p}</span>
+                            <span key={p} className="text-[10px] px-1.5 py-0.5 rounded-sm bg-gray-100 text-gray-600 border border-gray-200 truncate max-w-[100px]">{p}</span>
                           ))}
                         </div>
                       </td>
@@ -1310,11 +1310,11 @@ const ModelOverviewPanel: React.FC<{
       </div>
 
       {providerStats.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100">
             <span className="text-sm font-bold text-gray-700">Provider Distribution</span>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-5 stack-y-3">
             {providerStats.map(([provider, val]) => {
               const pc = getProviderColor(provider);
               const pct = totalRequests > 0 ? (val.requests / totalRequests * 100) : 0;
@@ -1339,13 +1339,13 @@ const ModelOverviewPanel: React.FC<{
       )}
 
       {dailyEntries.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
             <span className="text-sm font-bold text-gray-700">Daily Model Usage</span>
             <div className="flex flex-wrap gap-2">
               {allModelsInDaily.map((m, i) => (
                 <span key={m} className="flex items-center gap-1 text-[10px] text-gray-500">
-                  <span className={classNames('w-2.5 h-2.5 rounded-sm', MODEL_BAR_COLORS[i % MODEL_BAR_COLORS.length])} />
+                  <span className={classNames('w-2.5 h-2.5 rounded-xs', MODEL_BAR_COLORS[i % MODEL_BAR_COLORS.length])} />
                   {modelLabel(m)}
                 </span>
               ))}
@@ -1358,7 +1358,7 @@ const ModelOverviewPanel: React.FC<{
                 const maxDayTotal = Math.max(...dailyEntries.map(([, dm]) => [...dm.values()].reduce((s, n) => s + n, 0)), 1);
                 return (
                   <div key={day} className="flex-1 flex flex-col items-center gap-1 group relative">
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
                       {day}: {dayTotal} reqs
                     </div>
                     <div className="w-full flex flex-col-reverse rounded-t overflow-hidden" style={{ height: `${Math.max(dayTotal / maxDayTotal * 100, 3)}%` }}>
@@ -1395,7 +1395,7 @@ const ModelOverviewPanel: React.FC<{
               <div className={classNames('px-3 py-2 rounded-lg border text-xs', p.color.bg, p.color.border)}>
                 <div className={classNames('font-bold', p.color.text)}>{p.name}</div>
                 <div className="text-gray-500 text-[10px]">{p.model}</div>
-                {p.free && <span className="text-[9px] px-1 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold mt-1 inline-block">FREE</span>}
+                {p.free && <span className="text-[9px] px-1 py-0.5 rounded-sm bg-emerald-100 text-emerald-700 font-bold mt-1 inline-block">FREE</span>}
               </div>
               {i < arr.length - 1 && <span className="text-gray-300 text-lg">→</span>}
             </React.Fragment>
@@ -1565,7 +1565,7 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
   // VIEW 2: Individual detail
   if (selectedId) {
     return (
-      <div className="space-y-5">
+      <div className="stack-y-5">
         {isPlatformAdmin && selectedOrgName && (
           <OrgBanner orgName={selectedOrgName} onBack={() => { setCostOrgId(''); setSelectedId(''); }} backLabel="← Change Org" />
         )}
@@ -1573,7 +1573,7 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
         <div className="flex items-center gap-3">
           <button onClick={() => setSelectedId('')}
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <ChevronUp size={14} className="rotate-[-90deg]" /> All students
+            <ChevronUp size={14} className="-rotate-90" /> All students
           </button>
           <div>
             <span className="text-base font-bold text-gray-900">{selectedLearner?.name || '(no name)'}</span>
@@ -1606,28 +1606,28 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
                 { label: 'Free-tier reqs', value: freeRows.length.toLocaleString(), bg: 'bg-emerald-50', icon: <Zap size={16} className="text-emerald-500" /> },
                 { label: 'Paid reqs', value: paidRows.length.toLocaleString(), bg: 'bg-amber-50', icon: <TrendingUp size={16} className="text-amber-500" /> },
               ].map(({ label, value, bg, icon }) => (
-                <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-sm`}>
+                <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-xs`}>
                   {icon}<div><p className="text-xl font-black text-gray-900">{value}</p><p className="text-xs text-gray-500">{label}</p></div>
                 </div>
               ))}
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-3">
                 <DollarSign size={14} className="text-gray-400" />
                 <span className="text-sm font-bold text-gray-700">Cost breakdown</span>
                 <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5 ml-auto">
                   {(['page', 'model', 'provider'] as const).map(g => (
                     <button key={g} onClick={() => setGroupBy(g)}
-                      className={classNames('px-2.5 py-1 rounded text-xs font-semibold transition-colors capitalize',
-                        groupBy === g ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      className={classNames('px-2.5 py-1 rounded-sm text-xs font-semibold transition-colors capitalize',
+                        groupBy === g ? 'bg-white text-purple-700 shadow-xs' : 'text-gray-500 hover:text-gray-700')}>
                       {g}
                     </button>
                   ))}
                 </div>
                 <span className="text-xs text-gray-400">{fmtTokens(totalInTok + totalOutTok)} tokens</span>
               </div>
-              <div className="p-5 space-y-3">
+              <div className="p-5 stack-y-3">
                 {grouped.map(([key, val]) => {
                   const pc = getProviderColor(val.provider);
                   return (
@@ -1649,7 +1649,7 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100">
                 <span className="text-sm font-bold text-gray-700">Recent requests</span>
                 <span className="text-xs text-gray-400 ml-2">(last 50)</span>
@@ -1688,7 +1688,7 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
 
   // VIEW 1: Summary table
   return (
-    <div className="space-y-4">
+    <div className="stack-y-4">
       {isPlatformAdmin && selectedOrgName && (
         <OrgBanner orgName={selectedOrgName} onBack={() => setCostOrgId('')} backLabel="← Change Org" />
       )}
@@ -1698,14 +1698,14 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
         <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
           {([1, 7, 30, 90] as const).map(d => (
             <button key={d} onClick={() => setDays(d)}
-              className={classNames('px-3 py-1.5 rounded text-xs font-semibold transition-colors whitespace-nowrap',
-                days === d ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+              className={classNames('px-3 py-1.5 rounded-sm text-xs font-semibold transition-colors whitespace-nowrap',
+                days === d ? 'bg-white text-purple-700 shadow-xs' : 'text-gray-500 hover:text-gray-700')}>
               {d === 1 ? '1d' : d === 7 ? 'Week' : d === 30 ? 'Month' : '3 Month'}
             </button>
           ))}
         </div>
         <input type="text" placeholder="Search by name or email…" value={search} onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+          className="flex-1 min-w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-purple-500" />
         <button onClick={onRefresh} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
           <RefreshCw size={14} /> Refresh
         </button>
@@ -1719,7 +1719,7 @@ const LearnerCostPanel: React.FC<LearnerCostProps> = ({
       )}
 
       {!loading && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
               <colgroup>
@@ -1928,9 +1928,9 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
   };
 
   return (
-    <div className="space-y-5">
-      <div className="bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-indigo-50">
+    <div className="stack-y-5">
+      <div className="bg-white rounded-xl shadow-xs border border-purple-100 overflow-hidden">
+        <div className="px-6 py-4 border-b bg-linear-to-r from-purple-50 to-indigo-50">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-600" />
             Create Community Challenge
@@ -1940,7 +1940,7 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
           </p>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 stack-y-5">
           {/* Org */}
           {isPlatformAdmin ? (
             <div>
@@ -1972,7 +1972,7 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
               Challenge topic <span className="font-normal normal-case text-gray-400">(optional — blank lets rotation choose)</span>
             </label>
             <select value={templateSlug} onChange={e => setTemplateSlug(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-300">
               <option value="">— Let rotation decide —</option>
               {CHALLENGE_TEMPLATE_OPTIONS.map(t => (
                 <option key={t.slug} value={t.slug}>{t.label}</option>
@@ -1986,7 +1986,7 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
               Tier <span className="font-normal normal-case text-gray-400">(optional — blank lets rotation choose)</span>
             </label>
             <select value={tier} onChange={e => setTier(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-300">
               <option value="">— Let rotation decide —</option>
               {CHALLENGE_TIER_OPTIONS.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -2001,7 +2001,7 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
             </label>
             <textarea value={adminTopic} onChange={e => setAdminTopic(e.target.value)}
               rows={3} placeholder="e.g. There's a cholera risk after the recent flooding — focus the challenge on that."
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none" />
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-300 resize-none" />
             <p className="text-xs text-gray-400 mt-1">
               Claude still writes the actual challenge — same voice and grounding as every other challenge — but will prioritize this over the generic examples.
             </p>
@@ -2010,7 +2010,7 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
           {/* Override timing */}
           <label className="flex items-start gap-2.5 cursor-pointer">
             <input type="checkbox" checked={overrideTiming} onChange={e => setOverrideTiming(e.target.checked)}
-              className="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-400" />
+              className="mt-0.5 rounded-sm border-gray-300 text-purple-600 focus:ring-purple-400" />
             <span className="text-sm text-gray-700">
               <span className="font-semibold">Override normal 14-day timing.</span>{' '}
               <span className="text-gray-400">Off by default — leave unchecked to create what would be the next scheduled challenge, just with your inputs. Check this only if you want a challenge outside the normal cycle.</span>
@@ -2066,14 +2066,14 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
 
       {/* Preview content */}
       {preview && previewMeta && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b bg-gray-50 flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
               Preview — {previewMeta.slug} · {previewMeta.tier}
             </span>
             <span className="text-xs text-gray-400">{previewMeta.weekStart} → {previewMeta.weekEnd}</span>
           </div>
-          <div className="p-6 space-y-4">
+          <div className="p-6 stack-y-4">
             <div>
               <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-1">Title</p>
               <p className="text-sm font-bold text-gray-900">{preview.title}</p>
@@ -2092,7 +2092,7 @@ const CreateChallengePanel: React.FC<{ isPlatformAdmin: boolean }> = ({ isPlatfo
             </div>
             <div>
               <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-1">Return questions</p>
-              <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+              <ul className="text-sm text-gray-700 stack-y-1 list-disc list-inside">
                 <li>{preview.return_question_1}</li>
                 <li>{preview.return_question_2}</li>
                 {preview.return_question_3 && <li>{preview.return_question_3}</li>}
@@ -2171,7 +2171,7 @@ const PlatformGlobalPanel: React.FC<{
   );
 
   return (
-    <div className="space-y-5">
+    <div className="stack-y-5">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Organizations', value: orgs.length, bg: 'bg-purple-50', icon: <BarChart2 size={16} className="text-purple-500" /> },
@@ -2179,7 +2179,7 @@ const PlatformGlobalPanel: React.FC<{
           { label: 'Active (30d)', value: totalActive30, bg: 'bg-green-50', icon: <TrendingUp size={16} className="text-green-500" /> },
           { label: 'Countries', value: new Set(orgs.map(o => o.country).filter(Boolean)).size, bg: 'bg-amber-50', icon: <BarChart2 size={16} className="text-amber-500" /> },
         ].map(({ label, value, bg, icon }) => (
-          <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-sm`}>
+          <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-xs`}>
             {icon}
             <div>
               <p className="text-xl font-black text-gray-900">{value}</p>
@@ -2191,9 +2191,9 @@ const PlatformGlobalPanel: React.FC<{
 
       <input type="text" placeholder="Search by org, country, or city…"
         value={search} onChange={e => setSearch(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500" />
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -2707,7 +2707,7 @@ const AdminStudentDashboard: React.FC = () => {
         </div>
       )}
       {!loadingData && selectedId && activities.length > 0 && (
-        <div className="space-y-6">
+        <div className="stack-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Learning Activities', value: learningRows.length, icon: <BookOpen size={18} className="text-blue-500" />, bg: 'bg-blue-50' },
@@ -2715,7 +2715,7 @@ const AdminStudentDashboard: React.FC = () => {
               { label: 'Certifications', value: certRows.length, icon: <Trophy size={18} className="text-purple-500" />, bg: 'bg-purple-50' },
               { label: 'Certs Completed', value: completedCerts, icon: <Award size={18} className="text-amber-500" />, bg: 'bg-amber-50' },
             ].map(({ label, value, icon, bg }) => (
-              <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-sm`}>
+              <div key={label} className={`${bg} rounded-xl p-4 flex items-center gap-3 border border-white shadow-xs`}>
                 {icon}
                 <div>
                   <p className="text-xl font-black text-gray-900">{value}</p>
@@ -2730,7 +2730,7 @@ const AdminStudentDashboard: React.FC = () => {
                 <Trophy size={16} className="text-purple-600" /> Certifications
                 <span className="text-xs font-normal text-gray-400">({certRows.length})</span>
               </h2>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {certRows.map(row => <ActivityCard key={row.id} row={row} />)}
               </div>
             </section>
@@ -2758,7 +2758,7 @@ const AdminStudentDashboard: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 {filteredLearning.map(row => <ActivityCard key={row.id} row={row} />)}
               </div>
             </section>
@@ -2782,7 +2782,7 @@ const AdminStudentDashboard: React.FC = () => {
 
   // Shared learner selector
   const renderLearnerSelector = () => (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-6">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-5 mb-6">
       <label className="block text-sm font-semibold text-gray-700 mb-2">Select Learner</label>
       {loadingLearners ? (
         <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -2796,7 +2796,7 @@ const AdminStudentDashboard: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <select value={selectedId} onChange={e => setSelectedId(e.target.value)}
-              className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+              className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-purple-500">
               <option value="">— Choose a learner ({learners.length} total) —</option>
               {learners.map(l => (
                 <option key={l.id} value={l.id}>
@@ -2858,7 +2858,7 @@ const AdminStudentDashboard: React.FC = () => {
         {/* Safety flags and join requests — first thing a leader sees on a busy intake day.
             research_lead can view the dashboard but can't approve members. */}
         {(isPlatformAdmin || userRole === 'leader' || userRole === 'site_leader') && (
-          <div className="mb-5 space-y-5">
+          <div className="mb-5 stack-y-5">
             <SafetyFlagsCard />
             <PendingMembersCard />
           </div>
@@ -2882,7 +2882,7 @@ const AdminStudentDashboard: React.FC = () => {
               className={classNames(
                 'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
                 activeTab === tab.id
-                  ? 'bg-white text-purple-700 shadow-sm'
+                  ? 'bg-white text-purple-700 shadow-xs'
                   : 'text-gray-500 hover:text-gray-700'
               )}
             >
@@ -2943,7 +2943,7 @@ const AdminStudentDashboard: React.FC = () => {
                   <div className="mb-4 px-4 py-2.5 bg-indigo-50 border border-indigo-200 rounded-xl flex flex-wrap items-center gap-2">
                     <span className="text-xs font-semibold text-indigo-700">Showing learners who joined with your code{leaderJoinCodes.length > 1 ? 's' : ''}:</span>
                     {leaderJoinCodes.map(code => (
-                      <span key={code} className="font-mono text-xs font-black text-indigo-900 bg-white border border-indigo-200 rounded px-2 py-0.5">{code}</span>
+                      <span key={code} className="font-mono text-xs font-black text-indigo-900 bg-white border border-indigo-200 rounded-sm px-2 py-0.5">{code}</span>
                     ))}
                   </div>
                 )}

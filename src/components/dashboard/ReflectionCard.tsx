@@ -143,8 +143,8 @@ const ReflectionCard: React.FC<ReflectionCardProps> = ({ userId }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
-      <div className="px-5 py-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex items-center justify-between flex-wrap gap-2">
+    <div className="bg-white rounded-xl shadow-xs border border-indigo-100 overflow-hidden">
+      <div className="px-5 py-4 border-b bg-linear-to-r from-indigo-50 to-purple-50 flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-indigo-600" />
           {campDay ? `Day ${campDay} Reflection` : 'Daily Reflection'}
@@ -174,7 +174,7 @@ const ReflectionCard: React.FC<ReflectionCardProps> = ({ userId }) => {
               onChange={e => setReflectionText(e.target.value)}
               rows={4}
               placeholder="Write a few sentences..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 resize-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 resize-none"
             />
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs text-gray-400">

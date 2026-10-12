@@ -21,7 +21,7 @@ const ProficiencyDistributionChart: React.FC<ProficiencyDistributionChartProps> 
   const total = totalLearners > 0 ? totalLearners : PROFICIENCY_BANDS.reduce((s, b) => s + counts[b], 0);
 
   return (
-    <div className={classNames('px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-indigo-50/60 to-purple-50/60', className)}>
+    <div className={classNames('px-5 py-4 border-b border-gray-100 bg-linear-to-r from-indigo-50/60 to-purple-50/60', className)}>
       <div className="flex items-center gap-2 mb-3">
         <BarChart2 size={15} className="text-purple-600" />
         <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">

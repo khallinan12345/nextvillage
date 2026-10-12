@@ -424,7 +424,7 @@ const css = `
     font-family: 'DM Sans', sans-serif; font-size: 13px; color: ${C.mid};
     border-bottom: 2px solid transparent; white-space: nowrap;
     transition: all 0.2s; display: flex; align-items: center; gap: 7px;
-    flex-shrink: 0;
+    shrink: 0;
   }
   .ig-phase-tab.active {
     color: ${C.forest}; border-bottom-color: ${C.amber}; font-weight: 600;
@@ -455,7 +455,7 @@ const css = `
 
   /* ── TASK LIST ── */
   .ig-task-list {
-    width: 280px; flex-shrink: 0; border-right: 1px solid ${C.sand};
+    width: 280px; shrink: 0; border-right: 1px solid ${C.sand};
     background: ${C.white}; overflow-y: auto;
   }
   .ig-task-list-hdr {
@@ -472,7 +472,7 @@ const css = `
   .ig-task-item.locked { opacity: 0.4; cursor: not-allowed; }
   .ig-task-name { font-size: 13px; font-weight: 600; color: ${C.forest}; margin-bottom: 4px; }
   .ig-task-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .ig-task-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .ig-task-dot { width: 7px; height: 7px; border-radius: 50%; shrink: 0; }
   .ig-task-dot.complete { background: ${C.success}; }
   .ig-task-dot.active   { background: ${C.amber}; }
   .ig-task-dot.pending  { background: ${C.sandDk}; }
@@ -541,7 +541,7 @@ const css = `
     border-bottom: 1px solid ${C.sand}88;
   }
   .output-item:last-child { border-bottom: none; }
-  .output-dot { width: 5px; height: 5px; border-radius: 50%; background: ${C.amber}; flex-shrink: 0; }
+  .output-dot { width: 5px; height: 5px; border-radius: 50%; background: ${C.amber}; shrink: 0; }
   .ai-scope-notice {
     background: ${C.slate}08; border: 1px solid ${C.slate}22;
     border-left: 3px solid ${C.slate}; border-radius: 6px;
@@ -615,7 +615,7 @@ const css = `
   .ig-msg { display: flex; gap: 8px; align-items: flex-start; }
   .ig-msg.user { flex-direction: row-reverse; }
   .ig-msg-av {
-    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    width: 26px; height: 26px; border-radius: 50%; shrink: 0;
     display: flex; align-items: center; justify-content: center; font-size: 11px;
   }
   .ig-msg-av.ai { background: ${C.ink}; color: ${C.amber}; font-weight: 700; font-family: 'Cormorant Garamond', serif; font-size: 13px; }
@@ -656,7 +656,7 @@ const css = `
     width: 34px; height: 34px; border-radius: 7px;
     background: ${C.forest}; border: none; cursor: pointer;
     color: white; font-size: 14px; display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s; flex-shrink: 0;
+    transition: background 0.2s; shrink: 0;
   }
   .ig-send-btn:hover { background: ${C.forestMd}; }
   .ig-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -699,7 +699,7 @@ const css = `
     width: 28px; height: 28px; border-radius: 50%;
     border: 1px solid ${C.sand}; background: none; cursor: pointer;
     color: ${C.muted}; font-size: 14px; display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s; flex-shrink: 0;
+    transition: all 0.2s; shrink: 0;
   }
   .ig-remove-btn:hover { border-color: ${C.error}; color: ${C.error}; }
   .ig-add-member-btn {

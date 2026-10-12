@@ -465,7 +465,7 @@ function ActivityCard({ activity }: { activity: ActivityBlock }) {
         )}
       </div>
 
-      <div className="space-y-2 text-sm leading-relaxed text-gray-700">
+      <div className="stack-y-2 text-sm leading-relaxed text-gray-700">
         {activity.intro.map((line, i) => <p key={i}>{line}</p>)}
       </div>
 
@@ -483,7 +483,7 @@ function ActivityCard({ activity }: { activity: ActivityBlock }) {
       )}
 
       {activity.steps && (
-        <div className="mt-2 space-y-2 text-sm leading-relaxed text-gray-700">
+        <div className="mt-2 stack-y-2 text-sm leading-relaxed text-gray-700">
           {activity.steps.map((line, i) => <p key={i}>{line}</p>)}
         </div>
       )}
@@ -573,7 +573,7 @@ const AIDiscoveryCampGuidePage: React.FC = () => {
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-6">
 
         {/* header */}
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-purple-900 to-indigo-800 p-6 text-white">
+        <div className="mb-6 rounded-2xl bg-linear-to-br from-purple-900 to-indigo-800 p-6 text-white">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-cyan-300">
             <Sparkles className="h-3.5 w-3.5" /> AI Discovery
           </p>
@@ -592,7 +592,7 @@ const AIDiscoveryCampGuidePage: React.FC = () => {
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-white/20">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-linear-to-r from-amber-400 to-cyan-400 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>
@@ -628,14 +628,14 @@ const AIDiscoveryCampGuidePage: React.FC = () => {
 
                   <div className="mb-4 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900">
                     <p className="mb-1 font-extrabold">Remember:</p>
-                    <div className="space-y-1">
+                    <div className="stack-y-1">
                       {step.remember.map((line, i) => <p key={i}>{line}</p>)}
                     </div>
                   </div>
 
                   <div className="rounded-lg bg-teal-50 p-3 text-sm text-teal-900">
                     <p className="mb-1 font-extrabold">You'll know it worked when —</p>
-                    <div className="space-y-1">
+                    <div className="stack-y-1">
                       {step.checkpoint.map((line, i) => (
                         <p key={i} className="flex items-start gap-2">
                           <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />

@@ -1090,7 +1090,7 @@ const VideoStudioPage: React.FC = () => {
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 py-3 bg-slate-900 border-b border-slate-700/60 shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-pink-600">
+            <div className="p-2 rounded-lg bg-linear-to-br from-orange-500 to-pink-600">
               <Layers className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -1118,7 +1118,7 @@ const VideoStudioPage: React.FC = () => {
             {/* Project name */}
             <input
               type="text" value={videoName} onChange={e => setVideoName(e.target.value)}
-              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-36 focus:outline-none focus:border-orange-400 placeholder-slate-500"
+              className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-36 focus:outline-hidden focus:border-orange-400 placeholder-slate-500"
               placeholder="Project name…"
             />
             {/* Timecode */}
@@ -1243,7 +1243,7 @@ const VideoStudioPage: React.FC = () => {
             </div>
 
             {/* Panel content */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="flex-1 overflow-y-auto p-3 stack-y-2">
 
               {/* ── Video clips tab ── */}
               {activeTab === 'video' && (
@@ -1292,7 +1292,7 @@ const VideoStudioPage: React.FC = () => {
                   ) : audioLibrary.length === 0 ? (
                     <p className="text-xs text-slate-600 text-center py-2">No saved clips yet — generate some on the Voice Creation page!</p>
                   ) : (
-                    <div className="space-y-1 max-h-36 overflow-y-auto">
+                    <div className="stack-y-1 max-h-36 overflow-y-auto">
                       {audioLibrary.map(clip => (
                         <div key={clip.id}
                           className="flex items-center gap-2 px-2 py-1.5 bg-slate-800/70 border border-slate-700/40 rounded-lg cursor-pointer hover:bg-slate-700/70 transition-colors"
@@ -1313,7 +1313,7 @@ const VideoStudioPage: React.FC = () => {
                   )}
 
                   {audioTrack ? (
-                    <div className="bg-slate-800 border border-slate-700 rounded-lg p-3 space-y-3">
+                    <div className="bg-slate-800 border border-slate-700 rounded-lg p-3 stack-y-3">
                       <div className="flex items-center gap-2">
                         <Music size={14} className="text-green-400 shrink-0" />
                         <p className="text-xs text-slate-300 truncate flex-1">{audioTrack.name}</p>
@@ -1321,7 +1321,7 @@ const VideoStudioPage: React.FC = () => {
                           <X size={13} className="text-slate-500 hover:text-red-400" />
                         </button>
                       </div>
-                      <div className="space-y-2">
+                      <div className="stack-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-slate-400">Volume</span>
                           <span className="mono text-xs text-slate-400">{Math.round(audioTrack.volume * 100)}%</span>
@@ -1356,7 +1356,7 @@ const VideoStudioPage: React.FC = () => {
                   ) : audioLibrary.length === 0 ? (
                     <p className="text-xs text-slate-600 text-center py-2">No saved clips yet — generate some on the Voice Creation page!</p>
                   ) : (
-                    <div className="space-y-1 max-h-36 overflow-y-auto">
+                    <div className="stack-y-1 max-h-36 overflow-y-auto">
                       {audioLibrary.map(clip => (
                         <div key={clip.id}
                           className="flex items-center gap-2 px-2 py-1.5 bg-slate-800/70 border border-purple-800/40 rounded-lg cursor-pointer hover:bg-purple-900/30 transition-colors"
@@ -1401,7 +1401,7 @@ const VideoStudioPage: React.FC = () => {
                     }} />
                   </label>
 
-                  <div className="bg-slate-800/70 border border-slate-700/50 rounded-lg p-3 space-y-3">
+                  <div className="bg-slate-800/70 border border-slate-700/50 rounded-lg p-3 stack-y-3">
                     <p className="text-xs text-slate-400">Or record your voice at the current playhead position.</p>
                     {!isRecording ? (
                       <button onClick={startRecording}
@@ -1409,7 +1409,7 @@ const VideoStudioPage: React.FC = () => {
                         <Circle size={14} /> Start Recording
                       </button>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="stack-y-2">
                         <div className="flex items-center justify-center gap-2 text-red-400">
                           <div className="w-2.5 h-2.5 rounded-full bg-red-500 rec-pulse" />
                           <span className="mono text-sm font-bold">{fmt(recordingTime)}</span>
@@ -1423,7 +1423,7 @@ const VideoStudioPage: React.FC = () => {
                   </div>
 
                   {voiceSegs.length > 0 && (
-                    <div className="space-y-1.5">
+                    <div className="stack-y-1.5">
                       <p className="text-xs text-slate-500">Recordings</p>
                       {voiceSegs.map(v => (
                         <div key={v.id} className="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5">
@@ -1443,14 +1443,14 @@ const VideoStudioPage: React.FC = () => {
               {/* ── Text tab ── */}
               {activeTab === 'text' && (
                 <>
-                  <div className="bg-slate-800/70 border border-slate-700/50 rounded-lg p-3 space-y-3">
+                  <div className="bg-slate-800/70 border border-slate-700/50 rounded-lg p-3 stack-y-3">
                     <p className="text-xs text-slate-400">Add text at the current playhead position ({fmt(playhead)}).</p>
                     <textarea
                       value={newOverlayText}
                       onChange={e => setNewOverlayText(e.target.value)}
                       placeholder="Type your text here…"
                       rows={3}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 resize-none outline-none focus:ring-1 focus:ring-orange-500/50"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 resize-none outline-hidden focus:ring-1 focus:ring-orange-500/50"
                     />
                     <button onClick={addOverlay} disabled={!newOverlayText.trim()}
                       className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white rounded-lg py-2 text-sm font-semibold transition-colors">
@@ -1459,7 +1459,7 @@ const VideoStudioPage: React.FC = () => {
                   </div>
 
                   {overlays.length > 0 && (
-                    <div className="space-y-1.5">
+                    <div className="stack-y-1.5">
                       <p className="text-xs text-slate-500">Text overlays</p>
                       {overlays.map(o => (
                         <div key={o.id}
@@ -1476,7 +1476,7 @@ const VideoStudioPage: React.FC = () => {
                             </button>
                           </div>
                           {selectedOverlay === o.id && (
-                            <div className="mt-2 space-y-2 pt-2 border-t border-slate-700">
+                            <div className="mt-2 stack-y-2 pt-2 border-t border-slate-700">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-slate-400 w-14">Duration</span>
                                 <input type="range" min={0.5} max={10} step={0.5}
@@ -1609,7 +1609,7 @@ const VideoStudioPage: React.FC = () => {
               </div>
               <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                 <div
-                  className="h-2 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full transition-all"
+                  className="h-2 bg-linear-to-r from-orange-500 to-pink-500 rounded-full transition-all"
                   style={{ width: `${renderProgress * 100}%` }}
                 />
               </div>
@@ -1701,26 +1701,26 @@ const VideoStudioPage: React.FC = () => {
                 <button onClick={splitClipAtPlayhead}
                   disabled={!clips.some(c => playhead > c.timelineStart + 0.1 && playhead < c.timelineStart + (c.trimEnd - c.trimStart) - 0.1)}
                   title="Split clip at playhead (position playhead over a clip first)"
-                  className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 text-slate-400 hover:text-yellow-300 hover:bg-slate-700 disabled:opacity-30 text-[10px] transition-colors border border-slate-700">
+                  className="flex items-center gap-1 px-2 py-1 rounded-sm bg-slate-800 text-slate-400 hover:text-yellow-300 hover:bg-slate-700 disabled:opacity-30 text-[10px] transition-colors border border-slate-700">
                   <Scissors size={11} /> Split
                 </button>
                 <button onClick={deleteSelected}
                   disabled={!selectedClip}
                   title="Delete selected clip"
-                  className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-slate-700 disabled:opacity-30 text-[10px] transition-colors border border-slate-700">
+                  className="flex items-center gap-1 px-2 py-1 rounded-sm bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-slate-700 disabled:opacity-30 text-[10px] transition-colors border border-slate-700">
                   <Trash2 size={11} /> Delete
                 </button>
               </div>
             )}
             <div className="flex items-center gap-1 ml-auto">
               <button onClick={() => setPlayhead(p => Math.max(0, p - 5))}
-                className="p-1 rounded text-slate-500 hover:text-slate-300 transition-colors"><ChevronLeft size={14} /></button>
+                className="p-1 rounded-sm text-slate-500 hover:text-slate-300 transition-colors"><ChevronLeft size={14} /></button>
               <button onClick={() => setPlayhead(p => Math.min(totalDuration, p + 5))}
-                className="p-1 rounded text-slate-500 hover:text-slate-300 transition-colors"><ChevronRight size={14} /></button>
+                className="p-1 rounded-sm text-slate-500 hover:text-slate-300 transition-colors"><ChevronRight size={14} /></button>
               {/* Collapse/expand toggle */}
               <button onClick={() => setTimelineCollapsed(c => !c)}
                 title={timelineCollapsed ? 'Expand timeline' : 'Collapse timeline'}
-                className="p-1 rounded text-slate-500 hover:text-orange-400 transition-colors ml-1">
+                className="p-1 rounded-sm text-slate-500 hover:text-orange-400 transition-colors ml-1">
                 {timelineCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
             </div>
@@ -1884,7 +1884,7 @@ const VideoStudioPage: React.FC = () => {
                             const base = v.baseDuration ?? v.duration;
                             setVoiceSegs(prev => prev.map(x => x.id === v.id ? { ...x, playbackRate: next, baseDuration: base, duration: base / next } : x));
                           }}
-                          className="voice-handle shrink-0 text-[9px] font-bold text-purple-300 bg-purple-700/60 hover:bg-purple-600 px-1 rounded">
+                          className="voice-handle shrink-0 text-[9px] font-bold text-purple-300 bg-purple-700/60 hover:bg-purple-600 px-1 rounded-sm">
                           {(v.playbackRate ?? 1).toFixed(2).replace(/[.]?0+$/, '')}×
                         </button>
                         <button onClick={e => { e.stopPropagation(); setVoiceSegs(prev => prev.filter(x => x.id !== v.id)); }}

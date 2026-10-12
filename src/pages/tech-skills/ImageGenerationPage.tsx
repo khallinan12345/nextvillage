@@ -92,7 +92,7 @@ const ImageCard: React.FC<{ job: ImageJob; onReuse: (p: string) => void; onDelet
   const cfg = STATUS_CONFIG[job.status];
   const displayUrl = job.saved_image_url ?? job.image_url;
   return (
-    <div className={classNames('rounded-xl border backdrop-blur-sm overflow-hidden', cfg.border, 'bg-slate-900/60')}>
+    <div className={classNames('rounded-xl border backdrop-blur-xs overflow-hidden', cfg.border, 'bg-slate-900/60')}>
       <button onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors">
         <span className={classNames('text-sm font-semibold shrink-0', cfg.color)}>{cfg.icon} {job.status === 'generating' ? 'Generating…' : job.status.charAt(0).toUpperCase() + job.status.slice(1)}</span>
@@ -101,7 +101,7 @@ const ImageCard: React.FC<{ job: ImageJob; onReuse: (p: string) => void; onDelet
         {expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
       </button>
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
+        <div className="px-4 pb-4 stack-y-3 border-t border-white/10 pt-3">
           {job.status === 'succeeded' && displayUrl && (
             <img src={displayUrl} alt={job.prompt} className="w-full rounded-lg max-h-64 object-cover" />
           )}
@@ -520,9 +520,9 @@ const ImageGenerationPage: React.FC = () => {
     return (
       <AppLayout>
         <div className="fixed top-14 left-0 right-0 bottom-0 bg-slate-950 flex items-center justify-center p-8">
-          <div className="max-w-md text-center space-y-6">
+          <div className="max-w-md text-center stack-y-6">
             <div className="text-6xl">🌍</div>
-            <div className="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-8 backdrop-blur-sm">
+            <div className="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-8 backdrop-blur-xs">
               <h2 className="text-xl font-bold text-white mb-3">
                 Region Not Yet Available
               </h2>
@@ -554,10 +554,10 @@ const ImageGenerationPage: React.FC = () => {
 
         {/* Header */}
         <div className="mb-6">
-          <div className="inline-flex flex-col items-start gap-1 rounded-xl bg-slate-900/80 border border-slate-700/60 backdrop-blur-sm p-5 mb-4 w-full">
+          <div className="inline-flex flex-col items-start gap-1 rounded-xl bg-slate-900/80 border border-slate-700/60 backdrop-blur-xs p-5 mb-4 w-full">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-orange-500">
+                <div className="p-2 rounded-lg bg-linear-to-br from-pink-500 to-orange-500">
                   <ImagePlus className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -618,7 +618,7 @@ const ImageGenerationPage: React.FC = () => {
             {(['generate', 'history'] as ViewMode[]).map(v => (
               <button key={v} onClick={() => { setView(v); if (v === 'history') loadHistory(); }}
                 className={classNames('px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize',
-                  view === v ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white shadow'
+                  view === v ? 'bg-linear-to-r from-pink-600 to-orange-500 text-white shadow-sm'
                              : 'text-slate-400 hover:text-slate-200')}>
                 {v === 'history' ? `${lvl <= 1 ? 'My Images' : 'History'} (${history.length})` : (lvl <= 1 ? 'Make Image' : v)}
               </button>
@@ -628,7 +628,7 @@ const ImageGenerationPage: React.FC = () => {
 
         {/* Generate view */}
         {view === 'generate' && (
-          <div className="space-y-4">
+          <div className="stack-y-4">
 
             {/* Weekly usage */}
             {weeklyCount > 0 && !isBackToBasics && (
@@ -646,12 +646,12 @@ const ImageGenerationPage: React.FC = () => {
             )}
 
             {/* Prompt card */}
-            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
+            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-xs">
               <label className="block text-sm font-semibold text-slate-300 mb-2">{uiText.promptLabel}</label>
               <textarea value={prompt} onChange={e => setPrompt(e.target.value)}
                 rows={4} maxLength={750} disabled={isGenerating}
                 placeholder={uiText.promptPlaceholder}
-                className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 outline-none transition disabled:opacity-50" />
+                className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm resize-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 outline-hidden transition disabled:opacity-50" />
               <div className="flex items-center justify-between mt-1 mb-3">
                 <p className="text-xs text-slate-500">{uiText.promptHint}</p>
                 <span className={classNames('text-xs', charCount > 675 ? 'text-amber-400' : 'text-slate-500')}>{charCount}/750</span>
@@ -691,7 +691,7 @@ const ImageGenerationPage: React.FC = () => {
 
             {/* Critique / Step panel */}
             {showCritique && (
-              <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5 backdrop-blur-xs">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-amber-300 flex items-center gap-2">
                     <Lightbulb size={16} />
@@ -707,8 +707,8 @@ const ImageGenerationPage: React.FC = () => {
                     : <div className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{critiqueText}</div>
                 )}
                 {critiqueStep === 'step' && (
-                  <div className="space-y-3">
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  <div className="stack-y-3">
+                    <div className="stack-y-2 max-h-64 overflow-y-auto pr-1">
                       {stepMessages.map((m, i) => (
                         <div key={i} className={classNames('rounded-lg px-3 py-2 text-sm',
                           m.role === 'coach' ? 'bg-teal-900/40 border border-teal-500/30 text-teal-100' : 'bg-slate-700/60 text-slate-200 ml-6')}>
@@ -722,7 +722,7 @@ const ImageGenerationPage: React.FC = () => {
                       <input type="text" value={stepInput} onChange={e => setStepInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStepSend(); } }}
                         placeholder={lvl <= 1 ? 'Type your answer…' : 'Type your response…'}
-                        className="flex-1 bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:ring-1 focus:ring-teal-500/50" />
+                        className="flex-1 bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-hidden focus:ring-1 focus:ring-teal-500/50" />
                       <button onClick={handleImproveStep} disabled={!stepInput.trim() || isImprovingStep || isStepSending}
                         title="Improve my English"
                         className="flex items-center gap-1.5 bg-violet-700 hover:bg-violet-600 disabled:opacity-40 text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
@@ -740,14 +740,14 @@ const ImageGenerationPage: React.FC = () => {
             )}
 
             {/* Aspect ratio */}
-            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
+            <div className="bg-slate-900/70 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-xs">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-semibold text-slate-300">{uiText.aspectLabel}</span>
                 <div className="flex gap-1 flex-wrap">
                   {ASPECT_RATIOS.map(ar => (
                     <button key={ar} onClick={() => setAspectRatio(ar)} disabled={isGenerating}
                       className={classNames('px-3 py-1 rounded-lg text-sm font-medium transition-all disabled:opacity-40',
-                        aspectRatio === ar ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white'
+                        aspectRatio === ar ? 'bg-linear-to-r from-pink-600 to-orange-500 text-white'
                                            : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-600/50')}>
                       {ar}
                     </button>
@@ -769,7 +769,7 @@ const ImageGenerationPage: React.FC = () => {
 
             {/* Active job */}
             {activeJob && (
-              <div className={classNames('rounded-2xl border backdrop-blur-sm p-5 space-y-4',
+              <div className={classNames('rounded-2xl border backdrop-blur-xs p-5 stack-y-4',
                 activeJob.status === 'succeeded' ? 'bg-green-950/30 border-green-500/30'
                 : activeJob.status === 'failed'  ? 'bg-red-950/30 border-red-500/30'
                 : 'bg-pink-950/30 border-pink-500/30')}>
@@ -797,7 +797,7 @@ const ImageGenerationPage: React.FC = () => {
 
                 {/* Image display */}
                 {(imageUrl || savedUrl) && (
-                  <div className="space-y-3">
+                  <div className="stack-y-3">
                     <div className="rounded-xl overflow-hidden bg-black border border-green-500/20">
                       <img src={savedUrl ?? imageUrl ?? ''} alt={activeJob.prompt}
                         className="w-full max-h-96 object-contain" />
@@ -859,7 +859,7 @@ const ImageGenerationPage: React.FC = () => {
               <button onClick={handleGenerate} disabled={!prompt.trim() || isGenerating || (weeklyCount >= WEEKLY_LIMIT && !isBackToBasics)}
                 className={classNames('w-full flex items-center justify-center gap-3 rounded-xl py-3.5 font-semibold text-base transition-all',
                   prompt.trim() && !isGenerating && (weeklyCount < WEEKLY_LIMIT || isBackToBasics)
-                    ? 'bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-500 hover:to-orange-400 text-white shadow-lg hover:scale-[1.01]'
+                    ? 'bg-linear-to-r from-pink-600 to-orange-500 hover:from-pink-500 hover:to-orange-400 text-white shadow-lg hover:scale-[1.01]'
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed')}>
                 {isGenerating
                   ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {lvl <= 1 ? 'Making your image…' : 'Generating…'}</>
@@ -871,7 +871,7 @@ const ImageGenerationPage: React.FC = () => {
 
         {/* History view */}
         {view === 'history' && (
-          <div className="space-y-3">
+          <div className="stack-y-3">
             {loadingHist ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />

@@ -91,7 +91,7 @@ const OrgDropdown: React.FC<{
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white hover:border-indigo-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition-colors"
       >
         <span className={classNames(
           'truncate',
@@ -135,7 +135,7 @@ const OrgDropdown: React.FC<{
               placeholder="Search…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="flex-1 text-xs bg-transparent border-none outline-none text-gray-700 placeholder-gray-400"
+              className="flex-1 text-xs bg-transparent border-none outline-hidden text-gray-700 placeholder-gray-400"
               autoFocus
             />
           </div>
@@ -147,7 +147,7 @@ const OrgDropdown: React.FC<{
                 type="checkbox"
                 checked={isBroadcast}
                 onChange={toggleBroadcast}
-                className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-4 h-4 rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <Globe size={13} className="text-blue-500 shrink-0" />
               <span className="text-sm font-semibold text-blue-700">All Organizations</span>
@@ -170,7 +170,7 @@ const OrgDropdown: React.FC<{
                   checked={!isBroadcast && selectedIds!.includes(org.id)}
                   onChange={() => toggleOrg(org.id)}
                   disabled={isBroadcast}
-                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  className="w-4 h-4 rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <Building2 size={12} className="text-gray-400 shrink-0" />
                 <span className="text-sm text-gray-800 truncate">{org.name}</span>
@@ -264,7 +264,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
 
             {/* Header */}
@@ -279,7 +279,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="stack-y-4">
 
               {/* Org selector — platform admins only */}
               {isPlatformAdmin && (
@@ -311,7 +311,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
                     onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))}
                     placeholder="📢"
                     maxLength={4}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-center focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div className="flex-1">
@@ -323,7 +323,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
                     value={form.title}
                     onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                     placeholder="What's the news?"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -338,7 +338,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
                   onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
                   placeholder="Details about this announcement…"
                   rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
@@ -353,7 +353,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
                     value={form.link}
                     onChange={e => setForm(f => ({ ...f, link: e.target.value }))}
                     placeholder="https://…"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
@@ -363,7 +363,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
                     value={form.link_label}
                     onChange={e => setForm(f => ({ ...f, link_label: e.target.value }))}
                     placeholder="Learn more"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -378,7 +378,7 @@ const NewsManager: React.FC<NewsManagerProps> = ({
                   )}
                 >
                   <span className={classNames(
-                    'absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                    'absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform',
                     form.active ? 'translate-x-5' : 'translate-x-0'
                   )} />
                 </div>

@@ -136,7 +136,7 @@ export default function PromptChallengePage() {
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="px-4 py-2 rounded-md bg-blue-700 text-white font-medium hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="px-4 py-2 rounded-md bg-blue-700 text-white font-medium hover:bg-blue-800 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           Back to your dashboard
         </button>
@@ -183,7 +183,7 @@ export default function PromptChallengePage() {
           }}
           rows={3}
           disabled={busy}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500"
           placeholder="Write here…"
         />
         <div className="flex flex-wrap items-center gap-3">
@@ -191,7 +191,7 @@ export default function PromptChallengePage() {
             type="button"
             onClick={() => void send()}
             disabled={busy || input.trim() === ''}
-            className="px-4 py-2 rounded-md bg-blue-700 text-white font-medium hover:bg-blue-800 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="px-4 py-2 rounded-md bg-blue-700 text-white font-medium hover:bg-blue-800 disabled:opacity-50 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Send
           </button>
@@ -199,7 +199,7 @@ export default function PromptChallengePage() {
             type="button"
             onClick={() => void finish()}
             disabled={busy || !canFinish(messages)}
-            className="px-4 py-2 rounded-md border border-gray-400 text-gray-800 font-medium hover:bg-gray-50 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="px-4 py-2 rounded-md border border-gray-400 text-gray-800 font-medium hover:bg-gray-50 disabled:opacity-50 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             I am finished
           </button>

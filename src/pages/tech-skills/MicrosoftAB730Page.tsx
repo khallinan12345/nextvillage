@@ -235,7 +235,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
     : pct >= 0.5 ? 'from-amber-400 to-yellow-500 text-yellow-950'
     : 'from-red-400 to-rose-500 text-rose-950';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${color}`}>
       <Star size={12} />{score}/{max}
     </span>
   );
@@ -244,7 +244,7 @@ const ScoreBadge: React.FC<{ score: number; max?: number }> = ({ score, max = 3 
 // ─── Onboarding card ──────────────────────────────────────────────────────────
 
 const AB730Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div className="flex-1 overflow-y-auto p-4 stack-y-4">
     <div className="p-4 bg-purple-500/10 border border-purple-500/25 rounded-xl">
       <p className="text-xs font-bold text-purple-400 uppercase mb-3">💼 Welcome to AB-730 Certification Prep</p>
       <p className="text-sm text-gray-300 leading-relaxed mb-3">
@@ -264,7 +264,7 @@ const AB730Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
       </div>
 
       <p className="text-xs font-bold text-gray-400 uppercase mb-2">Three Skills Measured</p>
-      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed space-y-1 mb-3">
+      <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs leading-relaxed stack-y-1 mb-3">
         {[
           ['🧠', 'S1', 'Generative AI Fundamentals', '~30%', 'text-blue-300'],
           ['📝', 'S2', 'Prompts & Conversations',    '~35%', 'text-purple-300'],
@@ -296,7 +296,7 @@ const AB730Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
 
     <div className="p-3 bg-gray-800/40 rounded-lg border border-gray-700">
       <p className="text-xs font-bold text-gray-300 mb-1.5">🔗 How AB-730 builds on AI-900</p>
-      <div className="space-y-1.5 text-xs text-gray-400">
+      <div className="stack-y-1.5 text-xs text-gray-400">
         <div className="flex items-start gap-2">
           <span className="text-blue-400 font-bold flex-shrink-0">AI-900</span>
           <span>What AI is, how machine learning works, Azure AI services, Responsible AI principles</span>
@@ -377,7 +377,7 @@ const TopicStepper: React.FC<{
   const skills = [1, 2, 3] as const;
 
   return (
-    <div className="px-3 py-3 border-b border-gray-700 space-y-2 overflow-y-auto flex-shrink-0" style={{ maxHeight: '45vh' }}>
+    <div className="px-3 py-3 border-b border-gray-700 stack-y-2 overflow-y-auto flex-shrink-0" style={{ maxHeight: '45vh' }}>
       {/* Intro */}
       {onboarding && (() => {
         const idx = topics.findIndex(t => t.id === onboarding.id);
@@ -406,7 +406,7 @@ const TopicStepper: React.FC<{
               {sm.icon}{sm.shortLabel}
               <span className="text-gray-600 font-normal normal-case tracking-normal">{skillTopics[0].weight}</span>
             </div>
-            <div className="space-y-0.5">
+            <div className="stack-y-0.5">
               {skillTopics.map(topic => {
                 const globalIdx = topics.findIndex(t => t.id === topic.id);
                 const isDone = globalIdx < topicIndex;
@@ -813,7 +813,7 @@ const MicrosoftAB730Page: React.FC = () => {
 
       {/* Session picker */}
       {showSessionPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -821,7 +821,7 @@ const MicrosoftAB730Page: React.FC = () => {
               </h2>
               <button onClick={() => setShowSessionPicker(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-2">
               {sessions.map(s => (
                 <button key={s.ab730_session_id} onClick={() => loadSession(s)}
                   className="w-full text-left p-3 bg-gray-700/40 hover:bg-gray-700 border border-gray-600 hover:border-purple-500/40 rounded-xl transition-colors">
@@ -834,7 +834,7 @@ const MicrosoftAB730Page: React.FC = () => {
                     </div>
                     <button onClick={e => handleDeleteSession(e, s.ab730_session_id)}
                       disabled={deletingSessionId === s.ab730_session_id}
-                      className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors flex-shrink-0">
+                      className="p-1.5 text-gray-600 hover:text-red-400 rounded-sm transition-colors flex-shrink-0">
                       {deletingSessionId === s.ab730_session_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
                   </div>
@@ -856,7 +856,7 @@ const MicrosoftAB730Page: React.FC = () => {
         const scoreColor = (s: number) => s >= 2.5 ? 'text-emerald-400' : s >= 1.5 ? 'text-amber-400' : 'text-red-400';
         const skillLabel = (k: string) => k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
             <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
               <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -864,7 +864,7 @@ const MicrosoftAB730Page: React.FC = () => {
                 </h2>
                 <button onClick={() => setShowEvaluation(false)} className="p-1 text-gray-400 hover:text-white"><X size={18} /></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 stack-y-4">
                 {isEvaluating && (
                   <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 size={36} className="animate-spin text-purple-400 mb-3" />
@@ -908,7 +908,7 @@ const MicrosoftAB730Page: React.FC = () => {
                       </div>
                     )}
                     {evaluation.detailed_scores && (
-                      <div className="space-y-1">
+                      <div className="stack-y-1">
                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Skill Breakdown</p>
                         {Object.entries(evaluation.detailed_scores as Record<string, { score: number; justification: string }>).map(([skill, data]) => (
                           <details key={skill} className="group border border-gray-700 rounded-lg overflow-hidden">
@@ -943,7 +943,7 @@ const MicrosoftAB730Page: React.FC = () => {
               <Briefcase size={14} className="text-purple-400" />
               <span className="text-xs font-bold text-white truncate">AB-730 Prep</span>
               <button onClick={() => setVoiceOutputEnabled(v => !v)} title="Toggle voice"
-                className={`ml-auto p-1 rounded transition-colors ${voiceOutputEnabled ? 'text-purple-400 hover:text-purple-300' : 'text-gray-600 hover:text-gray-400'}`}>
+                className={`ml-auto p-1 rounded-sm transition-colors ${voiceOutputEnabled ? 'text-purple-400 hover:text-purple-300' : 'text-gray-600 hover:text-gray-400'}`}>
                 {voiceOutputEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
               </button>
             </div>
@@ -957,7 +957,7 @@ const MicrosoftAB730Page: React.FC = () => {
             <TopicStepper topics={TOPICS} topicIndex={topicIndex} onJump={handleJumpToTopic} />
           </div>
 
-          <div className="px-3 py-3 border-t border-gray-700 space-y-1.5 flex-shrink-0">
+          <div className="px-3 py-3 border-t border-gray-700 stack-y-1.5 flex-shrink-0">
             <button onClick={() => setShowSessionPicker(true)}
               className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors">
               <FolderOpen size={11} /> Sessions
@@ -987,7 +987,7 @@ const MicrosoftAB730Page: React.FC = () => {
             {isOnboarding ? (
               <AB730Onboarding onComplete={handleCompleteTopic} />
             ) : (
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 stack-y-4">
                 <div>
                   <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Topic {topicIndex}/{TOPICS.length - 1}</p>
                   <h2 className="text-sm font-bold text-white">{currentTopic?.label}</h2>
@@ -1014,7 +1014,7 @@ const MicrosoftAB730Page: React.FC = () => {
                 <ExamTipCard topicId={currentTopic?.id ?? ''} />
 
                 {answerHistory.filter(e => e.topicId === currentTopic?.id).length > 0 && (
-                  <div className="space-y-2">
+                  <div className="stack-y-2">
                     <p className="text-[10px] font-bold text-gray-500 uppercase">Your Answers — This Topic</p>
                     {answerHistory.filter(e => e.topicId === currentTopic?.id).slice(-3).map((entry, i) => (
                       <div key={entry.id} className="p-2 bg-gray-800/50 border border-gray-700 rounded-lg">
@@ -1054,7 +1054,7 @@ const MicrosoftAB730Page: React.FC = () => {
               </div>
 
               {/* Feedback + answer area */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+              <div className="flex-1 overflow-y-auto px-5 py-4 stack-y-3">
 
                 {aiExplanation && (
                   <div className="p-3 bg-gray-800/60 border border-gray-700 rounded-xl">
@@ -1096,14 +1096,14 @@ const MicrosoftAB730Page: React.FC = () => {
                     onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSubmit(); }}
                     placeholder={taskInstruction?.subTasks[subTaskIndex]?.substring(0, 80) + '…' || 'Type your answer here…'}
                     style={{ minHeight: '140px' }}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-none focus:border-purple-500 transition-colors leading-relaxed"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-y outline-hidden focus:border-purple-500 transition-colors leading-relaxed"
                   />
                   <p className="text-[9px] text-gray-700 mt-1">Ctrl+Enter to submit</p>
                 </div>
               </div>
 
               {/* Action buttons */}
-              <div className="flex-shrink-0 px-5 pb-5 space-y-2">
+              <div className="flex-shrink-0 px-5 pb-5 stack-y-2">
                 <div className="flex gap-2">
                   <button onClick={handleSubmit} disabled={isSubmitting || !answer.trim() || !taskInstruction}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors disabled:opacity-40">
@@ -1139,7 +1139,7 @@ const MicrosoftAB730Page: React.FC = () => {
 
                 {topicIndex >= TOPICS.length - 1 && topicHasAnswer && (
                   <button onClick={handleEvaluate}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all">
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-xl bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all">
                     <Award size={15} /> Get Exam Readiness Report
                   </button>
                 )}

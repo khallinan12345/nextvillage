@@ -621,7 +621,7 @@ const renderInline = (text: string, key: string | number): React.ReactNode => {
         if (part.startsWith('**') && part.endsWith('**'))
           return <strong key={i} className="font-bold text-ink">{part.slice(2, -2)}</strong>;
         if (part.startsWith('`') && part.endsWith('`'))
-          return <code key={i} className="bg-paper text-emerald-700 rounded px-1 text-sm font-mono">{part.slice(1, -1)}</code>;
+          return <code key={i} className="bg-paper text-emerald-700 rounded-sm px-1 text-sm font-mono">{part.slice(1, -1)}</code>;
         return part;
       })}
     </React.Fragment>
@@ -631,7 +631,7 @@ const renderInline = (text: string, key: string | number): React.ReactNode => {
 const MessageContent: React.FC<{ content: string }> = ({ content }) => {
   const vizSegments = parseVizContent(content);
   return (
-    <div className="space-y-3">
+    <div className="stack-y-3">
       {vizSegments.map((seg, s) => {
         if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={s} spec={seg.spec} />;
         // Text segment — run through the existing block renderer
@@ -643,7 +643,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
         // Numbered list block
         if (lines.every(l => /^\d+\.\s/.test(l))) {
           return (
-            <ol key={bi} className="list-decimal list-inside space-y-1 pl-1">
+            <ol key={bi} className="list-decimal list-inside stack-y-1 pl-1">
               {lines.map((l, li) => (
                 <li key={li} className="text-ink">{renderInline(l.replace(/^\d+\.\s/, ''), li)}</li>
               ))}
@@ -654,7 +654,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
         // Bullet list block
         if (lines.every(l => /^[-•*]\s/.test(l))) {
           return (
-            <ul key={bi} className="list-disc list-inside space-y-1 pl-1">
+            <ul key={bi} className="list-disc list-inside stack-y-1 pl-1">
               {lines.map((l, li) => (
                 <li key={li} className="text-ink">{renderInline(l.replace(/^[-•*]\s/, ''), li)}</li>
               ))}
@@ -764,7 +764,7 @@ const EvaluationModal: React.FC<{
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
       <div className="bg-card border border-hair rounded-2xl w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl">
         <div className={`sticky top-0 ${stage.glowBg} border-b ${stage.border} rounded-t-2xl px-6 py-4 flex items-start justify-between`}>
           <div>
@@ -776,7 +776,7 @@ const EvaluationModal: React.FC<{
           <button onClick={onClose} className="text-muted hover:text-ink p-1"><X size={22} /></button>
         </div>
 
-        <div className="px-6 py-5 space-y-3">
+        <div className="px-6 py-5 stack-y-3">
           <h3 className="text-muted font-semibold text-xs uppercase tracking-wider mb-4">Skill Breakdown</h3>
           {(evaluation.sub_categories ?? []).map((sub, i) => {
             const lc = LEVEL_CONFIG[sub.level];
@@ -790,7 +790,7 @@ const EvaluationModal: React.FC<{
                   </div>
                 </div>
                 <div className="h-1.5 bg-slate-700/60 rounded-full mb-3 overflow-hidden">
-                  <div className={`h-full rounded-full bg-gradient-to-r ${stage.gradient} transition-all duration-700`} style={{ width: `${sub.score}%` }} />
+                  <div className={`h-full rounded-full bg-linear-to-r ${stage.gradient} transition-all duration-700`} style={{ width: `${sub.score}%` }} />
                 </div>
                 <p className="text-body text-xs"><span className="text-muted mr-1">Evidence:</span>{sub.evidence}</p>
               </div>
@@ -823,7 +823,7 @@ const EvaluationModal: React.FC<{
             <div className="px-6 pb-4">
               <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
                 <p className="text-amber-800 text-xs font-semibold uppercase tracking-wider mb-2">🎯 Focus here next</p>
-                <ul className="space-y-1">
+                <ul className="stack-y-1">
                   {growth.map((s, i) => (
                     <li key={i} className="text-body text-sm flex items-start gap-2">
                       <span className="text-amber-600 mt-0.5">•</span>
@@ -864,7 +864,7 @@ const EvaluationModal: React.FC<{
           </button>
           <button
             onClick={onClose}
-            className={`flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r ${stage.gradient} hover:opacity-90 transition-opacity`}
+            className={`flex-1 py-3 rounded-xl font-bold text-white bg-linear-to-r ${stage.gradient} hover:opacity-90 transition-opacity`}
           >
             Continue Practising
           </button>
@@ -1288,13 +1288,13 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
         }}
         className={`relative rounded-2xl border-2 p-5 transition-all duration-200
           ${isCompleted
-            ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-sm pointer-events-none'
+            ? 'bg-emerald-100/80 border-emerald-300 cursor-not-allowed opacity-70 backdrop-blur-xs pointer-events-none'
             : isActive
-              ? `${stage.glowBg} ${stage.border} backdrop-blur-sm cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
-              : 'bg-surface/80 border-hair backdrop-blur-sm cursor-not-allowed opacity-70'}`}
+              ? `${stage.glowBg} ${stage.border} backdrop-blur-xs cursor-pointer hover:scale-[1.01] hover:shadow-2xl`
+              : 'bg-surface/80 border-hair backdrop-blur-xs cursor-not-allowed opacity-70'}`}
       >
         <div className="flex items-start gap-5">
-          <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-gradient-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
+          <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isUnlocked ? `bg-linear-to-br ${stage.gradient}` : 'bg-slate-600/80'}`}>
             {isCompleted ? <CheckCircle className="h-7 w-7 text-white" /> : isUnlocked ? <Icon className="h-7 w-7 text-white" /> : <Lock className="h-6 w-6 text-muted" />}
           </div>
           <div className="flex-1 min-w-0">
@@ -1330,7 +1330,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
+            <div className="bg-linear-to-r from-emerald-600 to-teal-600 rounded-2xl p-8 mb-4 text-white shadow-xl">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <FlaskConical className="h-12 w-12 animate-pulse" />
                 <h1 className="text-4xl font-bold">
@@ -1409,12 +1409,12 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-400" />
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="stack-y-8">
 
               {/* ── Tier 1: Scientific Reasoning ── */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex-1 h-px bg-gradient-to-r from-sky-500/60 to-transparent" />
+                  <div className="flex-1 h-px bg-linear-to-r from-sky-500/60 to-transparent" />
                   <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-100 border border-sky-300">
                     <Eye className="h-4 w-4 text-sky-700" />
                     <span className="text-sky-700 font-bold text-sm uppercase tracking-wider">
@@ -1422,14 +1422,14 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                     </span>
                     {progress?.tier1Complete && <CheckCircle className="h-4 w-4 text-green-600" />}
                   </div>
-                  <div className="flex-1 h-px bg-gradient-to-l from-sky-500/60 to-transparent" />
+                  <div className="flex-1 h-px bg-linear-to-l from-sky-500/60 to-transparent" />
                 </div>
                 <div className="text-center mb-5">
                   <p className="inline-block text-white text-sm bg-emerald-600 rounded-xl px-4 py-2 shadow-lg">
                     Five stages of core scientific reasoning skills.
                   </p>
                 </div>
-                <div className="space-y-4">
+                <div className="stack-y-4">
                   {(REASONING_STAGES || []).map((stage, idx) =>
                     renderStageCard(stage, idx, progress?.reasoning, false)
                   )}
@@ -1439,17 +1439,17 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
               {/* ── Tier 2: Pathway Accordions ── */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex-1 h-px bg-gradient-to-r from-emerald-500/60 to-transparent" />
+                  <div className="flex-1 h-px bg-linear-to-r from-emerald-500/60 to-transparent" />
                   <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300">
                     <BookOpen className="h-4 w-4 text-emerald-700" />
                     <span className="text-emerald-700 font-bold text-sm uppercase tracking-wider">
                       Tier 2 · Science Pathways
                     </span>
                   </div>
-                  <div className="flex-1 h-px bg-gradient-to-l from-emerald-500/60 to-transparent" />
+                  <div className="flex-1 h-px bg-linear-to-l from-emerald-500/60 to-transparent" />
                 </div>
 
-                <div className="space-y-4">
+                <div className="stack-y-4">
 
                   {/* Life Sciences accordion */}
                   <div className="rounded-2xl border-2 overflow-hidden transition-all border-green-500/50">
@@ -1458,7 +1458,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                       className="w-full flex items-center justify-between px-6 py-5 transition-all bg-green-100 hover:bg-green-200 cursor-pointer"
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-500`}>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-linear-to-br from-green-500 to-emerald-500`}>
                           <Microscope className="h-6 w-6 text-white" />
                         </div>
                         <div className="text-left">
@@ -1474,7 +1474,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                       {lifeOpen ? <ChevronUp className="h-5 w-5 text-green-700" /> : <ChevronDown className="h-5 w-5 text-green-700" />}
                     </button>
                     {lifeOpen && (
-                      <div className="px-4 pb-4 pt-2 space-y-3 bg-green-50">
+                      <div className="px-4 pb-4 pt-2 stack-y-3 bg-green-50">
                         {(LIFE_STAGES || []).map((stage, idx) =>
                           renderStageCard(stage, idx, progress?.life, false)
                         )}
@@ -1489,7 +1489,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                       className="w-full flex items-center justify-between px-6 py-5 transition-all bg-orange-100 hover:bg-orange-200 cursor-pointer"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-500">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-linear-to-br from-orange-500 to-red-500">
                           <Atom className="h-6 w-6 text-white" />
                         </div>
                         <div className="text-left">
@@ -1505,7 +1505,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                       {physicalOpen ? <ChevronUp className="h-5 w-5 text-orange-700" /> : <ChevronDown className="h-5 w-5 text-orange-700" />}
                     </button>
                     {physicalOpen && (
-                      <div className="px-4 pb-4 pt-2 space-y-3 bg-orange-50">
+                      <div className="px-4 pb-4 pt-2 stack-y-3 bg-orange-50">
                         {(PHYSICAL_STAGES || []).map((stage, idx) =>
                           renderStageCard(stage, idx, progress?.physical, false)
                         )}
@@ -1543,7 +1543,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
             <div className="bg-card border-2 border-hair rounded-2xl p-8 mb-6">
               <div className="text-center mb-7">
                 <div className="text-xs font-bold text-muted uppercase tracking-wider mb-1">{pathwayLabel}</div>
-                <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${selectedStage.gradient} flex items-center justify-center`}>
+                <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-linear-to-br ${selectedStage.gradient} flex items-center justify-center`}>
                   <Icon className="h-10 w-10 text-white" />
                 </div>
                 <div className="text-base font-semibold text-muted uppercase tracking-wider mb-1">Stage {selectedStage.id + 1}</div>
@@ -1591,7 +1591,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   onChange={e => setTopicInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && topicInput.trim()) startSession(); }}
                   placeholder="e.g., mangrove forests, cassava farming, the harmattan, fishing, solar panels..."
-                  className={`w-full bg-card border border-hair text-ink rounded-xl px-4 py-4 text-lg focus:outline-none focus:${selectedStage.border} placeholder-gray-400 transition-colors`}
+                  className={`w-full bg-card border border-hair text-ink rounded-xl px-4 py-4 text-lg focus:outline-hidden focus:${selectedStage.border} placeholder-gray-400 transition-colors`}
                 />
               </div>
               <button
@@ -1599,7 +1599,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 disabled={!topicInput.trim() || isSending}
                 className={`w-full py-4 rounded-xl text-lg font-bold transition-all
                   ${topicInput.trim() && !isSending
-                    ? `bg-gradient-to-r ${selectedStage.gradient} text-white hover:opacity-90 shadow-lg`
+                    ? `bg-linear-to-r ${selectedStage.gradient} text-white hover:opacity-90 shadow-lg`
                     : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
               >
                 {isSending ? 'Starting session...' : '🔬 Start New Session'}
@@ -1611,7 +1611,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <h3 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
                   <MessageSquare size={18} /> Continue a Session
                 </h3>
-                <div className="space-y-3">
+                <div className="stack-y-3">
                   {(activeSessions ?? []).map(session => (
                     <div key={session.id} onClick={() => resumeSession(session)}
                       className={`bg-card border ${selectedStage.border} rounded-xl p-4 cursor-pointer hover:bg-paper transition-all`}>
@@ -1641,7 +1641,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                 <h3 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
                   <CheckCircle size={18} className="text-green-600" /> Completed Sessions
                 </h3>
-                <div className="space-y-2">
+                <div className="stack-y-2">
                   {(finishedSessions ?? []).map(session => (
                     <div key={session.id} onClick={() => resumeSession(session)}
                       className="bg-green-100 border border-green-300 rounded-xl p-4 cursor-pointer hover:bg-green-200 transition-all">
@@ -1725,7 +1725,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-5">
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="max-w-3xl mx-auto stack-y-6">
               {messages.map(msg => (
                 <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <span className="text-xs font-medium text-muted mb-1.5">{msg.role === 'user' ? 'You' : 'AI Coach'}</span>
@@ -1770,7 +1770,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
                   placeholder="Type your observation, hypothesis, or answer here... or tap the mic to speak."
                   rows={3}
                   disabled={isSending || isImproving}
-                  className="w-full bg-transparent text-body rounded-xl px-1 py-1 focus:outline-none placeholder:text-muted resize-none text-lg leading-relaxed disabled:opacity-50 transition-colors"
+                  className="w-full bg-transparent text-body rounded-xl px-1 py-1 focus:outline-hidden placeholder:text-muted resize-none text-lg leading-relaxed disabled:opacity-50 transition-colors"
                 />
               </div>
               <div className="flex items-center justify-between mb-2 gap-2">

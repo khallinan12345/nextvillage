@@ -54,15 +54,15 @@ const AnimalCountPicker: React.FC<{ value: AnimalEntry[]; onChange: (v: AnimalEn
           className="text-xs text-green-700 font-semibold hover:underline disabled:opacity-40">+ Add species</button>
       </div>
       {value.length === 0 && <p className="text-sm text-gray-400 italic">No animals added yet.</p>}
-      <div className="space-y-2">
+      <div className="stack-y-2">
         {value.map((a, idx) => (
           <div key={idx} className="flex items-center gap-2">
             <select value={a.species} onChange={e => updateEntry(idx, 'species', e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400">
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-hidden focus:ring-2 focus:ring-green-400">
               {SPECIES_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.emoji} {s.label}</option>)}
             </select>
             <input type="number" min="0" value={a.count} onChange={e => updateEntry(idx, 'count', e.target.value)}
-              className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="0"/>
+              className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm text-center focus:outline-hidden focus:ring-2 focus:ring-green-400" placeholder="0"/>
             <button onClick={() => removeEntry(idx)} className="text-gray-400 hover:text-red-500 p-1"><X size={16}/></button>
           </div>
         ))}

@@ -203,7 +203,7 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
         {stepDot('done', 'Done', 4)}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+      <div className="flex-1 overflow-y-auto px-5 py-5 stack-y-5">
 
         {/* ── How to get a PAT guide ── */}
         <div className="rounded-xl border border-gray-800 overflow-hidden">
@@ -217,7 +217,7 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
             {guideOpen ? <ChevronDown size={13} className="text-gray-600" /> : <ChevronRight size={13} className="text-gray-600" />}
           </button>
           {guideOpen && (
-            <div className="px-4 py-4 space-y-3 border-t border-gray-800 bg-gray-950">
+            <div className="px-4 py-4 stack-y-3 border-t border-gray-800 bg-gray-950">
               {[
                 { n: 1, text: 'Go to github.com and sign in (or create a free account)', link: 'https://github.com' },
                 { n: 2, text: 'Click your profile photo → Settings → Developer settings (bottom of left sidebar)', link: 'https://github.com/settings/apps' },
@@ -247,14 +247,14 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
           <div className="px-4 py-3 bg-gray-900 border-b border-gray-800">
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Step 1 — Connect GitHub</p>
           </div>
-          <div className="px-4 py-4 space-y-3">
+          <div className="px-4 py-4 stack-y-3">
             <div className="relative">
               <input
                 type={showToken ? 'text' : 'password'}
                 value={token}
                 onChange={e => { setToken(e.target.value); setTokenValid(null); }}
                 placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 pr-10 font-mono"
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-hidden focus:border-purple-500 pr-10 font-mono"
               />
               <button onClick={() => setShowToken(p => !p)}
                 className="absolute right-3 top-2.5 text-gray-600 hover:text-gray-400">
@@ -285,14 +285,14 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
             <div className="px-4 py-3 bg-gray-900 border-b border-gray-800">
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Step 2 — Create Repository</p>
             </div>
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 py-4 stack-y-3">
               <div>
                 <label className="text-[10px] text-gray-500 uppercase font-bold mb-1 block">Repository name</label>
                 <input
                   type="text" value={repoName}
                   onChange={e => setRepoName(slugify(e.target.value))}
                   disabled={step !== 'repo'}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-purple-500 disabled:opacity-50"
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-purple-500 disabled:opacity-50"
                 />
                 <p className="text-[9px] text-gray-600 mt-1">github.com/{githubUser}/{repoName}</p>
               </div>
@@ -302,13 +302,13 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
                   type="text" value={repoDesc}
                   onChange={e => setRepoDesc(e.target.value)}
                   disabled={step !== 'repo'}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-purple-500 disabled:opacity-50"
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-hidden focus:border-purple-500 disabled:opacity-50"
                 />
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={repoPrivate} onChange={e => setRepoPrivate(e.target.checked)}
                   disabled={step !== 'repo'}
-                  className="rounded border-gray-600 bg-gray-800 text-purple-500" />
+                  className="rounded-sm border-gray-600 bg-gray-800 text-purple-500" />
                 <span className="text-xs text-gray-400">Private repository</span>
               </label>
               {step === 'repo' && (
@@ -334,10 +334,10 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
             <div className="px-4 py-3 bg-gray-900 border-b border-gray-800">
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Step 3 — Push Project Files</p>
             </div>
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 py-4 stack-y-3">
               <div className="rounded-lg bg-gray-950 border border-gray-800 p-3">
                 <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Files to push ({projectFiles.filter(f => f.content).length})</p>
-                <div className="space-y-0.5 max-h-32 overflow-y-auto">
+                <div className="stack-y-0.5 max-h-32 overflow-y-auto">
                   {projectFiles.filter(f => f.content).map(f => (
                     <div key={f.path} className="flex items-center gap-2 text-[10px] text-gray-400">
                       <GitBranch size={9} className="text-gray-700 flex-shrink-0" />
@@ -381,7 +381,7 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
             <div className="px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
               <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wide">🎉 Code is on GitHub — Deploy to Vercel</p>
             </div>
-            <div className="px-4 py-4 space-y-4">
+            <div className="px-4 py-4 stack-y-4">
 
               {/* Repo URL */}
               <div>
@@ -398,7 +398,7 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
               </div>
 
               {/* Vercel deploy steps */}
-              <div className="space-y-2">
+              <div className="stack-y-2">
                 <p className="text-[10px] text-gray-500 uppercase font-bold">Deploy to Vercel (3 steps)</p>
                 {[
                   { n: 1, text: 'Go to vercel.com and sign in with GitHub', link: 'https://vercel.com/new' },

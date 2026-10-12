@@ -34,7 +34,7 @@ const EvaluationPanel: React.FC<EvaluationPanelProps> = ({
   const overallTier = tierForRatio(maxScore > 0 ? overallScore / maxScore : 0);
 
   return (
-    <div className="space-y-4">
+    <div className="stack-y-4">
       <div className="bg-surface border border-hair rounded-xl p-6 text-center">
         <div className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">{title}</div>
         <div className="text-6xl font-extrabold text-ink">
@@ -47,7 +47,7 @@ const EvaluationPanel: React.FC<EvaluationPanelProps> = ({
       </div>
 
       {criteria.length > 0 && (
-        <div className="space-y-3">
+        <div className="stack-y-3">
           {criteria.map(c => {
             const max = c.maxScore ?? maxScore;
             const tier = tierForRatio(max > 0 ? c.score / max : 0);

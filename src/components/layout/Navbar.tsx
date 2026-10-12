@@ -193,7 +193,7 @@ const Navbar: React.FC = () => {
     'text-gray-600 hover:text-purple-700 border-b-2 border-transparent hover:border-purple-300';
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <nav className="bg-white shadow-xs border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 gap-4">
 
@@ -272,7 +272,7 @@ const Navbar: React.FC = () => {
                       </button>
 
                       {openDropdown === link.name && (
-                        <div className="absolute top-full left-0 z-[200] w-full">
+                        <div className="absolute top-full left-0 z-200 w-full">
                           {/* Transparent bridge — keeps hover zone continuous across the gap */}
                           <div className="h-1 w-full" />
                           <div className="bg-white rounded-md shadow-lg ring-1 ring-black/5 py-1 min-w-[230px] max-h-[75vh] overflow-y-auto">
@@ -296,7 +296,7 @@ const Navbar: React.FC = () => {
                                       <span className="flex items-center gap-1.5">
                                         {item.name}
                                         {item.path === '/tech-skills' && (
-                                          <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                          <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-700">
                                             ADVANCED
                                           </span>
                                         )}
@@ -328,7 +328,7 @@ const Navbar: React.FC = () => {
                                   <span className="flex items-center gap-1.5">
                                     {item.name}
                                     {item.path === '/tech-skills' && (
-                                      <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                      <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-700">
                                         ADVANCED
                                       </span>
                                     )}
@@ -403,7 +403,7 @@ const Navbar: React.FC = () => {
           <div className="xl:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-md text-gray-500 hover:text-purple-700 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+              className="p-2 rounded-md text-gray-500 hover:text-purple-700 hover:bg-purple-50 focus:outline-hidden focus:ring-2 focus:ring-purple-500 transition-colors"
             >
               <span className="sr-only">{isOpen ? 'Close menu' : 'Open menu'}</span>
               {isOpen ? <X size={22} /> : <Menu size={22} />}
@@ -415,7 +415,7 @@ const Navbar: React.FC = () => {
       {/* Mobile menu */}
       {isOpen && (
         <div className="xl:hidden border-t border-gray-100 bg-white">
-          <div className="px-2 pt-2 pb-3 space-y-0.5">
+          <div className="px-2 pt-2 pb-3 stack-y-0.5">
             {navigationLinks.map((link) => {
               if (link.dropdown || link.groups) {
                 const isResearch = link.name === 'Research';
@@ -456,7 +456,7 @@ const Navbar: React.FC = () => {
                                 <span className="flex items-center gap-1.5">
                                   {item.name}
                                   {item.path === '/tech-skills' && (
-                                    <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                    <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-700">
                                       ADVANCED
                                     </span>
                                   )}
@@ -490,7 +490,7 @@ const Navbar: React.FC = () => {
                           <span className="flex items-center gap-1.5">
                             {item.name}
                             {item.path === '/tech-skills' && (
-                              <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                              <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-700">
                                 ADVANCED
                               </span>
                             )}
@@ -519,7 +519,7 @@ const Navbar: React.FC = () => {
             })}
           </div>
 
-          <div className="border-t border-gray-100 px-2 pt-2 pb-3 space-y-0.5">
+          <div className="border-t border-gray-100 px-2 pt-2 pb-3 stack-y-0.5">
             {isLeaderOrAdmin && (
               <Link
                 to="/admin/student-dashboard"

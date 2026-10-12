@@ -1167,7 +1167,7 @@ const css = `
     width: 28px; height: 28px; border-radius: 50%;
     border: 1px solid ${C.sand}; background: none; cursor: pointer;
     color: ${C.muted}; font-size: 14px; display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s; flex-shrink: 0;
+    transition: all 0.2s; shrink: 0;
   }
   .remove-btn:hover { border-color: ${C.warn}; color: ${C.warn}; background: ${C.warnLt}; }
   .add-member-btn {
@@ -1251,7 +1251,7 @@ const css = `
   /* ── PHASE BODY ── */
   .phase-body { display: flex; gap: 0; min-height: calc(100vh - 280px); }
   .task-list {
-    width: 320px; flex-shrink: 0; border-right: 1px solid ${C.sand};
+    width: 320px; shrink: 0; border-right: 1px solid ${C.sand};
     background: ${C.white}; overflow-y: auto;
     padding: 20px 0;
   }
@@ -1270,7 +1270,7 @@ const css = `
   .task-item-name { font-size: 13px; font-weight: 600; color: ${C.navy}; margin-bottom: 4px; }
   .task-item-meta { font-size: 11px; color: ${C.muted}; display: flex; gap: 10px; }
   .task-status-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px;
+    width: 8px; height: 8px; border-radius: 50%; shrink: 0; margin-top: 3px;
   }
   .task-status-dot.complete { background: ${C.success}; }
   .task-status-dot.active { background: ${C.gold}; box-shadow: 0 0 0 3px ${C.gold}33; }
@@ -1357,7 +1357,7 @@ const css = `
   .ai-msg { display: flex; gap: 10px; align-items: flex-start; }
   .ai-msg.user { flex-direction: row-reverse; }
   .msg-avatar {
-    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    width: 28px; height: 28px; border-radius: 50%; shrink: 0;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px;
   }
@@ -1423,7 +1423,7 @@ const css = `
     background: ${C.navy}; border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     color: white; font-size: 14px; transition: background 0.2s;
-    flex-shrink: 0;
+    shrink: 0;
   }
   .ai-send-btn:hover { background: ${C.navyMd}; }
   .ai-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }

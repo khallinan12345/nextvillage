@@ -1192,13 +1192,13 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
       </div>
 
       {assessments.length > 0 && (
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
           <h2 className="text-lg font-semibold text-ink mb-6 flex items-center gap-2">
             <Trophy className="h-5 w-5 text-accent" />
             Your Progress
           </h2>
 
-          <div className="space-y-3 mb-6">
+          <div className="stack-y-3 mb-6">
             {assessments.map((assessment) => {
               const score = assessmentScores.find(s => s.assessment_name === assessment.assessment_name);
               const isPassed = score?.score !== null && score?.score !== undefined && score.score >= 2;
@@ -1284,7 +1284,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
         </div>
       )}
 
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm mb-8">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs mb-8">
         <h2 className="text-xl font-semibold text-ink mb-6">How Certification Works</h2>
 
         <div className="mb-8">
@@ -1343,7 +1343,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
           <ArrowLeft className="h-4 w-4" />
           Back to Overview
         </button>
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
           <h2 className="text-xl font-semibold text-ink mb-6">Select an Assessment</h2>
           {assessments.length === 0 ? (
             <div className="text-center py-12">
@@ -1354,7 +1354,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="stack-y-3">
               {assessments.map((assessment) => {
                 const score = assessmentScores.find(s => s.assessment_name === assessment.assessment_name);
                 const isPassed = score?.score !== null && score?.score !== undefined && score.score >= 2;
@@ -1402,7 +1402,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
         <ArrowLeft className="h-4 w-4" />
         Back to Assessment Selection
       </button>
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
         <h2 className="text-xl font-semibold text-ink mb-4">
           {selectedAssessment?.assessment_name}
         </h2>
@@ -1419,7 +1419,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             and you won't need to retake this particular assessment.
           </p>
         </div>
-        <div className="space-y-6">
+        <div className="stack-y-6">
           <div>
             <label className="block text-sm font-semibold text-ink mb-2">
               Topic <span className="text-red-500">*</span>
@@ -1429,7 +1429,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               value={learnerContext.topic}
               onChange={(e) => setLearnerContext({ ...learnerContext, topic: e.target.value })}
               placeholder="e.g., Clean water access, school attendance, crop yields"
-              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"
             />
             <p className="text-sm text-muted mt-1">Choose a local problem, interest, or opportunity you care about</p>
           </div>
@@ -1440,7 +1440,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             <select
               value={learnerContext.setting}
               onChange={(e) => setLearnerContext({ ...learnerContext, setting: e.target.value })}
-              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"
             >
               <option value="">Select a setting...</option>
               <option value="village">Village</option>
@@ -1461,7 +1461,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               value={learnerContext.constraints}
               onChange={(e) => setLearnerContext({ ...learnerContext, constraints: e.target.value })}
               placeholder="e.g., Limited internet, low budget, time constraints"
-              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"
             />
             <p className="text-sm text-muted mt-1">Include at least one real limitation (power, internet, money, time, etc.)</p>
           </div>
@@ -1474,7 +1474,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               value={learnerContext.audience}
               onChange={(e) => setLearnerContext({ ...learnerContext, audience: e.target.value })}
               placeholder="e.g., My peers, family members, community leaders"
-              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent"
             />
             <p className="text-sm text-muted mt-1">Who is the solution for? (peer, family, community member, etc.)</p>
           </div>
@@ -1511,7 +1511,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
         <ArrowLeft className="h-4 w-4" />
         Back to Context
       </button>
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
         <h2 className="text-xl font-semibold text-ink mb-4">
           {selectedAssessment?.assessment_name}
         </h2>
@@ -1565,7 +1565,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
         <div className="bg-surface border border-hair rounded-xl p-6 mb-6">
           <h3 className="text-base font-semibold text-ink mb-3">Scoring Rubric</h3>
           <p className="text-sm text-body mb-3">Your response will be evaluated on a 0-3 scale:</p>
-          <ul className="space-y-2 text-sm text-body">
+          <ul className="stack-y-2 text-sm text-body">
             <li><strong className="text-ink">0 (No Evidence):</strong> {selectedAssessment?.certification_level0_metric}</li>
             <li><strong className="text-ink">1 (Emerging):</strong> {selectedAssessment?.certification_level1_metric}</li>
             <li><strong className="text-ink">2 (Proficient):</strong> {selectedAssessment?.certification_level2_metric}</li>
@@ -1581,7 +1581,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
           <textarea
             value={userResponse}
             onChange={(e) => setUserResponse(e.target.value)}
-            className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent min-h-[420px] font-mono text-sm leading-relaxed"
+            className="w-full px-4 py-3 border border-hair rounded-lg bg-paper focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent min-h-[420px] font-mono text-sm leading-relaxed"
           />
           <p className="text-sm text-muted mt-2">
             Answer each question by replacing <em>[Answer Here]</em> with your own response. Use the 💡 hints above each question to make sure you cover the key points — the more specific and detailed you are, the better your evaluation will be.
@@ -1625,7 +1625,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
     const allPassed = checkAllAssessmentsPassed();
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm">
+        <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs">
           <div className={`text-center mb-8 p-8 rounded-xl border ${
             evaluationScore !== null && evaluationScore >= 2
               ? 'bg-green-50 border-green-300'
@@ -1705,7 +1705,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
               <p className="text-body mb-4">
                 You still need to achieve Proficient or higher in {remaining.length} assessment{remaining.length !== 1 ? 's' : ''}:
               </p>
-              <ul className="space-y-2 mt-2">
+              <ul className="stack-y-2 mt-2">
                 {remaining.map(r => {
                   const fullAssessment = assessments.find(a => a.assessment_name === r.assessment_name);
                   return (
@@ -1760,7 +1760,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
 
   const renderCertificate = () => (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-card border border-hair rounded-2xl p-8 shadow-sm text-center">
+      <div className="bg-card border border-hair rounded-2xl p-8 shadow-xs text-center">
         <div className="flex justify-center mb-6">
           <Award className="h-16 w-16 text-accent" />
         </div>
@@ -1778,7 +1778,7 @@ Keep your advice concise (3-5 key points). Write at the communication level spec
             value={certificateName}
             onChange={(e) => setCertificateName(e.target.value)}
             placeholder="Enter your full name"
-            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-center text-lg"
+            className="w-full max-w-md mx-auto px-4 py-3 border border-hair rounded-lg bg-card focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent text-center text-lg"
           />
         </div>
         <div className="mb-8">

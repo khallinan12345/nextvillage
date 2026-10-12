@@ -42,7 +42,7 @@ const ManualPidginTooltip: React.FC<ManualPidginTooltipProps> = ({
         aria-expanded={open}
         aria-controls={`pidgin-tooltip-${id}`}
         onClick={toggleOpen}
-        className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm transition hover:border-slate-400 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-900 shadow-xs transition hover:border-slate-400 hover:bg-slate-100 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
       >
         <MessageCircle className="h-4 w-4 text-slate-700" />
         <span>{label}</span>
@@ -65,7 +65,7 @@ const ManualPidginTooltip: React.FC<ManualPidginTooltipProps> = ({
             <button
               type="button"
               onClick={toggleOpen}
-              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               aria-label="Close Pidgin explanation"
             >
               <X className="h-4 w-4" />
@@ -85,7 +85,7 @@ const ManualPidginTooltip: React.FC<ManualPidginTooltipProps> = ({
               type="button"
               onClick={() => speakPidginText(pidginText)}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Volume2 className="h-4 w-4" />
               {speaking ? 'Playing' : loading ? 'Preparing...' : 'Listen'}
@@ -128,7 +128,7 @@ export const PidginTooltip: React.FC<PidginTooltipProps> = ({
         <button
           type="button"
           disabled
-          className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 shadow-xs"
           title="Provide pidginText or originalText to enable Pidgin translation"
         >
           <MessageCircle className="h-4 w-4 text-slate-400" />

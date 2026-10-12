@@ -35,7 +35,7 @@ const AuditTask: React.FC = () => {
   })), []);
 
   return (
-    <div className="space-y-4">
+    <div className="stack-y-4">
       <header>
         <h2 className="text-xl font-bold text-gray-900">Task 4 &middot; How would anyone ever know?</h2>
         <p className="text-gray-600 mt-1 max-w-3xl">
@@ -53,13 +53,13 @@ const AuditTask: React.FC = () => {
 
       <section className="rounded-lg border border-violet-200 bg-violet-50/50 p-4">
         <p className="text-xs font-bold uppercase tracking-wide text-violet-800 mb-2">Four tests for a real audit trail</p>
-        <ol className="space-y-1 text-sm text-gray-800 list-decimal pl-5">
+        <ol className="stack-y-1 text-sm text-gray-800 list-decimal pl-5">
           {TESTS.map((t) => <li key={t.id}><span className="font-semibold">{t.short}.</span> {t.question}</li>)}
         </ol>
       </section>
 
       <div className="grid lg:grid-cols-[280px_1fr] gap-4">
-        <div className="space-y-2">
+        <div className="stack-y-2">
           <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Where would you look? {opened.length}/{PLACES.length}</p>
           {PLACES.map((p) => (
             <button key={p.id} onClick={() => open(p.id)}
@@ -74,11 +74,11 @@ const AuditTask: React.FC = () => {
           ))}
         </div>
 
-        <div className="rounded-lg border border-gray-300 bg-white min-h-[16rem]">
+        <div className="rounded-lg border border-gray-300 bg-white min-h-64">
           {!place ? (
             <p className="p-6 text-sm text-gray-500">Pick a place to look. Before you open it, say out loud what you expect to find.</p>
           ) : (
-            <div className="p-4 space-y-3">
+            <div className="p-4 stack-y-3">
               <h3 className="text-base font-bold text-gray-900">{place.name}</h3>
               <div className="text-sm"><p className="text-xs font-bold uppercase tracking-wide text-gray-500">What you find</p><p className="text-gray-800 mt-0.5">{place.finds}</p></div>
               <div className="text-sm"><p className="text-xs font-bold uppercase tracking-wide text-gray-500">Why that is not enough</p><p className="text-gray-800 mt-0.5">{place.limit}</p></div>
@@ -101,7 +101,7 @@ const AuditTask: React.FC = () => {
         <>
           <section className="rounded-lg border border-gray-300 bg-white p-4 overflow-x-auto">
             <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Everywhere you looked</p>
-            <table className="w-full text-sm min-w-[32rem]">
+            <table className="w-full text-sm min-w-lg">
               <thead>
                 <tr className="text-left text-xs text-gray-500">
                   <th className="py-1 pr-3 font-semibold">Place</th>
@@ -134,7 +134,7 @@ const AuditTask: React.FC = () => {
           <section className="rounded-lg border border-gray-800 bg-gray-900 text-gray-100 p-5">
             <Quote className="w-5 h-5 text-gray-500 mb-2" />
             <p className="text-lg leading-snug font-serif">{CRITICS_LINE}</p>
-            <ul className="mt-4 space-y-2 text-sm text-gray-300">
+            <ul className="mt-4 stack-y-2 text-sm text-gray-300">
               {CLAUSES.map((c) => (
                 <li key={c.clause}><span className="font-semibold text-white">&ldquo;{c.clause}&rdquo;</span> &mdash; {c.shown}</li>
               ))}

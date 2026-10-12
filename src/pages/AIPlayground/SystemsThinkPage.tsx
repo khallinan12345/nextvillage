@@ -52,13 +52,13 @@ const MARKDOWN_COMPONENTS = {
   p: (props: React.ComponentProps<'p'>) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
   strong: (props: React.ComponentProps<'strong'>) => <strong className="font-semibold" {...props} />,
   em: (props: React.ComponentProps<'em'>) => <em className="italic" {...props} />,
-  ul: (props: React.ComponentProps<'ul'>) => <ul className="list-disc pl-5 mb-3 space-y-1.5" {...props} />,
-  ol: (props: React.ComponentProps<'ol'>) => <ol className="list-decimal pl-5 mb-3 space-y-1.5" {...props} />,
+  ul: (props: React.ComponentProps<'ul'>) => <ul className="list-disc pl-5 mb-3 stack-y-1.5" {...props} />,
+  ol: (props: React.ComponentProps<'ol'>) => <ol className="list-decimal pl-5 mb-3 stack-y-1.5" {...props} />,
   li: (props: React.ComponentProps<'li'>) => <li className="leading-relaxed" {...props} />,
   h1: (props: React.ComponentProps<'h1'>) => <h1 className="text-base font-bold mb-2 mt-3 first:mt-0" {...props} />,
   h2: (props: React.ComponentProps<'h2'>) => <h2 className="text-sm font-bold mb-2 mt-3 first:mt-0" {...props} />,
   h3: (props: React.ComponentProps<'h3'>) => <h3 className="text-sm font-semibold mb-1.5 mt-2.5 first:mt-0" {...props} />,
-  code: (props: React.ComponentProps<'code'>) => <code className="bg-black/5 rounded px-1 py-0.5 text-[0.85em] font-mono" {...props} />,
+  code: (props: React.ComponentProps<'code'>) => <code className="bg-black/5 rounded-sm px-1 py-0.5 text-[0.85em] font-mono" {...props} />,
   blockquote: (props: React.ComponentProps<'blockquote'>) => <blockquote className="border-l-2 border-violet-300 pl-3 italic text-gray-600 mb-3" {...props} />,
 };
 
@@ -538,7 +538,7 @@ const SystemsThinkPage: React.FC = () => {
                 if (e.key === 'Enter') { e.preventDefault(); commitSessionTitle(s.id); }
                 if (e.key === 'Escape') { e.preventDefault(); setEditingSessionTitleId(null); }
               }}
-              className="text-sm font-semibold text-gray-900 w-full outline-none border-b border-violet-300 bg-transparent"
+              className="text-sm font-semibold text-gray-900 w-full outline-hidden border-b border-violet-300 bg-transparent"
             />
           ) : (
             <p className="text-sm font-semibold text-gray-900 truncate">{s.title}</p>
@@ -548,7 +548,7 @@ const SystemsThinkPage: React.FC = () => {
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={e => { e.stopPropagation(); startEditSessionTitle(s); }}
-            className="p-1.5 text-gray-400 hover:text-violet-600 rounded transition-colors"
+            className="p-1.5 text-gray-400 hover:text-violet-600 rounded-sm transition-colors"
             title="Rename"
           >
             <Pencil size={13} />
@@ -558,7 +558,7 @@ const SystemsThinkPage: React.FC = () => {
               value={s.project_id || ''}
               onClick={e => e.stopPropagation()}
               onChange={e => assignSessionToProject(s.id, e.target.value || null)}
-              className="text-xs border border-gray-200 rounded-lg px-1 py-1 text-gray-500 max-w-[88px] outline-none"
+              className="text-xs border border-gray-200 rounded-lg px-1 py-1 text-gray-500 max-w-[88px] outline-hidden"
               title="Move to project"
             >
               <option value="">No Project</option>
@@ -566,7 +566,7 @@ const SystemsThinkPage: React.FC = () => {
             </select>
           )}
           <button onClick={e => handleDeleteSession(e, s.id)} disabled={deletingId === s.id}
-            className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors">
+            className="p-1.5 text-gray-400 hover:text-red-500 rounded-sm transition-colors">
             {deletingId === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
           </button>
         </div>
@@ -600,7 +600,7 @@ const SystemsThinkPage: React.FC = () => {
     <AppLayout>
       <div className={artifactPanelOpen ? 'max-w-6xl mx-auto' : 'max-w-4xl mx-auto'}>
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600">
+          <div className="p-2 rounded-xl bg-linear-to-br from-violet-600 to-purple-600">
             <Puzzle size={22} className="text-white" />
           </div>
           <div>
@@ -628,7 +628,7 @@ const SystemsThinkPage: React.FC = () => {
                     if (e.key === 'Enter') { e.preventDefault(); commitHeaderTitle(); }
                     if (e.key === 'Escape') { e.preventDefault(); setEditingHeaderTitle(false); }
                   }}
-                  className="font-semibold text-gray-900 min-w-0 flex-1 outline-none border-b border-violet-300 bg-transparent"
+                  className="font-semibold text-gray-900 min-w-0 flex-1 outline-hidden border-b border-violet-300 bg-transparent"
                 />
               ) : (
                 <button
@@ -668,7 +668,7 @@ const SystemsThinkPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-5 py-4 stack-y-4">
               {startingSession && messages.length === 0 ? (
                 <div className="flex items-center gap-2 text-sm text-gray-400 py-8 justify-center">
                   <Loader2 size={16} className="animate-spin" /> Ngozi is settling in…
@@ -693,9 +693,9 @@ const SystemsThinkPage: React.FC = () => {
                           </p>
                         )}
                         {isMe ? (
-                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          <p className="text-sm whitespace-pre-wrap wrap-break-word">{msg.content}</p>
                         ) : (
-                          <FormattedText content={msg.content} className="text-sm break-words" />
+                          <FormattedText content={msg.content} className="text-sm wrap-break-word" />
                         )}
                       </div>
                     </div>
@@ -759,12 +759,12 @@ const SystemsThinkPage: React.FC = () => {
                 rows={1}
                 placeholder={startingSession ? 'Ngozi is settling in…' : 'Share your thinking…'}
                 disabled={sending || startingSession || !activeSessionId}
-                className="flex-1 resize-none outline-none text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-violet-100"
+                className="flex-1 resize-none outline-hidden text-sm bg-gray-50 rounded-xl px-3 py-2 max-h-32 focus:ring-2 focus:ring-violet-100"
               />
               <button
                 onClick={() => handleSend()}
                 disabled={(!input.trim() && !pendingAttachment) || sending || startingSession || !activeSessionId}
-                className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                className="flex-shrink-0 w-9 h-9 rounded-xl bg-linear-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
               >
                 {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
               </button>
@@ -807,7 +807,7 @@ const SystemsThinkPage: React.FC = () => {
 
       {/* ── Session picker ──────────────────────────────────────────────── */}
       {showSessionPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center flex-shrink-0">
               <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -826,7 +826,7 @@ const SystemsThinkPage: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 stack-y-4">
               {sessions.length === 0 && projects.length === 0 ? (
                 <p className="text-center text-gray-400 text-sm py-8">No sessions yet — start your first one below.</p>
               ) : (
@@ -844,18 +844,18 @@ const SystemsThinkPage: React.FC = () => {
                               if (e.key === 'Enter') { e.preventDefault(); commitProjectName(p.id); }
                               if (e.key === 'Escape') { e.preventDefault(); setEditingProjectId(null); }
                             }}
-                            className="text-sm font-semibold text-gray-800 flex-1 min-w-0 outline-none border-b border-violet-300 bg-transparent"
+                            className="text-sm font-semibold text-gray-800 flex-1 min-w-0 outline-hidden border-b border-violet-300 bg-transparent"
                           />
                         ) : (
                           <button onClick={() => startEditProject(p)} className="flex items-center gap-1.5 text-sm font-semibold text-gray-800 hover:text-violet-600 min-w-0 flex-1 text-left">
                             <Folder size={13} className="flex-shrink-0" /> <span className="truncate">{p.name}</span>
                           </button>
                         )}
-                        <button onClick={() => deleteProject(p.id)} className="p-1 text-gray-400 hover:text-red-500 rounded flex-shrink-0" title="Delete project (sessions stay, just unfiled)">
+                        <button onClick={() => deleteProject(p.id)} className="p-1 text-gray-400 hover:text-red-500 rounded-sm flex-shrink-0" title="Delete project (sessions stay, just unfiled)">
                           <Trash2 size={13} />
                         </button>
                       </div>
-                      <div className="p-2 space-y-1.5">
+                      <div className="p-2 stack-y-1.5">
                         {(sessionsByProject.get(p.id) || []).length === 0 ? (
                           <p className="text-xs text-gray-400 px-2 py-1.5">No sessions in this project yet — use "Move to project" on a session below.</p>
                         ) : (sessionsByProject.get(p.id) || []).map(renderSessionRow)}
@@ -866,7 +866,7 @@ const SystemsThinkPage: React.FC = () => {
                   {unfiledSessions.length > 0 && (
                     <div>
                       {projects.length > 0 && <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 mb-1.5">Unfiled</p>}
-                      <div className="space-y-1.5">{unfiledSessions.map(renderSessionRow)}</div>
+                      <div className="stack-y-1.5">{unfiledSessions.map(renderSessionRow)}</div>
                     </div>
                   )}
                 </>
@@ -874,7 +874,7 @@ const SystemsThinkPage: React.FC = () => {
             </div>
             <div className="px-5 pb-4 flex-shrink-0">
               <button onClick={beginSession} disabled={startingSession}
-                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl transition-colors disabled:opacity-50">
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl transition-colors disabled:opacity-50">
                 {startingSession ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} Start New Session
               </button>
             </div>
