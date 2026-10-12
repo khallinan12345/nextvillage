@@ -14,7 +14,8 @@
     "deadcode": "knip",
     "preview": "vite preview",
     "assess:baseline": "tsx --env-file=.env.local scripts/baseline.ts",
-    "assess:monthly": "tsx --env-file=.env.local scripts/monthly.ts"
+    "assess:monthly": "tsx --env-file=.env.local scripts/monthly.ts",
+    "user:delete": "tsx --env-file=.env.local scripts/delete-user.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",
