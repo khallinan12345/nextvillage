@@ -18,6 +18,7 @@ import { setChatIdentity } from './lib/chatClient';
 import { supabase } from './lib/supabaseClient';
 import { ImpersonationProvider, ImpersonationBanner } from './contexts/ImpersonationContext';
 import ProfileCompletionPopup from './components/profile/ProfileCompletionPopup';
+import BirthYearPrompt from './components/profile/BirthYearPrompt';
 import RequireAuth from './components/auth/RequireAuth';
 import { AuthProvider } from './hooks/useAuth';
 
@@ -171,6 +172,12 @@ export const AppContent: React.FC = () => {
       needsProfileCompletion === true,
     [session, user, needsProfileCompletion]
   );
+
+  const showBirthYearPrompt =
+    session !== null &&
+    user !== null &&
+    needsProfileCompletion === false &&
+    (user as { birth_year?: number | null }).birth_year == null;
 
   useEffect(() => {
     console.log('[AppContent] auth state →', {
@@ -392,6 +399,9 @@ export const AppContent: React.FC = () => {
           onComplete={handleProfileCompletion}
         />
       )}
+
+      {/* One-time birth-year question, after the profile itself is complete. */}
+      {showBirthYearPrompt && <BirthYearPrompt userId={user!.id} />}
     </>
   );
 };
