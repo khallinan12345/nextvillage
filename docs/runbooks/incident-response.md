@@ -55,7 +55,7 @@ Take a copy of anything you may need before changing it (export the rows or save
 - `system_events`: errors and safety events by `event_type` and `created_at`. Routine rows are purged
   after 180 days, safeguarding rows after 2 years, so pull what you need early.
 - `together_safety_flags` and `system_events` rows named `safety_flag_*`: what was flagged and
-  whether leaders were emailed (`notified` fields on the flag).
+  whether leaders were emailed (`emailed_at` is empty on a flag that never went out).
 - `code_execution_log`: code runs, kept only 30 days. Pull it quickly if the issue is the sandbox.
 - `api_cost_log`: unusual spikes can show a stolen AI key being used.
 - Auth: recent sign-ins and password resets for the affected user(s).
