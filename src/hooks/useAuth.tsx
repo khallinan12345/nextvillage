@@ -14,6 +14,7 @@ interface UserProfile {
   team_id?: string;
   profile_completed?: boolean;
   membership_status?: 'approved' | 'pending' | 'declined';
+  birth_year?: number | null;
   created_at: string;
   updated_at: string;
 }
