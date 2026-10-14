@@ -80,22 +80,35 @@ changes.
 | `api_cost_log` | rows kept for finance; after 13 months the link to a person (`user_id`, `city`) is cleared |
 | `code_execution_log` | deleted after 30 days |
 
-### Proposed, needs a decision (not enforced yet)
+### Decided 14 October 2026 (Kevin), NOT yet enforced
 
-The starting figures already in `Data-Protection-Summary.html` section 04 are reused here. They are
-numbers that affect children's data and the partner communities, so they stay proposals until agreed.
+These replace the earlier proposals. Nothing below is deleted automatically until the enforcement
+migration is reviewed (row counts shown first) and Kevin says go.
 
-| Data | Proposed rule | Decision needed from |
+| Data | Rule | Under-13 learners |
 |---|---|---|
-| AI chat and tutoring transcripts (`dashboard` chat columns, `ai_playground_chats`, `systems_think_sessions`) | 90 days, then delete or reduce to non-identifying progress numbers | Kevin, partner leaders |
-| Learner-to-learner messages (`together_messages`) | 12 months | Kevin, leaders |
-| Generated images, audio and video, and their storage files | 12 months after creation unless the learner pins it | Kevin |
-| Assessment results | length of participation plus one grant cycle, then anonymized (k >= 5, already practiced) | Kevin, funders |
-| Accounts with no sign-in for 12 months | leader review, then delete 90 days later | leaders |
-| Withdrawn accounts and accepted deletion requests | delete within 30 days | Kevin |
-| Community-service records about non-users (patients, farmers, clients) | delete when the program that collected them ends, or 24 months, whichever is first; phone numbers sooner | Kevin, program owners, local counsel |
-| Certificates | kept while the account exists | Kevin |
-| `dashboard_placeholder_archive` | delete 90 days after sign-off | Kevin |
+| AI chat and tutoring transcripts (`dashboard.chat_history`, `image_chat_history`, `video_chat_history`; `ai_playground_chats`; `systems_think_sessions.messages`) | 90 days, then the transcript is cleared. Scores, evaluations and evidence on the same row stay (they are the longitudinal record). | 60 days |
+| Learner-to-learner messages (`together_messages`) | 12 months | peer chat off for under-13s |
+| Generated images, audio, video and their storage files | 12 months unless the learner pins it | 6 months |
+| Assessment results (scores, evaluations) | kept at least 3 years from the start. Funders do not need individual-level results, so individual rows are de-identified (pseudonymous token, no name/email) once the learner leaves or after the retention window; reported only in groups. | same |
+| Accounts with no sign-in for 12 months | leader review, then delete 90 days later | same |
+| Withdrawn accounts and accepted deletion requests | delete within 30 days | same |
+| Community-service records about non-users (patients, farmers, clients) | identifiers (name, village, phone) removed or the record deleted once the consultation is finished. Exact scope for a finished consultation to be confirmed. | forms off for under-13s |
+| Certificates | kept while the account exists | same |
+| `dashboard_placeholder_archive` | delete 90 days after sign-off | n/a |
+
+Basis for the 90-day figure: leaders do not read old transcripts (no bandwidth), and the monthly
+assessment only needs the current cycle. Row counts at decision time: 2,790 of 3,597 dashboard chat
+histories and 74 of 184 playground chats are older than 90 days; no media, Together message or
+systems-think session is old enough for its rule yet.
+
+### Under-13 tier (decided, to be built)
+
+Kevin decided NOT to exclude 8 to 12 year olds (Oloibiri children get five years of state-funded school;
+without nextVillage they can be left without a route). They get a stricter tier switched on by
+`profiles.birth_year`: leader-confirmed guardian permission, no peer chat, no names on leaderboards,
+no public certificate links, AI limited to vetted vendors with scrubbing, stricter image/voice/video
+filters, no forms about other people, shorter retention (above), and unthrottled safety alerts.
 
 ## 5. Deletion of one person's data
 
