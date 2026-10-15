@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "assess:baseline": "tsx --env-file=.env.local scripts/baseline.ts",
     "assess:monthly": "tsx --env-file=.env.local scripts/monthly.ts",
-    "user:delete": "tsx --env-file=.env.local scripts/delete-user.ts"
+    "user:delete": "tsx --env-file=.env.local scripts/delete-user.ts",
+    "accounts:purge-due": "tsx --env-file=.env.local scripts/purge-due-accounts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",
