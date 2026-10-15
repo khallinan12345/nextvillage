@@ -12,7 +12,7 @@ import { fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
 // ROUTING LOGIC:
 //   page = 'AILearningPage' | 'EnglishSkillsPage' |
 //          'SkillsDevelopmentPage' | consultant pages
-//     → Groq (primary) → Cerebras → Cloudflare → OpenRouter → Mistral → Anthropic Haiku (final)
+//     → Groq (primary) → Cerebras → Cloudflare → Mistral → Anthropic Haiku (final)
 //
 //   page = 'VibeCodingPage' | 'WebDevelopmentPage' |
 //          'FullStackDevelopmentPage' | 'AIWorkflowDevPage' |
@@ -23,7 +23,7 @@ import { fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
 //           all six hybrid pages route coding tasks here; Haiku was hitting
 //           quality/error ceilings as projects grew more elaborate)
 //     → taskType !== 'coding'  (evaluation, planning, help popup, critique, task instructions, Q&A)
-//         → Groq (primary) → Cerebras → Cloudflare → OpenRouter → Mistral → Anthropic Haiku (final)
+//         → Groq (primary) → Cerebras → Cloudflare → Mistral → Anthropic Haiku (final)
 //         NOTE: This now applies to WebDevelopmentPage too — evaluation, help, and
 //         task-instruction calls from WebDevelopmentPage all go through the free-tier
 //         chain with Haiku as the final fallback, not Haiku as the primary.
@@ -47,7 +47,7 @@ import { fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
 //   If taskType is omitted on a coding page, it defaults to 'coding' (uses Haiku).
 //
 // FALLBACK CHAIN (for free-tier-routed pages):
-//   Groq → Cerebras → Cloudflare Workers AI → OpenRouter (free) → Mistral → Anthropic Haiku
+//   Groq → Cerebras → Cloudflare Workers AI → Mistral → Anthropic Haiku
 //   NOTE: Gemini removed — free tier quota permanently exhausted (limit: 0)
 //   NOTE: DeepSeek removed — its pricing is no longer meaningfully cheaper
 //   than Anthropic Haiku, so it no longer earns a hop before the real thing.
@@ -192,7 +192,6 @@ const DEFAULT_MODELS = {
   gemini:           'gemini-2.0-flash',
   cloudflare:       '@cf/openai/gpt-oss-120b',  // same weights as groq/cerebras; was llama-3.3-70b-instruct-fp8-fast
   cloudflare_nemotron: '@cf/nvidia/nemotron-3-120b-a12b', // second Cloudflare model, own cooldown slot
-  openrouter:       'thinkingmachines/inkling:free',            // 975B general-purpose MoE; was nemotron-3-ultra-550b
   mistral:          'mistral-small-latest',
 };
 
@@ -757,33 +756,6 @@ async function callCloudflare(model, messages, system, max_tokens, temperature) 
 }
 
 
-// ── OpenRouter call ────────────────────────────────────────────────────────────
-
-async function callOpenRouter(model, messages, system, max_tokens, temperature) {
-  const orMessages = [
-    ...(system ? [{ role: 'system', content: system }] : []),
-    ...messages,
-  ];
-
-  const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'Content-Type':  'application/json',
-    },
-    body: JSON.stringify({ model, messages: orMessages, max_tokens, temperature, reasoning: { effort: 'low' } }),
-  });
-
-  const data = await upstream.json();
-
-  if (!upstream.ok) {
-    const err = new Error(data.error?.message || 'OpenRouter API error');
-    err.status = upstream.status;
-    throw err;
-  }
-
-  return { ...data, _route: { provider: 'openrouter', model } };
-}
 
 // ── Mistral call ───────────────────────────────────────────────────────────────
 
@@ -900,12 +872,6 @@ async function callWithFallbackChain(messages, system, max_tokens, temperature, 
       model:    MODELS.cloudflare_nemotron,
       keyEnv:   'CLOUDFLARE_API_TOKEN',
       fn:       () => callCloudflare(MODELS.cloudflare_nemotron, messages, system, max_tokens, temperature),
-    },
-    {
-      name:     'openrouter',
-      model:    MODELS.openrouter,
-      keyEnv:   'OPENROUTER_API_KEY',
-      fn:       () => callOpenRouter(MODELS.openrouter, messages, system, max_tokens, temperature),
     },
     {
       name:     'mistral',
@@ -1133,7 +1099,6 @@ export default async function handler(req, res) {
         'groq/llama-3.3-70b (primary free)',
         'gemini/2.0-flash (free fallback)',
         'cloudflare/gpt-oss-120b + nemotron-3-120b (free fallbacks)',
-        'openrouter/llama-3.3-70b:free (free fallback)',
         'mistral/small (free fallback)',
         'anthropic/haiku (final paid fallback + most coding tasks)',
         'anthropic/sonnet-5.5 (Create Game + Website Builder coding tasks)',
