@@ -26,6 +26,7 @@ import { AuthProvider } from './hooks/useAuth';
 // Auth Pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const SignupPage = lazy(() => import('./pages/auth/SignupPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const ConfirmationPage = lazy(() => import('./pages/auth/ConfirmationPage'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
@@ -249,6 +250,7 @@ export const AppContent: React.FC = () => {
         {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/confirmation" element={<ConfirmationPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />

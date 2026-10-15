@@ -2628,6 +2628,7 @@ const PublicLandingPage: React.FC = () => {
           </p>
           <p style={{ fontSize: "0.73rem", color: "rgba(255,255,255,0.16)", margin: 0 }}>
             © {new Date().getFullYear()} Davidson AI Innovation Center. ·{" "}
+            <Link to="/privacy" style={{ color: "rgba(255,255,255,0.28)" }}>Privacy</Link>{" "}·{" "}
             <Link to="/login" style={{ color: "rgba(255,255,255,0.28)" }}>Log In / Sign Up</Link>
           </p>
         </footer>
