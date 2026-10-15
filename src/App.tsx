@@ -19,6 +19,7 @@ import { supabase } from './lib/supabaseClient';
 import { ImpersonationProvider, ImpersonationBanner } from './contexts/ImpersonationContext';
 import ProfileCompletionPopup from './components/profile/ProfileCompletionPopup';
 import BirthYearPrompt from './components/profile/BirthYearPrompt';
+import YoungGate from './components/auth/YoungGate';
 import RequireAuth from './components/auth/RequireAuth';
 import { AuthProvider } from './hooks/useAuth';
 
@@ -318,15 +319,15 @@ export const AppContent: React.FC = () => {
         {/* Community Impact Routes */}
         <Route path="/community-impact/ai-ambassadors" element={<AIAmbassadorsPage />} />
         <Route path="/community-impact/ai-ambassadors/certification" element={<AIAmbassadorsCertificationPage />} />
-        <Route path="/community-impact/agriculture" element={<AgricultureConsultantPage />} />
+        <Route path="/community-impact/agriculture" element={<YoungGate><AgricultureConsultantPage /></YoungGate>} />
         <Route path="/community-impact/agriculture/certification" element={<AgricultureConsultantCertificationPage />} />
-        <Route path="/community-impact/fishing" element={<FishingConsultantPage />} />
+        <Route path="/community-impact/fishing" element={<YoungGate><FishingConsultantPage /></YoungGate>} />
         <Route path="/community-impact/fishing/certification" element={<FishingConsultantCertificationPage />} />
-        <Route path="/community-impact/healthcare" element={<HealthcareNavigatorPage />} />
+        <Route path="/community-impact/healthcare" element={<YoungGate><HealthcareNavigatorPage /></YoungGate>} />
         <Route path="/community-impact/healthcare/certification" element={<HealthcareNavigatorCertificationPage />} />
-        <Route path="/community-impact/entrepreneurship" element={<EntrepreneurshipConsultantPage />} />
+        <Route path="/community-impact/entrepreneurship" element={<YoungGate><EntrepreneurshipConsultantPage /></YoungGate>} />
         <Route path="/community-impact/entrepreneurship/certification" element={<EntrepreneurshipConsultantCertificationPage />} />
-        <Route path="/community-impact/animal-husbandry" element={<AnimalHusbandryPage />} />
+        <Route path="/community-impact/animal-husbandry" element={<YoungGate><AnimalHusbandryPage /></YoungGate>} />
         <Route path="/community-impact/healthcare-offline" element={<OfflineClinicalAssessment />} />
 
         {/* Research Routes */}
