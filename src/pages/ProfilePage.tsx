@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useAuth } from '../hooks/useAuth';
+import PrivacyDataCard from '../components/profile/PrivacyDataCard';
 
 // Grade level scale used platform-wide: 1=Elementary, 2=Middle School, 3=High School, 4=Adult Learner (18+)
 const GRADE_LEVEL_LABELS = {
@@ -1695,6 +1696,8 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <PrivacyDataCard />
 
         {/* Recent Activity (Placeholder) */}
         <div className="mt-8 bg-white rounded-lg shadow-sm">
