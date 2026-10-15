@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const young = await fetchCallerIsYoung(caller.id);
 
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
 
   const provider = young ? (anthropicKey ? 'anthropic' : null)

@@ -11,7 +11,7 @@ async function callOpenAI(
   userMessage: string,
   maxTokens = 4000
 ): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY is not configured');
 
   const response = await fetch(OPENAI_API_URL, {

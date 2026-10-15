@@ -177,7 +177,6 @@ Open, in priority order:
    their own retention rule (section 4).
 3. **Vendor terms for the free-tier AI chain and OpenAI** are not vetted (open item 02 of the summary).
 4. **Alert email fallback** (`SAFETY_ALERT_FALLBACK_EMAIL`, open item 04 of the summary) is still unconfirmed.
-5. **Hygiene:** `VITE_OPENAI_API_KEY` exists in Vercel as a non-sensitive variable. It is only read by
-   server code as a fallback (`api/evaluate-web-session.ts`, `api/pidgin-translate.ts`) and a search of the
-   built bundle found no key material, but a `VITE_` name invites mistakes; rename it to `OPENAI_API_KEY`.
+5. **Hygiene (done 2026-10-15):** the redundant `VITE_OPENAI_API_KEY` variable was removed from Vercel and the code now
+   reads only `OPENAI_API_KEY` (server side). Anything named `VITE_*` is shipped to browsers, so keep secrets off that prefix.
 6. Confirm the exact Supabase and E2B regions in their dashboards.
