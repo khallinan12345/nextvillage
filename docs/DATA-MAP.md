@@ -89,7 +89,7 @@ migration is reviewed (row counts shown first) and Kevin says go.
 |---|---|---|
 | AI chat and tutoring transcripts (`dashboard.chat_history`, `image_chat_history`, `video_chat_history`; `ai_playground_chats`; `systems_think_sessions.messages`) | 90 days, then the transcript is cleared. Scores, evaluations and evidence on the same row stay (they are the longitudinal record). | 60 days |
 | Learner-to-learner messages (`together_messages`) | 12 months | peer chat off for under-13s |
-| Generated images, audio, video and their storage files | 12 months unless the learner pins it | 6 months |
+| Generated images, audio, video, video frames and Together attachments (storage files) | 12 months (no pin option exists). **Live 2026-10-15:** nightly job `purge-learner-media` (04:00 UTC) deletes the files and clears the links to them | 6 months, only where a birth year under 13 is recorded (a blank birth year does not shorten it, because file deletion cannot be undone) |
 | Assessment results (scores, evaluations) | kept at least 3 years from the start. Funders do not need individual-level results, so individual rows are de-identified (pseudonymous token, no name/email) once the learner leaves or after the retention window; reported only in groups. | same |
 | Accounts with no sign-in for 12 months | leader review, then delete 90 days later | same |
 | Withdrawn accounts and accepted deletion requests | delete within 30 days | same |
