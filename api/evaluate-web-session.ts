@@ -1,6 +1,8 @@
 // api/evaluate-web-session.ts — Session evaluation + improvement advice using OpenAI
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
+import { claudeText } from './_lib/claudeText.js';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -280,7 +282,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await requireUser(req, res))) return;
+  const caller = await requireUser(req, res);
+  if (!caller) return;
 
   try {
     const { promptHistory, pages } = req.body;
@@ -299,8 +302,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const userContext = `PROMPT HISTORY:\n${promptLog}\n\nFINAL WEBSITE CODE:\n${codeSnapshot}`;
 
+    // Under-13 tier: young learners' work goes to Claude, never OpenAI.
+    const young = await fetchCallerIsYoung(caller.id);
+    const callModel = (system: string, user: string, maxTokens: number) =>
+      young ? claudeText({ system, user, maxTokens }) : callOpenAI(system, user, maxTokens);
+
     // Step 1: Evaluation
-    const evalRaw = await callOpenAI(EVALUATION_PROMPT, userContext, 8000);
+    const evalRaw = await callModel(EVALUATION_PROMPT, userContext, 8000);
     let evaluation: any;
     try {
       const cleaned = evalRaw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
@@ -311,7 +319,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Step 2: Advice
     const adviceContext = `${userContext}\n\nEVALUATION RESULTS:\n${JSON.stringify(evaluation, null, 2)}`;
-    const advice = await callOpenAI(ADVICE_PROMPT, adviceContext, 6000);
+    const advice = await callModel(ADVICE_PROMPT, adviceContext, 6000);
 
     return res.status(200).json({ success: true, evaluation, advice });
   } catch (error: any) {

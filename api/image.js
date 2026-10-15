@@ -1,9 +1,14 @@
 import { requireUser } from './_lib/requireUser.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
+import { NOT_AVAILABLE_FOR_AGE } from './_lib/claudeText.js';
 
 export default async function handler(req, res) {
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await requireUser(req, res))) return;
+  const caller = await requireUser(req, res);
+  if (!caller) return;
+  // Under-13 tier: prompts go to OpenAI, which we have not vetted.
+  if (await fetchCallerIsYoung(caller.id)) return res.status(403).json(NOT_AVAILABLE_FOR_AGE);
   try {
     const { prompt, size = '1024x1024' } = req.body || {};
     const r = await fetch('https://api.openai.com/v1/images/generations', {

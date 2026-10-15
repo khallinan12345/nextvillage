@@ -34,3 +34,66 @@ describe('peerChatBlocked', () => {
     expect(peerChatBlocked({ role: 'student', birth_year: 2005 }, young10, NOW)).toBe(false);
   });
 });
+
+// ── fetchCallerIsYoung (database lookup, fetch only) ──────────────────────────
+import { fetchCallerIsYoung, clearYoungCache } from './youngLearner.js';
+import { claudeText } from './claudeText.js';
+import { beforeEach, vi } from 'vitest';
+
+function fakeRest(tables) {
+  return vi.fn(async (url) => {
+    const u = new URL(url);
+    const table = u.pathname.split('/').pop();
+    const rows = tables[table];
+    if (rows instanceof Error) return { ok: false, status: 500, json: async () => ({}) };
+    return { ok: true, status: 200, json: async () => rows ?? [] };
+  });
+}
+const opts = (fetchImpl) => ({ supabaseUrl: 'https://x.supabase.co', key: 'k', fetchImpl, now: NOW });
+
+describe('fetchCallerIsYoung', () => {
+  beforeEach(() => clearYoungCache());
+
+  it('is true for a student born within 13 years, without looking up an org', async () => {
+    const f = fakeRest({ profiles: [{ role: 'student', birth_year: 2016 }] });
+    expect(await fetchCallerIsYoung('u1', opts(f))).toBe(true);
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+  it('is false for an older student and for staff', async () => {
+    expect(await fetchCallerIsYoung('u2', opts(fakeRest({ profiles: [{ role: 'student', birth_year: 2005 }] })))).toBe(false);
+    clearYoungCache();
+    expect(await fetchCallerIsYoung('u3', opts(fakeRest({ profiles: [{ role: 'leader', birth_year: null }] })))).toBe(false);
+  });
+  it('defaults by the organization minimum age when the birth year is blank', async () => {
+    const f = fakeRest({ profiles: [{ role: 'student', birth_year: null, organization_id: 'o1' }], organizations: [{ learner_age_min: 10 }] });
+    expect(await fetchCallerIsYoung('u4', opts(f))).toBe(true);
+  });
+  it('falls back to the join code when organization_id is empty', async () => {
+    const f = fakeRest({ profiles: [{ role: 'student', birth_year: null, organization_id: null, join_code_used: 'CODE1' }], organizations: [{ learner_age_min: 10 }] });
+    expect(await fetchCallerIsYoung('u5', opts(f))).toBe(true);
+  });
+  it('fails closed (young) when the lookup errors, and does not cache the failure', async () => {
+    const bad = fakeRest({ profiles: new Error('down') });
+    expect(await fetchCallerIsYoung('u6', opts(bad))).toBe(true);
+    const good = fakeRest({ profiles: [{ role: 'student', birth_year: 2000 }] });
+    expect(await fetchCallerIsYoung('u6', opts(good))).toBe(false);
+  });
+  it('caches a successful answer', async () => {
+    const f = fakeRest({ profiles: [{ role: 'student', birth_year: 2000 }] });
+    await fetchCallerIsYoung('u7', opts(f));
+    await fetchCallerIsYoung('u7', opts(f));
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('claudeText', () => {
+  it('calls Haiku 5.5 without temperature and returns the text', async () => {
+    process.env.ANTHROPIC_API_KEY = 'test';
+    let body;
+    const f = vi.fn(async (_u, init) => { body = JSON.parse(init.body); return { ok: true, status: 200, json: async () => ({ content: [{ type: 'text', text: 'hi' }] }) }; });
+    expect(await claudeText({ system: 's', user: 'u', maxTokens: 50, fetchImpl: f })).toBe('hi');
+    expect(body.model).toBe('claude-haiku-5-5');
+    expect(body).not.toHaveProperty('temperature');
+    delete process.env.ANTHROPIC_API_KEY;
+  });
+});

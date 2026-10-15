@@ -23,7 +23,7 @@ import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { tryFreeTierChain } from './_lib/freeTierChain.js';
 import { getRequestUser } from './_lib/requireUser.js';
-import { peerChatBlocked } from './_lib/youngLearner.js';
+import { peerChatBlocked, isYoungLearner } from './_lib/youngLearner.js';
 
 // Back to Basics Youth Education stays exempt from the token quota below —
 // keep in sync with src/lib/backToBasicsScope.ts.
@@ -182,6 +182,7 @@ export default async function handler(req, res) {
     }
 
     // Under-13 tier: no peer chat for young learners (the database blocks it too).
+    let youngCaller = false;
     if (!isPlatformAdmin) {
       const { data: callerOrg } = await supabase
         .from('organizations')
@@ -191,6 +192,7 @@ export default async function handler(req, res) {
       if (peerChatBlocked(profile, callerOrg)) {
         return res.status(403).json({ success: false, error: 'peer_chat_unavailable' });
       }
+      youngCaller = isYoungLearner(profile, callerOrg); // allowed in by org opt-in: Anthropic only
     }
 
     const isBackToBasics = room.organization_id === BACK_TO_BASICS_ORG_ID;
@@ -259,7 +261,7 @@ export default async function handler(req, res) {
     // Anthropic instead.) On success, skip the Anthropic call entirely.
     let freeTierReply = null;
     const latestUserText = anthropicMessages[anthropicMessages.length - 1].content;
-    if (!mightUpdateBook(latestUserText)) {
+    if (!youngCaller && !mightUpdateBook(latestUserText)) {
       try {
         const freeTierSystemPrompt = `You are Claude, participating as a collaborative co-writer in a shared group chat room called "${room.name}" for students and leaders at ${orgName}. Multiple people speak in this room — each message is prefixed with the sender's name in brackets so you can track who said what, but never use that bracket format in your own replies. Respond to whoever sent the most recent message — don't address some other named participant instead just because they spoke earlier or more often. Keep replies focused and not overly long — this is a live group conversation, not a report.`;
         const { result, actualProvider, actualModel } = await tryFreeTierChain(

@@ -15,6 +15,8 @@
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import OpenAI from 'openai';
 import { requireUser } from './_lib/requireUser.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
+import { claudeText } from './_lib/claudeText.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -23,7 +25,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await requireUser(req, res))) return;
+  const caller = await requireUser(req, res);
+  if (!caller) return;
 
   const { taskId, taskLabel, phase, projectFiles, sessionContext, completedTasks, communicationStrategy, learningStrategy } = req.body;
 
@@ -114,17 +117,19 @@ Completed tasks so far: ${completed.length > 0 ? completed.join(', ') : 'none ye
 Write the adaptive task instruction.`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: 600,
-      temperature: 0.4,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    });
-
-    const raw = completion.choices[0]?.message?.content || '{}';
+    // Under-13 tier: young learners' context goes to Claude, never OpenAI.
+    const young = await fetchCallerIsYoung(caller.id);
+    const raw = young
+      ? (await claudeText({ system, user, maxTokens: 600 })) || '{}'
+      : (await openai.chat.completions.create({
+          model: 'gpt-4o',
+          max_tokens: 600,
+          temperature: 0.4,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+        })).choices[0]?.message?.content || '{}';
     const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
 
     let result: any;

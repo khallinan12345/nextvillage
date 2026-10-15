@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
+import { NOT_AVAILABLE_FOR_AGE } from './_lib/claudeText.js';
 
 const SPEECHGEN_API_URL = 'https://speechgen.io/index.php?r=api/text';
 
@@ -91,7 +93,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await requireUser(req, res))) return;
+  const caller = await requireUser(req, res);
+  if (!caller) return;
+
+  // Under-13 tier: text goes to SpeechGen, which we have not vetted.
+  if (await fetchCallerIsYoung(caller.id)) return res.status(403).json(NOT_AVAILABLE_FOR_AGE);
 
   const { text, mode } = req.body as { text?: string; mode?: VoiceMode };
   if (!text || typeof text !== 'string' || !text.trim()) {
