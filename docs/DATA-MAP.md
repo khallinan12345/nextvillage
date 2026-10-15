@@ -91,8 +91,8 @@ migration is reviewed (row counts shown first) and Kevin says go.
 | Learner-to-learner messages (`together_messages`) | 12 months | peer chat off for under-13s |
 | Generated images, audio, video, video frames and Together attachments (storage files) | 12 months (no pin option exists). **Live 2026-10-15:** nightly job `purge-learner-media` (04:00 UTC) deletes the files and clears the links to them | 6 months, only where a birth year under 13 is recorded (a blank birth year does not shorten it, because file deletion cannot be undone) |
 | Assessment results (scores, evaluations) | kept at least 3 years from the start. Funders do not need individual-level results, so individual rows are de-identified (pseudonymous token, no name/email) once the learner leaves or after the retention window; reported only in groups. | same |
-| Accounts with no sign-in for 12 months | leader review, then delete 90 days later | same |
-| Withdrawn accounts and accepted deletion requests | delete within 30 days | same |
+| Accounts with no activity for 12 months | leader review, then delete 90 days later. **Live 2026-10-15:** nightly flagging (`flag-inactive-accounts`, 04:15 UTC), an Inactive accounts card for leaders, and `npm run accounts:purge-due` for the administrator (dry run by default). Nothing is removed without a leader's decision; anyone who returns is taken off the list. "Activity" counts sign-ins, session refreshes and dashboard changes | same |
+| Withdrawn accounts and accepted deletion requests | delete within 30 days. **Live 2026-10-15:** learners (or a parent or guardian) send a request from their profile; leaders and administrators see it, can lock the account at once, and an administrator erases it with `npm run user:delete` | same |
 | Community-service records about non-users (patients, farmers, clients) | identifiers (name, village, phone) removed or the record deleted once the consultation is finished. Exact scope for a finished consultation to be confirmed. | forms off for under-13s |
 | Certificates | kept while the account exists | same |
 | `dashboard_placeholder_archive` | delete 90 days after sign-off | n/a |
