@@ -11,6 +11,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import PendingMembersCard from '../../components/dashboard/PendingMembersCard';
+import MissingBirthYearCard from '../../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../../components/dashboard/SafetyFlagsCard';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
@@ -2861,6 +2862,7 @@ const AdminStudentDashboard: React.FC = () => {
           <div className="mb-5 stack-y-5">
             <SafetyFlagsCard />
             <PendingMembersCard />
+            <MissingBirthYearCard />
           </div>
         )}
 
