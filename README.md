@@ -19,7 +19,7 @@ npm install
 Copy `.env.local.example` if one exists, or ask a teammate for a `.env.local` — it's git-ignored and not checked in. Required variables fall into a few groups:
 
 - **Supabase**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-- **AI providers**: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` / `VITE_OPENAI_API_KEY`, `GROQ_API_KEY`, `CEREBRAS_API_KEY`, `AI_TOGETHER_API_KEY`, `HF_TOKEN`
+- **AI providers**: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `CEREBRAS_API_KEY`, `AI_TOGETHER_API_KEY`, `HF_TOKEN`
 - **Email**: `RESEND_API_KEY`
 - **Misc third-party**: `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN`, `SPEECHGEN_EMAIL` / `SPEECHGEN_TOKEN` / `SPEECHGEN_VOICE`, `NEWS_API_SECRET`, `CRON_SECRET`
 
