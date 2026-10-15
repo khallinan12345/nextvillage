@@ -14,6 +14,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { UserPlus, Check, CheckCheck, X, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import BirthYearInput from './BirthYearInput';
 
 interface PendingMember {
   id: string;
@@ -100,6 +101,13 @@ const PendingMembersCard: React.FC = () => {
     setMembers(prev => prev.filter(m => m.id !== member.id));
   };
 
+  // After a leader types a birth year, re-ask the database whether consent is still needed.
+  const birthYearSaved = async (id: string, year: number) => {
+    setMembers(prev => prev.map(m => (m.id === id ? { ...m, birth_year: year } : m)));
+    const { data: needs } = await supabase.rpc('membership_needs_consent', { target_user: id });
+    setNeedsConsent(prev => ({ ...prev, [id]: needs === true }));
+  };
+
   const openConsent = (member: PendingMember) => {
     setConsentFor(member.id);
     setConsentMethod('signed_form');
@@ -180,6 +188,11 @@ const PendingMembersCard: React.FC = () => {
                   ? ` · requested ${new Date(m.membership_requested_at).toLocaleDateString()}`
                   : ''}
               </p>
+              {!m.birth_year && (
+                <p className="text-xs text-gray-600 mt-1 flex flex-wrap items-center gap-2">
+                  Know their birth year? <BirthYearInput memberId={m.id} onSaved={year => birthYearSaved(m.id, year)} />
+                </p>
+              )}
               {needsConsent[m.id] && (
                 <p className="text-xs text-amber-700 mt-0.5 flex items-center gap-1">
                   <ShieldCheck size={12} /> Younger learner: needs parent or guardian consent before approval
