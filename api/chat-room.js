@@ -23,6 +23,7 @@ import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { tryFreeTierChain } from './_lib/freeTierChain.js';
 import { getRequestUser } from './_lib/requireUser.js';
+import { peerChatBlocked } from './_lib/youngLearner.js';
 
 // Back to Basics Youth Education stays exempt from the token quota below —
 // keep in sync with src/lib/backToBasicsScope.ts.
@@ -136,7 +137,7 @@ export default async function handler(req, res) {
     // mirrors get_my_effective_profile() in the DB. ─────────────────────────
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('organization_id, join_code_used, role, membership_status')
+      .select('organization_id, join_code_used, role, membership_status, birth_year')
       .eq('id', user_id)
       .single();
 
@@ -178,6 +179,18 @@ export default async function handler(req, res) {
 
     if (!isPlatformAdmin && (!effectiveOrgId || effectiveOrgId !== room.organization_id)) {
       return res.status(403).json({ success: false, error: 'not_authorized' });
+    }
+
+    // Under-13 tier: no peer chat for young learners (the database blocks it too).
+    if (!isPlatformAdmin) {
+      const { data: callerOrg } = await supabase
+        .from('organizations')
+        .select('learner_age_min, allow_young_peer_chat')
+        .eq('id', effectiveOrgId)
+        .maybeSingle();
+      if (peerChatBlocked(profile, callerOrg)) {
+        return res.status(403).json({ success: false, error: 'peer_chat_unavailable' });
+      }
     }
 
     const isBackToBasics = room.organization_id === BACK_TO_BASICS_ORG_ID;

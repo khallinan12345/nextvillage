@@ -28,7 +28,7 @@ AS $$
                THEN p.birth_year >= extract(year FROM now())::int - 13
              ELSE coalesce((SELECT o.learner_age_min < 13
                               FROM organizations o
-                             WHERE o.id = p.organization_id), false)
+                             WHERE o.id = coalesce(p.organization_id, org_id_for_join_code(p.join_code_used))), false)
            END
     FROM profiles p
     WHERE p.id = p_user

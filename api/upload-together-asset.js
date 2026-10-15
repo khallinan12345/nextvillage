@@ -16,6 +16,7 @@
 // Authorization so this endpoint can verify who's actually asking.
 
 import { createClient } from '@supabase/supabase-js';
+import { peerChatBlocked } from './_lib/youngLearner.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -97,7 +98,7 @@ export default async function handler(req, res) {
 
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
-    .select('organization_id, join_code_used, membership_status')
+    .select('organization_id, join_code_used, membership_status, role, birth_year')
     .eq('id', userId)
     .single();
   if (profileErr || !profile) {
@@ -129,6 +130,15 @@ export default async function handler(req, res) {
 
   if (!effectiveOrgId || effectiveOrgId !== room.organization_id) {
     return res.status(403).json({ error: 'not_authorized' });
+  }
+
+  const { data: callerOrg } = await supabase
+    .from('organizations')
+    .select('learner_age_min, allow_young_peer_chat')
+    .eq('id', effectiveOrgId)
+    .maybeSingle();
+  if (peerChatBlocked(profile, callerOrg)) {
+    return res.status(403).json({ error: 'peer_chat_unavailable' });
   }
 
   const contentType = req.headers['content-type'] || '';
