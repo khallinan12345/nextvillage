@@ -1195,7 +1195,11 @@ export default async function handler(req, res) {
 
     // Strip any lone surrogates before this content reaches provider request
     // bodies — see sanitizeContent/stripLoneSurrogates above.
-    let messages   = rawMessages.map(m => ({ ...m, content: sanitizeContent(m.content) }));
+    // Blank messages (an earlier empty AI reply saved into a long history) make Mistral and
+    // Anthropic reject the whole request, so drop them before anything is sent.
+    let messages   = rawMessages
+      .map(m => ({ ...m, content: sanitizeContent(m.content) }))
+      .filter(m => (typeof m.content === 'string' ? m.content.trim() !== '' : !Array.isArray(m.content) || m.content.length > 0));
     const system   = appendSafetyFloor(stripLoneSurrogates(rawSystem));
 
     // Fire-and-forget: classify the latest (pre-scrub) user message and
