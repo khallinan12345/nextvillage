@@ -115,6 +115,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-se
 .btn-sync.go:disabled { opacity:.5; cursor:default; }
 .btn-sync.close { background:var(--gray-100); color:var(--gray-600); margin-top:8px; }
 .hidden { display:none !important; }
+#btn-sync-header{display:none !important}
 </style>
 </head>
 <body>
@@ -651,7 +652,7 @@ function renderResult() {
       saveCard.append(h('button',{type:'button',className:'btn-reset',style:'margin-top:8px;',onClick:saveCurrent},'💾 Save Offline Instead'));
     } else {
       saveCard.append(h('button',{type:'button',className:'btn-save',onClick:saveCurrent},'💾 Save Offline'));
-      saveCard.append(h('div',{style:'font-size:12px;color:var(--amber-700);text-align:center;margin-top:8px;'},'📡 No connection — consultation will sync to vAI database when back online.'));
+      saveCard.append(h('div',{style:'font-size:12px;color:var(--amber-700);text-align:center;margin-top:8px;'},'📵 This record stays on this device only. It is not uploaded anywhere.'));
     }
   } else {
     if(state.saveMode==='database'){
@@ -662,7 +663,7 @@ function renderResult() {
     } else {
       saveCard.append(h('div',{className:'alert alert-green',style:'margin:0 0 8px;'},
         h('span',{className:'alert-icon'},'💾'),
-        h('div',null,h('div',{className:'alert-title'},'Saved to device'),h('div',{className:'alert-text'},getPending()+' consultation'+(getPending()!==1?'s':'')+' pending sync. Tap ⬆ when online.'))
+        h('div',null,h('div',{className:'alert-title'},'Saved to device'),h('div',{className:'alert-text'},getPending()+' consultation'+(getPending()!==1?'s':'')+' saved on this device only (not uploaded).'))
       ));
     }
   }
