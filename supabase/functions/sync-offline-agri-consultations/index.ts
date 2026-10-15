@@ -83,6 +83,18 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
+    // Under-13 tier: young learners may not create records about other people. This function
+    // writes with the service role (bypassing the row-level rule), so check here. Fails closed.
+    if (navigator_user_id) {
+      const { data: isYoung, error: youngError } = await supabase.rpc('is_young_learner', { p_user: navigator_user_id });
+      if (youngError || isYoung !== false) {
+        return new Response(JSON.stringify({ error: 'not_available_for_age' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const results: { offline_id: string; status: 'synced' | 'failed'; error?: string }[] = [];
 
     for (const consult of consultations as OfflineConsultation[]) {

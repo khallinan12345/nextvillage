@@ -25,7 +25,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'content-type',
 };
 
-const EXPECTED_SYNC_KEY = Deno.env.get('ANIMAL_OFFLINE_SYNC_KEY') ?? 'vai-animal-offline-2024-oloibiri';
+const EXPECTED_SYNC_KEY = Deno.env.get('ANIMAL_OFFLINE_SYNC_KEY'); // no built-in fallback: if the secret is unset, every request is refused
 
 async function logEvent(supabase: ReturnType<typeof createClient>, payload: {
   event_type: string;
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
   // Validate sync key
   const firstKey = consultations[0]?.syncKey;
-  if (firstKey !== EXPECTED_SYNC_KEY) {
+  if (!EXPECTED_SYNC_KEY || firstKey !== EXPECTED_SYNC_KEY) {
     return new Response(JSON.stringify({ error: 'Invalid sync key' }), { status: 401, headers: CORS_HEADERS });
   }
 
