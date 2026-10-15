@@ -51,6 +51,7 @@ import { useLoginStreak } from '../hooks/useLoginStreak';
 import { useReflectionStreak } from '../hooks/useReflectionStreak';
 import ReflectionCard from '../components/dashboard/ReflectionCard';
 import PendingMembersCard from '../components/dashboard/PendingMembersCard';
+import DataRequestsCard from '../components/dashboard/DataRequestsCard';
 import MissingBirthYearCard from '../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../components/dashboard/SafetyFlagsCard';
 import { EvidencePicker } from '../components/community-impact/EvidencePicker';
@@ -2262,6 +2263,7 @@ ${prior.impact_arc}
                 <SafetyFlagsCard />
                 <PendingMembersCard />
                 <MissingBirthYearCard />
+                <DataRequestsCard />
               </>
             )}
 
