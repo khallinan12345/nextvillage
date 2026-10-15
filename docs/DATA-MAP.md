@@ -180,3 +180,5 @@ Open, in priority order:
 5. **Hygiene (done 2026-10-15):** the redundant `VITE_OPENAI_API_KEY` variable was removed from Vercel and the code now
    reads only `OPENAI_API_KEY` (server side). Anything named `VITE_*` is shipped to browsers, so keep secrets off that prefix.
 6. Confirm the exact Supabase and E2B regions in their dashboards.
+
+**Guardian consent (16 Oct 2026):** a record in `guardian_consents` (who confirmed, when, how, short note; no guardian contact details) is required to approve any new learner who is or may be under 18, and leaders record the signed forms they already hold for current learners. Current learners are never switched off for lacking a record.

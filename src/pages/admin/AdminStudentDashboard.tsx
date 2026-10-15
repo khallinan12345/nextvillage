@@ -13,6 +13,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import PendingMembersCard from '../../components/dashboard/PendingMembersCard';
 import DataRequestsCard from '../../components/dashboard/DataRequestsCard';
 import InactiveAccountsCard from '../../components/dashboard/InactiveAccountsCard';
+import ConsentRecordsCard from '../../components/dashboard/ConsentRecordsCard';
 import UngroupedMembersCard from '../../components/dashboard/UngroupedMembersCard';
 import MissingBirthYearCard from '../../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../../components/dashboard/SafetyFlagsCard';
@@ -2865,6 +2866,7 @@ const AdminStudentDashboard: React.FC = () => {
           <div className="mb-5 stack-y-5">
             <SafetyFlagsCard />
             <PendingMembersCard />
+            <ConsentRecordsCard />
             <MissingBirthYearCard />
             <DataRequestsCard />
             <InactiveAccountsCard />

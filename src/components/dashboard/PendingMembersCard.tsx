@@ -51,6 +51,11 @@ const PendingMembersCard: React.FC = () => {
   const [consentMethod, setConsentMethod] = useState<ConsentMethod>('signed_form');
   const [consentNote, setConsentNote] = useState('');
   const [consentSure, setConsentSure] = useState(false);
+  // One confirmation for a whole group of learners whose signed forms the leader holds.
+  const [bulkConsentOpen, setBulkConsentOpen] = useState(false);
+  const [bulkMethod, setBulkMethod] = useState<ConsentMethod>('signed_form');
+  const [bulkNote, setBulkNote] = useState('');
+  const [bulkSure, setBulkSure] = useState(false);
 
   const load = useCallback(async () => {
     const { data, error: loadError } = await supabase
@@ -134,6 +139,27 @@ const PendingMembersCard: React.FC = () => {
     await load();
   };
 
+  const approveWithConsent = async () => {
+    setApprovingAll(true);
+    setError(null);
+    const failed: string[] = [];
+    for (const m of members.filter(x => needsConsent[x.id])) {
+      const { error: rpcError } = await supabase.rpc('review_membership', {
+        target_user: m.id,
+        decision: 'approved',
+        consent_method: bulkMethod,
+        consent_note: bulkNote.trim() || null,
+      });
+      if (rpcError) failed.push(m.name || m.email || m.id);
+    }
+    setApprovingAll(false);
+    setBulkConsentOpen(false);
+    setBulkSure(false);
+    setBulkNote('');
+    if (failed.length) setError(`Could not approve: ${failed.join(', ')}`);
+    await load();
+  };
+
   if (members.length === 0) return null;
 
   const bulkCount = members.filter(m => !needsConsent[m.id]).length;
@@ -169,8 +195,48 @@ const PendingMembersCard: React.FC = () => {
         <p className="text-sm text-gray-600 mt-1">
           Only approve people you know. Until you approve them, they can’t see your rooms, members or leaderboard.
           {confirmAll && ' Approve all only if every name below is someone in the room with you.'}
-          {consentCount > 0 && ` ${consentCount} younger learner${consentCount > 1 ? 's' : ''} below need${consentCount > 1 ? '' : 's'} a parent or guardian’s consent confirmed first.`}
+          {consentCount > 0 && ` ${consentCount} learner${consentCount > 1 ? 's' : ''} under 18 below need${consentCount > 1 ? '' : 's'} a parent or guardian’s consent confirmed first.`}
         </p>
+        {consentCount > 1 && (
+          <div className="mt-3">
+            {!bulkConsentOpen ? (
+              <button onClick={() => setBulkConsentOpen(true)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-amber-400 text-amber-800 text-sm hover:bg-amber-50">
+                <ShieldCheck size={14} /> Approve all {consentCount} under 18 with consent on file
+              </button>
+            ) : (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 stack-y-2">
+                <p className="text-sm font-medium text-gray-900">How do you know their parents or guardians agreed?</p>
+                {CONSENT_METHODS.map(opt => (
+                  <label key={opt.value} className="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="radio" name="bulk-consent" checked={bulkMethod === opt.value}
+                      onChange={() => setBulkMethod(opt.value)} />
+                    {opt.label}
+                  </label>
+                ))}
+                <input
+                  type="text" maxLength={500} value={bulkNote} onChange={e => setBulkNote(e.target.value)}
+                  placeholder={bulkMethod === 'other' ? 'Add a short note (required)' : 'Optional note, for example the form batch'}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+                />
+                <label className="flex items-start gap-2 text-sm text-gray-700">
+                  <input type="checkbox" className="mt-0.5" checked={bulkSure} onChange={e => setBulkSure(e.target.checked)} />
+                  I confirm a parent or guardian has agreed for each of these {consentCount} learners.
+                </label>
+                <div className="flex gap-2">
+                  <button onClick={approveWithConsent}
+                    disabled={approvingAll || !bulkSure || (bulkMethod === 'other' && !bulkNote.trim())}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60">
+                    {approvingAll ? <Loader2 size={14} className="animate-spin" /> : <CheckCheck size={14} />}
+                    Confirm and approve {consentCount}
+                  </button>
+                  <button onClick={() => setBulkConsentOpen(false)}
+                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {error && <p className="px-5 pt-3 text-sm text-red-600">{error}</p>}
@@ -195,7 +261,7 @@ const PendingMembersCard: React.FC = () => {
               )}
               {needsConsent[m.id] && (
                 <p className="text-xs text-amber-700 mt-0.5 flex items-center gap-1">
-                  <ShieldCheck size={12} /> Younger learner: needs parent or guardian consent before approval
+                  <ShieldCheck size={12} /> Under 18: needs parent or guardian consent before approval
                 </p>
               )}
               {consentFor === m.id && (
