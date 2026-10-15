@@ -104,6 +104,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
 
   const [authChecked, setAuthChecked] = useState(false);
   const [effectiveOrgId, setEffectiveOrgId] = useState<string | null>(null);
+  const [peerChatBlocked, setPeerChatBlocked] = useState(false);
   const isMember = !!effectiveOrgId;
   const quotaExempt = effectiveOrgId === BACK_TO_BASICS_ORG_ID;
   const [quotaUsed, setQuotaUsed] = useState(0);
@@ -152,14 +153,16 @@ const AIPlaygroundTogetherPage: React.FC = () => {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate('/home', { replace: true }); return; }
-    supabase
-      .rpc('get_my_effective_profile')
-      .then(({ data }) => {
-        const orgId = data?.[0]?.organization_id ?? null;
-        setEffectiveOrgId(orgId);
-        setAuthChecked(true);
-        if (!orgId) navigate('/home', { replace: true });
-      });
+    Promise.all([
+      supabase.rpc('get_my_effective_profile'),
+      supabase.rpc('viewer_peer_chat_blocked'),
+    ]).then(([{ data }, blocked]) => {
+      const orgId = data?.[0]?.organization_id ?? null;
+      setEffectiveOrgId(orgId);
+      setPeerChatBlocked(blocked.data === true);
+      setAuthChecked(true);
+      if (!orgId) navigate('/home', { replace: true });
+    });
   }, [user, authLoading, navigate]);
 
   // ── Quota usage for last 3 hours (Back to Basics is exempt) ──────────────
@@ -586,6 +589,27 @@ const AIPlaygroundTogetherPage: React.FC = () => {
       <AppLayout>
         <div className="flex items-center justify-center py-24">
           <Loader2 className="animate-spin text-purple-500" size={32} />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Under-13 tier: Together rooms are switched off for young learners (also enforced in the database).
+  if (peerChatBlocked) {
+    return (
+      <AppLayout>
+        <div className="max-w-md mx-auto py-20 text-center stack-y-3">
+          <h1 className="text-xl font-semibold text-gray-900">Together rooms are not available yet</h1>
+          <p className="text-sm text-gray-600">
+            Group rooms are for older learners. All of your learning activities are still here for you.
+            If you think this is a mistake, ask your leader.
+          </p>
+          <button
+            onClick={() => navigate('/home')}
+            className="mt-2 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
+          >
+            Back to home
+          </button>
         </div>
       </AppLayout>
     );
