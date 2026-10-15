@@ -110,6 +110,16 @@ without nextVillage they can be left without a route). They get a stricter tier 
 no public certificate links, AI limited to vetted vendors with scrubbing, stricter image/voice/video
 filters, no forms about other people, shorter retention (above), and unthrottled safety alerts.
 
+Built 14 October 2026 (PRs 255 to 258 plus the guardian-consent migration `20261014230000`): names and
+photos hidden from other students; no peer chat (per-organization opt-in `allow_young_peer_chat`, on for
+Back to Basics); Anthropic-only AI; no patient/farmer/client records. **Guardian consent (new learners
+only):** when a leader approves a young learner's join request, the approval requires confirming that a
+parent or guardian agreed, and the confirmation is stored in `guardian_consents` (learner, organization,
+who confirmed, when, how: signed form / in person / other, short note). No guardian name or contact is
+stored; the signed form stays with the program. Learners approved before this date are not asked for a
+record. Leaders can read their organization's records; nobody can write them except through
+`review_membership()`. Deleting a learner deletes their consent record.
+
 ## 5. Deletion of one person's data
 
 Today a request is handled by an administrator running one command from the repository:
