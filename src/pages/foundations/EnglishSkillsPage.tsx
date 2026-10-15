@@ -1065,10 +1065,13 @@ Respond ONLY with valid JSON:
       const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
       const aiText = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
-        messages: withUser.map(m => ({ role: m.role, content: m.content })),
+        // Only the recent turns go to the AI: a long session sent in full overflows the free
+        // providers' size limits. Blank messages are left out as well.
+        messages: withUser.filter(m => m.content.trim()).slice(-24).map(m => ({ role: m.role, content: m.content })),
         system: sysPrompt,
         max_tokens: 400,
       });
+      if (!aiText.trim()) throw new Error('empty AI reply');
       const illustratedText = await withIllustration(userText, aiText);
       const aiMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: illustratedText, timestamp: new Date().toISOString() };
       const finalMsgs = [...withUser, aiMsg];
