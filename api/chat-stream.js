@@ -21,6 +21,7 @@
 // Pure `fetch`-based, no Node-only APIs, so it works unmodified in this Edge runtime.
 import { checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
 import { estimateTokens, fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
 
 export const config = { runtime: 'edge' };
@@ -67,7 +68,9 @@ async function isSignedIn(authHeader) {
   const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
   }).catch(() => null);
-  return !!r?.ok;
+  if (!r?.ok) return null;
+  const u = await r.json().catch(() => null);
+  return u?.id ?? null;
 }
 const RESEND_KEY   = process.env.RESEND_API_KEY || '';
 const ALERT_EMAIL  = process.env.TRIAGE_ALERT_EMAIL || '';
@@ -344,8 +347,9 @@ async function classifyTask(messages, apiKey) {
 // Returns the full response as a single SSE done event (no streaming chunks)
 // so the frontend handles it identically to a finished Sonnet stream.
 
-async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, temperature, apiKey, user_id, cohort }) {
-  const groqKey = process.env.GROQ_API_KEY;
+async function callFreeTierWithHaikuBackup({ messages, system, max_tokens, temperature, apiKey, user_id, cohort, skipGroq = false }) {
+  // skipGroq: under-13 learners go to Anthropic only (see api/_lib/youngLearner.js).
+  const groqKey = skipGroq ? null : process.env.GROQ_API_KEY;
 
   // ── Try Groq first ──────────────────────────────────────────────────────────
   if (groqKey) {
@@ -437,7 +441,8 @@ export default async function handler(req) {
 
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await isSignedIn(req.headers.get('authorization')))) {
+  const callerId = await isSignedIn(req.headers.get('authorization'));
+  if (!callerId) {
     return new Response(JSON.stringify({ error: 'Please sign in to use this feature.' }), {
       status: 401,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
@@ -532,6 +537,7 @@ export default async function handler(req) {
   const taskType = await classifyTask(messagesForApi, apiKey);
 
   if (taskType === 'non-coding') {
+    const callerIsYoung = await fetchCallerIsYoung(callerId);
     // ── Non-coding path: Groq → Haiku (no streaming, single SSE done event) ─
     const { readable: ncReadable, writable: ncWritable } = new TransformStream();
     const ncWriter  = ncWritable.getWriter();
@@ -540,6 +546,7 @@ export default async function handler(req) {
     (async () => {
       try {
         const { text, model: usedModel, provider } = await callFreeTierWithHaikuBackup({
+          skipGroq:    callerIsYoung,
           messages:    messagesForApi,
           system,
           max_tokens,

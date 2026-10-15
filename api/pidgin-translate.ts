@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -26,13 +27,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await requireUser(req, res))) return;
+  const caller = await requireUser(req, res);
+  if (!caller) return;
+
+  // Under-13 tier: young learners' text only goes to Anthropic (not Groq or OpenAI).
+  const young = await fetchCallerIsYoung(caller.id);
 
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
 
-  const provider = groqKey ? 'groq'
+  const provider = young ? (anthropicKey ? 'anthropic' : null)
+    : groqKey ? 'groq'
     : openaiKey ? 'openai'
     : anthropicKey ? 'anthropic'
     : null;

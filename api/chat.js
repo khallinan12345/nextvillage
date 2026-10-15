@@ -6,6 +6,7 @@
 import { appendSafetyFloor, checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 import { requireUser } from './_lib/requireUser.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
 import { fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
 //
 // ROUTING LOGIC:
@@ -1149,7 +1150,8 @@ export default async function handler(req, res) {
 
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await requireUser(req, res))) return;
+  const caller = await requireUser(req, res);
+  if (!caller) return;
 
   // Hoisted out of the try block so the catch handler below can still
   // attribute a failed request to a user/page when it logs the triage event.
@@ -1221,7 +1223,13 @@ export default async function handler(req, res) {
     // Pick up any model_config changes (cached 5 min; falls back to defaults on failure)
     await refreshModels();
 
-    const { provider, model } = resolveRoute(page, playgroundModel, taskType);
+    let { provider, model } = resolveRoute(page, playgroundModel, taskType);
+
+    // Under-13 tier: young learners never go through the free-tier chain (vendors we have not
+    // vetted) — Anthropic only. Uses the signed-in user, not the userId in the request body.
+    if (provider === 'groq' && await fetchCallerIsYoung(caller.id)) {
+      ({ provider, model } = { provider: 'anthropic', model: MODELS.anthropic_haiku });
+    }
 
     console.log(`[chat.js] page="${page}" taskType="${taskType}" stream=${stream} → provider=${provider} model=${model}`);
 

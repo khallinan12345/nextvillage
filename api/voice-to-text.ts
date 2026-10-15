@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { Buffer } from 'buffer';
 import { requireUser } from './_lib/requireUser.js';
+import { fetchCallerIsYoung } from './_lib/youngLearner.js';
+import { NOT_AVAILABLE_FOR_AGE } from './_lib/claudeText.js';
 
 const GROQ_TRANSLATION_URL = 'https://api.groq.com/openai/v1/audio/translations';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -12,7 +14,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Signed-in users only — otherwise anyone who finds this URL can spend
   // our AI credits. The browser sends the token (src/lib/apiAuthFetch.ts).
-  if (!(await requireUser(req, res))) return;
+  const caller = await requireUser(req, res);
+  if (!caller) return;
+
+  // Under-13 tier: audio goes to Groq, which we have not vetted.
+  if (await fetchCallerIsYoung(caller.id)) return res.status(403).json(NOT_AVAILABLE_FOR_AGE);
 
   if (!GROQ_API_KEY) {
     return res.status(500).json({ error: 'GROQ_API_KEY is not configured' });
