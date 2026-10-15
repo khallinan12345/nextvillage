@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import AuthForm from '../../components/auth/AuthForm';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -26,6 +26,9 @@ const SignupPage: React.FC = () => {
         <div className="bg-white py-8 px-4 shadow-sm sm:rounded-lg sm:px-10">
           <AuthForm mode="signup" />
         </div>
+        <p className="mt-4 text-center text-xs text-gray-500">
+          Learners under 18 need a parent or guardian’s permission, which your group leader records. <Link to="/privacy" className="underline hover:text-gray-700">How we handle your information</Link>
+        </p>
       </div>
     </div>
   );
