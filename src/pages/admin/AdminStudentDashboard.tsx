@@ -13,6 +13,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import PendingMembersCard from '../../components/dashboard/PendingMembersCard';
 import DataRequestsCard from '../../components/dashboard/DataRequestsCard';
 import InactiveAccountsCard from '../../components/dashboard/InactiveAccountsCard';
+import UngroupedMembersCard from '../../components/dashboard/UngroupedMembersCard';
 import MissingBirthYearCard from '../../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../../components/dashboard/SafetyFlagsCard';
 import { supabase } from '../../lib/supabaseClient';
@@ -2867,6 +2868,7 @@ const AdminStudentDashboard: React.FC = () => {
             <MissingBirthYearCard />
             <DataRequestsCard />
             <InactiveAccountsCard />
+            <UngroupedMembersCard />
           </div>
         )}
 
