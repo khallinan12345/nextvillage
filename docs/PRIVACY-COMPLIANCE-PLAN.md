@@ -66,7 +66,7 @@ real. Two things soften this, both **[verify]** with a Nigerian attorney:
 | 2 | **Public privacy notice** | yes | yes | Draft only | Update the draft to match what is live; publish at `/privacy`; link from signup and footer | Claude drafts; attorney reviews | Weeks 1 to 3 |
 | 3 | **Attorney review** (US and Nigerian) | yes | yes | None | One engagement covering COPPA status, the under-18 rule, cross-border transfer, notice | Kevin | Weeks 1 to 4 |
 | 4 | **Parent notice and consent: under 13 (US)** | yes | yes | Built; only for new learners; Dayton consents backfilled | Keep; add a parent-facing notice text to give with the form | Claude, Kevin | Week 3 |
-| 5 | **Guardian consent for 13 to 17 (Nigeria)** | n/a | yes | Not built | Extend the consent record to all under-18; leaders collect forms; batch plan for existing learners | Claude builds; leaders collect | Weeks 3 to 8 |
+| 5 | **Guardian consent for everyone under 18 (Nigeria)** | n/a | yes | **Built 16 Oct 2026** (Kevin's decision: every learner under 18 needs guardian consent; forms are already collected offline). New learners cannot be approved without it; leaders record forms already on file in bulk from the dashboard; nobody is switched off | Leaders record the forms they hold (Divinegift: Davidson AI Futures Lab; others) and keep the paper originals | Leaders | Weeks 1 to 4 |
 | 6 | **Determine whether we must register with the NDPC** and appoint a DPO | n/a | probably (we process many children's records) | Not assessed | Attorney or licensed compliance organization to decide the tier; if yes, register and name a DPO | Kevin, attorney | Weeks 2 to 6 |
 | 7 | **Data transfer to the US** | n/a | yes | Supabase is in us-east-2 (Ohio); stated nowhere | Choose and document the legal basis (contract clauses, consent, adequacy); say it in the notice | Attorney | Weeks 2 to 6 |
 | 8 | **Breach response** | state laws | **72 hours to the regulator** | Runbook written; deadlines table unconfirmed | Update the runbook with the NDPC contact and the 72-hour step; run one practice drill | Claude, Kevin | Week 4 |
@@ -79,7 +79,7 @@ real. Two things soften this, both **[verify]** with a Nigerian attorney:
 
 ## 5. What is already built (so we do not redo it)
 
-Under-13 protections (names and photos hidden, no peer chat, one vetted AI vendor, no records about
+Guardian consent record for every learner under 18 (16 Oct); under-13 protections (names and photos hidden, no peer chat, one vetted AI vendor, no records about
 other people, guardian consent for new learners); birth-year collection and leader entry; leader approval
 of every member; safety flagging to leaders; retention for chats, media, health records and inactive
 accounts, run nightly; privacy requests (delete, withdraw, copy); placement of members who joined without

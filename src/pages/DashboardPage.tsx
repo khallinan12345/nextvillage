@@ -53,6 +53,7 @@ import ReflectionCard from '../components/dashboard/ReflectionCard';
 import PendingMembersCard from '../components/dashboard/PendingMembersCard';
 import DataRequestsCard from '../components/dashboard/DataRequestsCard';
 import InactiveAccountsCard from '../components/dashboard/InactiveAccountsCard';
+import ConsentRecordsCard from '../components/dashboard/ConsentRecordsCard';
 import MissingBirthYearCard from '../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../components/dashboard/SafetyFlagsCard';
 import { EvidencePicker } from '../components/community-impact/EvidencePicker';
@@ -2263,6 +2264,7 @@ ${prior.impact_arc}
               <>
                 <SafetyFlagsCard />
                 <PendingMembersCard />
+                <ConsentRecordsCard />
                 <MissingBirthYearCard />
                 <DataRequestsCard />
                 <InactiveAccountsCard />
