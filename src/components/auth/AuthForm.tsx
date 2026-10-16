@@ -21,6 +21,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<'form' | 'magic-link-sent'>('form');
   const [similarMatch, setSimilarMatch] = useState<SimilarProfileMatch | null>(null);
+  const [confirmNew, setConfirmNew] = useState(false);
 
   // ─── Duplicate email check ────────────────────────────────────────────────
   // Runs pre-auth (anon), so it goes through a SECURITY DEFINER RPC rather
@@ -231,18 +232,33 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             >
               Yes, that's me — send me a password reset link
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              fullWidth
-              onClick={() => {
-                setSimilarMatch(null);
-                // Re-submit the form now that user has confirmed they're new
-                handleAuth({ preventDefault: () => {} } as React.FormEvent);
-              }}
-            >
-              No, I'm a new user — continue signing up
-            </Button>
+            {!confirmNew ? (
+              <button
+                type="button"
+                onClick={() => setConfirmNew(true)}
+                className="text-xs text-gray-500 underline hover:text-gray-700 text-center"
+              >
+                No, I am a new user
+              </button>
+            ) : (
+              <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
+                <p className="text-xs text-gray-700">
+                  Are you sure? Two accounts split your work in half. If you have ever signed up before, reset your password instead.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSimilarMatch(null);
+                    setConfirmNew(false);
+                    // Re-submit the form now that user has confirmed they're new
+                    handleAuth({ preventDefault: () => {} } as React.FormEvent);
+                  }}
+                  className="mt-2 text-xs text-gray-600 underline hover:text-gray-800"
+                >
+                  Yes, I have never signed up before. Continue.
+                </button>
+              </div>
+            )}
             <button
               type="button"
               className="text-sm text-gray-400 hover:text-gray-600 text-center mt-1"
