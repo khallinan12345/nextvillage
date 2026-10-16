@@ -45,15 +45,15 @@ const PrivacyPage: React.FC = () => (
           <li>AI helpers receive their typed text with names and contact details removed. A safety check reads the latest message as written so a leader can step in if a child may be at risk.</li>
           <li>Children under 13 get extra protections (listed below).</li>
           <li>We do not sell information and we do not show advertising.</li>
-          <li>You can ask us to show, correct or delete everything: <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</li>
+          <li>You can ask us to show, correct or delete everything. Parents without email can simply tell the group leader in person, or email <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</li>
         </UL>
       </div>
 
       <H2>Who is responsible</H2>
       <p>
         nextVillage.community (families may also know it as vAI lab; it works with the Davidson AI Innovation Center in Oloibiri) is run by
-        <strong> Kevin Hallinan</strong>, 1629 E. 4th St., Dayton, OH 45403, USA. Write to{' '}
-        <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> with any
+        <strong> Kevin Hallinan</strong>, 1629 E. 4th St., Dayton, OH 45403, USA. Email{' '}
+        <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>, or tell your group leader in person, with any
         question or request. We expect to move the program into an organization, and this notice will say so
         when that happens.
       </p>
@@ -163,7 +163,7 @@ const PrivacyPage: React.FC = () => (
         You, or your parent or guardian, can ask to see, correct or delete your information, withdraw
         permission, or ask for a copy. If you have an account, go to <Link className="text-blue-700 underline" to="/profile">My Profile</Link> and
         use “Privacy and my data”. You can also email{' '}
-        <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We reply within 14 days (within 7 days if you only want a copy of your information). Deleting an account and its files is completed within 30 days.
+        <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>, or tell your group leader in person, who passes it to us the same day. We reply within 14 days (within 7 days if you only want a copy of your information). Deleting an account and its files is completed within 30 days.
         If you are under 18, your parent or guardian can make these requests for you.
       </p>
       <p className="mt-3">
