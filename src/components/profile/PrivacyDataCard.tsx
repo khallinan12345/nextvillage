@@ -29,7 +29,7 @@ const OPTIONS: { kind: Kind; label: string; help: string }[] = [
 ];
 
 const STATUS_TEXT: Record<RequestRow['status'], string> = {
-  open: 'Received. We will deal with it within 30 days.',
+  open: 'Received. We will reply within 14 days.',
   done: 'Done.',
   declined: 'Could not be done',
 };
