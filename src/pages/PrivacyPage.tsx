@@ -158,7 +158,7 @@ const PrivacyPage: React.FC = () => (
         You, or your parent or guardian, can ask to see, correct or delete your information, withdraw
         permission, or ask for a copy. If you have an account, go to <Link className="text-blue-700 underline" to="/profile">My Profile</Link> and
         use “Privacy and my data”. You can also email{' '}
-        <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We reply within 30 days.
+        <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We reply within 14 days (within 7 days if you only want a copy of your information). Deleting an account and its files is completed within 30 days.
         If you are under 18, your parent or guardian can make these requests for you.
       </p>
       <p className="mt-3">

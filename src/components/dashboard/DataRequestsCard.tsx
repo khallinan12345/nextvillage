@@ -75,7 +75,7 @@ const DataRequestsCard: React.FC = () => {
             {rows.length} privacy request{rows.length > 1 ? 's' : ''}
           </p>
           <p className="text-xs text-gray-500">
-            We must answer within 30 days. Lock the account first if it is a deletion or withdrawal.
+            Reply within 14 days (7 days for a copy of data). Lock the account first if it is a deletion or withdrawal.
             {isAdmin ? ' To erase: npm run user:delete -- <email> (dry run first).' : ' An administrator carries out deletions.'}
           </p>
         </div>
