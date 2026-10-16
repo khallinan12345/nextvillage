@@ -42,7 +42,7 @@ then come back to this runbook.
    | The platform itself is under attack | Vercel dashboard: turn on Attack Challenge Mode; add a Firewall rule to block the source. |
    | Something is actively harmful and cannot be fixed fast | Roll back the Vercel deployment to the last good one, or pause the affected feature. |
 
-3. **Tell Kevin** (owner) if it is not already him. Backup and child-protection contact: **Confidence Onuoha**, confidence.onuoha@nextVillage.community, WhatsApp +234 806 417 7653.
+3. **Tell Kevin** (owner) if it is not already him. Backup and child-protection contact: **Confidence Onuoha**, confidenceonuoha416@gmail.com, WhatsApp +234 806 417 7653.
 
 ---
 
