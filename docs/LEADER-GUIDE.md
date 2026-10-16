@@ -7,7 +7,7 @@ For group leaders and co-leaders (for example in Oloibiri and Dayton). Keep it s
 1. **Approve each new member yourself, and only if you know them.** On your dashboard, "Join requests".
    For anyone **under 18**, confirm that a parent or guardian agreed (signed form, or in person) and say how.
    You can approve a group with one confirmation if you hold all of their forms.
-2. **Record the consent forms you already hold.** On your dashboard, "Learners under 18 without a recorded
+2. **Record the consent forms you already hold, but only the right kind.** A form must cover **using the platform and sending information abroad**. The old media and publication form alone does not; those families also sign the one-page add-on first. On your dashboard, "Learners under 18 without a recorded
    consent": select the learners whose signed forms you have, choose "signed form", tick the confirmation.
    **Keep the paper forms safe** (a locked box or cabinet, listed by learner name). If a regulator or parent
    ever asks, the paper form is the proof. Make a photo or scan copy and store it somewhere separate.

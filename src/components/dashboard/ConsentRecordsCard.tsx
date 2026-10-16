@@ -18,7 +18,7 @@ interface Learner {
 }
 type Method = 'signed_form' | 'in_person' | 'other';
 const METHODS: { value: Method; label: string }[] = [
-  { value: 'signed_form', label: 'A signed consent form is on file' },
+  { value: 'signed_form', label: 'A signed consent form covering use of the platform is on file' },
   { value: 'in_person',   label: 'A parent or guardian agreed in person' },
   { value: 'other',       label: 'Another way (add a note)' },
 ];
@@ -69,7 +69,7 @@ const ConsentRecordsCard: React.FC = () => {
             {learners.length} learner{learners.length === 1 ? '' : 's'} under 18 without a recorded parent or guardian consent
           </span>
           <span className="block text-xs text-gray-500">
-            If you hold the signed forms, record them here so the platform keeps the evidence. Nobody loses access.
+            If you hold signed forms that cover using the platform (a media release alone is not enough), record them here. Nobody loses access.
           </span>
         </span>
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -112,7 +112,7 @@ const ConsentRecordsCard: React.FC = () => {
             />
             <label className="flex items-start gap-2 text-sm text-gray-700">
               <input type="checkbox" className="mt-0.5" checked={sure} onChange={e => setSure(e.target.checked)} />
-              I confirm that a parent or guardian has agreed for each of the {picked.size} learner{picked.size === 1 ? '' : 's'} I selected.
+              I confirm that a parent or guardian has agreed, on a form that covers using nextVillage and sending information abroad, for each of the {picked.size} learner{picked.size === 1 ? '' : 's'} I selected.
             </label>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <button onClick={record}
