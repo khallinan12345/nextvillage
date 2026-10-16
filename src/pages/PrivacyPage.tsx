@@ -54,7 +54,7 @@ const PrivacyPage: React.FC = () => (
         nextVillage.community (families may also know it as vAI lab; it works with the Davidson AI Innovation Center in Oloibiri) is run by
         <strong> Kevin Hallinan</strong>, 1629 E. 4th St., Dayton, OH 45403, USA. Email{' '}
         <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>, or tell your group leader in person, with any
-        question or request. We expect to move the program into an organization, and this notice will say so
+        question or request. In Oloibiri you can also message Confidence Onuoha, our child protection lead, on WhatsApp: +234 806 417 7653. We expect to move the program into an organization, and this notice will say so
         when that happens.
       </p>
 
