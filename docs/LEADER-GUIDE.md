@@ -2,7 +2,7 @@
 
 For group leaders and co-leaders (for example in Oloibiri and Dayton). Keep it short; ask Kevin if unsure.
 
-**Child protection lead: Confidence Onuoha** (WhatsApp +234 806 417 7653, confidenceonuoha416@gmail.com). Parents and leaders can go to her with any child-safety worry or in-person privacy request; she tells Kevin.
+**Child protection lead: Confidence Onuoha** (WhatsApp +234 806 417 7653, confidence.onuoha@nextVillage.community). Parents and leaders can go to her with any child-safety worry or in-person privacy request; she tells Kevin.
 
 ## Your five jobs
 
