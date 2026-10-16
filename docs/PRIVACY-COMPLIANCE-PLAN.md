@@ -105,3 +105,29 @@ a group; incident runbook; data map; vendor review.
 - COPPA amended rule: [Federal Register](https://www.federalregister.gov/documents/2025/04/22/2025-05904/childrens-online-privacy-protection-rule), [Davis Polk note](https://www.davispolk.com/insights/client-update/ftc-prioritizes-coppa-enforcement-new-compliance-obligations-take-effect)
 - COPPA consent and schools: [FTC FAQ summary (FPF)](https://fpf.org/blog/ftc-updates-coppa-faqs/)
 - Nonprofits and COPPA: [commentary](https://www.churchlawandtax.com/?p=723)
+
+## 8. Future action: when Impact Mining, Inc. becomes official
+
+Kevin is forming **Impact Mining, Inc.**, an Ohio nonprofit corporation (bank account in progress, 16 Oct
+2026). **When Kevin says it is official, do these in order.** Until then the privacy notice names Kevin
+Hallinan as an individual.
+
+1. **Collect the facts:** exact legal name, Ohio filing date, registered address, officers/board, EIN, and
+   a privacy contact address (ideally a role address such as `privacy@nextvillage.community`).
+2. **Public documents:** change the responsible party in `src/pages/PrivacyPage.tsx` (and its date); update
+   the roles table in `public/docs/Data-Protection-Summary.html` (and the copy in `docs/`); update this plan,
+   `DATA-MAP.md` and `VENDOR-REVIEW.md`; fix the landing-page footer and copyright line (it currently names
+   the Davidson AI Innovation Center only).
+3. **Move the accounts to the entity:** vendor accounts and billing are probably in Kevin's name today
+   (Supabase, Vercel, GitHub, Anthropic, OpenAI, Resend, Replicate, ElevenLabs, E2B, Cloudflare, the domain
+   `nextvillage.community`). Transfer or re-create them under Impact Mining, Inc. and **re-accept each
+   data processing agreement in the entity's name**.
+4. **Agreement with the Nigerian partner:** a short written agreement between Impact Mining, Inc. and the
+   Davidson AI Innovation Center (and Maji Mazuri in Kenya) saying who is the controller, who holds the signed
+   guardian consent forms, who answers requests, and who reports a breach and how fast.
+5. **Re-check the legal questions:** COPPA status of a nonprofit (it may fall outside the FTC's reach but
+   the platform follows it anyway), Nigerian registration/DPO for a foreign nonprofit processing Nigerian
+   children's data, and whether a local representative is needed.
+6. **Optional, later:** federal tax-exempt (501(c)(3)) status, board-level insurance, a named board member
+   responsible for privacy.
+7. **Update the security tracker** and the memory notes so future sessions use the entity name.
