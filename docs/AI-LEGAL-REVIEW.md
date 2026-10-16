@@ -210,3 +210,42 @@ Closed or reduced the same day, using only what did not depend on the consent fo
 **Still waiting on others:** the guardian consent form (A3, A7, parts of A4 and D1); the lawyer (A2, D2, E2,
 and everything in section 7); filing the vendor agreements (C2); a phone or contact method for COPPA's
 notice (B1); the Nigerian and Kenyan regulator contact addresses for the runbook (C3).
+
+---
+
+## 10. Review of the Oloibiri parent form (received 16 Oct 2026)
+
+**The document received** is titled "vAI lab media and publication consent form". It is a **media release**,
+not consent to the platform's processing of a child's data. It asks the parent to allow: (1) recording and
+using the child's image, voice and first name "only for awareness"; (2) publishing on Substack, LinkedIn,
+YouTube, the vAI lab website and donor reports; (3) with the child's surname, school name, uniform logos, home
+address and village name excluded. The parent acknowledges it is voluntary, that consent can be withdrawn "by
+emailing" (the address is **blank**), and that vAI lab "will store this signed form securely and will not sell
+or share my child's data".
+
+**What it does well:** it is specific about what is shown and where, voluntary, excludes the most identifying
+details, and states withdrawal. That is close to what the ODPC's own example requires for publishing a
+child's name and picture (finding A4). It would cover the two landing-page videos **if** the child in each
+appears with a signed form, and the first-name use, the donor reports and the social channels it names.
+
+**What it does not do (finding A3 stands):**
+
+| Gap | Why it matters | Fix |
+|---|---|---|
+| **No consent to use the platform or to process the child's data** (name, school, birth year, AI chats, work, scores, safety checks, leader access) | NDPA s.31(1) and Kenya s.33(1) require parental consent to process a child's data. A media release covers publication, not the platform | New Part A in `templates/PARENT-CONSENT-FORM.md`, or the one-page add-on for families who already signed |
+| **No mention of AI vendors, US storage, or the risks** | Kenya's regulations require the parent be told "the inherent risks in processing and the safeguards"; NDPA s.43(a) requires consent to a foreign transfer to follow being informed of the possible risks | Part A states them in plain words |
+| **"will not sell or share my child's data"** | Not accurate. Typed text goes (scrubbed) to AI vendors and data is held by hosting providers. An inaccurate promise weakens consent and the notice | Replace with: not sold, shared only with the service providers needed to run the platform, as described |
+| **Withdrawal email is blank** | A right that cannot be exercised is not meaningful (Kenya General Regulations; COPPA 312.4(d)) | Print a real address and a phone/WhatsApp number |
+| **Heading typo** ("complaint" for "compliant") and no named organisation, address or contact | The parent cannot tell who is responsible. The notice also needs the controller's contact | Name the Davidson AI Innovation Center and the US entity once formed, with addresses |
+| **No year of birth, no relationship to child, no language/explanation line, no witness** | We need the birth year; the person signing must be the parent or guardian; many parents may be read to | Added to the new form |
+| **No retention period or what withdrawal does to published material** | Informed consent includes how long and what withdrawal means | Added to Part B |
+| **Mixed purposes in one signature** | Kenya requires consent to be specific; bundling media with platform use makes it less free | New form separates required Part A from optional Part B |
+
+**Practical consequence:** do **not** record these media releases on the platform as guardian consent for
+platform use. The leader dashboards say "a signed consent form is on file"; that must mean a form covering use
+of the platform. Until Part A (or the add-on) is signed, leave those learners unrecorded. They are not
+switched off in the meantime (the platform never blocks learners already in).
+
+**Rating after this review:** A3 (consent content): **Gap**, now concrete. A4 (public display): **Partly**:
+the media release covers first name, image, voice and the named channels, and the platform now shows
+initials only, which is stricter than the form allows.

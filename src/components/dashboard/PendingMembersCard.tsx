@@ -30,7 +30,7 @@ interface PendingMember {
 // (see 20261014230000_guardian_consent.sql). No guardian contact details are kept.
 type ConsentMethod = 'signed_form' | 'in_person' | 'other';
 const CONSENT_METHODS: { value: ConsentMethod; label: string }[] = [
-  { value: 'signed_form', label: 'A signed consent form is on file' },
+  { value: 'signed_form', label: 'A signed consent form covering use of the platform is on file' },
   { value: 'in_person',   label: 'A parent or guardian agreed in person' },
   { value: 'other',       label: 'Another way (add a note)' },
 ];
@@ -221,7 +221,7 @@ const PendingMembersCard: React.FC = () => {
                 />
                 <label className="flex items-start gap-2 text-sm text-gray-700">
                   <input type="checkbox" className="mt-0.5" checked={bulkSure} onChange={e => setBulkSure(e.target.checked)} />
-                  I confirm a parent or guardian has agreed for each of these {consentCount} learners.
+                  I confirm a parent or guardian has agreed for each of these {consentCount} learners, on a form that covers using nextVillage and sending information abroad as explained in the privacy notice.
                 </label>
                 <div className="flex gap-2">
                   <button onClick={approveWithConsent}
@@ -282,7 +282,7 @@ const PendingMembersCard: React.FC = () => {
                   />
                   <label className="flex items-start gap-2 text-sm text-gray-700">
                     <input type="checkbox" className="mt-0.5" checked={consentSure} onChange={e => setConsentSure(e.target.checked)} />
-                    I confirm a parent or guardian has agreed to this learner using nextVillage.
+                    I confirm a parent or guardian has agreed, on a form that covers using nextVillage and sending the learner's information to AI services abroad, as explained in the privacy notice.
                   </label>
                   <div className="flex gap-2">
                     <button
