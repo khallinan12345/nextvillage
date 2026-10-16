@@ -68,6 +68,11 @@ const BirthYearPrompt: React.FC<{ userId: string }> = ({ userId }) => {
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
+        <p className="text-center text-xs text-gray-500">
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+            How we use your information
+          </a>
+        </p>
       </form>
     </div>
   );

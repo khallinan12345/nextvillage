@@ -22,6 +22,7 @@
 // NOT diagnosis or prescription.
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import PersonAgreedCheck from '../../components/community-impact/PersonAgreedCheck';
 import AppLayout from '../../components/layout/AppLayout';
 import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -840,6 +841,7 @@ const HealthcareNavigatorPage: React.FC = () => {
   const [loadingAssessments, setLoadingAssessments] = useState(false);
 
   // ── Add-patient form
+  const [personAgreed, setPersonAgreed] = useState(false);
   const [newName, setNewName] = useState('');
   const [newVillage, setNewVillage] = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -1293,7 +1295,7 @@ const HealthcareNavigatorPage: React.FC = () => {
 
   // ─── Save patient ─────────────────────────────────────────────────────────
   const savePatient = async () => {
-    if (!user || !newName.trim() || !newVillage) return;
+    if (!user || !newName.trim() || !newVillage || !personAgreed) return;
     setSavingPatient(true);
     try {
       const { error } = await supabase.from('health_patients').insert({
@@ -1311,7 +1313,7 @@ const HealthcareNavigatorPage: React.FC = () => {
     } finally { setSavingPatient(false); }
   };
 
-  const resetAddPatient = () => { setNewName(''); setNewVillage(''); setNewPhone(''); setNewAgeYears(''); setNewAgeMonths(''); setNewSex(''); setNewGroup('adult'); setNewNotes(''); };
+  const resetAddPatient = () => { setNewName(''); setNewVillage(''); setNewPhone(''); setNewAgeYears(''); setNewAgeMonths(''); setNewSex(''); setNewGroup('adult'); setNewNotes(''); setPersonAgreed(false); };
 
   // ─── Start new assessment ─────────────────────────────────────────────────
   const startAssessment = (patient: Patient) => {
@@ -1908,9 +1910,10 @@ const HealthcareNavigatorPage: React.FC = () => {
                   placeholder="Chronic conditions, allergies, previous serious illness…"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-400 text-base resize-none"/>
               </div>
-              <button onClick={savePatient} disabled={!newName.trim() || !newVillage || savingPatient}
+              <PersonAgreedCheck checked={personAgreed} onChange={setPersonAgreed} />
+              <button onClick={savePatient} disabled={!newName.trim() || !newVillage || !personAgreed || savingPatient}
                 className={classNames('w-full py-3.5 rounded-xl font-bold text-white text-base transition-opacity',
-                  newName.trim() && newVillage && !savingPatient ? 'bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
+                  newName.trim() && newVillage && personAgreed && !savingPatient ? 'bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
                 {savingPatient ? <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin"/>Saving…</span> : 'Register Patient'}
               </button>
             </div>

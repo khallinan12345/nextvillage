@@ -14,6 +14,7 @@
 // source pages.
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import PersonAgreedCheck from './PersonAgreedCheck';
 import AppLayout from '../layout/AppLayout';
 import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -212,6 +213,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
   const [newNotes, setNewNotes] = useState('');
   const [newExtra, setNewExtra] = useState<any>(config.extraFieldsInitial);
   const [savingEntity, setSavingEntity] = useState(false);
+  const [personAgreed, setPersonAgreed] = useState(false);
 
   // ── Structured intake
   const [intake, setIntake] = useState<Record<string, string>>({});
@@ -657,7 +659,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
 
   // ─── Save entity ──────────────────────────────────────────────────────────
   const saveEntity = async () => {
-    if (!user || !newName.trim() || !newVillage) return;
+    if (!user || !newName.trim() || !newVillage || !personAgreed) return;
     setSavingEntity(true);
     try {
       const payload = config.mapEntityToInsertPayload(
@@ -672,6 +674,7 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
   const resetAddEntity = () => {
     setNewName(''); setNewVillage(''); setNewPhone(''); setNewNotes('');
     setNewExtra(config.extraFieldsInitial);
+    setPersonAgreed(false);
   };
 
   const handleResolutionSubmit = async (consultId: string, data: ResolutionSubmitData) => {
@@ -1059,9 +1062,10 @@ export const AdvisorCasebookPage: React.FC<{ config: DomainConfig }> = ({ config
                   placeholder="Past problems, special concerns…"
                   className="w-full px-4 py-3 border border-hair bg-paper rounded-xl focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent text-sm resize-none"/>
               </div>
+              <PersonAgreedCheck checked={personAgreed} onChange={setPersonAgreed} />
               <QuietButton
                 onClick={saveEntity}
-                disabled={!newName.trim() || !newVillage || savingEntity}
+                disabled={!newName.trim() || !newVillage || !personAgreed || savingEntity}
                 loading={savingEntity}
                 variant="solid"
                 className="w-full justify-center py-3.5 text-base"

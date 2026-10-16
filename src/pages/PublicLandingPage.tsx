@@ -18,7 +18,7 @@ import {
   BookOpen, ExternalLink,
 } from "lucide-react";
 import { BookCard, BookModal } from "../components/BookModal";
-import { shortDisplayName } from "../lib/displayName";
+import { publicInitials, publicReason } from "../lib/displayName";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1507,7 +1507,7 @@ const PublicLandingPage: React.FC = () => {
                               <span style={{ fontSize: "1.2rem" }}>{meta.emoji}</span>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontWeight: 700, color: isLatest ? "#fef3c7" : "#fff", fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                  {shortDisplayName(w.winner_name)}
+                                  {publicInitials(w.winner_name)}
                                 </div>
                                 <div style={{ fontSize: "0.65rem", color: isLatest ? "#fbbf24" : "rgba(255,255,255,0.35)", fontWeight: 600, marginTop: 1 }}>
                                   {fmtWeek(w.week_start, w.week_end)}
@@ -1527,7 +1527,7 @@ const PublicLandingPage: React.FC = () => {
                             {/* Truncated reason */}
                             {w.winner_reason && (
                               <p style={{ fontSize: "0.77rem", color: isLatest ? "rgba(254,243,199,0.75)" : "rgba(255,255,255,0.45)", lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>
-                                "{w.winner_reason.length > 100 ? w.winner_reason.slice(0, 100).trimEnd() + "…" : w.winner_reason}"
+                                "{(() => { const r = publicReason(w.winner_name, w.winner_reason); return r.length > 100 ? r.slice(0, 100).trimEnd() + "…" : r; })()}"
                               </p>
                             )}
 
@@ -1626,7 +1626,7 @@ const PublicLandingPage: React.FC = () => {
                               🏆 Weekly Champion
                             </div>
                             <div style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: "#fff", fontSize: "1.15rem", lineHeight: 1.2 }}>
-                              {shortDisplayName(w.winner_name)}
+                              {publicInitials(w.winner_name)}
                             </div>
                             <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "0.2rem" }}>
                               {fmtWeek(w.week_start, w.week_end)}
@@ -1677,7 +1677,7 @@ const PublicLandingPage: React.FC = () => {
                           borderLeft: `3px solid ${tc}`,
                           paddingLeft: "1rem",
                         }}>
-                          "{w.winner_reason}"
+                          "{publicReason(w.winner_name, w.winner_reason)}"
                         </p>
                       </div>
                     </div>
