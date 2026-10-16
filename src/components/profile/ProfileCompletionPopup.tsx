@@ -165,6 +165,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
 
   // ── Duplicate-account detection ───────────────────────────────────────────
   const [duplicateMatch, setDuplicateMatch] = useState<SimilarProfileMatch | null>(null);
+  const [confirmNew, setConfirmNew] = useState(false);
   const [mergedAndRedirected, setMergedAndRedirected] = useState(false);
 
   // The join code of the organization being joined scopes the duplicate
@@ -566,17 +567,33 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
               >
                 {isSubmitting ? 'Sending…' : "Yes, that's me — send me a password reset link"}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDuplicateMatch(null);
-                  // Re-submit now that the user has confirmed they're a different person
-                  handleSubmit({ preventDefault: () => {} } as React.FormEvent);
-                }}
-                className="w-full py-2.5 border border-gray-300 hover:bg-gray-50 text-sm font-medium text-gray-700 rounded-lg transition-colors"
-              >
-                No, that's a different person — continue signing up
-              </button>
+              {!confirmNew ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmNew(true)}
+                  className="text-xs text-gray-500 underline hover:text-gray-700 text-center"
+                >
+                  That is a different person
+                </button>
+              ) : (
+                <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
+                  <p className="text-xs text-gray-700">
+                    Are you sure? Two accounts split your work in half, and your leader checks new members before approving them.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDuplicateMatch(null);
+                      setConfirmNew(false);
+                      // Re-submit now that the user has confirmed they're a different person
+                      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+                    }}
+                    className="mt-2 text-xs text-gray-600 underline hover:text-gray-800"
+                  >
+                    Yes, I am a different person. Continue.
+                  </button>
+                </div>
+              )}
               <button
                 type="button"
                 className="text-sm text-gray-400 hover:text-gray-600 text-center mt-1"
