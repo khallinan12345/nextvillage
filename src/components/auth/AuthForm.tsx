@@ -349,18 +349,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             <p className="mt-1 text-xs text-gray-500">{PASSWORD_RULE_TEXT}</p>
           )}
 
-          {/* Forgot password link — login mode only */}
-          {mode === 'login' && (
-            <div className="mt-2 text-right">
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Forgot your password?
-              </button>
-            </div>
-          )}
         </div>
 
         <div>
@@ -368,6 +356,25 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             {mode === 'login' ? 'Sign in' : 'Sign up'}
           </Button>
         </div>
+
+        {mode === 'login' && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
+            <p className="text-sm text-blue-900">Forgot your password? Do not make a new account.</p>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="mt-2 w-full rounded-lg bg-white border border-blue-600 text-blue-700 font-semibold py-2 text-sm hover:bg-blue-100"
+            >
+              Email me a link to reset my password
+            </button>
+            <p className="mt-1 text-xs text-blue-800">Type your email address above first.</p>
+          </div>
+        )}
+        {mode === 'signup' && (
+          <p className="text-xs text-gray-600 text-center">
+            Already joined before? Do not make a second account. Go back to sign in and use "Email me a link to reset my password".
+          </p>
+        )}
       </form>
 
       {/* OAuth */}
