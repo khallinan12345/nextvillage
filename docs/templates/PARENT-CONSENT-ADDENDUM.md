@@ -49,7 +49,7 @@ child makes are deleted after 12 months (6 months under 13). Accounts not used f
 deleted. We delete everything within 30 days when you ask.
 
 **Your rights.** You can ask to see, correct or delete your child's information, ask for a copy, or **withdraw
-this permission at any time**. Tell the group leader **in person**, or contact us by **email** at **[privacy email]**, or by **WhatsApp/phone** to Confidence Onuoha, our child protection lead, on **+234 806 417 7653** (email: confidence.onuoha@nextVillage.community).
+this permission at any time**. Tell the group leader **in person**, or contact us by **email** at **[privacy email]**, or by **WhatsApp/phone** to Confidence Onuoha, our child protection lead, on **+234 806 417 7653** (email: confidenceonuoha416@gmail.com).
 We reply within 14 days. Withdrawing means your child stops using nextVillage.community and we delete their account.
 
 ☐ **I give permission** for my child to use nextVillage.community, and for my child's information to be used and sent
