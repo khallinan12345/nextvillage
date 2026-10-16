@@ -19,6 +19,10 @@ For group leaders and co-leaders (for example in Oloibiri and Dayton). Keep it s
 5. **Answer privacy requests within 14 days** (7 days if someone only wants a copy of their information).
    They appear on your dashboard as "Privacy requests". If a parent wants a child's account closed, press
    "Lock account now" first, then tell Kevin. Kevin carries out the deletion.
+   **Many parents have no email.** A parent may tell you in person (or by phone or WhatsApp). That counts
+   as a valid request or withdrawal. Write down the date, the child's name, what was asked and who asked,
+   and tell Kevin the same day so the 14 days are not lost. If they want the account closed, press
+   "Lock account now" at once.
 
 ## When a safety alert arrives
 
