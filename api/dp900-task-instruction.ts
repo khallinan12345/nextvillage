@@ -82,7 +82,7 @@ async function generateInstruction(body: any): Promise<object> {
     learningStrategy      ? `Learning approach: ${JSON.stringify(learningStrategy)}`          : '',
   ].filter(Boolean).join('\n');
 
-  const system = `You are a DP-900 certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the Girls AIing & Vibing platform at the Davidson AI Innovation Center.
+  const system = `You are a DP-900 certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the Girls AIing & Vibing platform at the Davidson AI Futures Lab.
 
 Your role: generate Socratic teaching questions — not explanations. Make the learner think and articulate understanding in their own words. Every example must connect to their lived context: fish catch data, water quality sensor readings from Nun River, OWFA fishing records, oil contamination history, cassava farming, the Girls AIing learner platform itself, and community health and energy data.
 

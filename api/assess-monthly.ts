@@ -1161,7 +1161,7 @@ async function fetchPlaygroundSummary(
     // Optimisation 1: playground summary uses Haiku — topic classification
     // from short user messages needs no deep reasoning; Haiku is 3x cheaper.
     const pgContent = await callClaudeHaiku(
-      "You are an educational analyst reviewing free-form AI Playground conversations from youth learners (ages 12–24) at the Davidson AI Innovation Center in Oloibiri, Nigeria. " +
+      "You are an educational analyst reviewing free-form AI Playground conversations from youth learners (ages 12–24) at the Davidson AI Futures Lab in Oloibiri, Nigeria. " +
         "The AI Playground gives learners unrestricted access to Claude — no curriculum scaffolding, no activity structure. " +
         "Your job is to characterise how this learner is using free-form AI access and flag anything connected to Productive Use of Energy (PUE), entrepreneurship, or community enterprise. " +
         "Respond ONLY with valid JSON, no markdown.",
@@ -1715,7 +1715,7 @@ function buildEmailHtml(
 <div style="max-width:760px;margin:20px auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
   <div style="background:linear-gradient(135deg,#1a3d2b 0%,#2d6a4f 100%);padding:32px 36px;">
-    <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#52b788;margin-bottom:8px;font-weight:600;">Girls AIing &amp; Vibing · Oloibiri · Davidson AI Innovation Center</div>
+    <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#52b788;margin-bottom:8px;font-weight:600;">Girls AIing &amp; Vibing · Oloibiri · Davidson AI Futures Lab</div>
     <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">Monthly Assessment Report</div>
     <div style="font-size:14px;color:rgba(255,255,255,0.55);">${monthLabel} · PUE Linkage + Longitudinal Analysis · v2.0</div>
   </div>

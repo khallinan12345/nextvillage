@@ -69,7 +69,7 @@ const BRANDING_MAP: Record<BrandingVariant, Omit<Branding, 'isReady'>> = {
   },
   oloibiri: {
     variant: 'oloibiri',
-    institutionName: 'vAI — Davidson AI Innovation Center',
+    institutionName: 'vAI — Davidson AI Futures Lab',
     shortName: 'vAI',
     logoPath: '/VAI_logo.jpeg',
     logoPathLight: '/VAI_logo.jpeg',
@@ -77,7 +77,7 @@ const BRANDING_MAP: Record<BrandingVariant, Omit<Branding, 'isReady'>> = {
   },
   vai: {
     variant: 'vai',
-    institutionName: 'vAI — Davidson AI Innovation Center',
+    institutionName: 'vAI — Davidson AI Futures Lab',
     shortName: 'vAI',
     logoPath: '/VAI_logo.jpeg',
     logoPathLight: '/VAI_logo.jpeg',

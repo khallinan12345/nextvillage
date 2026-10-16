@@ -3,7 +3,7 @@
 **Paper:** Hallinan, K.P., Hao, L., Davidson, B., & Clergy, S. (2026). Education Before Electricity: AI-Facilitated Capability Formation as a Pre-Condition for Productive Energy Use in Off-Grid Communities. *Submitted to Energy Research & Social Science.*
 
 **Platform:** nextvillage.community  
-**Deployment site:** Davidson AI Innovation Center (vAI), Oloibiri, Bayelsa State, Nigeria  
+**Deployment site:** Davidson AI Futures Lab (vAI), Oloibiri, Bayelsa State, Nigeria  
 **Lab established:** June 2025  
 **First learner activity:** July 15, 2025  
 **Data window (this repository):** August 2025 – April 2026  
@@ -59,7 +59,7 @@ The assessment metrics (scaffolding, reasoning, capability scores, PUE and role 
 
 Oloibiri is a community of approximately 8,000 residents in Bayelsa State, Nigeria — the site of Nigeria's first commercial oil well (1956) and a community whose productive capacity was systematically displaced by decades of oil extraction without corresponding investment in human capital. The community has access to solar electricity via a Renewvia Energy Africa microgrid but has lacked the human capability infrastructure necessary to convert that electricity into productive economic activity.
 
-The Davidson AI Innovation Center (vAI) was established in June 2025 by community leader Bennywhite Davidson (co-author) with support from the University of Dayton research team. The center deployed the `nextvillage.community` platform — a React/TypeScript application with a Supabase backend and multi-provider AI routing — to deliver four integrated capability streams to community members with zero prior computer access:
+The Davidson AI Futures Lab (vAI) was established in June 2025 by community leader Bennywhite Davidson (co-author) with support from the University of Dayton research team. The center deployed the `nextvillage.community` platform — a React/TypeScript application with a Supabase backend and multi-provider AI routing — to deliver four integrated capability streams to community members with zero prior computer access:
 
 - **English & Mathematics** — foundational literacy and numeracy
 - **AI Proficiency & Digital Literacy** — AI literacy, prompt engineering, digital citizenship

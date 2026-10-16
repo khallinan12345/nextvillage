@@ -7,7 +7,7 @@ dispute; we are a small program trying to do this properly.
 ## 1. Who we are and what we do
 
 nextVillage is a learning platform run by a US nonprofit in formation (Impact Mining, Inc., Ohio) with
-community partners in Oloibiri, Bayelsa State, Nigeria (the Davidson AI Innovation Center), a partner in
+community partners in Oloibiri, Bayelsa State, Nigeria (the Davidson AI Futures Lab), a partner in
 Kenya (Maji Mazuri), and a small after-school group in Dayton, Ohio. Learners are mostly aged 10 to 17;
 some are 8 to 12. They learn AI, coding and entrepreneurship, with an AI tutor, and do community projects.
 There are no ads and we do not sell data.

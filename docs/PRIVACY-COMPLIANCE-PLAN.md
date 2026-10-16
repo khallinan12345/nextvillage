@@ -122,13 +122,13 @@ Hallinan as an individual.
 2. **Public documents:** change the responsible party in `src/pages/PrivacyPage.tsx` (and its date); update
    the roles table in `public/docs/Data-Protection-Summary.html` (and the copy in `docs/`); update this plan,
    `DATA-MAP.md` and `VENDOR-REVIEW.md`; fix the landing-page footer and copyright line (it currently names
-   the Davidson AI Innovation Center only).
+   the Davidson AI Futures Lab only).
 3. **Move the accounts to the entity:** vendor accounts and billing are probably in Kevin's name today
    (Supabase, Vercel, GitHub, Anthropic, OpenAI, Resend, Replicate, ElevenLabs, E2B, Cloudflare, the domain
    `nextvillage.community`). Transfer or re-create them under Impact Mining, Inc. and **re-accept each
    data processing agreement in the entity's name**.
 4. **Agreement with the Nigerian partner:** a short written agreement between Impact Mining, Inc. and the
-   Davidson AI Innovation Center (and Maji Mazuri in Kenya) saying who is the controller, who holds the signed
+   Davidson AI Futures Lab (and Maji Mazuri in Kenya) saying who is the controller, who holds the signed
    guardian consent forms, who answers requests, and who reports a breach and how fast.
 5. **Re-check the legal questions:** COPPA status of a nonprofit (it may fall outside the FTC's reach but
    the platform follows it anyway), Nigerian registration/DPO for a foreign nonprofit processing Nigerian
