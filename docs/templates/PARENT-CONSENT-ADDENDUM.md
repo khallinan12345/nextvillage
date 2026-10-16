@@ -10,7 +10,7 @@ translate before use. Replace the [brackets].** One sheet, one side. Keep the si
 ## nextVillage.community learning platform: add-on permission from a parent or guardian
 
 *(families may know it as vAI lab; run by the Davidson AI Futures Lab, Oloibiri, Bayelsa State, with
-[Impact Mining, Inc., address, Dayton, Ohio, USA])*
+Kevin Hallinan, 1629 E. 4th St., Dayton, OH 45403, USA)*
 
 Child's first name: ______________________  Year of birth: ________  Group/class: ______________
 Parent or guardian full name: ____________________________  Relationship to the child: ____________
