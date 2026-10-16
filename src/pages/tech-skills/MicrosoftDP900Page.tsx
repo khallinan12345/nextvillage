@@ -113,7 +113,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'OLTP (Online Transaction Processing) systems handle day-to-day operations — recording transactions as they happen, like a market sales system. OLAP (Online Analytical Processing) systems are designed for analysis — asking questions like "What were total fish sales by month for the past year?" These are fundamentally different workloads and require different database designs.',
-      question: 'The Davidson AI Innovation Center records each learner\'s quiz attempt in real time. At the end of each month, a report is generated showing completion rates by topic. Which part of this system is OLTP and which is OLAP — and what makes them different?',
+      question: 'The Davidson AI Futures Lab records each learner\'s quiz attempt in real time. At the end of each month, a report is generated showing completion rates by topic. Which part of this system is OLTP and which is OLAP — and what makes them different?',
     },
     {
       teaching: 'Batch processing collects data over a period and processes it all at once — like running a nightly report. Streaming (real-time) processing handles data the moment it arrives — like monitoring creek water quality second by second and alerting if contamination is detected.',
@@ -168,7 +168,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
       question: 'A Nigerian fintech startup is migrating their existing Microsoft SQL Server database to the cloud. Another startup is building a new app and wants open-source tools. Which Azure SQL service fits each scenario — and what does "managed" mean for a small team with no dedicated database administrator?',
     },
     {
-      teaching: 'PaaS (Platform as a Service) means Microsoft manages the server, operating system, backups, and patching — you only manage your database and data. This is ideal for small teams like those at the Davidson AI Innovation Center who want reliability without a dedicated server administrator.',
+      teaching: 'PaaS (Platform as a Service) means Microsoft manages the server, operating system, backups, and patching — you only manage your database and data. This is ideal for small teams like those at the Davidson AI Futures Lab who want reliability without a dedicated server administrator.',
       question: 'Compare managing a physical server on-premise versus using Azure SQL Database (PaaS). For each option, describe who is responsible for: hardware, OS updates, database backups, and scaling to handle more users. Which is more appropriate for the Girls AIing platform?',
     },
     {
@@ -267,7 +267,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'Power BI has three main components: Power BI Desktop (a Windows app for building reports), Power BI Service (the cloud platform for sharing and publishing), and Power BI Mobile (for viewing dashboards on phones). For community leaders viewing progress reports in Oloibiri on smartphones, Power BI Mobile is the relevant interface.',
-      question: 'A data analyst at the Davidson AI Innovation Center builds a monthly progress report in Power BI Desktop, publishes it to Power BI Service, and community leaders view it on their phones. Map each of the three Power BI components to this workflow — and which component is doing the analytical heavy lifting?',
+      question: 'A data analyst at the Davidson AI Futures Lab builds a monthly progress report in Power BI Desktop, publishes it to Power BI Service, and community leaders view it on their phones. Map each of the three Power BI components to this workflow — and which component is doing the analytical heavy lifting?',
     },
     {
       teaching: 'A dataset in Power BI is a modelled collection of data. A report is a multi-page document with charts and visuals. A dashboard is a single-page view of the most important visuals pinned from one or more reports. On the DP-900 exam, you need to know which of these three things is being described in a scenario.',

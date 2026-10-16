@@ -739,7 +739,7 @@ Respond ONLY in this JSON format:
       const { default: JSZip } = await import('jszip' as any);
       const zip = new JSZip();
       for (const f of projectFiles) zip.file(f.path, f.content);
-      zip.file('README.md', `# ${sessionName}\n\nReact + Supabase full-stack app — Davidson AI Innovation Center.\n\n## Setup\n\n1. \`cp .env.example .env\` and fill in your Supabase credentials\n2. \`npm install\`\n3. \`npm run dev\`\n`);
+      zip.file('README.md', `# ${sessionName}\n\nReact + Supabase full-stack app — Davidson AI Futures Lab.\n\n## Setup\n\n1. \`cp .env.example .env\` and fill in your Supabase credentials\n2. \`npm install\`\n3. \`npm run dev\`\n`);
       const blob = await zip.generateAsync({ type: 'blob' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
       a.download = `${sessionName.replace(/\s+/g, '-').toLowerCase()}.zip`; a.click();

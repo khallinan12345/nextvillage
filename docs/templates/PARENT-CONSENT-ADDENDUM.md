@@ -9,7 +9,7 @@ translate before use. Replace the [brackets].** One sheet, one side. Keep the si
 
 ## nextVillage.community learning platform: add-on permission from a parent or guardian
 
-*(families may know it as vAI lab; run by [Davidson AI Innovation Center, address, Oloibiri, Bayelsa State] with
+*(families may know it as vAI lab; run by the Davidson AI Futures Lab, Oloibiri, Bayelsa State, with
 [Impact Mining, Inc., address, Dayton, Ohio, USA])*
 
 Child's first name: ______________________  Year of birth: ________  Group/class: ______________
@@ -49,7 +49,7 @@ child makes are deleted after 12 months (6 months under 13). Accounts not used f
 deleted. We delete everything within 30 days when you ask.
 
 **Your rights.** You can ask to see, correct or delete your child's information, ask for a copy, or **withdraw
-this permission at any time**. Tell the group leader **in person**, or contact us by **email** at **[privacy email]**, or by **WhatsApp/phone** to Confidence Onuoha, our child protection lead, on **+234 806 417 7653** (email: confidenceonuoha416@gmail.com).
+this permission at any time**. Tell the group leader **in person**, or contact Confidence Onuoha, our child protection lead, by **WhatsApp/phone** on **+234 806 417 7653** or by **email** at **confidenceonuoha416@gmail.com**.
 We reply within 14 days. Withdrawing means your child stops using nextVillage.community and we delete their account.
 
 ☐ **I give permission** for my child to use nextVillage.community, and for my child's information to be used and sent

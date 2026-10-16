@@ -160,7 +160,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     { teaching: 'Azure AI Vision is the core service for image classification, object detection, and OCR. Azure AI Face is specifically for detecting, analysing, and comparing human faces.',
       question: 'A company wants to automatically tag photos from a community event — identifying people, objects, and reading any text visible in the photos. Which Azure computer vision service or combination of services would they use?' },
     { teaching: 'Azure AI Video Indexer extends computer vision to video: it can transcribe speech, detect faces over time, identify objects, and extract key moments — all automatically.',
-      question: 'A training video from the Davidson AI Innovation Center needs to be automatically captioned and have key topics extracted. Which Azure service handles this — and name two things it can extract from the video automatically.' },
+      question: 'A training video from the Davidson AI Futures Lab needs to be automatically captioned and have key topics extracted. Which Azure service handles this — and name two things it can extract from the video automatically.' },
     { teaching: 'On the AI-900, Azure service identification questions follow a pattern: "A solution needs to read printed text from scanned documents at scale — which Azure service?" Always match the use case to the service name.',
       question: 'Match each use case to the correct Azure computer vision service: (1) Detecting whether a person is wearing a face mask. (2) Reading invoice numbers from scanned paper forms. (3) Recognising a specific employee from a photo to grant door access.' },
   ],

@@ -544,7 +544,7 @@ const AgricultureConsultantCertificationPage: React.FC = () => {
         s.transcript.slice(-10).map(m => `${m.role === 'user' ? 'CONSULTANT STUDENT' : s.personaName}: ${m.content.slice(0, 500)}`).join('\n\n')
       ).join('\n\n');
 
-      const prompt = `You are evaluating a student's Agriculture Consultant Certification portfolio from the Davidson AI Innovation Center, Oloibiri, Nigeria.
+      const prompt = `You are evaluating a student's Agriculture Consultant Certification portfolio from the Davidson AI Futures Lab, Oloibiri, Nigeria.
 
 The student's role: advise smallholder farmers in the Niger Delta about crops, climate adaptation, oil contamination, and market strategy.
 
@@ -825,10 +825,10 @@ Return valid JSON only (no markdown, no code fences):
                 <Sprout size={32} className="text-white" />
               </div>
               <h1 className="text-2xl font-bold text-ink">Agriculture Consultant Certification</h1>
-              <p className="text-sm text-muted">Community Impact Track · Davidson AI Innovation Center</p>
+              <p className="text-sm text-muted">Community Impact Track · Davidson AI Futures Lab</p>
               <div className="flex justify-center">
                 <PidginTooltip
-                  originalText="Community Impact Track · Davidson AI Innovation Center"
+                  originalText="Community Impact Track · Davidson AI Futures Lab"
                   hintText="Tap here to translate this page subtitle into Nigerian Pidgin."
                 />
               </div>
@@ -1202,7 +1202,7 @@ Return valid JSON only (no markdown, no code fences):
                       : <><Download size={18} /> Download Certificate</>}
                   </button>
                   <p className="text-center text-xs text-muted">
-                    Green-themed PDF · Davidson AI Innovation Center · Oloibiri, Nigeria
+                    Green-themed PDF · Davidson AI Futures Lab · Oloibiri, Nigeria
                   </p>
                 </div>
               </>

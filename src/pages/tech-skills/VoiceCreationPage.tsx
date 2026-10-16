@@ -80,7 +80,7 @@ const EMOTIONS: { id: Emotion; label: string; emoji: string }[] = [
 ];
 
 const SCRIPT_SUGGESTIONS = [
-  'My name is Amara and I am learning how to use artificial intelligence at the Davidson AI Innovation Center in Oloibiri, Nigeria.',
+  'My name is Amara and I am learning how to use artificial intelligence at the Davidson AI Futures Lab in Oloibiri, Nigeria.',
   'Today I want to tell you about solar energy and how it is changing life in our community.',
   'Good morning! Welcome to our school. We are excited to show you what we have been learning about technology and the future.',
   'I believe that every young person in Africa deserves access to the best education and technology in the world.',

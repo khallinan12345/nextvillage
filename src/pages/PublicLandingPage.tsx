@@ -332,7 +332,7 @@ const PublicLandingPage: React.FC = () => {
         "creativity_mean", "pue_mean"
       ].join(", ");
 
-      // Fetch Davidson AI Innovation Center rows by name.
+      // Fetch Davidson AI Futures Lab rows by name.
       // When additional orgs join, this becomes a dropdown — one query per selected org.
       const { data, error } = await supabase
         .from("assessments_monthly_global")
@@ -825,7 +825,7 @@ const PublicLandingPage: React.FC = () => {
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "2.75rem" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#fbbf24", marginBottom: "0.6rem" }}>
-                {latest?.organization_name ?? "Davidson AI Innovation Center"} · {latest?.period_label ?? "Live Data"}
+                {latest?.organization_name ?? "Davidson AI Futures Lab"} · {latest?.period_label ?? "Live Data"}
               </div>
               <h2 style={{
                 fontFamily: "'Playfair Display', serif",
@@ -1914,7 +1914,7 @@ const PublicLandingPage: React.FC = () => {
               </h2>
               <p style={{ color: "rgba(26,18,8,0.6)", fontSize: "1.05rem", lineHeight: 1.8, maxWidth: 680, margin: "0 auto" }}>
                 In June 2025, a disused space in Oloibiri — a town of 8,000 people in Bayelsa State, Nigeria,
-                where the first oil well in West Africa once pumped and went dry — became the Davidson AI Innovation Center.
+                where the first oil well in West Africa once pumped and went dry — became the Davidson AI Futures Lab.
                 Four computers. Solar power. A Starlink connection. And two young men who knocked on doors
                 and told parents whose children could not afford school:{" "}
                 <em style={{ color: "#92400e" }}>"There is no cost. We want them."</em>
@@ -2532,7 +2532,7 @@ const PublicLandingPage: React.FC = () => {
                 Help us expand human-centred AI learning
               </h2>
               <p style={{ color: "rgba(26,18,8,0.58)", maxWidth: 600, margin: "0 auto", lineHeight: 1.75 }}>
-                vAI (Davidson AI Innovation Center) is building toward registered NGO status in Nigeria.
+                vAI (Davidson AI Futures Lab) is building toward registered NGO status in Nigeria.
                 We welcome partnerships with donors, foundations, universities, and organisations
                 who share our conviction that AI capability should reach every community — not just the connected few.
               </p>
@@ -2620,14 +2620,14 @@ const PublicLandingPage: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "center", marginBottom: "0.65rem" }}>
             <Sparkles size={15} color="#d97706" />
             <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "0.92rem", color: "rgba(255,255,255,0.5)" }}>
-              nextVillage.community · with the Davidson AI Innovation Center
+              nextVillage.community · with the Davidson AI Futures Lab
             </span>
           </div>
           <p style={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.22)", margin: "0 0 0.4rem" }}>
             Oloibiri, Bayelsa State, Nigeria · Dayton, Ohio, USA
           </p>
           <p style={{ fontSize: "0.73rem", color: "rgba(255,255,255,0.16)", margin: 0 }}>
-            © {new Date().getFullYear()} Davidson AI Innovation Center. ·{" "}
+            © {new Date().getFullYear()} Davidson AI Futures Lab. ·{" "}
             <Link to="/privacy" style={{ color: "rgba(255,255,255,0.28)" }}>Privacy</Link>{" "}·{" "}
             <Link to="/login" style={{ color: "rgba(255,255,255,0.28)" }}>Log In / Sign Up</Link>
           </p>
