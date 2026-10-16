@@ -7,6 +7,8 @@
 
 ---
 
+> **Easiest way (since 16 Oct 2026):** sign in as administrator, open the admin student dashboard and use the card "possible duplicate accounts". It lists likely pairs, **Preview** shows what moves, **Merge into newest** does the whole job below safely and records it in `account_merge_log`. Use the manual SQL below only for pairs the card does not find (for example different names).
+
 ## When to use this runbook
 
 - A learner says they can't find their progress / "it reset"
