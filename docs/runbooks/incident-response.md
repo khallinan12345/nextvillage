@@ -95,15 +95,21 @@ Clocks start when we **become aware**, not when we finish investigating.
    Current leadership notes are in the project memory; the Oloibiri leader is Divinegift Morris.
 2. **Affected people or their parents/guardians**, through the leader, once we know whose data it was.
    Say what was involved, what to watch for (for example phishing, a changed password), and how to reach us.
-3. **Regulators**, if the law applies and the level is High. Check the table and confirm with the attorney:
+3. **Regulators**, if the law applies and the level is High. Deadlines below come from the statutes
+   themselves (Nigeria NDPA 2023, Kenya DPA 2019), checked 16 Oct 2026; an attorney should still confirm.
 
-   | Where the person lives | Regulator | Usual deadline from awareness |
-   |---|---|---|
-   | Nigeria | NDPC (Nigeria Data Protection Commission) | 72 hours (NDPA 2023) |
-   | Kenya | ODPC | 72 hours |
-   | South Africa | Information Regulator (POPIA) | as soon as reasonably possible |
-   | EU / UK (once we serve them) | the national authority (UK: ICO) | 72 hours |
-   | US (once we serve them) | state attorneys general; the FTC where COPPA applies | state-specific; commonly 30-60 days |
+   | Where the person lives | Regulator | Deadline and trigger | Source |
+   |---|---|---|---|
+   | Nigeria | NDPC (Nigeria Data Protection Commission) | **72 hours** from awareness of a breach likely to risk people's rights and freedoms; tell the people affected "in plain and clear language" if the risk is high; describe the nature, the categories and approximate numbers of people and records, likely consequences, and steps taken | NDPA s.40(2)-(3) |
+   | Kenya | ODPC (Office of the Data Protection Commissioner) | **72 hours** where there is a real risk of harm; if later, say why; tell the person in writing within a reasonably practical period, with enough detail for them to protect themselves | Kenya DPA s.43(1)-(2), (5) |
+   | Our vendors → us | n/a | A processor must tell us **"without delay"**, and in Kenya "where reasonably practicable, within forty-eight hours" | NDPA s.40(1); Kenya DPA s.43(3) |
+   | South Africa | Information Regulator (POPIA) | as soon as reasonably possible | POPIA s.22 **[verify]** |
+   | EU / UK (once we serve them) | the national authority (UK: ICO) | 72 hours | GDPR Art. 33 |
+   | US (once we serve them) | state attorneys general; the FTC where COPPA applies | state-specific; commonly 30-60 days | **[verify]** |
+
+   Contacts to fill in before they are needed: **[NDPC breach-notification address]**, **[ODPC breach-notification address]**.
+   Keep a written **breach log** of every incident, however small: the facts, the effects, and what was done
+   (both Acts require it: NDPA s.40(8)). Use the template at the end of this file.
 
 4. **Vendors**: if it is their breach or their data, ask them for their incident reference and timeline in
    writing. Ask the same for anything we need them to delete.
@@ -143,6 +149,7 @@ Found:              <date/time UTC>, by <who>
 Level:              Low / Medium / High
 What happened:
 Data involved:      <whose, which fields, how many, children?>
+Effects on people:  <harm that happened or could happen>
 Contained at:       <date/time>
 Told:               <leaders / families / regulators / vendors, with times>
 Cause:

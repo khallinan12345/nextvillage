@@ -185,3 +185,28 @@ Both point at the two things above: consent that does not cover the use, and pub
 
 Meets: A5, A6, B4 (process), C4 (practice), C5. Partly: A1, A2, A7, B1, B3, C1, C3, C6, E5.
 Gap: B2 (fixed), C2, D1, E1, E3, E4. Unclear: A3, A4, D2, E2.
+
+---
+
+## 9. Progress after the first review (16 Oct 2026, second pass)
+
+Closed or reduced the same day, using only what did not depend on the consent form or a lawyer:
+
+| Finding | What was done | Rating now |
+|---|---|---|
+| **A4** public display of children | The landing page now shows winners by **initials only** (under-13s stay "Learner NNNN"); the written reason has the learner's name replaced with "this learner" in the page and, in the database, for **every minor** (not just under-13s). Videos and consent wording still to confirm | **Partly** |
+| **B1** notice content | Privacy link added where birth year is collected and on the profile privacy card; the purpose of each retention period is now stated beside it (COPPA 312.10). **A phone number or other contact method is still missing** | **Partly** |
+| **B2** reply times | 14 days (7 for a copy) in the notice, both request screens and the Data Protection Summary | **Meets** (Kenya's erasure deadline to verify) |
+| **C1** written security program | `SECURITY-PROGRAM.md`: coordinator, safeguards, annual checklist, third-party rule, review log | **Meets** on paper; the first yearly cycle is due October 2027 |
+| **C2** vendor assurances | `VENDOR-DPA-CHECKLIST.md` with verified links; **Kevin must accept, download and file each** | **Gap** (action needs the account holder) |
+| **C3** breach deadlines | Runbook now cites NDPA s.40 and Kenya s.43 (72 hours; 48 hours from processors), adds "effects on people" to the log. **Regulator contact addresses to be filled in** | **Meets** (contacts pending) |
+| **C4** retention policy | Purposes stated with each period in the public notice | **Meets** |
+| **D1** transfer basis | `TRANSFER-BASIS.md` records the basis relied on and what is missing (signed clauses; consent wording) | **Partly** |
+| **E1** DPIA | `DPIA.md` drafted: description, necessity, 11 risks with measures, residual risk, consultation decision | **Partly** (needs lawyer read and sign-off) |
+| **E3** partner agreement | Template at `templates/CONTROLLER-AGREEMENT-TEMPLATE.md`; to sign once the entity is official | **Partly** |
+| **E4** leader training | `LEADER-GUIDE.md` (one page); a short live session is still to do | **Partly** |
+| **E5** records about non-users | The three advisor forms now require the helper to confirm the person knows and agreed before saving | **Partly** |
+
+**Still waiting on others:** the guardian consent form (A3, A7, parts of A4 and D1); the lawyer (A2, D2, E2,
+and everything in section 7); filing the vendor agreements (C2); a phone or contact method for COPPA's
+notice (B1); the Nigerian and Kenyan regulator contact addresses for the runbook (C3).
