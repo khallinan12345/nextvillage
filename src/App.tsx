@@ -412,7 +412,7 @@ export const AppContent: React.FC = () => {
 function App() {
   useEffect(() => {
     if (import.meta.env.DEV) {
-      document.title = 'AI-ing and Vibing [DEV]';
+      document.title = 'nextVillage.community [DEV]';
     }
   }, []);
 

@@ -1,4 +1,4 @@
-# nextVillage parent or guardian consent form (TEMPLATE, English)
+# nextVillage.community parent or guardian consent form (TEMPLATE, English)
 
 **Draft for a lawyer to check, then translate (Pidgin and any local language) and print.** Replace every
 **[bracket]**. Print on one sheet, two sides. Give the parent a copy. Keep the signed original safe and list it
@@ -8,9 +8,9 @@ new joiners; families who already signed the old form sign only **Part A** (see
 
 ---
 
-## nextVillage learning platform: permission from a parent or guardian
+## nextVillage.community learning platform: permission from a parent or guardian
 
-*(also called vAI lab, run by [Davidson AI Innovation Center, address, Oloibiri, Bayelsa State] with
+*(families may know it as vAI lab; run by [Davidson AI Innovation Center, address, Oloibiri, Bayelsa State] with
 [Impact Mining, Inc., address, Dayton, Ohio, USA])*
 
 Child's first name: ______________________  Year of birth: ________  Group/class: ______________
@@ -19,7 +19,7 @@ Phone: ____________________________
 
 ### Part A. Using the platform (needed for your child to join)
 
-**What nextVillage is.** A learning website where children learn AI, coding and business skills, with an AI
+**What nextVillage.community is.** A learning website where children learn AI, coding and business skills, with an AI
 helper that answers questions, and do projects that help their community.
 
 **What we keep about your child.** Name, school, town, the **year** of birth (not the full date), a photo if the
@@ -29,7 +29,7 @@ children). We do **not** keep ID numbers or a home address.
 **Why.** To teach and give feedback, to keep children safe, and to show how the group is doing. Funders
 receive grouped numbers, not names. We do not sell information and we show no advertising.
 
-**Who can see it.** The group leader and the nextVillage administrators. Other children in the group see a
+**Who can see it.** The group leader and the nextVillage.community administrators. Other children in the group see a
 child's first name and the first letter of the last name (children under 13 appear as "Learner" and a number,
 with no photo). The public never sees a child's name on the website; it sees initials only.
 
@@ -49,9 +49,9 @@ deleted. We delete everything within 30 days when you ask.
 
 **Your rights.** You can ask to see, correct or delete your child's information, ask for a copy, or **withdraw
 this permission at any time**. Tell the group leader, or write to **[privacy email]** or **[WhatsApp/phone]**.
-We reply within 14 days. Withdrawing means your child stops using nextVillage and we delete their account.
+We reply within 14 days. Withdrawing means your child stops using nextVillage.community and we delete their account.
 
-☐ **I give permission** for my child to use nextVillage, and for my child's information to be used and sent
+☐ **I give permission** for my child to use nextVillage.community, and for my child's information to be used and sent
 abroad as described above.
 
 ### Part B. Pictures, voice and names for sharing (optional: tick only what you agree to)
@@ -59,7 +59,7 @@ abroad as described above.
 You can say no to every box and your child can still use nextVillage.
 
 ☐ Record and use my child's **image**  ☐ my child's **voice**  ☐ my child's **first name**
-for **awareness** of the program, on: ☐ Substack  ☐ LinkedIn  ☐ YouTube  ☐ the vAI lab / nextVillage website
+for **awareness** of the program, on: ☐ Substack  ☐ LinkedIn  ☐ YouTube  ☐ the nextVillage.community website
 ☐ reports to donors.
 
 We will **not** show my child's surname, school name, school uniform logo, home address or village name.
@@ -76,7 +76,7 @@ Parent/guardian signature or thumbprint: ____________________  Date: ___________
 The form was read or explained to me in ☐ English ☐ Pidgin ☐ other: __________ by: ____________________
 Group representative name and signature: ____________________  Date: ____________
 
-*Official use:* form kept at ______________ (place)  ·  recorded on nextVillage on ____________ by ____________
+*Official use:* form kept at ______________ (place)  ·  recorded on nextVillage.community on ____________ by ____________
 
 ---
 

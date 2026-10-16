@@ -573,7 +573,7 @@ const PublicLandingPage: React.FC = () => {
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 700, fontSize: "0.98rem", color: "#fff",
               }}>
-                vAI · Davidson AI Innovation Center
+                nextVillage.community
               </span>
             </div>
 
@@ -701,7 +701,7 @@ const PublicLandingPage: React.FC = () => {
               fontWeight: 900, lineHeight: 1.07, color: "#fff",
               marginBottom: "1.2rem", marginTop: 0,
             }}>
-              vAI · Davidson AI Innovation Center<br />
+              nextVillage.community<br />
               <span style={{
                 background: "linear-gradient(135deg,#d97706,#fbbf24)",
                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
@@ -2620,7 +2620,7 @@ const PublicLandingPage: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "center", marginBottom: "0.65rem" }}>
             <Sparkles size={15} color="#d97706" />
             <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "0.92rem", color: "rgba(255,255,255,0.5)" }}>
-              vAI · Davidson AI Innovation Center · Davidson AI Innovation Center
+              nextVillage.community · with the Davidson AI Innovation Center
             </span>
           </div>
           <p style={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.22)", margin: "0 0 0.4rem" }}>
