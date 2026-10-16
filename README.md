@@ -1,4 +1,4 @@
-# AI'ing & Vibing (vAI)
+# nextVillage.community (also known as vAI)
 
 An AI-facilitated learning platform for young people in rural communities to develop the skills to lead their own futures — learning modules, AI-tool workshops, certifications, and real community-impact challenges (health, agriculture, fishing, entrepreneurship, animal husbandry), with facilitator/admin dashboards to track outcomes for grant reporting.
 

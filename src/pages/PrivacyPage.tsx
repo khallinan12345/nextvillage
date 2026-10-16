@@ -32,7 +32,7 @@ const PrivacyPage: React.FC = () => (
       <p className="text-sm text-gray-500 mt-1">Last updated {UPDATED}</p>
 
       <p className="mt-6">
-        nextVillage is a learning platform. Students use it to learn AI, coding and entrepreneurship skills
+        nextVillage.community is a learning platform. Students use it to learn AI, coding and entrepreneurship skills
         and to do projects that help their own community. This page explains what information we keep about
         you, why, who else can see it, and what you can do about it. We have tried to write it in plain words.
       </p>
@@ -51,7 +51,7 @@ const PrivacyPage: React.FC = () => (
 
       <H2>Who is responsible</H2>
       <p>
-        nextVillage (also shown on some pages as AI’ing &amp; Vibing, vAI or the Davidson AI Innovation Center) is run by
+        nextVillage.community (families may also know it as vAI lab; it works with the Davidson AI Innovation Center in Oloibiri) is run by
         <strong> Kevin Hallinan</strong>, 1629 E. 4th St., Dayton, OH 45403, USA. Write to{' '}
         <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> with any
         question or request. We expect to move the program into an organization, and this notice will say so

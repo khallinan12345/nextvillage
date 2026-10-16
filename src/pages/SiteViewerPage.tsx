@@ -20,7 +20,7 @@ const SiteViewerPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white flex-shrink-0">
         <Link to="/tech-skills/website-builder" className="text-xs text-gray-400 hover:text-gray-700">
-          Built with the AI-ing &amp; Vibing Website Builder
+          Built with the nextVillage.community Website Builder
         </Link>
       </div>
       <iframe
