@@ -142,14 +142,19 @@ const PrivacyPage: React.FC = () => (
       </p>
 
       <H2>How long we keep it</H2>
+      <p>
+        We keep each kind of information only as long as we need it for the reason shown, then delete it or
+        make it anonymous. Younger children’s information is deleted sooner.
+      </p>
       <UL>
-        <li><strong>AI chat transcripts:</strong> cleared 90 days after your last activity on that item (60 days for learners under 13). Your scores and evaluations stay.</li>
-        <li><strong>Together messages:</strong> 12 months.</li>
-        <li><strong>Images, audio and video you make, and files shared in Together:</strong> 12 months (6 months for learners under 13).</li>
-        <li><strong>Activity logs:</strong> 180 days. <strong>Code-run logs:</strong> 30 days. <strong>Safety records:</strong> 2 years.</li>
-        <li><strong>Health consultation records about other people:</strong> the person’s name, village, phone number and notes are removed when a consultation is finished. We are bringing other community records under the same rule.</li>
-        <li><strong>Assessment results:</strong> kept for at least 3 years, then made anonymous.</li>
+        <li><strong>AI chat transcripts</strong> (so the tutor can continue your lesson and your leader can help): cleared 90 days after your last activity on that item (60 days for learners under 13). Your scores and evaluations stay, because they show your progress.</li>
+        <li><strong>Together messages</strong> (so a group can work together): 12 months.</li>
+        <li><strong>Images, audio and video you make, and files shared in Together</strong> (so you can use and share your work): 12 months (6 months for learners under 13).</li>
+        <li><strong>Activity logs</strong> (to keep the service running): 180 days. <strong>Code-run logs</strong> (to prevent abuse): 30 days. <strong>Safety records</strong> (so leaders can protect learners): 2 years.</li>
+        <li><strong>Health consultation records about other people</strong> (to help that person): the person’s name, village, phone number and notes are removed when a consultation is finished. We are bringing other community records under the same rule.</li>
+        <li><strong>Assessment results</strong> (to show learning over time): kept for at least 3 years, then made anonymous.</li>
         <li><strong>Accounts that go unused for 12 months</strong> are reviewed by a leader and, if not kept, deleted 90 days later.</li>
+        <li><strong>Consent records</strong> (to show that a parent or guardian agreed): kept while the learner has an account, and the signed paper form is kept by the group.</li>
         <li><strong>Deletion requests:</strong> we delete your account and files within 30 days. We cannot remove your name from another person’s own notes or messages, safety records already made, grouped statistics, or copies a service keeps under its own rules. Backups are overwritten on a regular schedule.</li>
       </UL>
 

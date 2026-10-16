@@ -74,7 +74,8 @@ const PrivacyDataCard: React.FC = () => {
       </div>
       <div className="p-6 stack-y-4">
         <p className="text-sm text-gray-600">
-          You decide what happens to your information. Choose one of these and your leader will be told.
+          You decide what happens to your information. Choose one of these and your leader will be told.{' '}
+          <a href="/privacy" className="underline text-blue-700">Read the privacy notice</a>.
         </p>
         {OPTIONS.map(o => (
           <div key={o.kind} className="border border-gray-200 rounded-lg p-3">

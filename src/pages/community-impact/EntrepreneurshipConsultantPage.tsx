@@ -21,6 +21,7 @@
 // Activity: entrepreneurship_consultant
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import PersonAgreedCheck from '../../components/community-impact/PersonAgreedCheck';
 import AppLayout from '../../components/layout/AppLayout';
 import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -635,6 +636,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   const [savingEntry, setSavingEntry] = useState(false);
 
   // ── Add-client form
+  const [personAgreed, setPersonAgreed] = useState(false);
   const [newName, setNewName] = useState('');
   const [newVillage, setNewVillage] = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -1239,7 +1241,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
   };
 
   const saveClient = async () => {
-    if (!user || !newName.trim() || !newVillage || !newBusinessType.trim()) return;
+    if (!user || !newName.trim() || !newVillage || !newBusinessType.trim() || !personAgreed) return;
     setSavingClient(true);
     try {
       const { error } = await supabase.from('entrepreneurship_clients').insert({
@@ -1255,7 +1257,7 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
     } finally { setSavingClient(false); }
   };
 
-  const resetAddClient = () => { setNewName(''); setNewVillage(''); setNewPhone(''); setNewBusinessType(''); setNewBusinessStage(''); setNewNotes(''); };
+  const resetAddClient = () => { setNewName(''); setNewVillage(''); setNewPhone(''); setNewBusinessType(''); setNewBusinessStage(''); setNewNotes(''); setPersonAgreed(false); };
 
   const [showResolutionModal, setShowResolutionModal] = useState(false);
 
@@ -1779,9 +1781,10 @@ const EntrepreneurshipConsultantPage: React.FC = () => {
                   placeholder="Capital available, past issues, special context…"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-sm resize-none"/>
               </div>
-              <button onClick={saveClient} disabled={!newName.trim() || !newVillage || !newBusinessType.trim() || !newBusinessStage || savingClient}
+              <PersonAgreedCheck checked={personAgreed} onChange={setPersonAgreed} />
+              <button onClick={saveClient} disabled={!newName.trim() || !newVillage || !newBusinessType.trim() || !newBusinessStage || !personAgreed || savingClient}
                 className={classNames('w-full py-3.5 rounded-xl font-bold text-white text-base transition-opacity',
-                  newName.trim() && newVillage && newBusinessType.trim() && newBusinessStage && !savingClient ? 'bg-linear-to-r from-amber-600 to-orange-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
+                  newName.trim() && newVillage && newBusinessType.trim() && newBusinessStage && personAgreed && !savingClient ? 'bg-linear-to-r from-amber-600 to-orange-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
                 {savingClient ? <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin"/>Saving…</span> : 'Register Client'}
               </button>
             </div>

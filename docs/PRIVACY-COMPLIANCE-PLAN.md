@@ -1,6 +1,7 @@
 # nextVillage privacy and child-protection plan: United States and Nigeria
 
 > A detailed review of this plan and the platform against the primary legal texts is in `docs/AI-LEGAL-REVIEW.md` (16 Oct 2026). Where the two differ, the review is newer.
+> Same-day follow-ups: `DPIA.md`, `SECURITY-PROGRAM.md`, `TRANSFER-BASIS.md`, `VENDOR-DPA-CHECKLIST.md`, `LEADER-GUIDE.md`, `templates/CONTROLLER-AGREEMENT-TEMPLATE.md`.
 
 Draft for Kevin, 15 October 2026. **Not legal advice.** Items marked **[verify]** come from law-firm
 commentary or secondary summaries and must be confirmed against the statute, the regulator's own text, or
