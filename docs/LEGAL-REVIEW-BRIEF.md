@@ -77,6 +77,10 @@ sell data.
 ## 4. Smaller questions, if time allows
 
 - Do we need a local representative in Nigeria or Kenya?
+- A draft **partnership agreement** for new partner organizations (`docs/templates/PARTNERSHIP-AGREEMENT.md`) sets
+  out services, cost sharing for AI usage, mentoring, branding, data protection roles and ending the
+  relationship. Please flag anything that would not hold up, especially clauses 4, 8, 12 and 13 (costs, data
+  roles, liability and governing law).
 - What should a short controller / joint-controller agreement with each partner cover? (Draft template in
   the repository: `docs/templates/CONTROLLER-AGREEMENT-TEMPLATE.md`.)
 - Is the incident runbook's 72-hour regulator clock and 48-hour processor clock adequate?
