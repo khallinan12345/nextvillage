@@ -1,4 +1,4 @@
-# nextVillage.community partnership agreement (TEMPLATE)
+# nextVillage.community partnership agreement (TEMPLATE, for organizations in sub-Saharan Africa)
 
 **Draft for a lawyer to check before first use.** A new organization completes the blanks in Schedule B and
 fills in the amounts in Schedule C; both sides sign. Plain language on purpose: every clause should be
@@ -119,8 +119,11 @@ assistance. The Organization agrees to share the results with its learners and f
 
 1. **Roles.** For learners' information, the **Organization** (which knows the learners and families) and
    **vAI** (which runs the platform) each have responsibilities under the data protection laws that apply
-   (for example, Nigeria's Data Protection Act 2023, Kenya's Data Protection Act 2019, the US children's
-   privacy rule). Schedule D lists them. Community data belongs to the community.
+   (for example Nigeria's Data Protection Act 2023, Kenya's Data Protection Act 2019, Ghana's Data Protection
+   Act 2012, or the law of the Organization's own country, and the US children's privacy rule where it
+   applies). The Organization tells vAI which law and regulator apply (Schedule B), and the two sides will
+   follow whichever is stricter. If the law requires the Organization to **register** with its data
+   protection regulator, the Organization will do so. Schedule D lists them. Community data belongs to the community.
 2. **Consent.** The Organization will collect a **signed parent or guardian consent form** (the form
    supplied by vAI, or one vAI has approved) for **every learner under 18** before approving that learner on
    the platform, will keep the signed original safely, and will record the consent on the platform. A form
@@ -132,8 +135,8 @@ assistance. The Organization agrees to share the results with its learners and f
    schedule, and cleaned of names and contact details before it reaches AI services. vAI keeps a written
    list of its service providers and will give it to the Organization on request.
 5. **Breach.** Each side will tell the other **within 24 hours** of learning of a problem that may affect
-   learners' information, so that the legal deadline (72 hours to the regulator in Nigeria and Kenya) can
-   be met.
+   learners' information, so that the deadline set by the Organization's country (72 hours to the regulator in Nigeria and Kenya)
+   can be met.
 6. **Requests.** A parent, guardian or learner may ask to see, correct or delete information, or withdraw
    permission, in person to a leader, by email, or on the platform. The Organization will pass requests to
    vAI the same day; vAI replies within **14 days** (7 days for a copy of information).
@@ -179,7 +182,7 @@ steps to check the suitability of adults who work with learners.
 
 The two sides will first try to settle a disagreement by talking, then by a neutral mediator both agree on.
 This agreement is governed by the law of **[governing law, for example the State of Ohio, USA, or the
-Organization's country; to be agreed]**. **[Lawyer to confirm.]**
+Organization's country such as Nigeria, Kenya or Ghana; to be agreed]**. **[Lawyer to confirm.]**
 
 ## 14. General
 
@@ -229,7 +232,8 @@ Date: ____________
 | Internet (provider, speed, reliability) | |
 | Power (grid, solar, generator; hours per day) | |
 | Lab space (where, supervised by whom, opening hours) | |
-| Languages learners use; national curriculum or examinations to support | |
+| Languages learners use; national curriculum or examinations to support (for example WAEC/WASSCE, KCSE) | |
+| Data protection law and regulator that apply in your country; are you registered with the regulator? | |
 | How people here make a living | |
 | Main challenges the community faces | |
 | What the community hopes for | |
