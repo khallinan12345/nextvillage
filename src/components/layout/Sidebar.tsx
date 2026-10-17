@@ -7,7 +7,7 @@ import {
   Code, Database, Layers, ImagePlus, Video, Mic, PenLine, Zap,
   Briefcase, Code2, Film, ImagePlus as ImagePlusIcon, Mic as MicIcon,
   Cpu, Wand2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Users, Sprout, Fish, Heart,
-  GitBranch, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe, Puzzle
+  GitBranch, ClipboardList, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe, Puzzle
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -44,6 +44,7 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const isLeaderOrAdmin = user?.role === 'site_leader' || user?.role === 'research_lead' || user?.role === 'platform_administrator';
+  const isTeamMember = isLeaderOrAdmin || user?.role === 'leader';
 
   const mainNavigation: NavItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: <Database size={20} /> },
@@ -398,6 +399,26 @@ const Sidebar: React.FC = () => {
                   <TrendingUp size={20} />
                 </span>
                 Learner growth
+              </Link>
+            </>
+          )}
+
+          {isTeamMember && (
+            <>
+              {!isLeaderOrAdmin && <div className="h-px bg-gray-100 my-3" />}
+              <Link
+                to="/team"
+                className={classNames(
+                  'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors',
+                  isActive('/team')
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'text-amber-600 hover:bg-amber-50 hover:text-amber-700'
+                )}
+              >
+                <span className={classNames('flex-shrink-0', isActive('/team') ? 'text-amber-700' : 'text-amber-400')}>
+                  <ClipboardList size={20} />
+                </span>
+                Team workspace
               </Link>
             </>
           )}

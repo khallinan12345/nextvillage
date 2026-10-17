@@ -91,6 +91,7 @@ const TechSkillsPage = lazy(() => import('./pages/tech-skills/TechSkillsPage'));
 const CodeAssistantPage = lazy(() => import('./pages/CodeAssistantPage'));
 const AdminStudentDashboard = lazy(() => import('./pages/admin/AdminStudentDashboard'));
 const LearnerGrowthPage = lazy(() => import('./pages/admin/LearnerGrowthPage'));
+const TeamPage = lazy(() => import('./pages/TeamPage'));
 
 // Community Impact Pages
 const AIAmbassadorsPage = lazy(() => import('./pages/community-impact/AIAmbassadorsPage'));
@@ -385,6 +386,7 @@ export const AppContent: React.FC = () => {
         <Route path="/admin/education" element={<DashboardPage />} />
         <Route path="/admin/student-dashboard" element={<AdminStudentDashboard />} />
         <Route path="/admin/learner-growth" element={<LearnerGrowthPage />} />
+        <Route path="/team" element={<TeamPage />} />
         <Route path="/teacher-dashboard" element={<Navigate to="/admin/student-dashboard" replace />} />
 
         </Route>
