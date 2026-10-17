@@ -103,7 +103,7 @@ const SAFETY_FALLBACK_EMAILS = (process.env.SAFETY_ALERT_FALLBACK_EMAIL || '')
 // (any profile with role='leader' in the student's organization) — falls
 // back to SAFETY_FALLBACK_EMAILS if the student has no organization, or it
 // has no leader profile yet.
-async function resolveLeaderEmails(userId, supabaseUrl, supabaseKey) {
+export async function resolveLeaderEmails(userId, supabaseUrl, supabaseKey) {
   const leaderEmails = new Set(SAFETY_FALLBACK_EMAILS);
   let student = null;
 
@@ -122,12 +122,30 @@ async function resolveLeaderEmails(userId, supabaseUrl, supabaseKey) {
     student = Array.isArray(profiles) ? profiles[0] : null;
 
     if (student?.organization_id) {
+      // Both roles run groups: site_leader is who most organizations have (a Oloibiri alert once
+      // reached only the single plain 'leader'). Same roles as api/notify-safety-flags.js.
       const leaderRes = await fetch(
-        `${supabaseUrl}/rest/v1/profiles?organization_id=eq.${encodeURIComponent(student.organization_id)}&role=eq.leader&select=email`,
+        `${supabaseUrl}/rest/v1/profiles?organization_id=eq.${encodeURIComponent(student.organization_id)}&role=in.(site_leader,leader)&select=email`,
         { headers }
       );
       const leaders = await leaderRes.json();
       if (Array.isArray(leaders)) leaders.forEach(l => l?.email && leaderEmails.add(l.email));
+
+      // The organization's named primary leader, whatever their role.
+      const orgRes = await fetch(
+        `${supabaseUrl}/rest/v1/organizations?id=eq.${encodeURIComponent(student.organization_id)}&select=leader_id`,
+        { headers }
+      );
+      const orgs = await orgRes.json();
+      const primaryId = Array.isArray(orgs) ? orgs[0]?.leader_id : null;
+      if (primaryId) {
+        const primRes = await fetch(
+          `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(primaryId)}&select=email`,
+          { headers }
+        );
+        const prim = await primRes.json();
+        if (Array.isArray(prim) && prim[0]?.email) leaderEmails.add(prim[0].email);
+      }
     }
   } catch { /* fall back to SAFETY_FALLBACK_EMAILS only */ }
 
