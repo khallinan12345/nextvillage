@@ -20,6 +20,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const ALLOWED_ROLES = new Set([
   'site_leader',
+  'site_administrator',
   'teacher',
   'platform_administrator',
   'leader',
@@ -28,6 +29,7 @@ const ALLOWED_ROLES = new Set([
 
 const ROLE_LABEL = {
   site_leader: 'Site Leader',
+  site_administrator: 'Site Administrator',
   teacher: 'Teacher',
   platform_administrator: 'Platform Administrator',
   leader: 'Leader',

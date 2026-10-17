@@ -301,7 +301,7 @@ const ADMIN_IDS = new Set([
   '8b3f70dc-e5d0-4eb0-af7d-ec6181968213',
 ]);
 
-const DASHBOARD_ROLES = new Set(['leader', 'site_leader', 'research_lead', 'platform_administrator']);
+const DASHBOARD_ROLES = new Set(['leader', 'site_leader', 'site_administrator', 'research_lead', 'platform_administrator']);
 
 const EXCLUDED_IDS = new Set([
   '0e738663-a70e-4fd3-9ba6-718c02e116c2',
@@ -2294,7 +2294,7 @@ const AdminStudentDashboard: React.FC = () => {
   }, [user, authLoading, navigate]);
 
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
-  const isLeader = (userRole === 'leader' || userRole === 'site_leader' || userRole === 'research_lead') && !isPlatformAdmin;
+  const isLeader = (userRole === 'leader' || userRole === 'site_leader' || userRole === 'site_administrator' || userRole === 'research_lead') && !isPlatformAdmin;
 
   const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'community-impact' | 'tech-skills-roadmap' | 'youth-enterprises'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
@@ -2863,7 +2863,7 @@ const AdminStudentDashboard: React.FC = () => {
 
         {/* Safety flags and join requests — first thing a leader sees on a busy intake day.
             research_lead can view the dashboard but can't approve members. */}
-        {(isPlatformAdmin || userRole === 'leader' || userRole === 'site_leader') && (
+        {(isPlatformAdmin || userRole === 'leader' || userRole === 'site_leader' || userRole === 'site_administrator') && (
           <div className="mb-5 stack-y-5">
             <SafetyFlagsCard />
             <PendingMembersCard />

@@ -21,7 +21,7 @@ interface Row {
 }
 
 const ROLE_TEXT: Record<string, string> = {
-  student: 'Learner', learner: 'Learner', teacher: 'Teacher', site_leader: 'Co-leader', leader: 'Leader',
+  student: 'Learner', learner: 'Learner', teacher: 'Teacher', site_leader: 'Co-leader', site_administrator: 'Site administrator', leader: 'Leader',
 };
 
 const InactiveAccountsCard: React.FC = () => {

@@ -125,7 +125,7 @@ export async function resolveLeaderEmails(userId, supabaseUrl, supabaseKey) {
       // Both roles run groups: site_leader is who most organizations have (a Oloibiri alert once
       // reached only the single plain 'leader'). Same roles as api/notify-safety-flags.js.
       const leaderRes = await fetch(
-        `${supabaseUrl}/rest/v1/profiles?organization_id=eq.${encodeURIComponent(student.organization_id)}&role=in.(site_leader,leader)&select=email`,
+        `${supabaseUrl}/rest/v1/profiles?organization_id=eq.${encodeURIComponent(student.organization_id)}&role=in.(site_leader,site_administrator,leader)&select=email`,
         { headers }
       );
       const leaders = await leaderRes.json();

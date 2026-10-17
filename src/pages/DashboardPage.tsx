@@ -475,7 +475,7 @@ const LEADERBOARD_OPTIONS: { value: LeaderboardMetric; label: string }[] = [
 
 const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-const ENCOURAGE_ROLES = ['site_leader', 'teacher', 'platform_administrator', 'leader', 'research_lead'];
+const ENCOURAGE_ROLES = ['site_leader', 'site_administrator', 'teacher', 'platform_administrator', 'leader', 'research_lead'];
 
 // ── Helper: Score bar component ────────────────────────────────────────────
 const ScoreBar: React.FC<{
@@ -2260,7 +2260,7 @@ ${prior.impact_arc}
           <div className="stack-y-8">
 
             {/* ── Safety flags + join requests waiting on this leader ─────── */}
-            {['site_leader', 'leader', 'platform_administrator'].includes(user?.role ?? '') && (
+            {['site_leader', 'site_administrator', 'leader', 'platform_administrator'].includes(user?.role ?? '') && (
               <>
                 <SafetyFlagsCard />
                 <PendingMembersCard />

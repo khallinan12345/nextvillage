@@ -247,7 +247,7 @@ const PendingMembersCard: React.FC = () => {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-gray-900 truncate">{m.name || 'No name given'}</p>
               <p className="text-xs text-gray-500 truncate">
-                {m.email || 'No email'} · {m.role === 'site_leader' ? 'Co-leader' : 'Learner'}
+                {m.email || 'No email'} · {(m.role === 'site_leader' || m.role === 'site_administrator') ? 'Co-leader' : 'Learner'}
                 {m.organizations?.name ? ` · ${m.organizations.name}` : ''}
                 {m.birth_year ? ` · born ${m.birth_year}` : ' · birth year not given yet'}
                 {m.membership_requested_at

@@ -69,7 +69,7 @@ interface BookImage {
 
 // Matches the leader-role set enforced by RLS (together_rooms_update /
 // together_messages_update_moderate) — keep in sync with the migration.
-const LEADER_ROLES = new Set(['teacher', 'site_leader', 'facilitator', 'leader', 'research_lead']);
+const LEADER_ROLES = new Set(['teacher', 'site_leader', 'site_administrator', 'facilitator', 'leader', 'research_lead']);
 
 interface TogetherRoom {
   id: string;

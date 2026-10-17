@@ -43,7 +43,7 @@ interface SectionConfig {
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const isLeaderOrAdmin = user?.role === 'site_leader' || user?.role === 'research_lead' || user?.role === 'platform_administrator';
+  const isLeaderOrAdmin = user?.role === 'site_leader' || user?.role === 'site_administrator' || user?.role === 'research_lead' || user?.role === 'platform_administrator';
   const isTeamMember = isLeaderOrAdmin || user?.role === 'leader';
 
   const mainNavigation: NavItem[] = [
