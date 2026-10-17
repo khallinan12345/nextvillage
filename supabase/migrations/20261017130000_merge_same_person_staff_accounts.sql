@@ -1,4 +1,5 @@
--- Let an administrator merge a person's duplicate staff accounts (same email, neither an administrator),
+-- Let an administrator merge a person's duplicate staff accounts (same email or same name, neither an
+-- administrator),
 -- as well as learner accounts. Everything else about merge_accounts() is unchanged.
 
 CREATE OR REPLACE FUNCTION public.merge_accounts(p_old uuid, p_new uuid, p_dry_run boolean DEFAULT true)
@@ -24,11 +25,12 @@ BEGIN
   SELECT * INTO w FROM profiles WHERE id = p_new;
   IF o.id IS NULL OR w.id IS NULL THEN RAISE EXCEPTION 'Account not found'; END IF;
   -- Learner accounts can be merged. Staff accounts only when both belong to the same person (same
-  -- email) and neither is a platform administrator, so one person's duplicate leader accounts can be
+  -- email or name) and neither is a platform administrator, so one person's duplicate leader accounts can be
   -- tidied up but two different staff members are never merged by mistake.
   IF NOT (
        (o.role::text IN ('student', 'learner') AND w.role::text IN ('student', 'learner'))
-    OR (lower(coalesce(o.email, '')) <> '' AND lower(o.email) = lower(coalesce(w.email, ''))
+    OR ((lower(coalesce(o.email, '')) <> '' AND lower(o.email) = lower(coalesce(w.email, ''))
+         OR (btrim(lower(coalesce(o.name, ''))) <> '' AND btrim(lower(o.name)) = btrim(lower(coalesce(w.name, '')))))
         AND o.role::text <> 'platform_administrator' AND w.role::text <> 'platform_administrator')
   ) THEN
     RAISE EXCEPTION 'Only learner accounts, or duplicate staff accounts of one person, can be merged here';
