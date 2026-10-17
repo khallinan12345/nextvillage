@@ -77,6 +77,9 @@ sell data.
 ## 4. Smaller questions, if time allows
 
 - Do we need a local representative in Nigeria or Kenya?
+- **Ghana:** a new partner, Open Mind Africa, is joining. We have not yet reviewed Ghana's Data Protection Act 2012
+  (Act 843) in primary form. Is a Ghanaian partner a data controller that must register with the Data
+  Protection Commission, and does sending Ghanaian children's data to the US need a specific basis?
 - A draft **partnership agreement** for new partner organizations (`docs/templates/PARTNERSHIP-AGREEMENT.md`) sets
   out services, cost sharing for AI usage, mentoring, branding, data protection roles and ending the
   relationship. Please flag anything that would not hold up, especially clauses 4, 8, 12 and 13 (costs, data
