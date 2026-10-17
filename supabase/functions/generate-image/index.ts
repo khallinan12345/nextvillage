@@ -224,7 +224,7 @@ async function notifyLeadersOfSafetyFlag(
         .from('profiles')
         .select('email')
         .eq('organization_id', profile.organization_id)
-        .eq('role', 'leader');
+        .in('role', ['site_leader', 'leader']);
       (leaders ?? []).forEach((l: { email: string | null }) => l?.email && leaderEmails.add(l.email));
     }
   } catch { /* fall back to SAFETY_FALLBACK_EMAILS only */ }
