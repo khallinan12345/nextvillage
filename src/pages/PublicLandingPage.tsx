@@ -1393,6 +1393,78 @@ const PublicLandingPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* What the data shows so far, and what it cannot yet show */}
+                {(() => {
+                  const first = bandRows[0];
+                  const last = bandRows[bandRows.length - 1];
+                  const cards: { title: string; color: string; points: string[] }[] = [
+                    {
+                      title: "What the evidence shows so far",
+                      color: "#4ade80",
+                      points: [
+                        headline
+                          ? `${headline.enrolled_learners} learners enrolled; ${headline.active_learners} have started at least one session and ${headline.persistent_learners} have kept learning for three or more months.`
+                          : "Learners are enrolling, starting sessions and returning month after month.",
+                        headline
+                          ? `${headline.certifications_total} formal certifications earned by ${headline.learners_certified} learners, each judged against a written rubric.`
+                          : "Formal certifications are earned against written rubrics.",
+                        first && last
+                          ? `As learners do more sessions they ask for less help: clarification requests per session fall from ${first.avg_clarification} to ${last.avg_clarification}, and the share of learner-months showing community application rises from ${first.community_application_pct}% to ${last.community_application_pct}%.`
+                          : "Learners ask for less help as they gain experience, and apply more of what they learn in their community.",
+                        "Learners use AI to help real people nearby: hundreds of recorded community consultations on farming, small business, health, fishing and livestock, with outcomes written down.",
+                      ],
+                    },
+                    {
+                      title: "What we cannot yet claim",
+                      color: "#fbbf24",
+                      points: [
+                        "That the programme caused these changes. There is no comparison group, and learners who keep going may have been stronger to begin with.",
+                        "That skill scores rise with time. They are flat across the early and middle bands and higher only in the small group with 100+ sessions.",
+                        "That the AI scores match teachers' judgement. They are an AI estimate and have not yet been checked against human marks.",
+                        "That most learners stay. Many start strongly and drop away within a few months; keeping learners engaged is our hardest problem.",
+                        "That the upper bands are typical. They hold few learners, so we report them as they are.",
+                      ],
+                    },
+                    {
+                      title: "What we are doing about it",
+                      color: "#38bdf8",
+                      points: [
+                        "Repeating the same prompt-writing task at the start and after 25, 50 and 100 sessions, scored blind, to measure each learner's growth against their own starting point.",
+                        "Comparing AI scores with scores from experienced teachers on the same work.",
+                        "Separating effort from skill with a monthly effort review, so quiet months are not mistaken for weak learners.",
+                        "Publishing how learners are evaluated, how their data is protected and how we decide on changes, so others can check our claims.",
+                      ],
+                    },
+                  ];
+                  return (
+                    <div style={{ marginTop: "2.5rem" }}>
+                      <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#d97706", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
+                        Impact and outcomes summary
+                      </div>
+                      <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: "0 0 1.25rem" }}>
+                        An honest reading of the numbers above: what they support, what they do not, and how we are strengthening them.
+                        Figures are drawn live from the same data as the charts.
+                      </p>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+                        {cards.map(card => (
+                          <div key={card.title} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${card.color}33`, borderRadius: 14, padding: "1.25rem 1.4rem" }}>
+                            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: card.color, marginBottom: "0.7rem" }}>{card.title}</div>
+                            <ul style={{ margin: 0, paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                              {card.points.map((pt, i) => (
+                                <li key={i} style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.65 }}>{pt}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                      <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", marginTop: "0.9rem", lineHeight: 1.6 }}>
+                        More: <a href="/docs/nextVillage-Impact-Summary.docx" style={{ color: "#fbbf24" }}>full impact summary</a>
+                        {" · "}<a href="/privacy" style={{ color: "#fbbf24" }}>how we protect learners' information</a>
+                      </p>
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>
