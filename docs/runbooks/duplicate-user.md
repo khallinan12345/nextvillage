@@ -165,6 +165,7 @@ UNION ALL SELECT 'tech_skills_progress', COUNT(*) FROM tech_skills_progress WHER
 
 -- If anything looks wrong: run ROLLBACK instead
 -- ROLLBACK;
+```
 
 ---
 
