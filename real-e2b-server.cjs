@@ -5,7 +5,8 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+// Development helper only: accept requests from the local Vite app and nothing else.
+app.use(cors({ origin: [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/] }));
 app.use(express.json());
 
 // E2B Code Execution using official SDK
@@ -87,61 +88,8 @@ async function executeWithE2BSDK(code, language) {
 }
 
 // Fallback: Use a simple JavaScript VM for testing
-function executeJavaScriptLocally(code) {
-  const startTime = Date.now();
-  
-  try {
-    const vm = require('vm');
-    
-    let outputBuffer = [];
-    
-    const context = {
-      console: {
-        log: (...args) => {
-          outputBuffer.push(args.map(arg => 
-            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-          ).join(' '));
-        },
-      },
-      setTimeout,
-      clearTimeout,
-      Math,
-      Date,
-      JSON,
-      Array,
-      Object,
-      String,
-      Number,
-      Boolean,
-    };
-    
-    const vmContext = vm.createContext(context);
-    const result = vm.runInContext(code, vmContext, {
-      timeout: 30000,
-      displayErrors: true,
-    });
-
-    const executionTime = Date.now() - startTime;
-    
-    let output = outputBuffer.join('\n');
-    if (result !== undefined) {
-      output += (output ? '\n' : '') + String(result);
-    }
-
-    return {
-      output: output || 'Code executed successfully (no output)',
-      executionTime,
-      success: true,
-    };
-  } catch (error) {
-    const executionTime = Date.now() - startTime;
-    return {
-      error: error.message,
-      executionTime,
-      success: false,
-    };
-  }
-}
+// Node's `vm` module is not a security sandbox (code inside can reach the host process), so there is
+// deliberately no local fallback for running learner code. Code only runs in the E2B cloud sandbox.
 
 // Code execution endpoint with fallback
 app.post('/api/execute-code', async (req, res) => {
@@ -171,19 +119,13 @@ app.post('/api/execute-code', async (req, res) => {
     try {
       result = await executeWithE2BSDK(code, language);
     } catch (sdkError) {
-      console.warn('⚠️  E2B SDK failed, using fallback:', sdkError.message);
+      console.warn('⚠️  E2B SDK failed:', sdkError.message);
       
-      if (language === 'javascript') {
-        // Fallback to local JS execution
-        result = executeJavaScriptLocally(code);
-      } else {
-        // For Python, return a helpful error
-        result = {
-          error: `E2B SDK failed (${sdkError.message}). Python execution requires E2B cloud sandbox.`,
-          executionTime: 0,
-          success: false,
-        };
-      }
+      result = {
+        error: `Code could not be run (${sdkError.message}). Running code requires the E2B cloud sandbox.`,
+        executionTime: 0,
+        success: false,
+      };
     }
     
     console.log('📤 Sending result:', {
@@ -494,7 +436,7 @@ app.get('/api/x-digest', async (req, res) => {
 });
 
 const PORT = 3001;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '127.0.0.1', () => {
   console.log('\n🎵 Development Server Running!');
   console.log(`📍 URL: http://localhost:${PORT}`);
   console.log('🔗 Vite will proxy /api requests to this server\n');

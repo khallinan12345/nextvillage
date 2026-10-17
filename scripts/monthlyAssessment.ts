@@ -276,8 +276,8 @@ async function main() {
   // DEBUG: Print what env vars the script sees
   console.log(`\n🔍 ENVIRONMENT CHECK:`);
   console.log(`   SUPABASE_URL: ${supabaseUrl?.substring(0, 40)}...`);
-  console.log(`   SUPABASE_SERVICE_ROLE_KEY: ${supabaseKey?.substring(0, 50)}...`);
-  console.log(`   DEEPSEEK_API_KEY: ${deepseekKey?.substring(0, 20)}...`);
+  console.log(`   SUPABASE_SERVICE_ROLE_KEY: ${supabaseKey ? 'set' : 'MISSING'}`);
+  console.log(`   DEEPSEEK_API_KEY: ${deepseekKey ? 'set' : 'MISSING'}`);
   
   // Test direct Supabase connection
   console.log(`\n🔍 TESTING SUPABASE CONNECTION:`);

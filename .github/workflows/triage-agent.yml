@@ -19,6 +19,9 @@ on:
         required: false
         default: '{"max_tokens": 8000, "model": "claude-sonnet-4-6"}'
 
+permissions:
+  contents: read
+
 jobs:
   triage:
     runs-on: ubuntu-latest

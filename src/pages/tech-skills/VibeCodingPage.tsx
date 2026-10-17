@@ -5,6 +5,7 @@
 //   LEFT  — AI design coach chat: "Start Here — Work with AI to Design Your Vibe Coding Prompt"
 //   RIGHT — VibeCodingWorkflow (phases 1–4)
 
+import { escapeHtml } from '../../lib/escapeHtml';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -62,7 +63,7 @@ interface VibeSession {
 // ── Markdown renderer ─────────────────────────────────────────────────────────
 
 const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
-  const rendered = text
+  const rendered = escapeHtml(text)
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded-sm text-sm">$1</code>')
