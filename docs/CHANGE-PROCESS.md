@@ -150,3 +150,7 @@ notice are updated if needed; leaders were told; the success measure is written 
 3. Create a simple project board with the lanes: Proposed, Candidate, Planned, In progress, Shipped, Not now.
 4. Hold the first planning meeting and seed the board from the compliance checklist, open questions from
    leaders, and the advisor's own list.
+
+## Where to do this
+
+Leaders and the platform team use the **Team workspace** (www.nextvillage.community/team, in the sidebar) to propose changes, see their status, keep a task list, and see which reviews are due. The GitHub proposal form remains for people who work in the code.
