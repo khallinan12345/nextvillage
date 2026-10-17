@@ -1,0 +1,19 @@
+# Decision log
+
+One line per decision that shapes the platform, newest first. Add the date, the decision, the reason, and who
+decided. If a decision is reversed, add a new line; do not delete the old one.
+
+| Date | Decision | Why | Decided by |
+|---|---|---|---|
+| 2026-10-17 | Adopt a written change process: propose, triage weekly, plan monthly, privacy and safety check, peer review, check results | One person was deciding everything; the team and the security advisor need shared ownership | Kevin Hallinan |
+| 2026-10-16 | Public name is **nextVillage.community** (not "AI'ing & Vibing") | One clear name for families, partners and regulators | Kevin Hallinan |
+| 2026-10-16 | The privacy contact is the child-protection lead, Confidence Onuoha; the Davidson AI Futures Lab has no street address | Parents without email need a local, reachable person | Kevin Hallinan |
+| 2026-10-16 | Platform runs on the strictest applicable law for each country; new countries (Ghana) get their own legal review before children are enrolled | Laws differ and we do not assume | Kevin Hallinan |
+| 2026-10-16 | A media-release-only parent form is not consent to use the platform; families sign the new form or the add-on | The old form did not cover the platform, AI vendors or US storage | Kevin Hallinan |
+| 2026-10-16 | Every learner must enter a valid join code to complete sign-up; duplicate accounts are merged, not left | Learners with no group had no leader and no safety alerts; duplicates split children's records | Kevin Hallinan |
+| 2026-10-16 | Partners pay AI usage cost (estimate US$0.20 to US$0.60 per active learner per day) and ideally modest mentoring support; no subscription fee | Keeps the platform free to start and sustainable | Kevin Hallinan |
+| 2026-10-15 | Every learner under 18 needs guardian consent collected by the leader | Both African laws treat under-18s as children | Kevin Hallinan |
+| 2026-10-14 | Do **not** exclude children under 13; give them a tight protected tier instead | Mission: reach young learners safely | Kevin Hallinan |
+| 2026-10 | AI models: Claude Sonnet 5.5 only for the main path; no older Sonnet; free-tier vendors for 13 and over only | Safety, cost and consistency | Kevin Hallinan |
+| 2026-10 | Remove OpenRouter, DeepSeek and Gemini from the AI chain; remove unused offline-sync functions | Fewer vendors that see children's text | Kevin Hallinan |
+| 2026-10 | Focus is Africa first; AI legal review plus a pro-bono lawyer; no insurance purchased for now | Budget | Kevin Hallinan |
