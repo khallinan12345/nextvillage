@@ -24,7 +24,7 @@ const supabase = createClient(
 );
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const LEADER_ROLES = ['site_leader', 'leader'];
+const LEADER_ROLES = ['site_leader', 'site_administrator', 'leader'];
 // Flags older than this are left for the dashboard rather than emailed late.
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 // Fixed, not taken from the request — see notify-join-request.js.

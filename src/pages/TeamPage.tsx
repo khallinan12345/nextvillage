@@ -12,8 +12,8 @@ import { useAuth } from '../hooks/useAuth';
 import { DOC_GROUPS, PRIVATE_DOCS, docUrl, REPO_URL } from '../lib/teamDocs';
 import { dueInfo, describeDue, sortByUrgency, type ReviewItem } from '../lib/teamReviews';
 
-const TEAM_ROLES = new Set(['leader', 'site_leader', 'research_lead', 'platform_administrator']);
-const PLATFORM_ROLES = new Set(['research_lead', 'platform_administrator']);
+const TEAM_ROLES = new Set(['leader', 'site_leader', 'site_administrator', 'research_lead', 'platform_administrator']);
+const PLATFORM_ROLES = new Set(['research_lead', 'site_administrator', 'platform_administrator']);
 
 type Tab = 'overview' | 'documents' | 'changes' | 'tasks' | 'reviews';
 const TABS: { id: Tab; label: string }[] = [

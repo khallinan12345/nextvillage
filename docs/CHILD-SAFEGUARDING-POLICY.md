@@ -3,11 +3,15 @@
 **Applies to:** everyone who works with learners on nextVillage.community or in a partner organization's
 learning space: platform team, group leaders, mentors, volunteers, visitors, and partner staff.
 
-**Child-protection lead:** Confidence Onuoha, +234 806 417 7653 (call or WhatsApp),
+**Child safety officer (child-protection lead):** Confidence Onuoha, +234 806 417 7653 (call or WhatsApp),
 confidenceonuoha416@gmail.com. **Platform contact:** Kevin Hallinan, kevin.hallinan@nextVillage.community.
 
 Version 1, 17 October 2026. To be adopted by the child-protection lead and the platform owner, reviewed
 once a year, and reviewed by a lawyer for each country where we work (see the legal review brief).
+
+Every organization we work with must name a **child safety officer** before any child is enrolled. At the
+Davidson AI Futures Lab it is Confidence Onuoha. In this policy "child-protection lead" and "child safety
+officer" mean the same person.
 
 ## 1. Why this policy exists
 
@@ -144,7 +148,8 @@ breach of this policy.
 
 | Contact | Name | Phone | Notes |
 |---------|------|-------|-------|
-| Organization's child-protection contact | | | |
+| Organization's child safety officer (required) | | | |
+| Deputy child safety officer | | | |
 | Local police | | | |
 | Local social welfare / child-protection office | | | |
 | Local health clinic or hospital | | | |

@@ -36,7 +36,7 @@ interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: 'student' | 'teacher' | 'platform_administrator' | 'site_leader' | 'research_lead';
+  role: 'student' | 'teacher' | 'platform_administrator' | 'site_leader' | 'site_administrator' | 'research_lead';
   grade_level?: number;
   gender?: 'female' | 'male' | 'other';
   continent?: string;
@@ -218,7 +218,7 @@ const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'student' as 'student' | 'teacher' | 'platform_administrator' | 'site_leader' | 'research_lead',
+    role: 'student' as 'student' | 'teacher' | 'platform_administrator' | 'site_leader' | 'site_administrator' | 'research_lead',
     grade_level: '1',
     gender: 'female' as 'female' | 'male' | 'other',
     continent: '',
@@ -444,12 +444,12 @@ const ProfilePage: React.FC = () => {
           });
 
           // For leaders — fetch the student list scoped by their role
-          if (['site_leader', 'platform_administrator', 'research_lead'].includes(profileData.role)) {
+          if (['site_leader', 'site_administrator', 'platform_administrator', 'research_lead'].includes(profileData.role)) {
             setLoadingStudents(true);
             let studentQuery = supabase
               .from('profiles')
               .select('id, name, email, join_code_used, created_at')
-              .not('role', 'in', '("site_leader","platform_administrator","research_lead")')
+              .not('role', 'in', '("site_leader","site_administrator","platform_administrator","research_lead")')
               .order('created_at', { ascending: false });
 
             if (profileData.is_primary_leader) {
@@ -834,6 +834,7 @@ const ProfilePage: React.FC = () => {
                           <option value="student">Student</option>
                           <option value="teacher">Teacher / Educator</option>
                           <option value="site_leader">Site Leader</option>
+                          <option value="site_administrator">Site Administrator</option>
                           <option value="research_lead">Research Lead</option>
                           <option value="platform_administrator">Platform Administrator</option>
                         </select>
@@ -845,6 +846,7 @@ const ProfilePage: React.FC = () => {
                             {formData.role === 'student'                ? 'Student'
                               : formData.role === 'teacher'             ? 'Teacher / Educator'
                               : formData.role === 'site_leader'         ? 'Site Leader'
+                              : formData.role === 'site_administrator'  ? 'Site Administrator'
                               : formData.role === 'research_lead'       ? 'Research Lead'
                               : formData.role === 'platform_administrator' ? 'Platform Administrator'
                               : formData.role}

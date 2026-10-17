@@ -743,7 +743,7 @@ export default function ResearchDataExplorer() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const allowed = ["research_lead", "platform_administrator", "site_leader"];
+  const allowed = ["research_lead", "platform_administrator", "site_leader", "site_administrator"];
   if (user && !allowed.includes(user.role)) {
     return (
       <div style={{ padding: 48, textAlign: "center", color: C.mid }}>

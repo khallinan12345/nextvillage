@@ -23,7 +23,7 @@ const supabase = createClient(
 );
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const LEADER_ROLES = ['site_leader', 'leader'];
+const LEADER_ROLES = ['site_leader', 'site_administrator', 'leader'];
 const FRESH_REQUEST_MS = 10 * 60 * 1000;
 // Fixed, not taken from the request — a caller-supplied Origin header would
 // let someone put their own link in an email leaders trust.
@@ -37,7 +37,7 @@ function escapeHtml(s) {
 }
 
 function roleLabel(role) {
-  return role === 'site_leader' ? 'co-leader' : 'learner';
+  return (role === 'site_leader' || role === 'site_administrator') ? 'co-leader' : 'learner';
 }
 
 function buildEmailHtml({ requester, org, dashboardUrl }) {

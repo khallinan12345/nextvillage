@@ -54,7 +54,9 @@ There is **no subscription fee** for the platform.
    browser; reliable internet; and a power plan. (For reference, one Starlink connection has been enough
    for a lab of 14 computers working at once.)
 2. **People:** a **lead mentor** from the Organization who is present when learners are, a named **primary
-   leader** for the platform, and a named **child-protection contact**.
+   leader** for the platform, and a named **child safety officer** (required: the Organization will not
+   enrol any child until one is named in Schedule B, has completed vAI's leader training and has signed the
+   code of conduct).
 3. **Learners chosen by the Organization.** The Organization knows its young people; vAI does not choose
    them.
 4. **Honest community information** for tailoring (livelihoods, challenges, hopes, assets).
@@ -142,7 +144,7 @@ assistance. The Organization agrees to share the results with its learners and f
    vAI the same day; vAI replies within **14 days** (7 days for a copy of information).
 7. **Research and public recognition** happen only as the signed parent forms allow.
 8. **Safety escalation.** If the platform flags a learner who may be at risk, the Organization's
-   child-protection contact will follow up the same day, in person and kindly, and follow its local
+   child safety officer will follow up the same day, in person and kindly, and follow its local
    child-protection duty first.
 9. The Organization's leaders will follow the rules in **Schedule E** and the vAI **leader guide**.
 
@@ -166,7 +168,7 @@ start. This is an intention, not an obligation, and vAI will help the Organizati
 
 Adults who work with learners will not be alone with a child in a private setting, will not exchange
 private messages with a child outside the platform or program channels, and will report any concern about a
-child's safety to the child-protection contact the same day. The Organization will take appropriate local
+child's safety to the child safety officer the same day. The Organization will take appropriate local
 steps to check the suitability of adults who work with learners.
 
 ## 12. No promises about results, and limits
@@ -225,7 +227,8 @@ Date: ____________
 | Address, city, state/province, country | |
 | Primary leader (name, email, WhatsApp/phone) | |
 | Lead mentor (name, email, WhatsApp/phone) | |
-| Child-protection contact (name, email, WhatsApp/phone) | |
+| **Child safety officer (required)** (name, email, WhatsApp/phone) | |
+| Deputy child safety officer (name, email, WhatsApp/phone) | |
 | Contact for notices (email) | |
 | Learners: age range, approximate number in the first cohort, gender mix | |
 | Computers available now (number and type) | |
@@ -262,7 +265,7 @@ Date: ____________
 | Who sees learners | Approves its own members; uses the dashboard only for the learners' benefit | Keeps each organization's data separate |
 | Requests (see, correct, delete, withdraw) | Accepts in person or by any channel; passes to vAI the same day | Replies within 14 days (7 for a copy); carries out deletions |
 | Breach or lost device | Tells vAI within 24 hours | Tells the Organization within 24 hours; reports to regulators within 72 hours when required |
-| Safety flags | Child-protection contact follows up the same day | Sends the alert to the leader and keeps the log |
+| Safety flags | Child safety officer follows up the same day | Sends the alert to the leader and keeps the log |
 | Service providers | Receives the current list on request | Maintains the list and agreements with them |
 | End of agreement | Chooses a copy of records | Returns, then deletes or anonymizes within 30 days |
 

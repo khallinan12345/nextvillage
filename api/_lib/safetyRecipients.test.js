@@ -30,6 +30,7 @@ describe('resolveLeaderEmails', () => {
       { id: 'c', email: 'site-leader-2@x', organization_id: 'o1', role: 'site_leader' },
       { id: 'd', email: 'other-org@x', organization_id: 'o2', role: 'site_leader' },
       { id: 'e', email: 'primary@x', organization_id: 'o1', role: 'teacher' },
+      { id: 'f', email: 'site-admin@x', organization_id: 'o1', role: 'site_administrator' },
     ],
     organizations: [{ id: 'o1', leader_id: 'e' }],
   };
@@ -39,7 +40,7 @@ describe('resolveLeaderEmails', () => {
     globalThis.fetch = fakeFetch(db);
     try {
       const { leaderEmails } = await resolveLeaderEmails('s1', 'https://db.test', 'key');
-      expect(leaderEmails.sort()).toEqual(['plain-leader@x', 'primary@x', 'site-leader-1@x', 'site-leader-2@x']);
+      expect(leaderEmails.sort()).toEqual(['plain-leader@x', 'primary@x', 'site-admin@x', 'site-leader-1@x', 'site-leader-2@x']);
     } finally { globalThis.fetch = orig; }
   });
 });

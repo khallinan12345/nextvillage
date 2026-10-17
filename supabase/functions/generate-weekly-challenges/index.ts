@@ -242,7 +242,7 @@ const TIER_ROTATION: Array<'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier
 // OLOIBIRI_ORG_ID in src/lib/useBranding.ts). A leader from any other org
 // has no challenge program to publish into.
 const OLOIBIRI_ORG_UUID = 'a1b2c3d4-0001-0001-0001-000000000001';
-const LEADER_ROLES = new Set(['leader', 'site_leader', 'research_lead']);
+const LEADER_ROLES = new Set(['leader', 'site_leader', 'site_administrator', 'research_lead']);
 
 Deno.serve(async (req) => {
   // Allow manual POST for testing, cron sends GET
