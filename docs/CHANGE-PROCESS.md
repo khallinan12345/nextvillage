@@ -154,3 +154,5 @@ notice are updated if needed; leaders were told; the success measure is written 
 ## Where to do this
 
 Leaders and the platform team use the **Team workspace** (www.nextvillage.community/team, in the sidebar) to propose changes, see their status, keep a task list, and see which reviews are due. The GitHub proposal form remains for people who work in the code.
+
+On the first of each month the workspace emails a reminder of reviews due, open tasks and (for the platform team) proposals waiting for triage. Leaders see only what is shared with all leaders. The recipient lists are in the `report_recipients` table (`team_reminder_platform` and `team_reminder_leaders`).
