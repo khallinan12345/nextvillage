@@ -2492,7 +2492,7 @@ const PublicLandingPage: React.FC = () => {
               <p style={{ color: "rgba(255,255,255,0.48)", fontSize: "0.88rem", marginBottom: "1.5rem" }}>
                 Access is managed — community leaders receive join codes directly from our team.
               </p>
-              <a href="mailto:bennywhite.davidson@renewvia.com?subject=New Community Interest — vAI Platform"
+              <a href="mailto:kevin.hallinan@nextVillage.community,bennywhite.davidson@renewvia.com?subject=New Community Interest — vAI Platform"
                 className="pub-btn btn-amber" style={{ fontSize: "1rem", padding: "0.82rem 1.9rem" }}>
                 Contact Us to Learn More <ArrowRight size={15} />
               </a>
@@ -2511,6 +2511,10 @@ const PublicLandingPage: React.FC = () => {
                 <a href="/docs/Community-Onboarding-questions.html" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
                   <BookOpen size={14} /> Questions Communities Ask <ExternalLink size={12} />
+                </a>
+                <a href="/docs/nextVillage-Partnership-Agreement-DRAFT.docx" download
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
+                  <BookOpen size={14} /> Partnership agreement (draft) <ExternalLink size={12} />
                 </a>
                 <a href="/docs/Data-Protection-Summary.html" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
