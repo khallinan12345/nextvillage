@@ -1,0 +1,49 @@
+name: Change proposal
+description: Suggest a change to the platform (anyone on the team can propose)
+title: "Proposal: "
+labels: ["proposal"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve, for whom, and how do we know?
+      description: Learners, leaders, parents or partners. Evidence beats opinion (what you saw, data, a request).
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: The smallest change that would help
+    validations:
+      required: true
+  - type: dropdown
+    id: touches
+    attributes:
+      label: Does it touch children's data, safety, AI behavior, consent or access?
+      options:
+        - "No"
+        - "Yes"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost in time and money (including AI cost)
+  - type: textarea
+    id: measure
+    attributes:
+      label: How will we know it worked?
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Where did the idea come from?
+      options:
+        - Leader or learner feedback
+        - Our usage or cost data
+        - Security or privacy review
+        - Partner request
+        - Article or other research
+        - Other

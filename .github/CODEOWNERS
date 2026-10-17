@@ -1,0 +1,13 @@
+# Sensitive areas get a named reviewer. Add the security and privacy advisor's GitHub username next to
+# each line once they join (for example: /supabase/migrations/ @khallinan12345 @advisor-username),
+# then turn on "Require review from Code Owners" in the main branch protection.
+/supabase/migrations/        @khallinan12345
+/supabase/functions/         @khallinan12345
+/api/                        @khallinan12345
+/src/lib/supabaseClient.ts   @khallinan12345
+/src/pages/PrivacyPage.tsx   @khallinan12345
+/docs/SECURITY-PROGRAM.md    @khallinan12345
+/docs/DPIA.md                @khallinan12345
+/docs/DATA-MAP.md            @khallinan12345
+/docs/templates/             @khallinan12345
+/.github/                    @khallinan12345
