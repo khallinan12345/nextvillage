@@ -6,6 +6,9 @@ on:
     paths:
       - "public/book-data/book.json"
 
+permissions:
+  contents: read
+
 jobs:
   publish-to-storage:
     runs-on: ubuntu-latest

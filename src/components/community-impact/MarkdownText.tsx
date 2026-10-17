@@ -11,6 +11,7 @@
 import React from 'react';
 import { extractIllustration } from './illustrationParser';
 import { SceneIllustration } from './SceneIllustration';
+import { escapeHtml } from '../../lib/escapeHtml';
 
 export const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const { text: cleanedText, scene } = extractIllustration(text);
@@ -19,7 +20,7 @@ export const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
     <div className="stack-y-1.5">
       {cleanedText.split('\n').map((line, i) => {
         if (!line.trim()) return <div key={i} className="h-1.5" />;
-        const html = line
+        const html = escapeHtml(line)
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.*?)\*/g, '<em>$1</em>');
         return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;

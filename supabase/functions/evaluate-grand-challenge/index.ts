@@ -202,7 +202,7 @@ Deno.serve(async (req: Request) => {
       severity:   'error',
       details: { submission_id: body.submission_id, error: message },
     });
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: 'Evaluation failed. Please try again.' }), {
       status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }

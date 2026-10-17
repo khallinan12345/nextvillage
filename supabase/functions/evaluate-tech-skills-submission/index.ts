@@ -313,7 +313,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error('evaluate-tech-skills-submission error:', err);
-    return new Response(JSON.stringify({ error: String(err) }), {
+    return new Response(JSON.stringify({ error: 'Evaluation failed. Please try again.' }), {
       status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }
