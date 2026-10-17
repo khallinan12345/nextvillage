@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Starting a nextVillage community</title>
+<meta name="description" content="A complete guide for a new organization: what the partnership includes, what it costs, what you need, how to set up, protect children, recruit learners and run the lab, with the forms to sign.">
+<style>
+  :root{
+    --green:#1F5C4A;
+    --green-deep:#143B30;
+    --sage:#A9C7BC;
+    --sage-pale:#EEF4F1;
+    --ink:#22272A;
+    --ink-soft:#5A6268;
+    --rule:#DFE4E1;
+    --paper:#FFFFFF;
+    --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:18px;
+    line-height:1.65;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    background:var(--green);
+    color:#fff;
+    padding:2.8rem 1.5rem 2.4rem;
+  }
+  .masthead .inner{max-width:1080px;margin:0 auto}
+  .kicker{
+    font-family:var(--sans);
+    font-size:.82rem;
+    letter-spacing:.02em;
+    color:var(--sage);
+    margin:0 0 .6rem;
+  }
+  .masthead h1{
+    font-size:clamp(1.85rem,4.4vw,2.9rem);
+    line-height:1.12;
+    font-weight:600;
+    margin:0 0 .7rem;
+    max-width:19ch;
+  }
+  .standfirst{
+    margin:0;
+    max-width:56ch;
+    color:#DCE8E3;
+    font-size:1.05rem;
+  }
+  .byline{
+    font-family:var(--sans);
+    font-size:.85rem;
+    color:var(--sage);
+    margin:1.6rem 0 0;
+    padding-top:1rem;
+    border-top:1px solid rgba(169,199,188,.35);
+    max-width:60ch;
+  }
+
+  /* ---------- layout ---------- */
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 1.5rem 5rem;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:2.5rem;
+  }
+  @media (min-width:940px){
+    .wrap{grid-template-columns:15rem 1fr;gap:3.5rem;align-items:start}
+  }
+
+  /* ---------- contents ---------- */
+  nav.toc{
+    font-family:var(--sans);
+    font-size:.9rem;
+    padding-top:2.5rem;
+  }
+  @media (min-width:940px){
+    nav.toc{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding-bottom:2rem}
+  }
+  nav.toc h2{
+    font-size:.8rem;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin:0 0 .7rem;
+  }
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:toc}
+  nav.toc li{counter-increment:toc;margin:0 0 .1rem}
+  nav.toc a{
+    display:block;
+    padding:.3rem 0 .3rem .6rem;
+    border-left:2px solid var(--rule);
+    color:var(--ink-soft);
+    text-decoration:none;
+    line-height:1.35;
+  }
+  nav.toc a::before{content:counter(toc) ".  ";color:var(--sage)}
+  nav.toc a:hover,nav.toc a:focus-visible{color:var(--green);border-left-color:var(--sage)}
+  nav.toc a.here{color:var(--green-deep);border-left-color:var(--green);font-weight:600}
+
+  /* ---------- article ---------- */
+  article{padding-top:2.5rem;max-width:40rem}
+  article p{margin:0 0 1.1rem}
+  article > p:first-of-type{font-size:1.06rem}
+
+  h2.sec{
+    font-family:var(--sans);
+    font-size:1.4rem;
+    font-weight:600;
+    color:var(--green-deep);
+    line-height:1.25;
+    margin:3.2rem 0 1.1rem;
+    padding-top:1.4rem;
+    border-top:1px solid var(--rule);
+  }
+  #start h2.sec:first-child{border-top:none}
+  h3{
+    font-family:var(--sans);
+    font-size:1.02rem;
+    font-weight:600;
+    color:var(--ink);
+    margin:1.9rem 0 .6rem;
+  }
+
+  ul,ol.steps,ol.check{margin:0 0 1.2rem;padding-left:1.3rem}
+  li{margin:0 0 .5rem}
+  ol.steps li::marker{color:var(--green);font-family:var(--sans);font-size:.9rem}
+
+  ul.check{list-style:none;padding-left:0}
+  ul.check li{
+    position:relative;
+    padding-left:1.7rem;
+  }
+  ul.check li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:.2rem;
+    width:1.05rem;
+    height:1.05rem;
+    border:1.5px solid var(--sage);
+    border-radius:3px;
+  }
+
+  strong{font-weight:600}
+  .lede-term{font-weight:600;color:var(--green-deep)}
+
+  .note{
+    background:var(--sage-pale);
+    border:1px solid var(--sage);
+    border-radius:3px;
+    padding:1.1rem 1.2rem;
+    font-size:.96rem;
+    margin:0 0 1.4rem;
+  }
+  .note p{margin:0 0 .6rem}
+  .note p:last-child{margin-bottom:0}
+  .note h3{margin-top:0}
+
+  .todo{
+    background:#FBF3E7;
+    border:1px solid #E4C79B;
+    border-radius:3px;
+    padding:1.1rem 1.2rem;
+    font-size:.94rem;
+    font-family:var(--sans);
+    font-style:italic;
+    color:#6B4E23;
+    margin:0 0 1.4rem;
+  }
+  .todo p{margin:0}
+
+  .sign{
+    margin-top:3.5rem;
+    padding-top:1.5rem;
+    border-top:1px solid var(--rule);
+    font-size:.9rem;
+    font-family:var(--sans);
+    color:var(--ink-soft);
+  }
+  a{color:var(--green)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+  @media print{
+    .masthead{background:#fff;color:#000;padding:0 0 1rem;border-bottom:2px solid #1F5C4A}
+    .masthead h1,.standfirst,.byline{color:#000}
+    .kicker{color:#1F5C4A}
+    nav.toc{display:none}
+    .wrap{display:block;padding:0}
+    article{max-width:none;padding-top:1rem}
+    h2.sec{page-break-after:avoid}
+  }
+
+  table.t{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.95rem}
+  table.t th,table.t td{border:1px solid var(--rule);padding:.5rem .65rem;text-align:left;vertical-align:top}
+  table.t th{background:var(--sage-pale)}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="inner">
+    <p class="kicker">nextVillage.community · with the Davidson AI Futures Lab (vAI)</p>
+    <h1>Starting a nextVillage community</h1>
+    <p class="standfirst">The complete guide for a new organization: what the partnership includes, what it costs, what you need to have in place, how to set up, how children are protected, and how to run the lab week to week. The forms to sign are listed at the end.</p>
+    <p class="byline">Prepared by Prof. Kevin Hallinan and Bennywhite Davidson · October 2026</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <nav class="toc" aria-label="Contents">
+    <h2>On this page</h2>
+    <ol>
+      <li><a href="#what">What you are building</a></li>
+      <li><a href="#offer">What the partnership includes</a></li>
+      <li><a href="#cost">What it costs, and who pays</a></li>
+      <li><a href="#need">What you need before you start</a></li>
+      <li><a href="#people">The people who make it work</a></li>
+      <li><a href="#setup">Getting your community set up</a></li>
+      <li><a href="#localized">How your community gets localized</a></li>
+      <li><a href="#children">Protecting children and data</a></li>
+      <li><a href="#lab">Building the lab</a></li>
+      <li><a href="#trust">Earning community trust</a></li>
+      <li><a href="#recruit">Recruiting learners</a></li>
+      <li><a href="#cohort">Your first cohort</a></li>
+      <li><a href="#weekly">Running the lab: week to week</a></li>
+      <li><a href="#reports">Reports and measurement</a></li>
+      <li><a href="#next">Becoming the next mentor</a></li>
+      <li><a href="#start">Steps to start, and the forms</a></li>
+    </ol>
+  </nav>
+
+  <article>
+
+    <h2 class="sec" id="what">1. What you are building</h2>
+    <p>nextVillage.community is a learning platform, but the platform is not the point. The point is what a young person in your community can become with the right tools in their hands: someone who can help a neighbour find healthcare information, help a farmer diagnose a crop disease, help a trader grow a business, or start something of their own. The lab you build is a room. What happens in that room, the trust you earn, the young people you bring in and the mentoring you give, is the real work.</p>
+    <p>We began in Oloibiri, Bayelsa State, Nigeria in July 2025 with four computers and about thirty young people. Today the Davidson AI Futures Lab has fourteen computers and about 140 young people use it, and some of them hold paid technology work. Nothing about that depended on Oloibiri being special. It depended on a mentor who showed up and a platform that asks learners to do the thinking.</p>
+    <p>The platform is built so that AI <em>builds</em> a young person's thinking and does not replace it. Learning tasks open in sequence, only after a learner shows understanding of the step before. The AI coaches and questions rather than handing over finished work. Community-impact challenges cannot be closed until the learner documents what actually happened and the value it created. Certifications are taken without AI assistance, so a certificate reflects what the learner can do.</p>
+
+    <h2 class="sec" id="offer">2. What the partnership includes</h2>
+    <h3>What we provide</h3>
+    <ul>
+      <li><strong>Access to the platform</strong> for your learners and leaders.</li>
+      <li><strong>Your own organization view</strong> for learners and leaders, and an <strong>organization administrator dashboard</strong> that shows only your people.</li>
+      <li><strong>Learning modules tailored to your local culture</strong>: AI learning, skills and community challenges written for your place, not copied from another community.</li>
+      <li><strong>Customization of the site</strong> so it looks like your organization's own site (your name, logo and colors), powered by vAI.</li>
+      <li><strong>Reports:</strong> daily usage reports, monthly learner progress reports, and monthly longitudinal results for your learners.</li>
+      <li><strong>Mentoring:</strong> help for your leaders to build on-the-ground organization and structures; mentoring for leaders in managing and leading students; and mentoring for advanced learners and leaders in how to work with AI.</li>
+      <li><strong>Safeguards and support:</strong> protections for children, consent and privacy tools, a leader guide and training session, and help when something goes wrong.</li>
+    </ul>
+    <h3>What you provide</h3>
+    <ul>
+      <li>A safe, supervised space with <strong>computers, internet and a power plan</strong>.</li>
+      <li>A <strong>lead mentor</strong> who is present when learners are, a primary platform leader and a child-protection contact.</li>
+      <li>Learners chosen by you. You know your young people; we do not.</li>
+      <li>A <strong>signed parent or guardian consent form for every learner under 18</strong>.</li>
+      <li><strong>Support for AI usage costs</strong> and, ideally, modest support for the mentoring services while your community gets started (next section).</li>
+    </ul>
+    <p>There is <strong>no subscription fee</strong> for the platform. The terms are set out in the partnership agreement (see the end of this guide).</p>
+
+    <h2 class="sec" id="cost">3. What it costs, and who pays</h2>
+    <h3>AI usage</h3>
+    <p>AI is the one real running cost. We keep it low by sending each request through a chain of <strong>free-tier AI services first</strong> and using a paid service only when the free ones cannot answer. Right now we estimate the cost at <strong>US$0.20 to US$0.60 per active learner per day</strong>, where an active learner is one who used the platform's AI that day. Your organization funds the AI cost for your own learners, on a monthly statement of actual cost with no markup, or a fixed monthly amount we review every three months. A monthly ceiling is agreed so there are no surprises.</p>
+    <table class="t">
+      <thead><tr><th>Example</th><th>Learners using the AI on a day</th><th>Estimated cost per day</th><th>Estimated per month</th></tr></thead>
+      <tbody>
+        <tr><td>A first cohort</td><td>20</td><td>US$4 to US$12</td><td>US$120 to US$360 if all 20 used it every day; much less in practice</td></tr>
+        <tr><td>A busy lab (like Oloibiri)</td><td>14 computers working at once, about 140 registered</td><td>US$2 to US$3 measured, July to October 2026</td><td>about US$60 to US$100 measured</td></tr>
+      </tbody>
+    </table>
+    <p>Not every registered learner is active every day, so real cost is usually well below the top of the range. In Oloibiri our measured cost between July and October 2026 was about US$0.11 to US$0.28 per active learner per day. The estimate above is deliberately higher so you can plan with room to spare. Cost depends mainly on how many learners use the AI and how heavily.</p>
+    <p>Prof. Hallinan personally covers the AI cost in Oloibiri. He cannot do the same in other communities, so the cost falls to your organization, to joint fundraising, or to a mix. We will help look for funding together.</p>
+    <h3>Mentoring support</h3>
+    <p>Ideally we would like <strong>modest support</strong> from the new organization for the mentoring services, to help the community get off the ground. If that is not possible, we will talk about what is, because lack of funds should not stop a good community from starting. Over time we see the organizations we help start offering the same services to new communities that come on board.</p>
+    <h3>Your own costs</h3>
+    <p>Computers, internet, power, the space and your lead mentor's stipend are your costs. A community that already has computers and internet starts with a real advantage.</p>
+
+    <h2 class="sec" id="need">4. What you need before you start</h2>
+    <p>We assume your community already has <strong>computers and internet</strong>. Specifically:</p>
+    <ul>
+      <li><strong>Devices.</strong> Laptops, desktop computers or tablets with a modern web browser. Shared devices are fine; most labs have more learners than devices and use a rotation. Although the platform works on a smartphone, many young people who come to a lab do not own one, so shared computers are central to the design.</li>
+      <li><strong>Internet.</strong> Reliable enough for text and images; video needs more. Our experience: <strong>one Starlink connection has been enough for a lab of 14 computers working at the same time.</strong> If connection is uneven, plan the schedule around when it is best. Several activities, like the Healthcare Navigator's clinical assessment tool, work without a live connection.</li>
+      <li><strong>Power.</strong> Often the real constraint. The Oloibiri lab runs on solar battery systems. For a facility that already has computers and internet, a modest solar and battery backup, in the range of US$1,200, goes a long way toward extending learning hours and protecting sessions from outages. Size it from your device count, daily hours of use and your actual (not rated) charging window.</li>
+      <li><strong>A safe, supervised space.</strong> An adult is present, entrances are visible, and parents feel comfortable having their children there.</li>
+      <li><strong>An email address</strong> for each leader, and ideally one for each learner (see section 6).</li>
+    </ul>
+
+    <h2 class="sec" id="people">5. The people who make it work</h2>
+    <p>This is the section to read most carefully. Our experience is unambiguous: the mentor determines success more than any technology. In eleven months in Oloibiri, engaged learning dropped to near zero whenever the lab leader was away.</p>
+    <ul>
+      <li><strong>A lead mentor from your organization.</strong> One staff member who supports learners, encourages them and keeps them motivated, present whenever learners are. We recommend a stipend or other recognition. In Oloibiri, Prof. Hallinan provides a stipend for the lab's leader.</li>
+      <li><strong>A mentor of mentors from vAI.</strong> A young adult in our network, mentored by Prof. Hallinan, who develops mentors and young people in technology skills. At the start this person mentors only your lead mentor, for about <strong>five hours a week and never more</strong>, for no more than about a year, because by then your organization has its own capability. A stipend for this service is very helpful.</li>
+      <li><strong>Ambassadors.</strong> Learners who become peer teachers and, in time, mentors for other communities. Name a small group early, before they feel ready.</li>
+      <li><strong>A child-protection contact.</strong> A named adult who follows up the same day on any safety alert, and who parents can approach with a concern.</li>
+    </ul>
+    <p>What good leadership looks like is not a secret formula. It is showing up consistently, knowing every learner by name, keeping real standards, and treating the lab as a place of care. When a learner struggles or loses interest, the lead mentor notices after one missed week, not five, and visits or calls the family. The mentor of mentors helps you build these habits.</p>
+
+    <h2 class="sec" id="setup">6. Getting your community set up</h2>
+    <h3>Step 1: you register as the site leader</h3>
+    <p>Sign up on the platform with your own email and password (or Google or GitHub). When asked who you are, choose <span class="lede-term">Teacher / Educator</span>, then <span class="lede-term">Register My Organization</span>. You will be asked for:</p>
+    <ul>
+      <li>Your organization's name and a short description.</li>
+      <li>Your continent, country, state or province, and city, town or village.</li>
+      <li>The age range and gender mix of your learners.</li>
+      <li>Optionally, a logo.</li>
+      <li><strong>Community context</strong>, three short answers: how people make their living, the challenges your community faces, and what it hopes for. Take real time on these (section 7).</li>
+      <li>Optionally, how long to keep learner data, and which tools to switch on. We recommend leaving all five on for a first cohort: Foundations (English, Mathematics, Science), AI Proficiency, Tech Skills, Creative AI and Community Impact AI.</li>
+    </ul>
+    <h3>Step 2: you get a join code</h3>
+    <p>The platform creates a unique 6-character code (for example, DAV001). Every learner and co-facilitator enters it at sign-up, which links them to your organization, your location and your localized content. You will say it out loud dozens of times in your first month, and you can find it, and make more, on your Profile page.</p>
+    <h3>Step 3: learners and co-facilitators join</h3>
+    <p>A young person signs up, chooses <span class="lede-term">Student / Learner</span> and enters your join code. Another adult helping you run the lab chooses <span class="lede-term">Join as Co-Facilitator</span> with the same code. Each learner uses their own email so that progress and password reset stay theirs alone. If a learner has no email of their own, talk about what that means for account recovery before they start. <strong>If someone forgets a password, they use "Email me a link to reset my password" on the sign-in page. They should never make a second account.</strong></p>
+    <h3>Step 4: you approve each learner</h3>
+    <p>New members wait for your approval. For anyone under 18 you confirm that a parent or guardian has signed the consent form, and say how. Approve only young people you know.</p>
+    <h3>Step 5: you use your dashboard</h3>
+    <p>Your administrator dashboard shows your learners, and only yours: who is active and who has gone quiet, their progress, consent records still missing, birth years still missing, privacy requests, and safety alerts. You can also post community challenges that only your learners see.</p>
+    <h3>Make the site look like yours</h3>
+    <p>We can tailor the site's name, logo and colors so learners experience it as your own organization's site, powered by vAI. Send us your logo and brand colors in the partnership agreement (Schedule B).</p>
+
+    <h2 class="sec" id="localized">7. How your community gets localized</h2>
+    <p>This is what makes the platform useful and not generic. Your three community-context answers, combined with our research into your town or region (its main livelihoods, real challenges, effects of climate on farming and water, assets and unmet needs), are used to write new lesson content and community-impact challenges specific to your place.</p>
+    <p>Every new community's modules match Oloibiri's in structure, the same number of lessons across the same subjects and skills, but the content is generated fresh and grounded in what is true about you. Two communities can work through completely different real-world examples in the same week. We run this step once, early. Its quality depends directly on how honest and specific your answers were. Vague answers produce vague lessons.</p>
+    <p>For school subjects, Foundations courses in English, Mathematics and Science can be aligned to your national curriculum subject by subject. We would want your teachers to help map that alignment. Examination preparation can be built around your national examination formats in the same way: learners sit practice exams without AI help, then receive a checklist of specific things to improve, with links to the exact topics on the platform.</p>
+
+    <h2 class="sec" id="children">8. Protecting children and data</h2>
+    <p>Most learners are children. Protecting them is a condition of the partnership, not an extra.</p>
+    <ul>
+      <li><strong>Parent or guardian consent for every learner under 18.</strong> The leader collects a signed form before approving the learner and keeps the signed original safe (a locked box, listed by learner name, with a photo copy kept separately). The platform records that you hold it, when, how, and a note. No guardian contact details are stored on the platform. We supply the form; a form that only covers pictures or media is not enough, because the parent must also agree to the platform, the AI services and storage in the United States. Where a parent cannot read, explain it aloud in their language; a mark with a witness is acceptable.</li>
+      <li><strong>Younger learners.</strong> We do not exclude children under 13. They get extra protections: names and photos hidden from other learners, no peer chat by default, a single vetted AI vendor, shorter retention, and no records about other people.</li>
+      <li><strong>What is kept and for how long.</strong> Chat transcripts, messages, media, inactive accounts and logs are deleted on a schedule, nightly. Names and contact details are removed from what a learner types before it reaches an AI service.</li>
+      <li><strong>Parents are in control.</strong> A parent may ask to see, correct or delete their child's information, or withdraw permission, in person to a leader, by email or on the platform. You pass the request on the same day; we reply within 14 days (7 for a copy).</li>
+      <li><strong>Safety alerts.</strong> If the platform sees words that may show a child is at risk, a leader is emailed. It is automatic and can be wrong. The child-protection contact talks to the child, in person, kindly and casually, the same day.</li>
+      <li><strong>Community data belongs to the community.</strong> Each leader sees only their own organization's learners. Publicly, learners are shown by initials only. No child's name, picture, voice or work is published unless the signed form clearly says so.</li>
+      <li><strong>Breach.</strong> Tell us within 24 hours of a lost device or any suspected exposure, so the 72-hour deadline to regulators in Nigeria and Kenya can be met.</li>
+      <li><strong>Where it is stored.</strong> In the United States (Supabase, Ohio). Our privacy notice (www.nextvillage.community/privacy) and Data Protection Summary explain this plainly and list the service providers.</li>
+    </ul>
+    <p>Our approach follows Nigeria's Data Protection Act 2023, Kenya's Data Protection Act 2019 and the US children's privacy rule. Each country has details of its own, so in a new country we adapt the forms to that country's law with your help. Every leader receives a one-page leader guide and a short training session.</p>
+
+    <h2 class="sec" id="lab">9. Building the lab</h2>
+    <p>The lab is a physical room where learners work. It does not need to be large or new; several successful labs are a single repurposed room. Beyond what is in section 4:</p>
+    <ul>
+      <li>Open on a <strong>consistent, predictable schedule</strong> learners and parents can rely on. Consistency turns a novelty into a habit.</li>
+      <li>Keep devices charged and clean, and fix what breaks quickly. An interrupted charging routine is one of the most common reasons a lab's hours shrink.</li>
+      <li>Keep a simple attendance sheet; the platform shows activity, but your sheet shows who came.</li>
+      <li>Rainy season and outages reduce use. In Oloibiri, in the middle of the rainy season, use still held at about 60% of its peak. Plan for it.</li>
+    </ul>
+
+    <h2 class="sec" id="trust">10. Earning community trust</h2>
+    <p>A lab with devices and no community backing will sit empty. Build relationships with the people whose approval matters locally:</p>
+    <ul>
+      <li><strong>Traditional and local government leadership.</strong> A visit and a clear, honest explanation (free, AI-facilitated learning tied to real community benefit, not a foreign extraction of data or attention) turns suspicion into support.</li>
+      <li><strong>Religious leaders.</strong> Priests, pastors, imams and other faith leaders are often the most trusted voices with parents. Meeting them early, and where appropriate asking for a brief mention after a service, is often the highest-leverage conversation a new leader has.</li>
+      <li><strong>School leadership.</strong> Teachers and headmasters are natural allies and can help reach families.</li>
+    </ul>
+    <p>The message that works is simple and concrete: it is free, it is for your children, it teaches real skills, and here is a specific thing a young person here could do with it, such as helping a neighbour with health information, a farmer with a crop problem, or a local trader.</p>
+
+    <h2 class="sec" id="recruit">11. Recruiting learners</h2>
+    <p>Recruitment is often door to door: introduce yourself to parents and explain the program directly.</p>
+    <ul>
+      <li>Bring the join code and the <strong>consent form</strong>, and show, do not just describe. A phone or tablet with a real activity open persuades better than any explanation.</li>
+      <li>Answer the two questions every parent has, even if unspoken: <em>is this safe for my child?</em> and <em>what is in it for them?</em></li>
+      <li>Start with a small, visible group. What they can show their parents and neighbours after a few weeks becomes your best recruiting tool.</li>
+      <li>The platform's weekly challenges ask learners to go out and "bring someone" into the work. Recruiting is the same muscle, and you exercise it first.</li>
+    </ul>
+
+    <h2 class="sec" id="cohort">12. Your first cohort</h2>
+    <p>Smaller and longer beats larger and shorter. A pilot shape that has worked: <strong>20 to 30 learners for three to six months, led by one staff mentor</strong>, starting with <strong>AI Proficiency</strong> and moving into one applied pathway (Tech Skills, AI Creative Studio or Community Impact AI), with success indicators agreed in advance. AI Proficiency comes first because learners need to understand what AI is, how it can be wrong and how to use it ethically before they build with it. The Curriculum section gives step-by-step guides learners work through in order.</p>
+    <table class="t">
+      <thead><tr><th>When</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td>Weeks 1 to 2</td><td>Sign the agreement. Register the organization, receive the join code. Send community information and logo. vAI starts the local tailoring. Meet local leaders. Choose the lead mentor.</td></tr>
+        <tr><td>Weeks 2 to 4</td><td>Collect signed parent forms. Recruit the first 20 to 30 learners. Leader training session. Meet your mentor of mentors weekly.</td></tr>
+        <tr><td>Month 2</td><td>Approve learners as forms come in. Lab opens on a fixed schedule. Learners begin AI Proficiency. First daily and monthly reports arrive.</td></tr>
+        <tr><td>Months 3 to 6</td><td>Move into the applied pathway. Weekly community challenges. Name ambassadors. Review the first monthly longitudinal results and agree what to change.</td></tr>
+        <tr><td>Month 6</td><td>Review together: learners, costs, mentoring needs, whether to grow the cohort or add a second lab.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sec" id="weekly">13. Running the lab: week to week</h2>
+    <ul>
+      <li>A new community-impact challenge goes live roughly every one to two weeks. Know what it is and be ready to explain it in plain terms.</li>
+      <li>Check which learners are active and which have gone quiet. A learner is easier to bring back after one missed week than after five.</li>
+      <li>Review submitted community-impact work (the "return questions" after learners go into the community). This is where you see whether the work is landing.</li>
+      <li>Read safety alerts the same day.</li>
+      <li>Once a month, a proficiency assessment runs automatically for learners with enough activity. No action needed, but know it is happening.</li>
+      <li>Meet your mentor of mentors weekly. A fifteen-minute conversation with someone who has solved your exact problem is worth hours of guessing.</li>
+      <li>Keep recruiting. The first cohort is rarely the last.</li>
+    </ul>
+
+    <h2 class="sec" id="reports">14. Reports and measurement</h2>
+    <ul>
+      <li><strong>Daily usage reports:</strong> who used the platform and how much.</li>
+      <li><strong>Monthly learner progress reports:</strong> each learner's progress through the pathways.</li>
+      <li><strong>Monthly longitudinal results:</strong> how each learner's proficiency changes over time, so you can see growth and not just activity.</li>
+    </ul>
+    <p>Learning is measured with an AI instrument against published rubrics; for AI proficiency these draw on UNESCO's AI competency standards for students. Learners are assessed on their ability to check AI output, recognize bias and notice when AI is wrong. Verification is taught, not assumed.</p>
+
+    <h2 class="sec" id="next">15. Becoming the next mentor</h2>
+    <p>The name says it: <em>the next village</em>. The lab in Oloibiri is not trying to own anything. Its purpose is to help each community build its own capability and pass it on. Once your organization has built that capability, you can help mentor another community, and eventually offer the same services to communities that come on board after you. We will help you prepare for that when you are ready.</p>
+
+    <h2 class="sec" id="start">16. Steps to start, and the forms</h2>
+    <ul class="check">
+      <li>Read this guide with your leadership; ask us anything.</li>
+      <li>Complete <strong>Schedule B</strong> (about your organization) and agree <strong>Schedule C</strong> (costs and support) in the partnership agreement; both sides sign.</li>
+      <li>Choose your lead mentor, primary leader and child-protection contact.</li>
+      <li>Confirm devices, internet and power (section 4).</li>
+      <li>Register as site leader and receive your join code.</li>
+      <li>Send your logo, brand colors and community-context answers.</li>
+      <li>Meet local government, religious and school leaders.</li>
+      <li>Print the <strong>parent consent forms</strong> and begin collecting signatures with your first families.</li>
+      <li>Hold the leader training session; meet your mentor of mentors.</li>
+      <li>Open the lab on a fixed schedule and begin with AI Proficiency.</li>
+    </ul>
+    <h3>Forms (all in the project's docs folder)</h3>
+    <table class="t">
+      <thead><tr><th>Form</th><th>Who completes it</th><th>File</th></tr></thead>
+      <tbody>
+        <tr><td>Partnership agreement (with Schedules A to F)</td><td>The organization and vAI</td><td><code>docs/templates/PARTNERSHIP-AGREEMENT.md</code>, Word copy in <code>docs/forms/</code></td></tr>
+        <tr><td>Parent or guardian consent form, full</td><td>Each family of a new learner</td><td><code>docs/templates/PARENT-CONSENT-FORM.md</code>, Word copy in <code>docs/forms/</code></td></tr>
+        <tr><td>Parent consent add-on</td><td>Families who already signed a media-release form</td><td><code>docs/templates/PARENT-CONSENT-ADDENDUM.md</code>, Word copy in <code>docs/forms/</code></td></tr>
+        <tr><td>Data responsibilities agreement (for organizations that control their own learners' data)</td><td>The organization and vAI</td><td><code>docs/templates/CONTROLLER-AGREEMENT-TEMPLATE.md</code></td></tr>
+        <tr><td>Leader guide (one page)</td><td>Every leader reads it</td><td><code>docs/LEADER-GUIDE.md</code></td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <p><strong>A note on the forms.</strong> The agreement and the parent forms are drafts to be checked by a lawyer, and a person fluent in your learners' language should check any translation before families use it.</p>
+    </div>
+
+    <div class="sign">
+      <p>Questions? Prof. Kevin Hallinan, kevin.hallinan@nextVillage.community. For child-protection concerns in Nigeria: Confidence Onuoha, confidenceonuoha416@gmail.com, WhatsApp +234 806 417 7653. For answers to the questions communities ask most, see the companion document "Questions communities ask before they start".</p>
+    </div>
+
+  </article>
+</div>
+
+<script>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+    var sections = Object.keys(map).map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    if (!('IntersectionObserver' in window) || !sections.length) return;
+
+    var visible = new Set();
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { visible.add(e.target.id); } else { visible.delete(e.target.id); }
+      });
+      var current = sections.filter(function (s) { return visible.has(s.id); })[0];
+      if (!current) return;
+      links.forEach(function (a) { a.classList.remove('here'); });
+      map[current.id].classList.add('here');
+    }, { rootMargin: '0px 0px -70% 0px' });
+
+    sections.forEach(function (s) { obs.observe(s); });
+  })();
+</script>
+
+</body>
+</html>
