@@ -8,7 +8,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const UPDATED = '16 October 2026';
+const UPDATED = '17 October 2026';
 const CONTACT_EMAIL = 'confidenceonuoha416@gmail.com';
 
 const H2: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -47,6 +47,22 @@ const PrivacyPage: React.FC = () => (
           <li>We do not sell information and we do not show advertising.</li>
           <li>You can ask us to show, correct or delete everything. Parents without email can simply tell the group leader in person, or contact Confidence Onuoha (child protection lead) at <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</li>
         </UL>
+      </div>
+
+      <div className="mt-6 rounded-lg border border-sky-200 bg-sky-50 p-5" id="for-learners">
+        <p className="text-lg font-semibold text-gray-900">For learners: your information, in simple words</p>
+        <ul className="list-disc pl-6 mt-3 stack-y-2 text-gray-800 text-base">
+          <li>This is your space to learn. We keep a little information about you so the site works: your name, your town, the year you were born, and what you write and make.</li>
+          <li>Your leader and the nextVillage team can see your work so they can help you. Other learners cannot see your private work.</li>
+          <li>When you talk to the AI, it does not need your phone number, your address, or your family’s secrets. <strong>Do not type them.</strong> If you do by mistake, tell your leader.</li>
+          <li>The AI can be wrong. Check important things with a person you trust.</li>
+          <li>Never share your password. If you forget it, press “Email me a link to reset my password.” Do not make a second account.</li>
+          <li>If something online makes you feel scared, sad, or uncomfortable, tell your leader or an adult you trust, right away. You will not be in trouble.</li>
+          <li>If you write that you are in danger or want to hurt yourself or someone else, a leader will be told so that they can help you.</li>
+          <li>We never sell your information and we never show you advertising.</li>
+          <li>Your parent or guardian can ask to see your information, change it, or delete it. You can ask your leader too.</li>
+          <li>Want to ask a question about any of this? Ask your leader, or talk to Confidence Onuoha.</li>
+        </ul>
       </div>
 
       <H2>Who is responsible</H2>
