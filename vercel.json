@@ -42,6 +42,10 @@
     {
       "path": "/api/seriousness-report",
       "schedule": "0 7 3 * *"
+    },
+    {
+      "path": "/api/team-review-reminder",
+      "schedule": "0 8 1 * *"
     }
   ]
 }
