@@ -20,7 +20,10 @@
  *     login alone would undercount that stat. The per-user TABLE below it
  *     is keyed strictly off sign-ins, which is what was asked for.
  *
- * Sends email to khallinan1@udayton.edu.
+ * Sends the site-wide report to khallinan1@udayton.edu only (it lists every organization's learners).
+ * Also sends a version limited to learners at the Oloibiri site to the people in report_recipients
+ * (report = 'daily_report_oloibiri'); it has no costs and no other organization's learners.
+ * Query: ?send=0  build everything but send no email (the JSON shows who would get the site report).
  * Writes a summary row to public.daily_activity_log in Supabase.
  *
  * Required env vars:
@@ -54,6 +57,8 @@ interface UserRow {
   city: string | null;
   country: string | null;
   organization: string | null;
+  organizationId: string | null;
+  role: string | null;
   lastSignInAt: string;
   pages: string[];
 }
@@ -198,7 +203,7 @@ async function fetchDailySummary(
   const profileRows = await inChunks(signedInIds, async (chunk) => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, name, email, city, country, organization_id")
+      .select("id, name, email, city, country, organization_id, role")
       .in("id", chunk);
     return data || [];
   });
@@ -221,6 +226,8 @@ async function fetchDailySummary(
         city: p?.city ?? null,
         country: p?.country ?? null,
         organization: p?.organization_id ? orgMap.get(p.organization_id) ?? null : null,
+        organizationId: p?.organization_id ?? null,
+        role: p?.role ?? null,
         lastSignInAt: loginMap.get(id)!,
         pages: [...(pagesByUser.get(id) || [])],
       };
@@ -232,6 +239,47 @@ async function fetchDailySummary(
     totalRegisteredUsers: totalRegisteredUsers ?? 0,
     signedInToday: signedInIds.length,
     activeToday: activeUserIds.size,
+    rows,
+    categoryTotals,
+  };
+}
+
+// ─── The Oloibiri site report ────────────────────────────────────────────────
+// The site-wide report above lists every organization's learners, so it goes to the platform owner
+// only. The people who run the Oloibiri site get a version limited to learners at that site: the main
+// organization plus its duplicate records (mirrors site_org_id() in the database and api/seriousness-report.ts).
+const SITE_ORG_IDS = new Set([
+  "a1b2c3d4-0001-0001-0001-000000000001",
+  "00bd2a68-7ae4-4e70-82de-455e865a9a48",
+  "85f12740-d3bf-4f50-b36b-15dc4428bd08",
+  "545d286d-2045-4792-92e5-f2fbec2e895e",
+  "089cc033-e2c6-4227-b87f-9e27692c57d6",
+]);
+const SITE_REPORT = "daily_report_oloibiri";
+
+function isSiteLearnerRow(r: { organizationId: string | null; city: string | null; role: string | null }): boolean {
+  if (r.role !== "student" && r.role !== "learner") return false;
+  if (r.organizationId) return SITE_ORG_IDS.has(r.organizationId);
+  return /^oloibiri/i.test(r.city ?? "");
+}
+
+async function siteLearnerCount(): Promise<number> {
+  const withOrg = await supabase.from("profiles").select("id", { count: "exact", head: true })
+    .in("role", ["student", "learner"]).eq("membership_status", "approved").in("organization_id", [...SITE_ORG_IDS]);
+  const noOrg = await supabase.from("profiles").select("id", { count: "exact", head: true })
+    .in("role", ["student", "learner"]).eq("membership_status", "approved").is("organization_id", null).ilike("city", "oloibiri%");
+  return (withOrg.count ?? 0) + (noOrg.count ?? 0);
+}
+
+function siteSummary(all: DailySummary, learnersInSite: number): DailySummary {
+  const rows = all.rows.filter(isSiteLearnerRow);
+  const categoryTotals: Record<string, number> = {};
+  for (const r of rows) for (const pg of r.pages) categoryTotals[pg] = (categoryTotals[pg] || 0) + 1;
+  return {
+    logDate: all.logDate,
+    totalRegisteredUsers: learnersInSite,
+    signedInToday: rows.length,
+    activeToday: rows.filter((r) => r.pages.length > 0).length,
     rows,
     categoryTotals,
   };
@@ -443,7 +491,7 @@ function buildCostSection(cost: DailyCostSummary): string {
   </div>`;
 }
 
-function buildEmailHtml(summary: DailySummary, dateLabel: string, cost: DailyCostSummary): string {
+function buildEmailHtml(summary: DailySummary, dateLabel: string, cost: DailyCostSummary, site = false): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f3f6f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
@@ -452,7 +500,7 @@ function buildEmailHtml(summary: DailySummary, dateLabel: string, cost: DailyCos
   <!-- Header -->
   <div style="background:linear-gradient(135deg,#0d1b14 0%,#1a3d2b 60%,#1a5c3f 100%);padding:24px 28px;">
     <div style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#52b788;margin-bottom:5px;font-weight:600;">
-      nextVillage · Site-Wide Daily Activity
+      nextVillage · ${site ? 'Oloibiri Daily Activity' : 'Site-Wide Daily Activity'}
     </div>
     <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;">Daily Activity Report</div>
     <div style="font-size:11px;color:rgba(255,255,255,0.5);">${dateLabel} · 12:00 Nigerian Time (WAT)</div>
@@ -463,11 +511,11 @@ function buildEmailHtml(summary: DailySummary, dateLabel: string, cost: DailyCos
       </div>
       <div style="background:rgba(82,183,136,0.2);border-radius:7px;padding:7px 12px;text-align:center;">
         <div style="font-size:18px;font-weight:700;color:#52b788;">${summary.activeToday}</div>
-        <div style="font-size:8px;color:#52b788;text-transform:uppercase;letter-spacing:0.8px;">Active Today (login + usage)</div>
+        <div style="font-size:8px;color:#52b788;text-transform:uppercase;letter-spacing:0.8px;">${site ? 'Used the platform today' : 'Active Today (login + usage)'}</div>
       </div>
       <div style="background:rgba(255,255,255,0.08);border-radius:7px;padding:7px 12px;text-align:center;">
         <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.7);">${summary.totalRegisteredUsers}</div>
-        <div style="font-size:8px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.8px;">Total Registered Users</div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.8px;">${site ? 'Learners in the group' : 'Total Registered Users'}</div>
       </div>
     </div>
   </div>
@@ -484,14 +532,14 @@ function buildEmailHtml(summary: DailySummary, dateLabel: string, cost: DailyCos
       </div>
     </div>
 
-    ${buildCostSection(cost)}
+    ${site ? '' : buildCostSection(cost)}
 
     <!-- Footer -->
     <div style="border-top:1px solid #e5e7eb;padding-top:12px;color:#9ca3af;font-size:10px;">
       <div>🕛 Generated at 12:00 WAT (11:00 UTC) ·
         <a href="https://www.nextvillage.community" style="color:#1a5c3f;text-decoration:none;">Open App ↗</a>
       </div>
-      <div style="margin-top:3px;">Facilitator/admin accounts excluded. Site-wide — no cohort or organization filter. "Pages Used Today" lists every dashboard category_activity plus AI Playground / Systems Think / Agriculture Consultation activity logged today; "no logged activity" means the user signed in but touched nothing yet.</div>
+      <div style="margin-top:3px;">${site ? 'Learners at the Oloibiri site only. This report is for the people who run the site; please do not forward it.' : 'Facilitator/admin accounts excluded. Site-wide — no cohort or organization filter.'} "Pages Used Today" lists every dashboard category_activity plus AI Playground / Systems Think / Agriculture Consultation activity logged today; "no logged activity" means the user signed in but touched nothing yet.</div>
     </div>
   </div>
 </div>
@@ -579,7 +627,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let emailError: string | null = null;
     try {
       const resendKey = process.env.RESEND_API_KEY;
-      if (!resendKey) {
+      if (req.query.send === "0") {
+        emailError = "send=0: emails skipped";
+      } else if (!resendKey) {
         emailError = "RESEND_API_KEY not set";
         console.warn("⚠️  RESEND_API_KEY not set — skipping email");
       } else {
@@ -606,7 +656,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error("❌ Email threw:", e.message);
     }
 
+    // ── The Oloibiri site's own report (learners at that site only) ──────────
+    let siteEmail: Record<string, unknown> = { sent: false };
+    try {
+      const siteData = siteSummary(summary, await siteLearnerCount());
+      const { data: recips, error: recErr } = await supabase.from("report_recipients").select("email").eq("report", SITE_REPORT).eq("active", true);
+      if (recErr) throw new Error(recErr.message);
+      const to = (recips ?? []).map((r: { email: string }) => r.email);
+      siteEmail = { sent: false, rows: siteData.rows.length, signedIn: siteData.signedInToday, recipients: to.length };
+      if (req.query.send !== "0" && process.env.RESEND_API_KEY && to.length > 0) {
+        const out = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "nextVillage <reports@nextvillage.community>",
+            to,
+            subject: `📅 Oloibiri Daily Report — ${dateLabel} · ${siteData.signedInToday} signed in`,
+            html: buildEmailHtml(siteData, dateLabel, costSummary, true),
+          }),
+        });
+        siteEmail = { ...siteEmail, sent: out.ok, error: out.ok ? undefined : `Resend ${out.status}: ${await out.text()}` };
+      }
+    } catch (e: any) {
+      siteEmail = { sent: false, error: e.message };
+      console.error("❌ Site report failed:", e.message);
+    }
+
     return res.status(200).json({
+      siteEmail,
       date: logDate,
       signedInToday: summary.signedInToday,
       activeToday: summary.activeToday,
