@@ -2474,7 +2474,7 @@ const PublicLandingPage: React.FC = () => {
                       We are building the proposal portal now. Register your interest and we will contact you when submissions open.
                     </p>
                     <a
-                      href="mailto:bennywhite.davidson@renewvia.com?subject=Research%20Network%20Interest&body=Hello%2C%20I%20am%20interested%20in%20proposing%20a%20study%20through%20the%20vAI%20Open%20Research%20Network.%0A%0AName%3A%20%0AInstitution%3A%20%0AResearch%20area%3A%20%0A%0APlease%20keep%20me%20informed%20of%20when%20submissions%20open."
+                      href="mailto:bennywhite.davidson@nextVillage.community?subject=Research%20Network%20Interest&body=Hello%2C%20I%20am%20interested%20in%20proposing%20a%20study%20through%20the%20vAI%20Open%20Research%20Network.%0A%0AName%3A%20%0AInstitution%3A%20%0AResearch%20area%3A%20%0A%0APlease%20keep%20me%20informed%20of%20when%20submissions%20open."
                       style={{
                         display: "inline-flex", alignItems: "center", gap: "0.5rem",
                         padding: "0.75rem 1.75rem", borderRadius: 10,
@@ -2564,7 +2564,7 @@ const PublicLandingPage: React.FC = () => {
               <p style={{ color: "rgba(255,255,255,0.48)", fontSize: "0.88rem", marginBottom: "1.5rem" }}>
                 Access is managed — community leaders receive join codes directly from our team.
               </p>
-              <a href="mailto:kevin.hallinan@nextVillage.community,bennywhite.davidson@renewvia.com?subject=New Community Interest — vAI Platform"
+              <a href="mailto:kevin.hallinan@nextVillage.community,bennywhite.davidson@nextVillage.community?subject=New Community Interest — vAI Platform"
                 className="pub-btn btn-amber" style={{ fontSize: "1rem", padding: "0.82rem 1.9rem" }}>
                 Contact Us to Learn More <ArrowRight size={15} />
               </a>
@@ -2673,8 +2673,8 @@ const PublicLandingPage: React.FC = () => {
                 we'd love to hear from you.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.9rem", justifyContent: "center" }}>
-                <a href="mailto:bennywhite.davidson@renewvia.com" className="pub-btn btn-amber">
-                  <Mail size={15} /> bennywhite.davidson@renewvia.com
+                <a href="mailto:bennywhite.davidson@nextVillage.community" className="pub-btn btn-amber">
+                  <Mail size={15} /> bennywhite.davidson@nextVillage.community
                 </a>
                 <a href="https://www.linkedin.com/in/kevinhallinanenergyinnovator123"
                   target="_blank" rel="noopener noreferrer"
