@@ -16,6 +16,7 @@ import InactiveAccountsCard from '../../components/dashboard/InactiveAccountsCar
 import ConsentRecordsCard from '../../components/dashboard/ConsentRecordsCard';
 import UngroupedMembersCard from '../../components/dashboard/UngroupedMembersCard';
 import DuplicateAccountsCard from '../../components/dashboard/DuplicateAccountsCard';
+import SafetyOfficerCard from '../../components/dashboard/SafetyOfficerCard';
 import MissingBirthYearCard from '../../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../../components/dashboard/SafetyFlagsCard';
 import { supabase } from '../../lib/supabaseClient';
@@ -2865,6 +2866,7 @@ const AdminStudentDashboard: React.FC = () => {
             research_lead can view the dashboard but can't approve members. */}
         {(isPlatformAdmin || userRole === 'leader' || userRole === 'site_leader' || userRole === 'site_administrator') && (
           <div className="mb-5 stack-y-5">
+            <SafetyOfficerCard />
             <SafetyFlagsCard />
             <PendingMembersCard />
             <ConsentRecordsCard />

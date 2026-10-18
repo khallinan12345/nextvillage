@@ -3,11 +3,13 @@
 // Public parent and learner handout at /my-path: what nextVillage is for, the learner's path, how
 // children are kept safe, and how families can help. Same content as the printable one-page card
 // (public/docs/My-Path-Card.pdf; sources in docs/forms/). Keep the two in step with docs/CORE-CURRICULUM.md.
-// The contact is vAI's Safety Officer. Other organizations hand out the blank template version of the
-// card with their own child safety officer filled in.
+// Whose safety officer is shown: with ?code=<join code> that organization's own child safety officer;
+// for a signed-in member, their organization's; otherwise vAI's Safety Officer. Leaders print it from
+// their dashboard link (nextvillage.community/my-path?code=THEIRCODE).
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 
 const STEPS: { n: number; title: string; body: string; cert?: string }[] = [
   { n: 0, title: 'AI Discovery', body: 'About five short sessions: give AI clear instructions and make a robot, a character, a story and a game.' },
@@ -18,11 +20,42 @@ const STEPS: { n: number; title: string; body: string; cert?: string }[] = [
   { n: 5, title: 'Full-Stack Capstone', body: 'Build a complete application with a database and user accounts.', cert: 'Full-Stack' },
 ];
 
+interface Contact { org: string | null; name: string; email: string | null; phone: string | null; isVai: boolean }
+const VAI: Contact = { org: null, name: 'Confidence Onuoha', email: 'confidenceonuoha416@gmail.com', phone: '+234 806 417 7653', isVai: true };
+
+function useContact(): Contact {
+  const [params] = useSearchParams();
+  const code = params.get('code');
+  const [contact, setContact] = useState<Contact>(VAI);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      let call;
+      if (code) {
+        call = supabase.rpc('get_org_safety_officer', { p_code: code });
+      } else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return; // signed out and no code: keep vAI's Safety Officer
+        call = supabase.rpc('my_safety_officer');
+      }
+      const { data } = await call;
+      const row = (Array.isArray(data) ? data[0] : data) as { org_name: string | null; officer_name: string | null; officer_email: string | null; officer_phone: string | null } | undefined;
+      if (alive && row?.officer_name) {
+        setContact({ org: row.org_name, name: row.officer_name, email: row.officer_email, phone: row.officer_phone, isVai: false });
+      }
+    })().catch(() => { /* fall back to vAI's Safety Officer */ });
+    return () => { alive = false; };
+  }, [code]);
+  return contact;
+}
+
 const H2: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <h2 className="text-xl font-semibold text-emerald-900 mt-8 mb-2">{children}</h2>
 );
 
-const MyPathPage: React.FC = () => (
+const MyPathPage: React.FC = () => {
+  const contact = useContact();
+  return (
   <div className="min-h-screen bg-white">
     <header className="border-b border-gray-200 print:hidden">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -103,19 +136,26 @@ const MyPathPage: React.FC = () => (
       <div className="mt-8 rounded-lg border-2 border-emerald-900 p-4">
         <p className="font-semibold text-gray-900">Questions or concerns?</p>
         <p>
-          Talk to your group leader in person, or contact the Safety Officer:{' '}
-          <strong>Confidence Onuoha</strong>, Safety Officer for vAI (Village AI), the organization behind nextVillage.community. Phone or WhatsApp +234 806 417 7653,{' '}
-          <a className="text-blue-700 underline" href="mailto:confidenceonuoha416@gmail.com">confidenceonuoha416@gmail.com</a>.
+          Talk to your group leader in person, or contact the {contact.isVai ? 'Safety Officer' : 'child safety officer'}:{' '}
+          <strong>{contact.name}</strong>
+          {contact.isVai
+            ? ', Safety Officer for vAI (Village AI), the organization behind nextVillage.community.'
+            : contact.org ? `, ${contact.org}.` : '.'}
+          {contact.phone && <> Phone or WhatsApp {contact.phone}.</>}
+          {contact.email && <> <a className="text-blue-700 underline" href={`mailto:${contact.email}`}>{contact.email}</a></>}
         </p>
       </div>
 
       <p className="text-sm text-gray-600 mt-6 print:hidden">
-        <a className="text-blue-700 underline" href="/docs/My-Path-Card.pdf" target="_blank" rel="noopener noreferrer">Print the one-page card (PDF)</a>
+        <button className="text-blue-700 underline" onClick={() => window.print()}>Print this page</button>
+        {' · '}
+        <a className="text-blue-700 underline" href="/docs/My-Path-Card.pdf" target="_blank" rel="noopener noreferrer">One-page card (PDF)</a>
         {' · '}
         <Link className="text-blue-700 underline" to="/privacy">Privacy notice</Link>
       </p>
     </main>
   </div>
 );
+};
 
 export default MyPathPage;

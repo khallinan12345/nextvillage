@@ -39,7 +39,7 @@ Read the child safeguarding policy together, then cover:
 
 - Every learner under 18 needs a signed guardian consent form. Where a parent has no email, the form is
   signed in person or by thumbprint with a witness.
-- Hand every family the **My path card** with the consent form, so parents know what the programme is for.
+- Hand every family the **My path card** with the consent form (print it from `nextvillage.community/my-path?code=` followed by your join code, so your child safety officer's details appear), so parents know what the programme is for.
 - Record the consent on the leader dashboard. The dashboard shows who is still missing a form.
 - Young learners under 13 are better protected by default: no peer chat, names hidden, and a reviewed AI
   provider only. Ask the birth year of each child so the right protections apply.
