@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import MySafetyOfficer from '../components/profile/MySafetyOfficer';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -813,6 +814,8 @@ const ProfilePage: React.FC = () => {
                         placeholder="Enter your email address"
                       />
                     </div>
+
+                    <MySafetyOfficer />
 
                     {/* Role Selection */}
                     <div className="w-full">

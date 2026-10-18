@@ -10,7 +10,7 @@ Word copies of every form a new organization or family signs. The editable sourc
 | Parent consent add-on (families who already signed a media form) | Those families | `Parent consent add-on.docx` | `templates/PARENT-CONSENT-ADDENDUM.md` |
 | Data responsibilities agreement | The organization and vAI, where the organization controls its learners' data | `Data responsibilities agreement.docx` | `templates/CONTROLLER-AGREEMENT-TEMPLATE.md` |
 
-| My path card (one page for every family) | Hand out to each family with the consent form | `My path card (Davidson AI Futures Lab).pdf`; `My path card (blank, for partners).pdf` to fill in by hand; `my-path-card-template.html` to edit | web version at `/my-path` |
+| My path card (one page for every family) | Hand out to each family with the consent form | `My path card (Davidson AI Futures Lab).pdf`; `My path card (blank, for partners).pdf` to fill in by hand; `my-path-card-template.html` to edit | web version at `/my-path?code=JOINCODE` shows that organization's child safety officer and can be printed |
 
 Also: `../LEADER-GUIDE.md` (one page for every leader) and `../Community-Onboarding-Guide.html` (the
 complete starting guide). All forms are drafts for a lawyer to check; a fluent speaker should check any

@@ -132,6 +132,10 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   // creator: making a new org
   const [orgName, setOrgName] = useState('');
   const [orgDescription, setOrgDescription] = useState('');
+  // Required for a new organization: the person families can go to with a safety worry.
+  const [officerName, setOfficerName] = useState('');
+  const [officerEmail, setOfficerEmail] = useState('');
+  const [officerPhone, setOfficerPhone] = useState('');
   const [continent, setContinent] = useState('');
   const [country, setCountry] = useState('');
   const [state, setState] = useState('');
@@ -286,6 +290,8 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
       }
       if (leaderOrgMode === 'create') {
         if (!orgName.trim()) { setError('Please enter your organization name'); return; }
+        if (officerName.trim().length < 2) { setError('Please name your child safety officer (it can be you)'); return; }
+        if (!officerEmail.trim() && !officerPhone.trim()) { setError('Please give your child safety officer an email or a phone/WhatsApp number'); return; }
         if (!continent)      { setError('Please select your continent'); return; }
         if (!country)        { setError('Please select your country'); return; }
         if (!ageMin || !ageMax) { setError('Please enter the learner age range'); return; }
@@ -336,6 +342,9 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
           .insert({
             name:             orgName.trim(),
             description:      orgDescription.trim() || null,
+            child_safety_officer_name:  officerName.trim(),
+            child_safety_officer_email: officerEmail.trim() || null,
+            child_safety_officer_phone: officerPhone.trim() || null,
             join_code:        newCode,          // legacy single column — keep for compat
             join_codes:       [newCode],        // new array column
             leader_id:        actualUserId,
@@ -968,6 +977,22 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                     <input type="text" value={orgName} onChange={e => setOrgName(e.target.value)}
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
                       placeholder="e.g. Davidson AI Futures Lab" />
+                  </div>
+
+                  <div className="stack-y-2 p-3 bg-white rounded-lg border border-indigo-200">
+                    <label className="block text-xs font-semibold text-indigo-900">Child safety officer * (required)</label>
+                    <p className="text-xs text-gray-600">
+                      A named adult whom families and children can go to with a worry, and who follows up on safety alerts. It can be you.
+                      You cannot enrol learners until this is filled in. Their contact details appear on your families' My path card.
+                    </p>
+                    <input type="text" value={officerName} onChange={e => setOfficerName(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Full name" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input type="email" value={officerEmail} onChange={e => setOfficerEmail(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Email" />
+                      <input type="text" value={officerPhone} onChange={e => setOfficerPhone(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Phone or WhatsApp" />
+                    </div>
                   </div>
 
                   <div>
