@@ -3,8 +3,8 @@
 // Public parent and learner handout at /my-path: what nextVillage is for, the learner's path, how
 // children are kept safe, and how families can help. Same content as the printable one-page card
 // (public/docs/My-Path-Card.pdf; sources in docs/forms/). Keep the two in step with docs/CORE-CURRICULUM.md.
-// Contact details are for the Davidson AI Futures Lab; other organizations hand out the blank template
-// version of the card with their own child safety officer filled in.
+// The contact is vAI's Safety Officer. Other organizations hand out the blank template version of the
+// card with their own child safety officer filled in.
 
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -103,8 +103,8 @@ const MyPathPage: React.FC = () => (
       <div className="mt-8 rounded-lg border-2 border-emerald-900 p-4">
         <p className="font-semibold text-gray-900">Questions or concerns?</p>
         <p>
-          Talk to your group leader in person, or contact the child safety officer at the Davidson AI Futures Lab in Oloibiri:{' '}
-          <strong>Confidence Onuoha</strong>, phone or WhatsApp +234 806 417 7653,{' '}
+          Talk to your group leader in person, or contact the Safety Officer:{' '}
+          <strong>Confidence Onuoha</strong>, Safety Officer for vAI (Village AI), the organization behind nextVillage.community. Phone or WhatsApp +234 806 417 7653,{' '}
           <a className="text-blue-700 underline" href="mailto:confidenceonuoha416@gmail.com">confidenceonuoha416@gmail.com</a>.
         </p>
       </div>
