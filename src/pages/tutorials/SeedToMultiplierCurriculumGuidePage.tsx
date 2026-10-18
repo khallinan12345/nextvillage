@@ -212,6 +212,7 @@ const SeedToMultiplierCurriculumGuidePage: React.FC = () => {
             then certify — score Proficient or better to unlock the next phase. The certification exams
             are still the gate; they're just no longer the first thing you see.
           </p>
+          <a href="/my-path" className="mt-3 inline-block text-sm font-semibold text-emerald-200 underline">Share the My Path handout with your family</a>
 
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm text-emerald-50">
             <Map className="h-4 w-4 shrink-0" />

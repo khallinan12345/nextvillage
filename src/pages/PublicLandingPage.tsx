@@ -2588,6 +2588,10 @@ const PublicLandingPage: React.FC = () => {
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
                   <BookOpen size={14} /> Partnership agreement (draft) <ExternalLink size={12} />
                 </a>
+                <a href="/my-path" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
+                  <BookOpen size={14} /> For parents: My path handout <ExternalLink size={12} />
+                </a>
                 <a href="/docs/Data-Protection-Summary.html" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5eead4", fontSize: "0.86rem", fontWeight: 600, textDecoration: "none" }}>
                   <BookOpen size={14} /> Data Protection Summary <ExternalLink size={12} />

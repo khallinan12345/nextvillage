@@ -53,6 +53,7 @@ export const DOC_GROUPS: DocGroup[] = [
       { title: 'Vendor review', path: 'docs/VENDOR-REVIEW.md', about: 'Each outside service and its terms.' },
       { title: 'Data protection impact assessment', path: 'docs/DPIA.md', about: 'Risks to children and how they are reduced.' },
       { title: 'Privacy and compliance plan', path: 'docs/PRIVACY-COMPLIANCE-PLAN.md', about: 'The full plan and its open items.' },
+      { title: 'My path card (handout for families)', path: 'docs/forms/my-path-card-template.html', about: 'One page for parents: what this is, the path, safety. Also at /my-path.' },
       { title: 'Parent consent forms', path: 'docs/forms/README.md', about: 'Print-ready forms and how to use them.' },
     ],
   },

@@ -92,6 +92,7 @@ const CodeAssistantPage = lazy(() => import('./pages/CodeAssistantPage'));
 const AdminStudentDashboard = lazy(() => import('./pages/admin/AdminStudentDashboard'));
 const LearnerGrowthPage = lazy(() => import('./pages/admin/LearnerGrowthPage'));
 const TeamPage = lazy(() => import('./pages/TeamPage'));
+const MyPathPage = lazy(() => import('./pages/MyPathPage'));
 
 // Community Impact Pages
 const AIAmbassadorsPage = lazy(() => import('./pages/community-impact/AIAmbassadorsPage'));
@@ -252,6 +253,7 @@ export const AppContent: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/my-path" element={<MyPathPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/confirmation" element={<ConfirmationPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />

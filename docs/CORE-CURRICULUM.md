@@ -31,6 +31,7 @@ tools.
 | Guardian consent form signed for every learner under 18 | Leader | Recorded on the leader dashboard |
 | Learner signs up with the organization's join code, using their own email if they have one | Learner, with the leader | Leader approves them |
 | Birth year entered (it switches on the stronger protections for under-13s) | Leader or learner | Birth year shown on the profile |
+| Hand each family the **My path card**: what this is about, the path, and how their child is kept safe | Leader | Family has it with the consent form |
 | Ten-minute privacy talk using "Your information, in simple words" | Leader | Learner can say what not to type to the AI |
 | Safeguarding basics: who the child safety officer is, and that telling an adult is never punished | Leader | Learner knows who to tell |
 | One person, one account; how to reset a password | Leader | Learner knows the reset button |
@@ -175,8 +176,8 @@ the earlier steps, community work and Foundations rather than be pushed on.
 6. **Local relevance depends on the organization's community description.** The more a partner tells us
    about its community, the more the lessons feel local. The Ghana and Kenya materials are still being
    adapted.
-7. **A published, one-page learner version of this path does not yet exist.** The platform has the Core
-   Path page and the AI Discovery guide; a printable "my path" card would help learners and families.
+7. **The My path card is new.** It explains the path to families on one page (and at nextvillage.community/my-path).
+   We have not yet asked parents whether it answers their questions; ask leaders to report what families say.
 
 Changes to the order of the path, the pass mark, or what a step teaches are significant changes and go
 through the change process.
@@ -186,6 +187,7 @@ through the change process.
 | Item | Where |
 |------|-------|
 | The Core Path | Tutorials, "The Core Path" |
+| My path card (families) | `/my-path` and `public/docs/My-Path-Card.pdf` |
 | AI Discovery guide | Tutorials, AI Discovery Camp (`/tutorials/ai-discovery-camp`) |
 | AI Learning modules | `/learning/ai` |
 | Skills Development modules | `/learning/skills` |
