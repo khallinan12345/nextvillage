@@ -45,6 +45,7 @@ const PrivacyPage: React.FC = () => (
           <li>AI helpers receive their typed text with names and contact details removed. A safety check reads the latest message as written so a leader can step in if a child may be at risk.</li>
           <li>Children under 13 get extra protections (listed below).</li>
           <li>We do not sell information and we do not show advertising.</li>
+          <li>Want to know what your child will do and why? Read the <Link className="text-blue-700 underline" to="/my-path">My path handout</Link>.</li>
           <li>You can ask us to show, correct or delete everything. Parents without email can simply tell the group leader in person, or contact Confidence Onuoha (child protection lead) at <a className="text-blue-700 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</li>
         </UL>
       </div>
