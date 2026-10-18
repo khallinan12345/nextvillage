@@ -60,6 +60,7 @@ export const DOC_GROUPS: DocGroup[] = [
     id: 'learning',
     label: 'Learning and results',
     docs: [
+      { title: 'Core curriculum for new learners', path: 'docs/CORE-CURRICULUM.md', about: 'What a new learner does, in order, and how each step is checked.', word: 'docs/Core-Curriculum.docx' },
       { title: 'How students are evaluated', path: 'docs/STUDENT-EVALUATION.md', about: 'Every kind of evaluation, with known limits.', word: 'docs/Student-Evaluation.docx' },
       { title: 'Impact and outcomes summary', path: 'docs/IMPACT-SUMMARY.md', about: 'What the data supports and what it does not.', word: 'docs/Impact-Summary.docx' },
     ],
