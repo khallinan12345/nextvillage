@@ -8,10 +8,8 @@ readable by a community leader. Replace each **[bracket]**. Keep a signed copy o
 
 This agreement is between:
 
-**vAI**, the nextVillage.community program, run by **Kevin Hallinan**, 1629 E. 4th St., Dayton, OH 45403,
-USA, with the Davidson AI Futures Lab, Oloibiri, Bayelsa State, Nigeria ("**vAI**"). vAI expects to assign
-this agreement to **Impact Mining, Inc.**, an Ohio nonprofit now being formed, and the Organization agrees
-to that assignment (clause 14);
+The **Davidson AI Futures Lab**, of Oloibiri, Bayelsa State, Nigeria, led by **Mr. Bennywhite Davidson**,
+which runs the nextVillage.community program ("**vAI**");
 
 and
 
@@ -53,10 +51,12 @@ There is **no subscription fee** for the platform.
 1. **A place and equipment:** a safe, supervised space; computers (or tablets) that run a modern web
    browser; reliable internet; and a power plan. (For reference, one Starlink connection has been enough
    for a lab of 14 computers working at once.)
-2. **People:** a **lead mentor** from the Organization who is present when learners are, a named **primary
-   leader** for the platform, and a named **child safety officer** (required: the Organization will not
-   enrol any child until one is named in Schedule B, has completed vAI's leader training and has signed the
-   code of conduct).
+2. **People:** a **lead mentor** from the Organization who is present when learners are, one or more named **site
+   leaders** (one of them is the primary leader for the platform), and a named **child safety officer**
+   (required: the Organization will not enrol any child until one is named in Schedule B, has completed
+   vAI's leader training and has signed the code of conduct). In Schedule B the Organization gives vAI the
+   **name and email of its site leader or leaders** and the **name, email and WhatsApp number of its child
+   safety officer**, and tells vAI at once if any of them changes.
 3. **Learners chosen by the Organization.** The Organization knows its young people; vAI does not choose
    them.
 4. **Honest community information** for tailoring (livelihoods, challenges, hopes, assets).
@@ -188,9 +188,7 @@ Organization's country such as Nigeria, Kenya or Ghana; to be agreed]**. **[Lawy
 
 ## 14. General
 
-1. **Assignment to Impact Mining, Inc.** vAI may assign this agreement to Impact Mining, Inc. when it is
-   formed, on written notice, and the Organization agrees. Otherwise neither side may assign it without the
-   other's written consent.
+1. **Assignment.** Neither side may assign this agreement without the other's written consent.
 2. **Whole agreement; changes in writing.** This agreement and its Schedules are the whole agreement. Changes
    must be in writing and signed by both sides.
 3. **Notices** may be by email to the addresses in Schedule B.
@@ -199,7 +197,7 @@ Organization's country such as Nigeria, Kenya or Ghana; to be agreed]**. **[Lawy
 
 ## Signatures
 
-For **vAI**: ______________________  Name: Kevin Hallinan   Title: Founder, nextVillage.community
+For **vAI**: ______________________  Name: Mr. Bennywhite Davidson   Title: Leader, Davidson AI Futures Lab
 Date: ____________
 
 For the **Organization**: ______________________  Name: ______________________   Title: ____________
@@ -225,9 +223,9 @@ Date: ____________
 |---|---|
 | Legal name and any registration number | |
 | Address, city, state/province, country | |
-| Primary leader (name, email, WhatsApp/phone) | |
+| **Site leader or leaders (required)** (name and email of each; mark the primary leader for the platform) | |
 | Lead mentor (name, email, WhatsApp/phone) | |
-| **Child safety officer (required)** (name, email, WhatsApp/phone) | |
+| **Child safety officer (required)** (name, email and **WhatsApp number**) | |
 | Deputy child safety officer (name, email, WhatsApp/phone) | |
 | Contact for notices (email) | |
 | Learners: age range, approximate number in the first cohort, gender mix | |
