@@ -1,10 +1,11 @@
 # Data protection agreement between program partners (TEMPLATE)
 
-**Draft template for a lawyer to adapt. Not legal advice.** Use one agreement per partner: (a) Impact Mining,
-Inc. and the Davidson AI Futures Lab (Oloibiri, Nigeria); (b) Impact Mining, Inc. and Maji Mazuri
-(Kenya); (c) any later partner. Fill the **[brackets]**. Sign after the entity is official.
+**Draft template for a lawyer to adapt. Not legal advice.** Use one agreement per partner: (a) vAI and Maji Mazuri
+(Kenya); (b) any later partner. The Davidson AI Futures Lab (Oloibiri, Nigeria) is part of vAI; ask the
+lawyer whether it also needs its own agreement for Oloibiri learners. Fill the **[brackets]**.
 
-**Parties:** Impact Mining, Inc., an Ohio nonprofit corporation, **[address]** ("the Platform Operator"); and
+**Parties:** **vAI**, the nextVillage.community program run by the Davidson AI Futures Lab (Oloibiri, Bayelsa State,
+Nigeria) together with Kevin Hallinan, **[legal form and address; lawyer to confirm]** ("the Platform Operator"); and
 **[partner legal name, address, registration]** ("the Partner").
 
 ## 1. Purpose
