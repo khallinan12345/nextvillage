@@ -2,7 +2,7 @@
 //
 // Public parent and learner handout at /my-path: what nextVillage is for, the learner's path, how
 // children are kept safe, and how families can help. Same content as the printable one-page card
-// (public/docs/My-Path-Card.pdf; sources in docs/forms/). Keep the two in step with docs/CORE-CURRICULUM.md.
+// (public/docs/My-Path-Card.pdf; sources in docs/forms/). Keep the two in step with docs/onboarding/CORE-CURRICULUM.md.
 // Whose safety officer is shown: with ?code=<join code> that organization's own child safety officer;
 // for a signed-in member, their organization's; otherwise vAI's Safety Officer. Leaders print it from
 // their dashboard link (nextvillage.community/my-path?code=THEIRCODE).

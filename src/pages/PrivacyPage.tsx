@@ -1,7 +1,7 @@
 // src/pages/PrivacyPage.tsx
 //
 // Public privacy notice, at /privacy. Written to be readable by a young learner. It must match
-// what the platform does (docs/DATA-MAP.md, docs/VENDOR-REVIEW.md, docs/PRIVACY-COMPLIANCE-PLAN.md);
+// what the platform does (docs/privacy-and-legal/DATA-MAP.md, docs/privacy-and-legal/VENDOR-REVIEW.md, docs/privacy-and-legal/PRIVACY-COMPLIANCE-PLAN.md);
 // update it whenever those change. The responsible party is an individual for now and should
 // change when an organization is formed.
 

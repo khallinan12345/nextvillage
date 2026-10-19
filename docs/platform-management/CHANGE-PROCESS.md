@@ -136,9 +136,9 @@ notice are updated if needed; leaders were told; the success measure is written 
 ## 8. Where things live
 
 - **Proposals and tasks:** the GitHub project / issues (template: "Change proposal").
-- **Decisions:** `docs/DECISION-LOG.md`.
+- **Decisions:** `docs/platform-management/DECISION-LOG.md`.
 - **Code review:** pull requests (template in `.github/PULL_REQUEST_TEMPLATE.md`).
-- **Security and privacy documents:** `docs/SECURITY-PROGRAM.md`, `docs/DPIA.md`, `docs/DATA-MAP.md`.
+- **Security and privacy documents:** `docs/platform-management/SECURITY-PROGRAM.md`, `docs/privacy-and-legal/DPIA.md`, `docs/privacy-and-legal/DATA-MAP.md`.
 - **Compliance to-do list:** the shared compliance checklist.
 
 ## 9. Setting this up (first steps)

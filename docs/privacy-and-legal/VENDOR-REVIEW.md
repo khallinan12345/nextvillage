@@ -1,7 +1,7 @@
 # Vendor review: who sees learners' data, and on what terms
 
 Date: 15 October 2026. Written from each vendor's public documentation (links at the bottom) and from
-what our code sends (`docs/DATA-MAP.md`). **Not legal advice.** Several points come from secondary
+what our code sends (`docs/privacy-and-legal/DATA-MAP.md`). **Not legal advice.** Several points come from secondary
 summaries and must be checked on the vendor's own page before they go in a published notice or a
 contract. Nothing here has been signed or negotiated yet.
 

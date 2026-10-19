@@ -1,6 +1,6 @@
 # nextVillage data map, retention and deletion
 
-Status: first complete draft, 12 October 2026. Companion to `docs/Data-Protection-Summary.html`
+Status: first complete draft, 12 October 2026. Companion to `docs/privacy-and-legal/Data-Protection-Summary.html`
 (the Kenya Data Protection Act reading, rev. 3). This file is the working inventory: what we hold,
 who else sees it, how long we keep it, and how a person's data is erased. Counts are approximate
 and were read from the live database on 2026-10-12 (aggregates only, no personal data).

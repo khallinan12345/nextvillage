@@ -2,7 +2,7 @@
 
 <!-- Plain words. Link the proposal issue: Closes #__ -->
 
-## Tier (see docs/CHANGE-PROCESS.md)
+## Tier (see docs/platform-management/CHANGE-PROCESS.md)
 
 - [ ] A. Routine
 - [ ] B. Significant (privacy and safety check done)

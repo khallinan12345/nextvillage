@@ -316,8 +316,8 @@ child's safety or privacy, Confidence Onuoha.
 | Monthly skills report | `api/assess-monthly` |
 | Repeated task scoring | `api/_lib/anchorScoring.js` and `api/score-anchor` |
 | Effort review | `api/_lib/seriousness.js` |
-| AI vendors and data flow | `docs/VENDOR-REVIEW.md`, `docs/DATA-MAP.md` |
-| How a change to any of this is decided | `docs/CHANGE-PROCESS.md` |
+| AI vendors and data flow | `docs/privacy-and-legal/VENDOR-REVIEW.md`, `docs/privacy-and-legal/DATA-MAP.md` |
+| How a change to any of this is decided | `docs/platform-management/CHANGE-PROCESS.md` |
 
 Changing a rubric, a pass line, or what goes to an AI provider is a tier B change under the change
 process, because it affects how children are judged.

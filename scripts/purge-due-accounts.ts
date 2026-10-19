@@ -7,7 +7,7 @@
  * Only accounts with a recorded leader decision of "remove", past their date, and still inactive are
  * included (due_account_removals()). Platform administrators are never included. Same erasure as
  * `npm run user:delete`: files first (database cascades do not touch storage), then the auth user,
- * and database rows cascade. See docs/DATA-MAP.md, "Deletion".
+ * and database rows cascade. See docs/privacy-and-legal/DATA-MAP.md, "Deletion".
  */
 import { createClient } from '@supabase/supabase-js';
 

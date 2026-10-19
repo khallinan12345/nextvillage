@@ -3,7 +3,7 @@
 // Privacy requests (delete my data, withdraw permission, send me a copy) from learners in the
 // leader's organization. Administrators see every organization's. Renders nothing when there are
 // none. Locking an account uses review_membership('declined'), which a leader can already do;
-// the erasure itself is run by an administrator (see docs/runbooks/incident-response.md and
+// the erasure itself is run by an administrator (see docs/platform-management/runbooks/incident-response.md and
 // `npm run user:delete`).
 
 import React, { useCallback, useEffect, useState } from 'react';

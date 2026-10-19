@@ -3,7 +3,7 @@
 // Shown above the "Register" button on every advisor form that stores a record about another person
 // (patient, farmer, fisher, animal keeper, business owner). The helper must confirm that the person
 // knows their details are being recorded and has agreed. Required by the privacy review
-// (docs/AI-LEGAL-REVIEW.md, E5): these people have no account and no other way to object.
+// (docs/privacy-and-legal/AI-LEGAL-REVIEW.md, E5): these people have no account and no other way to object.
 
 import React from 'react';
 

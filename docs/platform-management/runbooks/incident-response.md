@@ -2,8 +2,8 @@
 
 **Owner:** Kevin Hallinan  
 **Last updated:** October 2026  
-**Location in repo:** `docs/runbooks/incident-response.md`  
-**Related:** `docs/DATA-MAP.md` (what we hold, who else sees it, how a person is erased)
+**Location in repo:** `docs/platform-management/runbooks/incident-response.md`  
+**Related:** `docs/privacy-and-legal/DATA-MAP.md` (what we hold, who else sees it, how a person is erased)
 
 Status: first version. Contacts marked **[fill in]** are not set up yet. A privacy attorney should
 review the notification steps before we open in the US, UK or EU.
@@ -134,7 +134,7 @@ Keep messages factual. Do not guess at causes or blame in writing before we know
 ## Afterwards (within a week)
 
 - Write a short, blameless summary: timeline, cause, who was affected, what we did, what we changed.
-- Update `docs/DATA-MAP.md` if the picture of what we hold or who sees it changed.
+- Update `docs/privacy-and-legal/DATA-MAP.md` if the picture of what we hold or who sees it changed.
 - Update the security tracker and this runbook with anything we learned.
 - If a child's safety was involved, review with the organization's leader whether anything in how
   learners report concerns should change.

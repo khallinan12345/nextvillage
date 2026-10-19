@@ -6,8 +6,8 @@
 /api/                        @khallinan12345
 /src/lib/supabaseClient.ts   @khallinan12345
 /src/pages/PrivacyPage.tsx   @khallinan12345
-/docs/SECURITY-PROGRAM.md    @khallinan12345
-/docs/DPIA.md                @khallinan12345
-/docs/DATA-MAP.md            @khallinan12345
+/docs/platform-management/SECURITY-PROGRAM.md    @khallinan12345
+/docs/privacy-and-legal/DPIA.md                @khallinan12345
+/docs/privacy-and-legal/DATA-MAP.md            @khallinan12345
 /docs/templates/             @khallinan12345
 /.github/                    @khallinan12345

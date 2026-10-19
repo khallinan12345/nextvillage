@@ -12,6 +12,6 @@ Word copies of every form a new organization or family signs. The editable sourc
 
 | My path card (one page for every family) | Hand out to each family with the consent form | `My path card (Davidson AI Futures Lab).pdf`; `My path card (blank, for partners).pdf` to fill in by hand; `my-path-card-template.html` to edit | web version at `/my-path?code=JOINCODE` shows that organization's child safety officer and can be printed |
 
-Also: `../LEADER-GUIDE.md` (one page for every leader) and `../Community-Onboarding-Guide.html` (the
+Also: `../onboarding/LEADER-GUIDE.md` (one page for every leader) and `../onboarding/Community-Onboarding-Guide.html` (the
 complete starting guide). All forms are drafts for a lawyer to check; a fluent speaker should check any
 translation before families use it.

@@ -1,7 +1,7 @@
 // src/pages/TeamPage.tsx
 //
 // Team workspace at /team, for leaders and the platform team only. One place for: the documentation
-// library, change proposals (docs/CHANGE-PROCESS.md), open tasks, and the review schedule that shows
+// library, change proposals (docs/platform-management/CHANGE-PROCESS.md), open tasks, and the review schedule that shows
 // what is due. Access is enforced by the database (see migration 20261017120000_team_workspace.sql);
 // the checks here only decide what to show.
 
@@ -187,7 +187,7 @@ const Overview: React.FC<{
       <p className="text-sm text-gray-700 mt-2">
         Anyone on the team can propose a change. The platform team triages proposals weekly and plans monthly. Anything that touches
         children's information, consent or safety gets a privacy and safety check and a second reviewer. Read the full process in the{' '}
-        <a className="text-blue-700 underline" href={docUrl('docs/CHANGE-PROCESS.md')} target="_blank" rel="noopener noreferrer">change process</a>.
+        <a className="text-blue-700 underline" href={docUrl('docs/platform-management/CHANGE-PROCESS.md')} target="_blank" rel="noopener noreferrer">change process</a>.
       </p>
     </div>
   </div>
