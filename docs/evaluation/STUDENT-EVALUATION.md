@@ -280,10 +280,14 @@ Honest list, so the team can decide what to improve. Each should go through the 
    a human educator's review.
 9. **An older monthly-assessment function exists in the database project** next to the live one. Confirm
    it is retired so two systems do not produce different scores.
-10. **Reports to leaders.** The partnership agreement promises monthly progress reports to each
-    organization. Today the monthly report email goes to the platform owner and the effort review to a
-    short recipient list; a per-organization version for leaders needs to be built and checked for what
-    it reveals about each child.
+10. **Reports to leaders (built 19 Oct 2026; sends once recipients are added).** A monthly progress report for each organization's leaders
+    now exists (`api/org-monthly-report.ts`, run on the 4th). It carries each learner's four scores, whether
+    each moved since last month, and sessions. It leaves out what children wrote, the AI's comments about
+    them, safety information, certification counts (the stored count looks unreliable, e.g. 34 passed for
+    one learner) and other organizations' learners. Scores under 10 show as "<10". It sends only to
+    people added as recipients for that organization; see the administrator manual. Open: only a minority
+    of learners get a monthly score today, so most reports will list many learners as "too little
+    activity"; fixing that depends on how the monthly assessment chooses whom to score.
 11. **No appeal path is written for learners.** Section 9 describes how a family can ask for a review.
     A one-page "if you disagree with a score" note for leaders should be added.
 
