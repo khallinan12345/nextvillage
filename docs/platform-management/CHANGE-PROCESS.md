@@ -87,6 +87,13 @@ advisor reviews and the privacy documents are updated **with** the change, not a
 - **Another person reviews** every pull request before it merges (Tier B and C: the security advisor for
   anything touching access, data, AI or consent).
 - Database changes are tested as a learner, a leader of another organization and a signed-out visitor.
+- **Sensitive paths need an approval from Kevin or Randy.** The paths are listed in `.github/CODEOWNERS`
+  (database migrations, edge functions, the API, the privacy page, the security program, the data map and
+  DPIA, the templates, and `.github/`). A pull request that changes one of them gets a check called
+  `protected-paths-review` (the workflow is `.github/workflows/protected-paths-review.yml`). It passes
+  at once when Kevin or Randy opened the pull request. When anyone else opened it, it stays red until Kevin
+  or Randy approves the latest commit; a new commit needs a fresh approval. Pull requests that touch none of
+  those paths are not affected. To change who is exempt, edit `EXEMPT_USERS` in the workflow.
 
 ### Step 6. Release and tell people
 - Merge when the checks pass and the reviewer approves.
