@@ -3,6 +3,18 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.3';
 
+// The learner's name is never sent to the AI. Prompts say [LEARNER]; the real name is put back here,
+// in the result, so feedback and leaderboard text read the same as before.
+const LEARNER_TOKEN = '[LEARNER]';
+function fillLearnerName<T>(value: T, name: string): T {
+  if (typeof value === 'string') return value.split(LEARNER_TOKEN).join(name) as unknown as T;
+  if (Array.isArray(value)) return value.map(v => fillLearnerName(v, name)) as unknown as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, fillLearnerName(v, name)])) as T;
+  }
+  return value;
+}
+
 interface EvaluationResult {
   tier: 'seed' | 'scout' | 'bridge' | 'builder' | 'multiplier';
   tier_label: string;
@@ -408,7 +420,7 @@ async function callClaude(
     .map(pair => `Q: ${pair!.q}\nA: ${pair!.a || '(no answer provided)'}`)
     .join('\n\n');
 
-  const systemPrompt = `You are evaluating a Community AI Challenge submission from a youth learner at the Davidson AI Innovation Center in Nigeria (nextvillage.community).
+  const systemPrompt = `You are evaluating a Community AI Challenge submission from a youth learner in a nextVillage.community partner learning group in Africa (nextvillage.community).
 
 The Community AI Challenge is a TWO-PHASE process:
   Phase 1 - Go into the community: talk to real farmers, fishers, traders, healthcare workers, or family members. Observe real problems. Write what you personally saw and heard.
@@ -442,7 +454,7 @@ TARGET TIER: ${challenge.tier_target}
 CHALLENGE INSTRUCTION: ${challenge.challenge_instruction}
 COMMUNITY ROLE TARGETED: ${challenge.community_role}
 
-LEARNER: ${learnerName}
+LEARNER: [LEARNER] (write [LEARNER] wherever you would use their name; their real name is withheld and is filled in afterwards)
 COMMUNITY MEMBER ROLE REPORTED: ${enrollment.community_member_role || 'not specified'}
 BROUGHT PERSON TO HUB: ${enrollment.brought_person ? 'Yes' : 'No'}
 
@@ -455,9 +467,9 @@ Return a JSON object with exactly these fields:
 {
   "tier": "one of: seed | scout | bridge | builder | multiplier",
   "tier_label": "the label for that tier",
-  "summary": "1-2 sentences describing what ${learnerName} did — written for the public leaderboard and news banner. Third person, specific, celebratory.",
-  "tier_reasoning": "2-3 sentences explaining to ${learnerName} why they earned this tier. Reference what they specifically wrote. Warm and direct.",
-  "follow_up_instruction": "1-2 sentences telling ${learnerName} exactly what to do next to go deeper with this community member or problem. Specific and actionable.",
+  "summary": "1-2 sentences describing what [LEARNER] did — written for the public leaderboard and news banner. Third person, specific, celebratory.",
+  "tier_reasoning": "2-3 sentences explaining to [LEARNER] why they earned this tier. Reference what they specifically wrote. Warm and direct.",
+  "follow_up_instruction": "1-2 sentences telling [LEARNER] exactly what to do next to go deeper with this community member or problem. Specific and actionable.",
   "next_tier_hint": "1 sentence describing what would earn a higher tier next time."
 }`;
 
@@ -490,5 +502,5 @@ Return a JSON object with exactly these fields:
   }
 
   parsed.tier_label = TIER_LABELS[parsed.tier];
-  return parsed;
+  return fillLearnerName(parsed, learnerName);
 }

@@ -31,7 +31,7 @@ import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { logApiCost } from "../lib/api-cost-logger.js";
 import {
   SCORE_KEYS,
-  SYSTEM_PROMPT,
+  systemPromptFor,
   buildScoringPrompt,
   buildTranscriptText,
   hasEnoughContent,
@@ -49,6 +49,13 @@ const supabase = createClient(
 
 type Subject = "attempt" | "original";
 
+interface OrgRow {
+  id: string;
+  name: string | null;
+  city: string | null;
+  country: string | null;
+}
+
 interface AttemptRow {
   id: string;
   user_id: string;
@@ -57,7 +64,7 @@ interface AttemptRow {
   original_transcript: unknown;
 }
 
-async function callModel(userPrompt: string, userId: string): Promise<string> {
+async function callModel(userPrompt: string, userId: string, system: string): Promise<string> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -70,7 +77,7 @@ async function callModel(userPrompt: string, userId: string): Promise<string> {
       model: MODEL,
       max_tokens: 1500,
       output_config: { effort: "medium" },
-      system: SYSTEM_PROMPT,
+      system,
       messages: [{ role: "user", content: userPrompt }],
     }),
   });
@@ -140,11 +147,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  // The scoring prompt names the learner's organization, so look each one up. A failed lookup stops
+  // the run rather than quietly scoring against the wrong context.
+  const batch = jobs.slice(0, limit);
+  const userIds = [...new Set(batch.map((j) => j.attempt.user_id))];
+  const orgByUser = new Map<string, OrgRow | null>();
+  if (userIds.length) {
+    const { data: profs, error: profErr } = await supabase.from("profiles").select("id, organization_id").in("id", userIds);
+    if (profErr) return res.status(500).json({ error: profErr.message });
+    const orgIds = [...new Set((profs ?? []).map((p: { organization_id: string | null }) => p.organization_id).filter(Boolean))] as string[];
+    const orgs = new Map<string, OrgRow>();
+    if (orgIds.length) {
+      const { data: orgRows, error: orgErr } = await supabase.from("organizations").select("id, name, city, country").in("id", orgIds);
+      if (orgErr) return res.status(500).json({ error: orgErr.message });
+      for (const o of (orgRows ?? []) as OrgRow[]) orgs.set(o.id, o);
+    }
+    for (const p of (profs ?? []) as { id: string; organization_id: string | null }[]) {
+      orgByUser.set(p.id, p.organization_id ? orgs.get(p.organization_id) ?? null : null);
+    }
+  }
+
   let scoredCount = 0;
   let insufficient = 0;
   const errors: string[] = [];
 
-  for (const { attempt, subject } of jobs.slice(0, limit)) {
+  for (const { attempt, subject } of batch) {
     if (Date.now() - started > TIME_BUDGET_MS) break;
     try {
       const messages = parseTranscript(subject === "attempt" ? attempt.transcript : attempt.original_transcript);
@@ -161,7 +188,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         continue;
       }
 
-      const reply = await callModel(buildScoringPrompt(buildTranscriptText(messages)), attempt.user_id);
+      const reply = await callModel(
+        buildScoringPrompt(buildTranscriptText(messages)),
+        attempt.user_id,
+        systemPromptFor(orgByUser.get(attempt.user_id))
+      );
       const { scores, evidence } = parseScores(reply) as {
         scores: Record<string, number | null>;
         evidence: Record<string, string[]>;

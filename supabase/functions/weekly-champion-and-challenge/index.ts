@@ -120,7 +120,7 @@ const TIER_LABELS: Record<string, string> = {
 const ORG_CONFIGS: OrgConfig[] = [
   {
     id: 'oloibiri',
-    display_name: 'Davidson AI Innovation Center — Oloibiri',
+    display_name: 'Davidson AI Futures Lab — Oloibiri',
     location: 'Oloibiri, Ogbia LGA, Bayelsa State, Niger Delta, Nigeria',
     dominant_livelihoods:
       'fishing (Kolo Creek, River Nun), cassava farming, plantain, petty trade, ' +
