@@ -1,5 +1,7 @@
 # Data handling and confidentiality commitment (TEMPLATE)
 
+*Printable Word copy: `docs/platform-management/Data-Handling-Commitment.docx`. Edit this file first, then regenerate the Word copy.*
+
 **For every administrator, leader, co-leader, mentor and volunteer who can see learners' information.** Read
 the leader guide and the operations manual first. Draft for a lawyer to check.
 

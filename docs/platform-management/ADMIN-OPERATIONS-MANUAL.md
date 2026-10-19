@@ -146,7 +146,7 @@ Use the project folder on a computer with the project set up (`.env.local` prese
 6. Print the parent forms and begin collecting signatures before approving any learner under 18.
 
 ### 4.8 A leader or administrator joins or leaves the team
-- **Joining:** they read this manual, sign the data handling commitment, and then receive access. Give access to
+- **Joining:** they read this manual, sign the data handling commitment (`Data-Handling-Commitment.docx`, in this folder), and then receive access. Give access to
   the minimum needed.
 - **Leaving:** remove their leader or administrator access the same day, change any shared logins they knew,
   and take back printed forms or devices holding learner information.
