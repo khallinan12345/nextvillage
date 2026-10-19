@@ -147,12 +147,12 @@ order.** Until then the privacy notice names Kevin Hallinan as an individual.
 
 ## 9. Organizations that leave the platform
 
-**Back to Basics Youth Education (Dayton), 19 Oct 2026.** The group is no longer connected to the platform. It is hidden
-from sign-up, its 10 learner accounts cannot sign in, and Kevin chose to keep the data but drop the personal
-identification. Done: each learner's name, email, sign-in identity, avatar, school name and username were removed (they
-are now "Former learner BtB-01" to "BtB-10"), and the free-text note on their guardian-consent records was cleared.
-Their birth year, gender, city, scores, activity and usage records were kept. **Not done, and a known gap:** the chat
-sessions (126 dashboard rows, 42 playground chats), websites (57), games (26), images (349) and videos (18) were kept as
-they are, and may still contain names or faces the children typed or uploaded. So this is account-level
-de-identification only. Decide later whether to delete that content or set an end date for keeping it. The 8 leaders
-and staff of the group were not changed. Girls AI Camp Dayton (formerly Girls AIing & Vibing) has no members.
+**Back to Basics Youth Education (Dayton), 19 Oct 2026.** The group is no longer connected to the platform and is hidden
+from sign-up. Kevin first chose to keep the data without the identification (its 10 learners were blocked from
+signing in and de-identified), then decided he needs none of it. **Final state:** 13 accounts were deleted, with
+everything that belonged to them: the 10 learners (including their chat sessions, websites, games and images) and
+four staff accounts (Lawrence Lindsey, Linda Bolds, Molly Keane, Molly Keane-Sexton). Four accounts remain: Adrienne
+Janae Rice (two accounts, one already merged into the other), a third "Adrienne Rice" account, and Kevin's own
+Back to Basics login. Still present because they belong to the organization rather than a person: 238 generated
+learning modules, 1 site and 10 group-chat rooms tagged to it. The organization record itself is kept (unlisted).
+Girls AI Camp Dayton (formerly Girls AIing & Vibing) has no members.
