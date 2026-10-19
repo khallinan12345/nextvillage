@@ -1,6 +1,6 @@
 # AI legal review: nextVillage privacy and child-protection position
 
-**Date:** 16 October 2026. **Reviewer:** Claude (an AI). **For:** Kevin Hallinan / Impact Mining, Inc. (forming).
+**Date:** 16 October 2026. **Reviewer:** Claude (an AI). **For:** Kevin Hallinan, for vAI. Impact Mining, Inc. (forming) is a US funding vehicle, not the platform operator.
 
 ## 0. What this is, and what it is not
 
