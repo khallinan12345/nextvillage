@@ -35,7 +35,7 @@ const UngroupedMembersCard: React.FC = () => {
     if (!isAdmin) return;
     const [{ data: list, error: listError }, { data: orgList }] = await Promise.all([
       supabase.rpc('list_members_without_org'),
-      supabase.from('organizations').select('id, name').order('name'),
+      supabase.from('organizations').select('id, name').eq('is_listed', true).order('name'),
     ]);
     if (listError) { console.warn('[UngroupedMembersCard] load failed:', listError.message); return; }
     setPeople((list ?? []) as Person[]);

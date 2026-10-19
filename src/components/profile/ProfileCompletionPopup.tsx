@@ -1,6 +1,6 @@
 // src/components/profile/ProfileCompletionPopup.tsx
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { findSimilarProfile, sendDuplicateResetLink, type SimilarProfileMatch } from '../../lib/duplicateDetection';
 import { User, GraduationCap, Globe, MapPin, Key, Building2, Search, PlusCircle, Upload, Copy, CheckCircle } from 'lucide-react';
@@ -120,9 +120,14 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   const [joinCodeStatus, setJoinCodeStatus] = useState<'idle'|'checking'|'found'|'not_found'>('idle');
   const [orgCtx, setOrgCtx] = useState<OrgContext | null>(null);  // filled when join code found
   const [gradeLevel, setGradeLevel] = useState('3');
+  // The organizations people may choose from when they have no join code (not free text, so no misspellings).
+  const [directory, setDirectory] = useState<OrgContext[]>([]);
+  const [listedOrgId, setListedOrgId] = useState('');
+  const [coListedOrgId, setCoListedOrgId] = useState('');
 
   // ── Leader-only ────────────────────────────────────────────────────────────
-  const [leaderOrgMode, setLeaderOrgMode] = useState<LeaderOrgMode>('choose');
+  // New organizations are set up by the platform administrator, never at sign-up, so leaders start on 'join'.
+  const [leaderOrgMode, setLeaderOrgMode] = useState<LeaderOrgMode>('join');
 
   // co-leader: joining an existing org
   const [coJoinCode, setCoJoinCode]           = useState('');
@@ -217,10 +222,36 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
     }
   };
 
+  // ── Directory of organizations people can choose from ─────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc('list_joinable_organizations');
+      if (!cancelled && Array.isArray(data)) setDirectory(data as OrgContext[]);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleListedOrgChange = (id: string) => {
+    setListedOrgId(id);
+    const found = directory.find(o => o.id === id) ?? null;
+    setJoinCode(''); setJoinCodeStatus('idle');
+    setOrgCtx(found);
+    if (found?.learner_gender === 'female') setGender('female');
+    if (found?.learner_gender === 'male')   setGender('male');
+  };
+
+  const handleCoListedOrgChange = (id: string) => {
+    setCoListedOrgId(id);
+    setCoJoinCode(''); setCoJoinStatus('idle');
+    setCoOrgCtx(directory.find(o => o.id === id) ?? null);
+  };
+
   // ── Learner join code lookup (array-aware via RPC) ────────────────────────
   const handleJoinCodeChange = async (code: string) => {
     const upper = code.toUpperCase();
     setJoinCode(upper);
+    setListedOrgId('');
     if (upper.length < 6) { setJoinCodeStatus('idle'); setOrgCtx(null); return; }
     setJoinCodeStatus('checking');
     const { data } = await supabase
@@ -241,6 +272,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   const handleCoJoinCodeChange = async (code: string) => {
     const upper = code.toUpperCase();
     setCoJoinCode(upper);
+    setCoListedOrgId('');
     if (upper.length < 6) { setCoJoinStatus('idle'); setCoOrgCtx(null); return; }
     setCoJoinStatus('checking');
     const { data } = await supabase
@@ -278,7 +310,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
     // Learners can only join through an organization — a leader then
     // approves them before they see anyone else in it.
     if (role === 'student' && !orgCtx) {
-      setError('Please enter the join code your leader gave you'); return;
+      setError('Please enter your join code, or choose your organization from the list'); return;
     }
 
     if (role === 'site_leader') {
@@ -286,7 +318,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         setError('Please choose to join an existing organization or create a new one'); return;
       }
       if (leaderOrgMode === 'join') {
-        if (!coOrgCtx) { setError('Please enter a valid organization join code'); return; }
+        if (!coOrgCtx) { setError('Please enter a valid join code, or choose the organization from the list'); return; }
       }
       if (leaderOrgMode === 'create') {
         if (!orgName.trim()) { setError('Please enter your organization name'); return; }
@@ -329,7 +361,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
       // ── LEADER: join existing org ──────────────────────────────────────────
       if (role === 'site_leader' && leaderOrgMode === 'join' && coOrgCtx) {
         organization_id = coOrgCtx.id;
-        join_code_used  = coJoinCode;
+        join_code_used  = coJoinCode || null;
         // co-leader just links their profile to the org; leader_id stays unchanged
       }
 
@@ -427,7 +459,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
       // ── LEARNER with code: link to org ─────────────────────────────────────
       if (role === 'student' && orgCtx) {
         organization_id = orgCtx.id;
-        join_code_used  = joinCode;
+        join_code_used  = joinCode || null;
       }
 
       // ── Determine location ─────────────────────────────────────────────────
@@ -488,7 +520,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
 
       // ── Joined an existing org: the database put this profile in
       // 'pending' — email that org's leaders so they can approve it ────────
-      if (join_code_used) {
+      if (join_code_used || (organization_id && leaderOrgMode !== 'create')) {
         fetch('/api/notify-join-request', {
           method: 'POST',
           headers: { Authorization: `Bearer ${session.access_token}` },
@@ -808,6 +840,23 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                   )}
                 </div>
 
+                {/* No code? Choose from the list (no typing, so no misspellings) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Building2 className="inline mr-1" size={14} /> No join code? Choose your organization
+                  </label>
+                  <select value={listedOrgId} onChange={e => handleListedOrgChange(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="">Select your organization…</option>
+                    {directory.map(o => (<option key={o.id} value={o.id}>{o.name}</option>))}
+                  </select>
+                  {listedOrgId && (
+                    <p className="mt-1.5 text-xs text-gray-500">
+                      A leader of this organization will approve you before you can see anything.
+                    </p>
+                  )}
+                </div>
+
                 {/* Gender — only shown if org has mixed genders or no org */}
                 {learnerNeedsGender && (
                   <div>
@@ -911,8 +960,8 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                   </label>
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     {([
-                      { mode: 'create' as LeaderOrgMode, Icon: PlusCircle, label: 'Register My Organization', desc: 'I am the primary leader — set up a new org' },
-                      { mode: 'join'   as LeaderOrgMode, Icon: Search,     label: 'Join as Co-Facilitator',   desc: 'Another leader already registered — I have a join code' },
+                      // New organizations are created by the platform administrator, not at sign-up.
+                      { mode: 'join'   as LeaderOrgMode, Icon: Search,     label: 'Join my organization',   desc: 'Use your join code, or choose your organization from the list' },
                     ]).map(({ mode, Icon, label, desc }) => (
                       <button key={mode} type="button"
                         onClick={() => setLeaderOrgMode(mode)}
@@ -960,6 +1009,21 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                         )}
                         {coJoinStatus === 'not_found' && coJoinCode.length === 6 && (
                           <p className="mt-1.5 text-sm text-red-600">Code not found — check with the primary leader</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <Building2 className="inline mr-1" size={12} /> No join code? Choose your organization
+                        </label>
+                        <select value={coListedOrgId} onChange={e => handleCoListedOrgChange(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-sm">
+                          <option value="">Select your organization…</option>
+                          {directory.map(o => (<option key={o.id} value={o.id}>{o.name}</option>))}
+                        </select>
+                        {coListedOrgId && coOrgCtx && (
+                          <p className="mt-1.5 text-xs text-indigo-600">
+                            The platform administrator will approve you before you can see {coOrgCtx.name}'s learners.
+                          </p>
                         )}
                       </div>
                     </div>
