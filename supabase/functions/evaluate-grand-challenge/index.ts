@@ -21,6 +21,18 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.3';
 
+// The learner's name is never sent to the AI. Prompts say [LEARNER]; the real name is put back here,
+// in the result, so feedback and leaderboard text read the same as before.
+const LEARNER_TOKEN = '[LEARNER]';
+function fillLearnerName<T>(value: T, name: string): T {
+  if (typeof value === 'string') return value.split(LEARNER_TOKEN).join(name) as unknown as T;
+  if (Array.isArray(value)) return value.map(v => fillLearnerName(v, name)) as unknown as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, fillLearnerName(v, name)])) as T;
+  }
+  return value;
+}
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -308,7 +320,7 @@ async function callClaude(
 ): Promise<GrandChallengeEvaluation> {
   const { learnerName, submission, quarter, evidence } = ctx;
 
-  const systemPrompt = `You are evaluating a Quarterly Grand Challenge submission from a youth learner at the Davidson AI Innovation Center in Oloibiri, Nigeria (nextvillage.community).
+  const systemPrompt = `You are evaluating a Quarterly Grand Challenge submission from a youth learner in a nextVillage.community partner learning group in Africa (nextvillage.community).
 
 The Grand Challenge is a SUSTAINED QUARTERLY JOURNEY — very different from a single weekly action. The learner has documented their relationship with one real community member over multiple weeks, using AI to deepen understanding and drive real change.
 
@@ -340,7 +352,7 @@ QUARTER: ${quarter.quarter} (${quarter.start_date} to ${quarter.submission_deadl
 ORG: ${submission.org_id}
 PAGE: ${submission.community_impact_slug}
 
-LEARNER: ${learnerName}
+LEARNER: [LEARNER] (write [LEARNER] wherever you would use their name; their real name is withheld and is filled in afterwards)
 COMMUNITY MEMBER: ${submission.community_member_name ?? 'not named'} (${submission.community_member_role ?? 'role not specified'})
 JOURNAL ENTRIES: ${submission.journal_entry_count}
 WEEKS DOCUMENTED: ${submission.weeks_documented}
@@ -353,12 +365,12 @@ Return a JSON object with exactly these fields:
 {
   "tier": "one of: seed | scout | bridge | builder | multiplier",
   "tier_label": "the label for that tier",
-  "summary": "2-3 sentences describing ${learnerName}'s quarterly journey — written for the public leaderboard and ceremony. Third person, specific, celebratory.",
-  "impact_reasoning": "3-4 sentences explaining to ${learnerName} why they earned this tier. Reference specific details from their submission. Warm, honest, and direct.",
+  "summary": "2-3 sentences describing [LEARNER]'s quarterly journey — written for the public leaderboard and ceremony. Third person, specific, celebratory.",
+  "impact_reasoning": "3-4 sentences explaining to [LEARNER] why they earned this tier. Reference specific details from their submission. Warm, honest, and direct.",
   "sustained_engagement_score": 0,
   "community_depth_score": 0,
   "ai_integration_score": 0,
-  "follow_up_instruction": "1-2 sentences telling ${learnerName} what to focus on next quarter to go deeper. Specific and actionable.",
+  "follow_up_instruction": "1-2 sentences telling [LEARNER] what to focus on next quarter to go deeper. Specific and actionable.",
   "prize_description": "1 sentence describing what this tier earns at the quarterly ceremony."
 }`;
 
@@ -391,5 +403,5 @@ Return a JSON object with exactly these fields:
   }
 
   parsed.tier_label = TIER_LABELS[parsed.tier];
-  return parsed;
+  return fillLearnerName(parsed, learnerName);
 }

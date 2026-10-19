@@ -259,14 +259,18 @@ Honest list, so the team can decide what to improve. Each should go through the 
    session evaluator (which used OpenAI) and the certification evaluations in the chat route (which used
    Haiku) were all moved to it. Edge functions take effect when deployed. Challenge and task *writing*
    (not grading) may still use other models.
-3. **Some evaluators still send the learner's name.** The two challenge evaluators include the learner's
-   name from their profile in the text sent to the AI so the feedback can address them. Using only a
-   first name, or none, is safer and should be considered.
-4. **The challenge prompts still say "Davidson AI Innovation Center".** They need updating to the
-   Davidson AI Futures Lab and to be organization-neutral for new partners.
-5. **Some prompts are written for Oloibiri.** The repeated-task scorer describes "a rural community with a
-   new solar mini-grid". Before Kenya and Ghana learners are scored, the wording should be checked so it
-   does not disadvantage them.
+3. **Learner names no longer reach the AI (resolved 18 Oct 2026).** The two challenge evaluators, the grand-challenge
+   evaluator and the grand-challenge submission review now send "[LEARNER]" instead of the name; the real
+   name is put back into the result afterwards, so the feedback reads the same. (The learner's own
+   written answers are sent as written; a learner can still type a name into them.)
+4. **The challenge prompts now say Davidson AI Futures Lab or are organization-neutral (resolved 18 Oct 2026).** The evaluators and the winner selection now
+   describe "a nextVillage.community partner learning group in Africa", and the generated challenges name
+   the Davidson AI Futures Lab.
+5. **The repeated-task scorer no longer assumes Oloibiri (resolved 18 Oct 2026).** Oloibiri learners are scored with the original
+   wording, unchanged, so their earlier scores stay comparable. Every other organization (and a learner
+   with none) gets a neutral description built from its own name and place, and a language note that does
+   not assume Nigerian English or Pidgin. The rubric is identical. Still Oloibiri-specific: the monthly
+   assessment prompt (its Productive Use of Energy research framework) and the effort-review prompt.
 6. **Which certifications use which route needs checking.** Certification evaluations in the chat
    route (any page named *CertificationPage) now use Sonnet 5.5. A few (financial literacy, solar
    engineering, web development) may reach the AI by a different path and should still be confirmed.

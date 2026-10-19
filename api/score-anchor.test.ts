@@ -8,11 +8,13 @@ const state = {
   attempts: [] as Row[],
   done: [] as Row[],
   upserts: [] as Row[],
+  profiles: [] as Row[],
+  orgs: [] as Row[],
 };
 
 function chain(result: () => unknown) {
   const q: Record<string, unknown> = {};
-  for (const m of ['select', 'not', 'order', 'limit']) q[m] = () => q;
+  for (const m of ['select', 'not', 'order', 'limit', 'in']) q[m] = () => q;
   q.then = (resolve: (v: unknown) => unknown) => Promise.resolve(result()).then(resolve);
   return q;
 }
@@ -21,6 +23,8 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     from: (table: string) => {
       if (table === 'anchor_attempts') return chain(() => ({ data: state.attempts, error: null }));
+      if (table === 'profiles') return chain(() => ({ data: state.profiles, error: null }));
+      if (table === 'organizations') return chain(() => ({ data: state.orgs, error: null }));
       return {
         ...(chain(() => ({ data: state.done, error: null })) as object),
         upsert: (row: Row) => {
@@ -46,6 +50,8 @@ beforeEach(() => {
   state.attempts = [];
   state.done = [];
   state.upserts = [];
+  state.profiles = [];
+  state.orgs = [];
   modelRequests = [];
   process.env.CRON_SECRET = 'secret';
   process.env.SUPABASE_URL = 'http://localhost';
@@ -99,6 +105,26 @@ describe('score-anchor', () => {
     expect(modelRequests[0].body.model).toBe('claude-sonnet-5-5');
     expect(modelRequests[0].body).not.toHaveProperty('temperature');
     expect(modelRequests[0].body.output_config).toEqual({ effort: 'medium' });
+  });
+
+  it('keeps the original Oloibiri prompt for Oloibiri learners and uses a neutral one for everyone else', async () => {
+    const OLOIBIRI = 'a1b2c3d4-0001-0001-0001-000000000001';
+    state.attempts = [
+      { id: 'o1', user_id: 'u1', kind: 'checkpoint', transcript: talk('x'), original_transcript: null },
+      { id: 'k1', user_id: 'u2', kind: 'checkpoint', transcript: talk('y'), original_transcript: null },
+    ];
+    state.profiles = [{ id: 'u1', organization_id: OLOIBIRI }, { id: 'u2', organization_id: 'maji' }];
+    state.orgs = [
+      { id: OLOIBIRI, name: 'Davidson AI Futures Lab', city: 'Oloibiri', country: 'Nigeria' },
+      { id: 'maji', name: 'Maji Mazuri', city: 'Nairobi', country: 'Kenya' },
+    ];
+    await run();
+    expect(modelRequests[0].system).toContain('Oloibiri, Nigeria, a rural community with a new solar mini-grid');
+    expect(modelRequests[0].system).toContain('Nigerian English or Pidgin');
+    expect(modelRequests[1].system).not.toContain('Oloibiri');
+    expect(modelRequests[1].system).not.toContain('solar mini-grid');
+    expect(modelRequests[1].system).toContain('Maji Mazuri in Nairobi, Kenya');
+    expect(modelRequests[1].system).toContain('Score four dimensions from 0 to 100');
   });
 
   it('skips transcripts that already have a score', async () => {

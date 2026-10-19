@@ -19,6 +19,18 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.3';
 
+// The learner's name is never sent to the AI. Prompts say [LEARNER]; the real name is put back here,
+// in the result, so feedback and leaderboard text read the same as before.
+const LEARNER_TOKEN = '[LEARNER]';
+function fillLearnerName<T>(value: T, name: string): T {
+  if (typeof value === 'string') return value.split(LEARNER_TOKEN).join(name) as unknown as T;
+  if (Array.isArray(value)) return value.map(v => fillLearnerName(v, name)) as unknown as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, fillLearnerName(v, name)])) as T;
+  }
+  return value;
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface SubmissionSummary {
@@ -342,7 +354,7 @@ Change: ${e.change_observed}`.trim()).join('\n\n');
     system: `You are evaluating a Grand Challenge submission. Respond ONLY with valid JSON. No markdown.`,
     messages: [{
       role: 'user',
-      content: `Evaluate this submission from ${learnerName}.
+      content: `Evaluate this submission from [LEARNER] (write [LEARNER] wherever you would use their name; their real name is withheld and is filled in afterwards).
 
 TITLE: ${submission.title}
 DOMAIN: ${submission.community_impact_slug}
@@ -360,7 +372,7 @@ Return JSON: { "tier": "seed|scout|bridge|builder|multiplier", "tier_label": "..
   const raw = response.content.filter(b => b.type === 'text')
     .map(b => (b as any).text).join('');
   const clean = raw.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  const parsed = JSON.parse(clean);
+  const parsed = fillLearnerName(JSON.parse(clean), learnerName);
 
   await supabase
     .from('grand_challenge_submissions')
@@ -403,7 +415,7 @@ Evidence strength: ${s.evidence_strength}
     // Sonnet 5.5 rejects `temperature`; effort is set to medium for grading. Cast: SDK 0.27 types lack output_config.
     ...({ output_config: { effort: 'medium' } } as Record<string, unknown>),
     max_tokens: 1200,
-    system: `You are selecting the winner of the ${quarter} Grand Challenge at the Davidson AI Innovation Center in ${orgId}, Nigeria (nextvillage.community).
+    system: `You are selecting the winner of the ${quarter} Grand Challenge at a nextVillage.community partner learning group (${orgId}) in Africa.
 
 Youth learners have spent 3 months taking AI out into their community — helping farmers, fishers, traders, families — and documenting what changed. You are choosing the submission that best demonstrates sustained, documented, real-world community impact.
 

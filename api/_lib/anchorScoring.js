@@ -16,9 +16,10 @@ const MAX_TOTAL_CHARS = 24000;
 const MAX_EVIDENCE_ITEMS = 3;
 const MAX_EVIDENCE_CHARS = 300;
 
-export const SYSTEM_PROMPT = `You are an expert educational assessment analyst for an AI learning lab in Oloibiri, Nigeria, a rural community with a new solar mini-grid. Learners are aged 12 to 24 and are developing AI and digital skills, often for the first time.
+function buildPrompt(context, language) {
+  return `${context}
 
-You will read one conversation between a learner and an AI facilitator during a prompt-writing activity. Score only what the learner's own messages show. Score the thinking, not the polish: learners may write in Nigerian English or Pidgin, and spelling and grammar must not lower a score. Do not reward length for its own sake.
+You will read one conversation between a learner and an AI facilitator during a prompt-writing activity. Score only what the learner's own messages show. Score the thinking, not the polish: ${language} Do not reward length for its own sake.
 
 Score four dimensions from 0 to 100:
 - cognitive: understanding of the task and the ideas in it, and applying them accurately (for example, knowing what makes a request to an AI clear, specific and useful).
@@ -37,6 +38,28 @@ Return a single JSON object and nothing else, with exactly these fields:
   "problem_solving_score": <0-100 or null>, "problem_solving_evidence": ["..."],
   "creativity_score": <0-100 or null>, "creativity_evidence": ["..."]
 }`;
+}
+
+// The Oloibiri wording is kept exactly as it was so scores already recorded there stay comparable.
+export const OLOIBIRI_ORG_ID = 'a1b2c3d4-0001-0001-0001-000000000001';
+const OLOIBIRI_CONTEXT = "You are an expert educational assessment analyst for an AI learning lab in Oloibiri, Nigeria, a rural community with a new solar mini-grid. Learners are aged 12 to 24 and are developing AI and digital skills, often for the first time.";
+const OLOIBIRI_LANGUAGE = "learners may write in Nigerian English or Pidgin, and spelling and grammar must not lower a score.";
+export const SYSTEM_PROMPT = buildPrompt(OLOIBIRI_CONTEXT, OLOIBIRI_LANGUAGE);
+
+/**
+ * The system prompt for a learner's organization. Oloibiri keeps its original wording. Every other
+ * organization (or a learner with none) gets a neutral description built from its own name and place, and a language note
+ * that does not assume Nigerian English or Pidgin, so a Kenyan or Ghanaian learner is not read
+ * against a context that is not theirs. Everything that defines the rubric is identical.
+ */
+export function systemPromptFor(org) {
+  if (org && org.id === OLOIBIRI_ORG_ID) return SYSTEM_PROMPT;
+  const place = [org?.city, org?.country].filter(Boolean).join(', ');
+  const name = org?.name ? `${org.name}` : 'a partner community';
+  const context = `You are an expert educational assessment analyst for an AI learning program run with ${name}${place ? ` in ${place}` : ''}. Learners are aged 12 to 24 and are developing AI and digital skills, often for the first time.`;
+  const language = 'learners may write in a local variety of English, in Pidgin or another local language, or in a mix, and spelling and grammar must not lower a score.';
+  return buildPrompt(context, language);
+}
 
 /** Accepts an array or a JSON string; returns [{role, content}] with text content only. */
 export function parseTranscript(raw) {
