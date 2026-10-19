@@ -196,6 +196,10 @@ tell the platform administrator.
   pull requests.
 - **Monthly assessment.** If a manual run is ever started and stops partway, its partial rows can block the
   next scheduled run; ask the technical maintainer before re-running.
+- **Progress report page.** Site leaders, teachers and facilitators open **Progress report** in the menu to see their own
+  organization's monthly scores (never another organization's); platform administrators choose an organization. The page
+  reads `get_org_progress_report` in the database, which refuses everyone else. Roles with no access: `leader`,
+  `research_lead`, `site_administrator`, learners.
 - **Organization progress reports.** On the 4th of each month `/api/org-monthly-report` emails each
   organization's leaders a progress report for their own learners (scores, movement, sessions; nothing the
   children wrote). It sends only to people you add: `insert into report_recipients (report, email, name)
