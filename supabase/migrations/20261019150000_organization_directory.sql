@@ -36,13 +36,13 @@ BEGIN
   UPDATE data_requests             SET organization_id = main WHERE organization_id = ANY(dupes);
   UPDATE inactive_account_reviews  SET organization_id = main WHERE organization_id = ANY(dupes);
 
-  -- keep every old join code working on the surviving organization
+  -- keep every old join code working on the surviving organization. A code may belong to only one
+  -- organization at a time, so remember the codes, delete the duplicates, then add the codes to the main one.
   SELECT array_agg(DISTINCT c) INTO extra FROM organizations o, unnest(o.join_codes) c WHERE o.id = ANY(dupes);
+  DELETE FROM organizations WHERE id = ANY(dupes);
   UPDATE organizations
      SET join_codes = (SELECT array_agg(DISTINCT c) FROM unnest(join_codes || coalesce(extra, '{}')) c)
    WHERE id = main;
-
-  DELETE FROM organizations WHERE id = ANY(dupes);
 END $$;
 
 -- Funders
