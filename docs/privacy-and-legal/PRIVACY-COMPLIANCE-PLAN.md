@@ -114,25 +114,33 @@ a group; incident runbook; data map; vendor review.
 ## 8. Future action: when Impact Mining, Inc. becomes official
 
 Kevin is forming **Impact Mining, Inc.**, an Ohio nonprofit corporation (bank account in progress, 16 Oct
-2026). **When Kevin says it is official, do these in order.** Until then the privacy notice names Kevin
-Hallinan as an individual.
+2026). **Its role (Kevin, 18 Oct 2026): a US funding vehicle that brings donations to vAI in Africa, and
+possibly later brings services to the US and helps manage them. vAI, not Impact Mining, owns the
+platform.** "vAI" is the program run by the Davidson AI Futures Lab (Oloibiri) together with Kevin
+Hallinan; the partnership agreement says so in clause 6.2. **When Kevin says it is official, do these in
+order.** Until then the privacy notice names Kevin Hallinan as an individual.
 
 1. **Collect the facts:** exact legal name, Ohio filing date, registered address, officers/board, EIN, and
    a privacy contact address (ideally a role address such as `privacy@nextvillage.community`).
-2. **Public documents:** change the responsible party in `src/pages/PrivacyPage.tsx` (and its date); update
-   the roles table in `public/docs/Data-Protection-Summary.html` (and the copy in `docs/`); update this plan,
-   `DATA-MAP.md` and `VENDOR-REVIEW.md`; fix the landing-page footer and copyright line (it currently names
-   the Davidson AI Futures Lab only).
-3. **Move the accounts to the entity:** vendor accounts and billing are probably in Kevin's name today
-   (Supabase, Vercel, GitHub, Anthropic, OpenAI, Resend, Replicate, ElevenLabs, E2B, Cloudflare, the domain
-   `nextvillage.community`). Transfer or re-create them under Impact Mining, Inc. and **re-accept each
-   data processing agreement in the entity's name**.
-4. **Agreement with the Nigerian partner:** a short written agreement between Impact Mining, Inc. and the
-   Davidson AI Futures Lab (and Maji Mazuri in Kenya) saying who is the controller, who holds the signed
-   guardian consent forms, who answers requests, and who reports a breach and how fast.
-5. **Re-check the legal questions:** COPPA status of a nonprofit (it may fall outside the FTC's reach but
-   the platform follows it anyway), Nigerian registration/DPO for a foreign nonprofit processing Nigerian
-   children's data, and whether a local representative is needed.
-6. **Optional, later:** federal tax-exempt (501(c)(3)) status, board-level insurance, a named board member
+2. **Ask Kevin who is the responsible party for the platform** (vAI as Kevin plus the Lab, Kevin alone, or
+   the nonprofit for US services only). Do not assume it is Impact Mining. Then update, as he decides:
+   `src/pages/PrivacyPage.tsx` (and its date), the roles table in
+   `docs/privacy-and-legal/Data-Protection-Summary.html` (and its copy in `public/docs/`), this plan,
+   `DATA-MAP.md`, `VENDOR-REVIEW.md`, and the landing-page footer and copyright line.
+3. **Donations and funders:** describe Impact Mining, Inc. as the funding vehicle in
+   `docs/fund-raising/FUNDER-DATA-PROTECTION-SUMMARY.md` and the funder materials; check with a lawyer how
+   donations reach vAI in Africa (grants, restrictions, reporting).
+4. **Vendor accounts:** they are probably in Kevin's name today (Supabase, Vercel, GitHub, Anthropic,
+   OpenAI, Resend, Replicate, ElevenLabs, E2B, Cloudflare, the domain `nextvillage.community`). Keep them
+   with vAI's owner as Kevin decides; if he moves any to the entity, **re-accept each data processing
+   agreement in the new account holder's name** (see `VENDOR-DPA-CHECKLIST.md`).
+5. **Agreements with partners:** `docs/templates/CONTROLLER-AGREEMENT-TEMPLATE.md` currently names Impact
+   Mining, Inc. as the platform operator; change it to vAI (or whoever Kevin decides) so it matches the
+   partnership agreement. It says who is the controller, who holds the signed guardian consent forms, who
+   answers requests, and who reports a breach and how fast.
+6. **Re-check the legal questions:** COPPA status of whoever operates the platform, Nigerian
+   registration/DPO for a foreign operator processing Nigerian children's data, and whether a local
+   representative is needed.
+7. **Optional, later:** federal tax-exempt (501(c)(3)) status, board-level insurance, a named board member
    responsible for privacy.
-7. **Update the security tracker** and the memory notes so future sessions use the entity name.
+8. **Update the security tracker** and the memory notes so future sessions use the right names.

@@ -103,7 +103,8 @@ There is **no subscription fee** for the platform.
 1. The Organization keeps ownership of its **name, logo and marks**, and gives vAI permission to use them
    on the Organization's version of the site and in vAI's reports and public description of the
    partnership (with the Organization's approval of any public use).
-2. vAI keeps ownership of the **platform, software and learning modules.** The Organization receives a
+2. vAI (the program run by the Davidson AI Futures Lab together with Kevin Hallinan) keeps ownership of the
+   **platform, software and learning modules.** The Organization receives a
    non-exclusive right to use them during this agreement for its learners.
 3. Content written specifically for the Organization's community is available to the Organization during
    this agreement and afterward for non-commercial educational use in its own community.
