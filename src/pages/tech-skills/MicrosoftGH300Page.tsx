@@ -147,7 +147,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'GitHub offers three account types: Personal accounts (individual users), Organisation accounts (teams and companies), and Enterprise accounts (large organisations with advanced security). Repositories can be Public (anyone can see), Private (only invited people), or Internal (visible to org members).',
-      question: 'The Girls AIing platform is built by a small team and the code should only be visible to team members. Should the repository be Public, Private, or Internal — and what account type makes most sense for the organisation?',
+      question: 'The nextVillage platform is built by a small team and the code should only be visible to team members. Should the repository be Public, Private, or Internal — and what account type makes most sense for the organisation?',
     },
   ],
   repos_basics: [
@@ -433,7 +433,7 @@ const GH300Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
       <p className="text-xs text-gray-400 leading-relaxed">
         Each topic uses the <strong className="text-white">Socratic method</strong> — you explain concepts in your
         own words before the AI confirms or corrects. This builds genuine understanding, not just memorisation.
-        Examples are grounded in real development scenarios from the <strong className="text-white">Girls AIing platform</strong> and
+        Examples are grounded in real development scenarios from the <strong className="text-white">nextVillage platform</strong> and
         community projects in <strong className="text-white">Oloibiri, Nigeria</strong>.
       </p>
     </div>

@@ -109,7 +109,7 @@ async function logEvent({ function_name, event_type, severity, payload, user_id,
       body: JSON.stringify({
         from:    'triage@nextvillage.community',
         to:      ALERT_EMAIL,
-        subject: `[Girls AIing] ${severity.toUpperCase()}: ${event_type} in ${function_name}`,
+        subject: `[nextVillage] ${severity.toUpperCase()}: ${event_type} in ${function_name}`,
         html: `<h2>${event_type}</h2><p><strong>Function:</strong> ${function_name}</p>
                <pre>${JSON.stringify(payload, null, 2)}</pre>`,
       }),

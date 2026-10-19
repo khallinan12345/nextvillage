@@ -68,7 +68,7 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
   const [validating, setValidating]       = useState(false);
 
   const [repoName, setRepoName]           = useState(slugify(sessionName));
-  const [repoDesc, setRepoDesc]           = useState('Built with the Girls AIing and Vibing full-stack platform');
+  const [repoDesc, setRepoDesc]           = useState('Built with the nextVillage full-stack platform');
   const [repoPrivate, setRepoPrivate]     = useState(false);
   const [creating, setCreating]           = useState(false);
   const [repo, setRepo]                   = useState<RepoInfo | null>(null);
@@ -130,7 +130,7 @@ const GitHubPanel: React.FC<GitHubPanelProps> = ({ projectFiles, sessionName }) 
       log('Initialising repository...');
       await ghFetch(`/repos/${githubUser}/${repo.name}/contents/README.md`, token, 'PUT', {
         message: 'Initial commit — project scaffold',
-        content: toBase64(`# ${sessionName}\n\nBuilt with the Girls AIing and Vibing full-stack platform.\n`),
+        content: toBase64(`# ${sessionName}\n\nBuilt with the nextVillage full-stack platform.\n`),
       });
 
       // 2. Push each project file

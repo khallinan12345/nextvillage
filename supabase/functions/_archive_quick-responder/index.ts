@@ -503,9 +503,7 @@ async function postCombinedNews(
     : `🌍 New Community Challenge for ${orgName}`;
 
   try {
-    const newsUrl = Deno.env.get('SUPABASE_URL')!
-      .replace('supabase.co', 'vercel.app')
-      .replace('https://wohmsbeygxrbwogrggkq.', 'https://girls-aiing-and-vibing.');
+    const newsUrl = 'https://www.nextvillage.community';
 
     await fetch(`${newsUrl}/api/platform-news`, {
       method: 'POST',

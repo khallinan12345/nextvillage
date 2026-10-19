@@ -155,4 +155,4 @@ four staff accounts (Lawrence Lindsey, Linda Bolds, Molly Keane, Molly Keane-Sex
 Janae Rice (two accounts, one already merged into the other), a third "Adrienne Rice" account, and Kevin's own
 Back to Basics login. Still present because they belong to the organization rather than a person: 238 generated
 learning modules, 1 site and 10 group-chat rooms tagged to it. The organization record itself is kept (unlisted).
-Girls AI Camp Dayton (formerly Girls AIing & Vibing) has no members.
+A second former group (a Dayton camp with no members) was deleted entirely on 19 Oct 2026.

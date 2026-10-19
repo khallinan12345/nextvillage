@@ -86,7 +86,7 @@ const STEPS: GuideStep[] = [
     ],
     copyBlocks: [{
       label: 'Prompt to send Claude',
-      text: `I'm working on a React + TypeScript website called nextVillage (also known as "Girls AIing & Vibing"). It's built with Vite, React Router, Tailwind CSS, and Supabase.
+      text: `I'm working on a React + TypeScript website called nextVillage (also known as "nextVillage"). It's built with Vite, React Router, Tailwind CSS, and Supabase.
 
 Here is a similar file from the project, as a mirror for how things are normally built here — styling, layout, imports, structure:
 

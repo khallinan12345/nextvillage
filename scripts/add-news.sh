@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/add-news.sh
 # ─────────────────────────────────────────────────────────────────────────────
-# Manage the Girls AIing platform "What's New" banner from the terminal.
+# Manage the nextVillage platform "What's New" banner from the terminal.
 #
 # SETUP (one time):
 #   1. Add NEWS_API_SECRET to your .env.local (any long random string)
@@ -33,7 +33,7 @@ if [ -f ".env.local" ]; then
   export $(grep -v '^#' .env.local | xargs)
 fi
 
-BASE_URL="${PLATFORM_URL:-https://girls-aiing-and-vibing.vercel.app}"
+BASE_URL="${PLATFORM_URL:-https://www.nextvillage.community}"
 SECRET="${NEWS_API_SECRET:-}"
 ENDPOINT="${BASE_URL}/api/platform-news"
 
@@ -144,7 +144,7 @@ case "$CMD" in
   # ── help ─────────────────────────────────────────────────────────────────────
   help|*)
     cat <<'EOF'
-Girls AIing — News Banner Manager
+nextVillage — News Banner Manager
 ───────────────────────────────────────────────────────────────────────────────
 
   Add a news item:
@@ -163,7 +163,7 @@ Girls AIing — News Banner Manager
 
   Required env vars (add to .env.local):
     NEWS_API_SECRET=your-random-secret   # same value in Vercel env vars
-    PLATFORM_URL=https://girls-aiing-and-vibing.vercel.app  # optional override
+    PLATFORM_URL=https://www.nextvillage.community  # optional override
 
 EOF
     ;;

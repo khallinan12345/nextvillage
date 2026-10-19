@@ -123,7 +123,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
   data_roles: [
     {
       teaching: 'The three core data roles on the DP-900 exam are: Database Administrator (keeps databases running, manages security and backups), Data Engineer (builds pipelines that move and transform data), and Data Analyst (queries data and creates reports and visualisations for decision-makers). These are distinct roles with different tools and skills.',
-      question: 'The Girls AIing platform collects learner progress data in Supabase, transforms it into monthly reports, and displays dashboards. Which of the three data roles — administrator, engineer, or analyst — is primarily responsible for each part of this workflow?',
+      question: 'The nextVillage platform collects learner progress data in Supabase, transforms it into monthly reports, and displays dashboards. Which of the three data roles — administrator, engineer, or analyst — is primarily responsible for each part of this workflow?',
     },
     {
       teaching: 'A data pipeline is the automated series of steps that moves data from where it is generated (source) to where it is used (destination), often transforming it along the way. Without a pipeline, data sits in silos — unusable for decision-making.',
@@ -131,13 +131,13 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'Data governance means having rules about who can access data, how data quality is maintained, and how long data is retained. For communities like Oloibiri, governance is especially important when data is about people — health records, names, income — because misuse has real consequences.',
-      question: 'The Girls AIing platform stores personality baseline data (Big Five scores) for each learner. Name two data governance decisions that should be made about this data — who can access it, how it should be protected, or how long it should be kept.',
+      question: 'The nextVillage platform stores personality baseline data (Big Five scores) for each learner. Name two data governance decisions that should be made about this data — who can access it, how it should be protected, or how long it should be kept.',
     },
   ],
   relational_concepts: [
     {
       teaching: 'A relational database organises data into tables (relations). Each table has rows (records) and columns (attributes). Tables are linked by keys: a Primary Key uniquely identifies each row in a table. A Foreign Key in one table references the primary key in another, creating a relationship.',
-      question: 'Design a simple relational structure for the Girls AIing platform: one table for learners and one for quiz_attempts. What would the primary key be in each table? What foreign key would link quiz_attempts back to learners — and why is this better than putting all the data in one table?',
+      question: 'Design a simple relational structure for the nextVillage platform: one table for learners and one for quiz_attempts. What would the primary key be in each table? What foreign key would link quiz_attempts back to learners — and why is this better than putting all the data in one table?',
     },
     {
       teaching: 'Normalisation is the process of organising a database to reduce data duplication. Instead of repeating a learner\'s name in every quiz record, you store it once in a learners table and reference it by ID. This reduces errors, saves storage, and makes updates easier.',
@@ -155,7 +155,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'Relational databases use a rigid schema — every row must match the defined columns. Non-relational databases are schema-flexible — different records can have different fields. This makes NoSQL ideal when data structures vary or evolve rapidly, like storing learner profiles where some have voice recordings and others do not.',
-      question: 'The Girls AIing platform is considering storing learner portfolio items — which could include text entries, images, code files, or voice recordings — with very different metadata for each type. Should they use a relational or non-relational database for this feature, and why?',
+      question: 'The nextVillage platform is considering storing learner portfolio items — which could include text entries, images, code files, or voice recordings — with very different metadata for each type. Should they use a relational or non-relational database for this feature, and why?',
     },
     {
       teaching: 'The CAP theorem states that distributed databases can only guarantee two of three properties at once: Consistency (all nodes see the same data), Availability (the system always responds), and Partition tolerance (the system works even when the network splits). NoSQL systems often sacrifice consistency for availability and scale.',
@@ -169,17 +169,17 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'PaaS (Platform as a Service) means Microsoft manages the server, operating system, backups, and patching — you only manage your database and data. This is ideal for small teams like those at the Davidson AI Futures Lab who want reliability without a dedicated server administrator.',
-      question: 'Compare managing a physical server on-premise versus using Azure SQL Database (PaaS). For each option, describe who is responsible for: hardware, OS updates, database backups, and scaling to handle more users. Which is more appropriate for the Girls AIing platform?',
+      question: 'Compare managing a physical server on-premise versus using Azure SQL Database (PaaS). For each option, describe who is responsible for: hardware, OS updates, database backups, and scaling to handle more users. Which is more appropriate for the nextVillage platform?',
     },
     {
       teaching: 'Provisioned compute means you pay for a fixed amount of database computing power (CPU, RAM) at all times. Serverless compute means Azure automatically scales up or down based on demand and you only pay for actual usage. For unpredictable workloads like a learning platform with peak activity during class sessions, serverless can be more cost-effective.',
-      question: 'The Girls AIing platform has 20 active learners during class sessions but near-zero activity overnight. Should the platform use provisioned or serverless Azure SQL — and calculate roughly what this difference might mean for a platform with very limited funding.',
+      question: 'The nextVillage platform has 20 active learners during class sessions but near-zero activity overnight. Should the platform use provisioned or serverless Azure SQL — and calculate roughly what this difference might mean for a platform with very limited funding.',
     },
   ],
   query_techniques: [
     {
       teaching: 'A VIEW is a saved SQL query that acts like a virtual table. You can query a view as if it were a regular table, but it always reflects the latest underlying data. Views are useful for simplifying complex queries and controlling which columns users can see — for example, a view that shows learner progress without exposing personal identifiers.',
-      question: 'The Girls AIing platform wants to give mentors a view of learner progress that shows first name, topic scores, and completion percentage — but never the learner\'s full profile or personality data. How would a SQL VIEW help achieve this, and what would the benefit be compared to giving mentors direct table access?',
+      question: 'The nextVillage platform wants to give mentors a view of learner progress that shows first name, topic scores, and completion percentage — but never the learner\'s full profile or personality data. How would a SQL VIEW help achieve this, and what would the benefit be compared to giving mentors direct table access?',
     },
     {
       teaching: 'Indexes speed up queries by creating a separate data structure that the database engine can search quickly — like the index at the back of a book. Without an index, the database reads every row to find matching records (a "full table scan"). For large datasets like millions of sensor readings, indexes are critical for performance.',
@@ -193,11 +193,11 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
   azure_storage: [
     {
       teaching: 'Azure Storage offers three non-relational storage services: Azure Blob Storage (for large unstructured files — images, videos, backups), Azure Table Storage (key-value pairs — simple, fast, cheap for simple lookups), and Azure Files (managed file shares accessible like a network drive). Each is designed for a different kind of data.',
-      question: 'The Girls AIing platform generates voice recordings of learner responses, PDF certificates, and a simple lookup table mapping topic IDs to topic names. Match each to the correct Azure Storage service — Blob, Table, or Files — and explain your reasoning.',
+      question: 'The nextVillage platform generates voice recordings of learner responses, PDF certificates, and a simple lookup table mapping topic IDs to topic names. Match each to the correct Azure Storage service — Blob, Table, or Files — and explain your reasoning.',
     },
     {
       teaching: 'Azure Blob Storage has three access tiers that control cost and retrieval speed: Hot (frequent access — slightly more expensive but instant), Cool (infrequent access — cheaper storage, small retrieval fee), and Archive (rarely accessed — very cheap storage, hours to retrieve). Choosing the right tier saves significant cost at scale.',
-      question: 'The Girls AIing platform stores: (a) learner profile photos accessed every time someone logs in, (b) monthly backup snapshots that are almost never retrieved, (c) certificates generated 3 months ago that learners occasionally download. Assign each to Hot, Cool, or Archive tier — and explain the trade-off you are making.',
+      question: 'The nextVillage platform stores: (a) learner profile photos accessed every time someone logs in, (b) monthly backup snapshots that are almost never retrieved, (c) certificates generated 3 months ago that learners occasionally download. Assign each to Hot, Cool, or Archive tier — and explain the trade-off you are making.',
     },
     {
       teaching: 'Azure Data Lake Storage Gen2 combines the scalability of Azure Blob Storage with a hierarchical file system designed for big data analytics. It is built for storing massive datasets — like years of sensor readings or national agricultural data — that will be processed by analytics engines rather than retrieved by individual users.',
@@ -207,7 +207,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
   azure_cosmos: [
     {
       teaching: 'Azure Cosmos DB is Microsoft\'s globally distributed NoSQL database service. Its key selling points are: global distribution (replicate data to multiple regions instantly), guaranteed single-digit millisecond latency, and support for multiple APIs — meaning you can use it with MongoDB-style queries, Cassandra, Gremlin (graph), or table APIs without changing your application much.',
-      question: 'The Girls AIing platform is expanding from Oloibiri to Ibiade and then globally. Learners in each location need fast, reliable access to their learning data. How does Azure Cosmos DB\'s global distribution feature address this — and what would happen without it when a learner in Ibiade accesses data stored only in a server in the US?',
+      question: 'The nextVillage platform is expanding from Oloibiri to Ibiade and then globally. Learners in each location need fast, reliable access to their learning data. How does Azure Cosmos DB\'s global distribution feature address this — and what would happen without it when a learner in Ibiade accesses data stored only in a server in the US?',
     },
     {
       teaching: 'Cosmos DB offers five consistency levels, from strongest to weakest: Strong, Bounded Staleness, Session, Consistent Prefix, and Eventual. Strong consistency means all reads see the latest write — but is slower. Eventual consistency means data may be briefly out of sync between regions — but is faster and cheaper. Most apps use Session consistency as a practical middle ground.',
@@ -215,21 +215,21 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'Cosmos DB charges through Request Units (RUs) — a combined measure of CPU, memory, and IOPS consumed by each database operation. A simple read of a small document costs 1 RU. A complex query over many documents costs many more. You provision RUs in advance (or use serverless mode) and are charged whether you use them or not.',
-      question: 'The Girls AIing platform occasionally has zero activity at night and bursts of 50 concurrent learners during class sessions. Would you choose provisioned throughput or serverless mode for Cosmos DB — and which DP-900 concept explains why serverless might be more cost-effective for this usage pattern?',
+      question: 'The nextVillage platform occasionally has zero activity at night and bursts of 50 concurrent learners during class sessions. Would you choose provisioned throughput or serverless mode for Cosmos DB — and which DP-900 concept explains why serverless might be more cost-effective for this usage pattern?',
     },
   ],
   analytics_concepts: [
     {
       teaching: 'The analytics workflow follows a pipeline: Ingest (collect raw data from sources), Store (land it in a data lake or warehouse), Process (clean, transform, and model it), and Visualise (present it in dashboards and reports). Each stage has specific Azure services. The DP-900 exam tests whether you can match each stage to the right tool.',
-      question: 'The Girls AIing platform produces learner activity logs every day. Walk through the four analytics stages for this data: Where is it ingested from? Where is it stored? What processing might happen (cleaning, aggregating)? And who visualises it — and how? Map each stage to a real part of the platform you already know.',
+      question: 'The nextVillage platform produces learner activity logs every day. Walk through the four analytics stages for this data: Where is it ingested from? Where is it stored? What processing might happen (cleaning, aggregating)? And who visualises it — and how? Map each stage to a real part of the platform you already know.',
     },
     {
       teaching: 'A data warehouse is optimised for analytical queries — it stores pre-aggregated, historical data in a structure designed for fast reporting. Unlike a transactional database (OLTP), a warehouse uses a star schema: a central fact table (e.g. quiz_attempts) surrounded by dimension tables (e.g. learners, topics, dates). This makes queries like "Show me pass rates by topic for Cohort 2" extremely fast.',
-      question: 'Design a simple star schema for the Girls AIing platform analytics. What is the central fact table, and what measure does it store? Name three dimension tables that would surround it — and give one example query that this star schema would answer quickly.',
+      question: 'Design a simple star schema for the nextVillage platform analytics. What is the central fact table, and what measure does it store? Name three dimension tables that would surround it — and give one example query that this star schema would answer quickly.',
     },
     {
       teaching: 'ETL stands for Extract, Transform, Load — the traditional pipeline for moving data into a warehouse. ELT (Extract, Load, Transform) loads raw data first, then transforms it inside the warehouse using its compute power. Modern cloud analytics platforms like Azure Synapse favour ELT because cloud storage is cheap and compute is powerful.',
-      question: 'The Girls AIing platform wants to pull daily learner logs from Supabase, clean out test accounts, calculate aggregate scores per cohort, and load the results into a reporting database. Is this better described as ETL or ELT — and which step in the process is the "Transform"?',
+      question: 'The nextVillage platform wants to pull daily learner logs from Supabase, clean out test accounts, calculate aggregate scores per cohort, and load the results into a reporting database. Is this better described as ETL or ELT — and which step in the process is the "Transform"?',
     },
   ],
   azure_synapse: [
@@ -239,11 +239,11 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'Azure Data Factory (ADF) is Azure\'s managed data integration service — a tool for building ETL/ELT pipelines without writing much code. You visually design pipelines that copy data from sources (Supabase, CSV files, APIs) into destinations (data lakes, warehouses). ADF is the "data plumber" service on Azure.',
-      question: 'Every night at midnight, the Girls AIing platform should automatically pull new learner records from Supabase, clean the data, and load it into Azure Synapse for reporting. Which Azure service would orchestrate this nightly pipeline — and what does it mean that ADF is a "low-code" tool for this kind of work?',
+      question: 'Every night at midnight, the nextVillage platform should automatically pull new learner records from Supabase, clean the data, and load it into Azure Synapse for reporting. Which Azure service would orchestrate this nightly pipeline — and what does it mean that ADF is a "low-code" tool for this kind of work?',
     },
     {
       teaching: 'Azure Synapse Link creates a real-time link between Azure Cosmos DB (operational data) and Synapse Analytics (analytical data) — without the need for a separate ETL pipeline. As data is written to Cosmos DB, it becomes automatically queryable in Synapse. This eliminates the lag between when data is created and when it appears in reports.',
-      question: 'The Girls AIing platform updates learner scores in real time in Cosmos DB, but the monthly reports have always shown data that is one day old because of nightly ETL. How would Azure Synapse Link change this — and what does the elimination of this lag mean for a mentor who wants to check learner progress during a class session?',
+      question: 'The nextVillage platform updates learner scores in real time in Cosmos DB, but the monthly reports have always shown data that is one day old because of nightly ETL. How would Azure Synapse Link change this — and what does the elimination of this lag mean for a mentor who wants to check learner progress during a class session?',
     },
   ],
   azure_databricks: [
@@ -257,13 +257,13 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'Delta Lake is an open-source storage layer that brings ACID transactions (Atomicity, Consistency, Isolation, Durability) to data lakes. Without Delta Lake, a data lake is just files — if a pipeline fails midway, you can end up with corrupted partial data. Delta Lake ensures that either a write fully completes or is fully rolled back, like a database.',
-      question: 'Every night, the Girls AIing platform loads quiz data into a data lake for analytics. Halfway through one night, the internet connection drops. Without Delta Lake, what could happen to the data — and how does Delta Lake solve this problem using the concept of ACID transactions?',
+      question: 'Every night, the nextVillage platform loads quiz data into a data lake for analytics. Halfway through one night, the internet connection drops. Without Delta Lake, what could happen to the data — and how does Delta Lake solve this problem using the concept of ACID transactions?',
     },
   ],
   azure_powerbi: [
     {
       teaching: 'Microsoft Power BI is the primary data visualisation and business intelligence service in the Azure ecosystem. It connects to almost any data source, transforms data with Power Query, models it with DAX (Data Analysis Expressions), and produces interactive dashboards that non-technical users can explore without SQL knowledge.',
-      question: 'The Girls AIing platform wants to give community leaders in Oloibiri a dashboard showing learner progress — but the leaders have no technical background. How does Power BI address both the technical challenge (connecting to data) and the human challenge (presenting it accessibly) — and what makes it better than giving them raw database access?',
+      question: 'The nextVillage platform wants to give community leaders in Oloibiri a dashboard showing learner progress — but the leaders have no technical background. How does Power BI address both the technical challenge (connecting to data) and the human challenge (presenting it accessibly) — and what makes it better than giving them raw database access?',
     },
     {
       teaching: 'Power BI has three main components: Power BI Desktop (a Windows app for building reports), Power BI Service (the cloud platform for sharing and publishing), and Power BI Mobile (for viewing dashboards on phones). For community leaders viewing progress reports in Oloibiri on smartphones, Power BI Mobile is the relevant interface.',
@@ -271,7 +271,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     },
     {
       teaching: 'A dataset in Power BI is a modelled collection of data. A report is a multi-page document with charts and visuals. A dashboard is a single-page view of the most important visuals pinned from one or more reports. On the DP-900 exam, you need to know which of these three things is being described in a scenario.',
-      question: 'The Girls AIing monthly report has 8 pages covering different topics: completion rates, assessment scores, quiz performance by domain, and cohort comparison. A one-page executive summary shows the four most important numbers for community leaders. Which is the Power BI report and which is the dashboard — and what is the dataset they both draw from?',
+      question: 'The nextVillage monthly report has 8 pages covering different topics: completion rates, assessment scores, quiz performance by domain, and cohort comparison. A one-page executive summary shows the four most important numbers for community leaders. Which is the Power BI report and which is the dashboard — and what is the dataset they both draw from?',
     },
   ],
   practice_exam: [
@@ -366,7 +366,7 @@ const DP900Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
         Data is already being generated in your community — fish catches, water quality readings, learner progress,
         health records. The DP-900 teaches you how to <strong className="text-white">store, organise, and analyse</strong> that
         data using Azure. Every example in this course will be grounded in <strong className="text-white">real scenarios
-        from Oloibiri and the Girls AIing platform</strong> — so you learn the exam concepts through things you already know.
+        from Oloibiri and the nextVillage platform</strong> — so you learn the exam concepts through things you already know.
       </p>
     </div>
 
@@ -384,7 +384,7 @@ const DP900Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
       <p className="text-xs text-gray-400 leading-relaxed">
         Each topic follows the <strong className="text-white">Socratic method</strong> — you explain concepts in your own words
         before AI confirms or corrects. This builds genuine understanding, not just memorisation.
-        All examples connect to <strong className="text-white">Oloibiri, the Girls AIing platform, and Nigerian data contexts</strong>.
+        All examples connect to <strong className="text-white">Oloibiri, the nextVillage platform, and Nigerian data contexts</strong>.
       </p>
     </div>
 

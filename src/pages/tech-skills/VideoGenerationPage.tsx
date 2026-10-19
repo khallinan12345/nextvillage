@@ -1118,7 +1118,7 @@ Return ONLY the improved text. No explanation, no preamble.`
                     ? '📧 Do you have a special project and need more videos? Send an email to '
                     : '📧 Have a special project that requires additional video generations? Email '}
                   <a
-                    href="mailto:khallinan1@udayton.edu?subject=Video%20Generation%20Request%20-%20Girls%20AIing&body=Hi%20Kevin%2C%0A%0AI%20would%20like%20to%20request%20additional%20video%20generation%20access%20for%20a%20special%20project.%0A%0AProject%20description%3A%20%0A%0ANumber%20of%20videos%20needed%3A%20%0A%0AThank%20you!"
+                    href="mailto:khallinan1@udayton.edu?subject=Video%20Generation%20Request%20-%20nextVillage&body=Hi%20Kevin%2C%0A%0AI%20would%20like%20to%20request%20additional%20video%20generation%20access%20for%20a%20special%20project.%0A%0AProject%20description%3A%20%0A%0ANumber%20of%20videos%20needed%3A%20%0A%0AThank%20you!"
                     className="inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-200 underline underline-offset-2 font-medium transition-colors"
                   >
                     <Mail size={12} />
