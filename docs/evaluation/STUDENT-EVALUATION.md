@@ -280,14 +280,19 @@ Honest list, so the team can decide what to improve. Each should go through the 
    a human educator's review.
 9. **An older monthly-assessment function exists in the database project** next to the live one. Confirm
    it is retired so two systems do not produce different scores.
-10. **Reports to leaders (built 19 Oct 2026; sends once recipients are added).** A monthly progress report for each organization's leaders
-    now exists (`api/org-monthly-report.ts`, run on the 4th). It carries each learner's four scores, whether
-    each moved since last month, and sessions. It leaves out what children wrote, the AI's comments about
-    them, safety information, certification counts (the stored count looks unreliable, e.g. 34 passed for
-    one learner) and other organizations' learners. Scores under 10 show as "<10". It sends only to
-    people added as recipients for that organization; see the administrator manual. Open: only a minority
-    of learners get a monthly score today, so most reports will list many learners as "too little
-    activity"; fixing that depends on how the monthly assessment chooses whom to score.
+10. **Reports to leaders: built and live, waiting for recipients (19 Oct 2026).** A monthly progress report
+    for each organization's leaders now exists (`api/org-monthly-report.ts`, run on the 4th; the
+    run-tracking table is in the database). It carries each learner's four scores, whether each moved
+    since last month, and sessions. It leaves out what children wrote, the AI's comments about them,
+    safety information, certification counts (the stored count looks unreliable, e.g. 34 passed for one
+    learner) and other organizations' learners. Scores under 10 show as "<10". It sends only to people
+    added as recipients for that organization; none are added yet, so nothing has gone out. A preview of
+    Oloibiri's August report went to Kevin only. **Still open:** (a) add recipients per organization;
+    (b) coverage: only about 10% of Oloibiri learners (13 of 130 for August) have a monthly score,
+    because the monthly assessment needs at least three active sessions in the month and now also
+    evaluates "Use Claude" use. Kevin chose to leave this as is (19 Oct), so most reports will list
+    most learners as "too little activity to score"; (c) find out why the stored certification count is
+    wrong before it is shown to leaders.
 11. **No appeal path is written for learners.** Section 9 describes how a family can ask for a review.
     A one-page "if you disagree with a score" note for leaders should be added.
 
