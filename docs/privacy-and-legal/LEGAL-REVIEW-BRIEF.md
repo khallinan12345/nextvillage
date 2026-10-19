@@ -11,8 +11,10 @@ fine" or "change this" in a few bullets is exactly what we need. We are not aski
 AI, coding and entrepreneurship with an AI tutor and do community projects. There are no ads and we do not
 sell data.
 
-- **Operator today:** Kevin Hallinan, individually, 1629 E. 4th St., Dayton, OH 45403, USA. He is forming
-  **Impact Mining, Inc.**, an Ohio nonprofit (bank account in progress); the notice will move to it.
+- **Operator today:** Kevin Hallinan, individually, 1629 E. 4th St., Dayton, OH 45403, USA. vAI is the program
+  run by the Davidson AI Futures Lab together with Kevin, and vAI owns the platform. Kevin is also forming
+  **Impact Mining, Inc.**, an Ohio nonprofit that will be a US funding vehicle for vAI (bank account in
+  progress); it does not own the platform.
 - **Nigeria (largest group, about 140 learners):** the **Davidson AI Futures Lab**, Oloibiri, Bayelsa State,
   a community learning center (families also know it as "vAI lab"). It has no street address. Local group
   leader: Divinegift Morris. Child-protection lead: Confidence Onuoha.
@@ -51,9 +53,9 @@ sell data.
 ## 3. The five questions (please prioritise)
 
 1. **Nigeria: registration and data protection officer.** Under the NDPA 2023 and the NDPC's GAID 2025, is
-   anyone (Impact Mining, the Nigerian partner, or both) a "data controller of major importance" who must
+   anyone (vAI's operator, the Nigerian partner, or both) a "data controller of major importance" who must
    register with the NDPC, appoint a DPO and file an annual compliance return? What are the thresholds? And
-   who is the **controller** for Nigerian learners: the US entity, the local center, or jointly? What does
+   who is the **controller** for Nigerian learners: vAI's operator, the local center, or jointly? What does
    Kenya require of a small education nonprofit (registration with the ODPC)?
    *Our reading:* unclear; we could not read the GAID thresholds or Kenya's registration schedule in primary
    form (Appendix A, finding E2).

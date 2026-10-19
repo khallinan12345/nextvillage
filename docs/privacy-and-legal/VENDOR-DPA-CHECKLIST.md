@@ -1,9 +1,9 @@
 # Vendor data processing agreements: checklist
 
-For the account holder (Kevin now; Impact Mining, Inc. later). The US rule (COPPA 312.8(c)) and both African
+For the account holder (Kevin, for vAI). The US rule (COPPA 312.8(c)) and both African
 laws expect **written assurances** from every vendor that handles children's data. Most vendors build the
 agreement into their terms, so the task is mostly **find it, accept it where needed, download a dated copy,
-and file it**. Re-do each one in the entity's name when Impact Mining, Inc. is official.
+and file it**. Re-do each one in the new account holder's name if an account ever moves.
 
 **How to record each:** save the PDF (or screenshot with date) in a shared folder named "Vendor
 agreements", and tick the box and add the date below.

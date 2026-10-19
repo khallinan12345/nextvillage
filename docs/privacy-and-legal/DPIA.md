@@ -2,8 +2,7 @@
 
 **Version 1, 16 October 2026.** Required before high-risk processing by Nigeria NDPA s.28 and Kenya DPA
 s.31 (and the Kenyan General Regulations, regs. 49-50). It is written from the platform as built
-(`DATA-MAP.md`, `VENDOR-REVIEW.md`, `AI-LEGAL-REVIEW.md`). **Owner:** Kevin Hallinan (interim; to pass to
-Impact Mining, Inc.). **Review:** every year, and before any new feature that collects more about learners
+(`DATA-MAP.md`, `VENDOR-REVIEW.md`, `AI-LEGAL-REVIEW.md`). **Owner:** Kevin Hallinan, for vAI. **Review:** every year, and before any new feature that collects more about learners
 or sends data to a new vendor. A draft, not legal advice; a lawyer should read it (see `LEGAL-REVIEW-BRIEF.md`).
 
 ## 1. Why a DPIA is needed

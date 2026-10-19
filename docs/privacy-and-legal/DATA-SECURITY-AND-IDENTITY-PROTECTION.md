@@ -196,9 +196,10 @@ We would rather say this plainly than overstate our position.
   step; this is being closed. Address recognition is a safety net and depends partly on the language step.
 - **Signed forms still to come:** about 140 learners in Oloibiri are covered by the older form until their
   families sign the add-on. Recording of their consents is not yet complete.
-- **Legal status of the operator:** the platform is run today by Kevin Hallinan individually and is moving
-  into Impact Mining, Inc., an Ohio nonprofit now being formed. This document and the privacy notice will be
-  updated when that is official.
+- **Legal status of the operator:** the platform is run today by Kevin Hallinan individually, for vAI (the program
+  run by the Davidson AI Futures Lab together with Kevin). Impact Mining, Inc., an Ohio nonprofit now being
+  formed, will raise funds for vAI and does not own the platform. This document and the privacy notice will
+  be updated if the legally responsible party changes.
 - **No promise of perfection.** No system is risk-free. We promise to reduce risk with real controls, to
   tell families the truth about what we do, and to fix problems quickly.
 

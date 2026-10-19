@@ -11,7 +11,7 @@ and sets the yearly cycle.
 
 | Role | Person | Duty |
 |---|---|---|
-| **Security coordinator** (312.8(b)(1)) | Kevin Hallinan (interim; Impact Mining, Inc. once formed) | Owns this program; runs the annual assessment; signs off changes |
+| **Security coordinator** (312.8(b)(1)) | Kevin Hallinan (for vAI) | Owns this program; runs the annual assessment; signs off changes |
 | **Local contact** | The organization leader (Oloibiri: Divinegift Morris) | Receives safety alerts; follows the incident runbook locally; keeps the paper consent forms safe |
 | **Technical maintainer** | The person or tool making code changes (currently Kevin with Claude) | All production changes go through a reviewed pull request that must pass checks; no bypassing |
 

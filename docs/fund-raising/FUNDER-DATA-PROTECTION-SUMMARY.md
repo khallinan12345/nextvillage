@@ -41,8 +41,8 @@ recorded in a public decision log.
   teachers' marks.
 - We use US-based cloud and AI providers, so children's data crosses borders. We have documented each
   vendor and are filing their data processing agreements.
-- The programme is run by an individual today and is being moved into a nonprofit, Impact Mining, Inc.
-  We will update our notices and agreements when that happens.
+- The programme (vAI) is run by the Davidson AI Futures Lab together with its founder. A US nonprofit, Impact Mining, Inc., is being formed to
+  raise funds for it. We will update our notices and agreements as that changes.
 - Some improvements are still open; we keep a public list and work through it.
 
 ## Documents available on request
