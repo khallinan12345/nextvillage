@@ -1,0 +1,86 @@
+name: Protected paths review
+
+# Changes to the sensitive paths listed in .github/CODEOWNERS need an approval from Kevin or Randy,
+# unless Kevin or Randy made the change. Everything else is unaffected.
+#
+# GitHub's own "Require review from Code Owners" cannot exempt particular authors on a personal
+# repository, so this check does it. It reports a commit status named "protected-paths-review" on the
+# pull request's latest commit; that status is a required check on main.
+#
+# It runs with pull_request_target so it always uses the version of this file on main, never one a pull
+# request edited. It never checks out or runs the pull request's code: it only reads the list of
+# changed files and the reviews through the GitHub API.
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      AUTHOR: ${{ github.event.pull_request.user.login }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # People whose own changes need no review, and whose approval counts for everyone else's.
+      EXEMPT_USERS: "khallinan12345 adsi4nt"
+    steps:
+      - name: Decide
+        run: |
+          set -euo pipefail
+
+          post() {  # state, description
+            echo "$1: $2"
+            if [ "${DRY_RUN:-0}" != "1" ]; then
+              gh api "repos/$REPO/statuses/$HEAD_SHA" -f state="$1" -f context="protected-paths-review" \
+                -f description="$2" -f target_url="$RUN_URL" > /dev/null
+            fi
+          }
+
+          is_exempt() { for u in $EXEMPT_USERS; do [ "$u" = "$1" ] && return 0; done; return 1; }
+
+          # Protected paths: the pattern column of CODEOWNERS on main (a trailing slash means a folder).
+          patterns=$(gh api -H "Accept: application/vnd.github.raw+json" "repos/$REPO/contents/.github/CODEOWNERS?ref=$BASE_SHA" \
+            | grep -E '^/' | awk '{print $1}')
+          [ -n "$patterns" ] || { post failure "Could not read the protected paths from CODEOWNERS"; exit 0; }
+
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')
+
+          touched=""
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            while IFS= read -r pat; do
+              p="${pat#/}"
+              case "$p" in
+                */) [[ "$f" == "$p"* ]] && touched="$touched $f" ;;
+                *)  [[ "$f" == "$p" ]] && touched="$touched $f" ;;
+              esac
+            done <<< "$patterns"
+          done <<< "$files"
+
+          if [ -z "${touched// /}" ]; then post success "No protected path changed"; exit 0; fi
+          if is_exempt "$AUTHOR"; then post success "Protected paths changed by $AUTHOR (exempt)"; exit 0; fi
+
+          # Latest meaningful review per person, counted only if it is on the current commit.
+          approvers=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/reviews" --jq '.[] | select(.state=="APPROVED" or .state=="CHANGES_REQUESTED" or .state=="DISMISSED") | [.user.login, .state, .commit_id] | @tsv' \
+            | awk -F'\t' '{last[$1]=$2"\t"$3} END {for (u in last) print u"\t"last[u]}')
+          while IFS=$'\t' read -r user state commit; do
+            [ -n "$user" ] || continue
+            if [ "$state" = "APPROVED" ] && [ "$commit" = "$HEAD_SHA" ] && is_exempt "$user"; then
+              post success "Approved by $user"; exit 0
+            fi
+          done <<< "$approvers"
+
+          post failure "Protected paths changed: needs approval from Kevin or Randy on the latest commit"
