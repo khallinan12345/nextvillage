@@ -144,3 +144,15 @@ order.** Until then the privacy notice names Kevin Hallinan as an individual.
 7. **Optional, later:** federal tax-exempt (501(c)(3)) status, board-level insurance, a named board member
    responsible for privacy.
 8. **Update the security tracker** and the memory notes so future sessions use the right names.
+
+## 9. Organizations that leave the platform
+
+**Back to Basics Youth Education (Dayton), 19 Oct 2026.** The group is no longer connected to the platform. It is hidden
+from sign-up, its 10 learner accounts cannot sign in, and Kevin chose to keep the data but drop the personal
+identification. Done: each learner's name, email, sign-in identity, avatar, school name and username were removed (they
+are now "Former learner BtB-01" to "BtB-10"), and the free-text note on their guardian-consent records was cleared.
+Their birth year, gender, city, scores, activity and usage records were kept. **Not done, and a known gap:** the chat
+sessions (126 dashboard rows, 42 playground chats), websites (57), games (26), images (349) and videos (18) were kept as
+they are, and may still contain names or faces the children typed or uploaded. So this is account-level
+de-identification only. Decide later whether to delete that content or set an end date for keeping it. The 8 leaders
+and staff of the group were not changed. Girls AI Camp Dayton (formerly Girls AIing & Vibing) has no members.

@@ -17,6 +17,7 @@
     "assess:monthly": "tsx --env-file=.env.local scripts/monthly.ts",
     "user:delete": "tsx --env-file=.env.local scripts/delete-user.ts",
     "org:block-learners": "tsx --env-file=.env.local scripts/block-org-learners.ts",
+    "org:deidentify-learners": "tsx --env-file=.env.local scripts/deidentify-org-learners.ts",
     "accounts:purge-due": "tsx --env-file=.env.local scripts/purge-due-accounts.ts"
   },
   "dependencies": {
