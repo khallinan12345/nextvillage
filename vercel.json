@@ -36,6 +36,10 @@
       "schedule": "30 4 * * *"
     },
     {
+      "path": "/api/org-monthly-report?send=1",
+      "schedule": "0 9 4 * *"
+    },
+    {
       "path": "/api/seriousness-report",
       "schedule": "0 6 3 * *"
     },

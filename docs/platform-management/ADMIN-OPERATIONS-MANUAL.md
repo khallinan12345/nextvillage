@@ -196,6 +196,13 @@ tell the platform administrator.
   pull requests.
 - **Monthly assessment.** If a manual run is ever started and stops partway, its partial rows can block the
   next scheduled run; ask the technical maintainer before re-running.
+- **Organization progress reports.** On the 4th of each month `/api/org-monthly-report` emails each
+  organization's leaders a progress report for their own learners (scores, movement, sessions; nothing the
+  children wrote). It sends only to people you add: `insert into report_recipients (report, email, name)
+  values ('org_progress:<organization id>', 'leader@example.org', 'Name');`, and stops with
+  `update report_recipients set active = false where email = '...';`. To check one first, call it with the
+  cron secret and `?org=<id>&month=YYYY-MM&preview_to=you@example.org` (emails only you, marked PREVIEW);
+  without `send=1` it sends nothing. `?force=1` resends a month already sent.
 - **Costs.** AI usage is logged per request. Review the monthly total against each organization's agreed
   ceiling.
 
