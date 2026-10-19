@@ -203,6 +203,11 @@ tell the platform administrator.
   `update report_recipients set active = false where email = '...';`. To check one first, call it with the
   cron secret and `?org=<id>&month=YYYY-MM&preview_to=you@example.org` (emails only you, marked PREVIEW);
   without `send=1` it sends nothing. `?force=1` resends a month already sent.
+- **An organization leaves the platform.** Hide it from sign-up (`update organizations set is_listed = false where name = '...';`),
+  then stop its learners signing in without deleting anything: `npm run org:block-learners -- "<organization name>"`
+  (dry run), then add `--confirm`. Leaders and staff are not touched. `--undo --confirm` reverses it. Their data stays;
+  decide separately what to keep and for how long (see the privacy compliance plan). Done for Back to Basics on
+  19 Oct 2026.
 - **Costs.** AI usage is logged per request. Review the monthly total against each organization's agreed
   ceiling.
 
