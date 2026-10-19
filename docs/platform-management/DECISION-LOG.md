@@ -17,3 +17,4 @@ decided. If a decision is reversed, add a new line; do not delete the old one.
 | 2026-10 | AI models: Claude Sonnet 5.5 only for the main path; no older Sonnet; free-tier vendors for 13 and over only | Safety, cost and consistency | Kevin Hallinan |
 | 2026-10 | Remove OpenRouter, DeepSeek and Gemini from the AI chain; remove unused offline-sync functions | Fewer vendors that see children's text | Kevin Hallinan |
 | 2026-10 | Focus is Africa first; AI legal review plus a pro-bono lawyer; no insurance purchased for now | Budget | Kevin Hallinan |
+| 2026-10-18 | **Every evaluation uses the same model: Claude Sonnet 5.5 at medium effort** (challenge, grand challenge, winner selection, tie-break, tech skills, web session, certifications). Edge functions need deploying to take effect | Scores must be comparable across learners and over time; no OpenAI for grading | Kevin Hallinan |

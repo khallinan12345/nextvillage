@@ -132,10 +132,9 @@ const SONNET55_PAGES = new Set([
 // for Oloibiri's learners in practice, so "low" is the default on every
 // Sonnet 5.5 route (per an observed cost uptick). "medium" is used where the
 // extra depth earns its cost: code generation (the hybrid coding pages) and
-// SystemsThinkPage's multi-layered Socratic reasoning. Never applies to Haiku 5.5 — see modelSupportsEffort() — Haiku
-// rejects the effort parameter outright, so a page pinned to Haiku (e.g.
-// certification pages) is already running as cheap as this lever can make
-// it and gets no output_config.effort at all.
+// SystemsThinkPage's multi-layered Socratic reasoning, and certification evaluations. Never applies to
+// Haiku 5.5 — see modelSupportsEffort() — Haiku rejects the effort parameter outright, so a page pinned
+// to Haiku gets no output_config.effort at all.
 const PAGE_EFFORT = {
   SystemsThinkPage: 'medium',
 };
@@ -145,6 +144,7 @@ const PAGE_EFFORT = {
 // and for Systems Think's reasoning; low for everything else.
 function getEffortForPage(page) {
   if (PAGE_EFFORT[page]) return PAGE_EFFORT[page];
+  if (isCertPage(page)) return 'medium';
   return HYBRID_CODING_PAGES.has(page) ? 'medium' : 'low';
 }
 
@@ -154,7 +154,8 @@ function modelSupportsEffort(model) {
   return !/^claude-haiku/.test(model);
 }
 
-// Certification pages — always Haiku; structured JSON eval must be reliable
+// Certification pages — evaluations always use Sonnet 5.5 (same model for every evaluation), medium effort.
+// Any page named *CertificationPage is treated the same way (see isCertPage).
 const CERT_PAGES = new Set([
   'AIReadySkillsPage',
   'AIProficiencyPage',
@@ -169,6 +170,10 @@ const CERT_PAGES = new Set([
   'HealthcareNavigatorCertificationPage',
   'EntrepreneurshipConsultantCertificationPage',
 ]);
+
+function isCertPage(page) {
+  return CERT_PAGES.has(page) || /CertificationPage$/.test(page || '');
+}
 
 // ── Model configuration ───────────────────────────────────────────────────────
 // Model IDs live in the Supabase `model_config` table so a deprecated model can
@@ -466,9 +471,9 @@ function resolveRoute(page, playgroundModel, taskType) {
     return { provider: 'groq', model: MODELS.groq };
   }
 
-  // Certification pages → Haiku directly; reliable JSON eval, no free-tier risk
-  if (CERT_PAGES.has(page)) {
-    return { provider: 'anthropic', model: MODELS.anthropic_haiku };
+  // Certification pages → Sonnet 5.5, the model every evaluation uses; no free-tier risk
+  if (isCertPage(page)) {
+    return { provider: 'anthropic', model: MODELS.anthropic_sonnet55 };
   }
 
   // Default → Haiku

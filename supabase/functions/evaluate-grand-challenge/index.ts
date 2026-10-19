@@ -363,7 +363,9 @@ Return a JSON object with exactly these fields:
 }`;
 
   const response = await anthropic.messages.create({
-    model:      'claude-sonnet-4-6',
+    model:      'claude-sonnet-5-5',
+    // Sonnet 5.5 rejects `temperature`; effort is set to medium for grading. Cast: SDK 0.27 types lack output_config.
+    ...({ output_config: { effort: 'medium' } } as Record<string, unknown>),
     max_tokens: 1000,
     system:     systemPrompt,
     messages:   [{ role: 'user', content: userPrompt }],

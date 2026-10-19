@@ -1,45 +1,7 @@
-// api/evaluate-web-session.ts — Session evaluation + improvement advice using OpenAI
+// api/evaluate-web-session.ts — Session evaluation + improvement advice using Claude Sonnet 5.5
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
-import { fetchCallerIsYoung } from './_lib/youngLearner.js';
 import { claudeText } from './_lib/claudeText.js';
-
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-
-async function callOpenAI(
-  systemPrompt: string,
-  userMessage: string,
-  maxTokens = 4000
-): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY is not configured');
-
-  const response = await fetch(OPENAI_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      temperature: 0.5,
-      max_tokens: maxTokens,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(
-      `OpenAI API error (${response.status}): ${err?.error?.message || 'Unknown'}`
-    );
-  }
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
-}
 
 const EVALUATION_PROMPT = `You are an expert Web Development Mentor evaluating a learner's vibe coding session.
 
@@ -302,10 +264,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const userContext = `PROMPT HISTORY:\n${promptLog}\n\nFINAL WEBSITE CODE:\n${codeSnapshot}`;
 
-    // Under-13 tier: young learners' work goes to Claude, never OpenAI.
-    const young = await fetchCallerIsYoung(caller.id);
+    // Every evaluation uses the same model (Sonnet 5.5, medium effort) so scores are comparable.
+    // Learners' work goes to Claude only, never OpenAI.
     const callModel = (system: string, user: string, maxTokens: number) =>
-      young ? claudeText({ system, user, maxTokens }) : callOpenAI(system, user, maxTokens);
+      claudeText({ system, user, maxTokens, model: 'claude-sonnet-5-5', effort: 'medium' });
 
     // Step 1: Evaluation
     const evalRaw = await callModel(EVALUATION_PROMPT, userContext, 8000);

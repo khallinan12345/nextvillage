@@ -236,7 +236,7 @@ and not tied to any penalty.
   than five learners.
 
 **What goes to the AI companies.** To be judged, the learner's text is sent to the AI provider that does
-the judging (mostly Anthropic; OpenAI for one web-design evaluation). Through the main chat route, phone
+the judging (Anthropic). Through the main chat route, phone
 numbers, emails, exact addresses, school names, exact ages and other people's names are removed before the
 text is sent on. Section 10 lists the places where that is not yet true for a particular evaluator. The
 provider terms, retention and transfer basis are in the vendor review and the data map.
@@ -253,10 +253,12 @@ Honest list, so the team can decide what to improve. Each should go through the 
 1. **The scores are AI judgments and have not been checked against human markers.** We have not yet
    compared AI scores with scores from two experienced teachers on the same work. That check (even on 20
    pieces of work) would tell us how far to trust the numbers.
-2. **Different AI models grade different things.** The monthly report and repeated task use Claude
-   Sonnet 5.5. The two challenge evaluators and the tech-skills evaluator still call older Claude
-   models (Sonnet 4.6 and 4.5), and one web-design evaluator uses OpenAI. The stated policy is Sonnet
-   5.5 everywhere, so these should be brought in line or the exception recorded in the decision log.
+2. **One model grades everything (resolved 18 Oct 2026).** Kevin's decision: every evaluation uses the
+   same model, Claude Sonnet 5.5, at medium effort. The two challenge evaluators, the grand-challenge
+   evaluator and winner selection, the weekly champion tie-break, the tech-skills evaluator, the web-design
+   session evaluator (which used OpenAI) and the certification evaluations in the chat route (which used
+   Haiku) were all moved to it. Edge functions take effect when deployed. Challenge and task *writing*
+   (not grading) may still use other models.
 3. **Some evaluators still send the learner's name.** The two challenge evaluators include the learner's
    name from their profile in the text sent to the AI so the feedback can address them. Using only a
    first name, or none, is safer and should be considered.
@@ -265,9 +267,9 @@ Honest list, so the team can decide what to improve. Each should go through the 
 5. **Some prompts are written for Oloibiri.** The repeated-task scorer describes "a rural community with a
    new solar mini-grid". Before Kenya and Ghana learners are scored, the wording should be checked so it
    does not disadvantage them.
-6. **Which certifications use which route needs checking.** Most certifications are set to a fixed Claude
-   model so the JSON result is reliable. A few (financial literacy, solar engineering, web development)
-   reach the AI by a different path and should be confirmed.
+6. **Which certifications use which route needs checking.** Certification evaluations in the chat
+   route (any page named *CertificationPage) now use Sonnet 5.5. A few (financial literacy, solar
+   engineering, web development) may reach the AI by a different path and should still be confirmed.
 7. **The "pass at 2" line is a design choice, not a tested standard.** Whether level 2 is the right bar
    for each certification has not been reviewed by subject teachers.
 8. **Scoring rubric wording was drafted by the AI.** The rubric dimensions for the repeated task need
