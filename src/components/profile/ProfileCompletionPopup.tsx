@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { findSimilarProfile, sendDuplicateResetLink, type SimilarProfileMatch } from '../../lib/duplicateDetection';
-import { User, GraduationCap, Globe, MapPin, Key, Building2, Search, PlusCircle, Upload, Copy, CheckCircle } from 'lucide-react';
+import { User, GraduationCap, Globe, MapPin, Key, Building2, Search, Upload, Copy, CheckCircle } from 'lucide-react';
 
 // Site leader can either join an existing org (they have a co-leader join code)
 // or create a brand-new org for their own cohort.
@@ -251,8 +251,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   const handleJoinCodeChange = async (code: string) => {
     const upper = code.toUpperCase();
     setJoinCode(upper);
-    setListedOrgId('');
-    if (upper.length < 6) { setJoinCodeStatus('idle'); setOrgCtx(null); return; }
+    if (upper.length < 6) { setJoinCodeStatus('idle'); if (!listedOrgId) setOrgCtx(null); return; }
     setJoinCodeStatus('checking');
     const { data } = await supabase
       .rpc('find_org_by_join_code', { lookup_code: upper });
@@ -260,6 +259,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
     if (found) {
       setJoinCodeStatus('found');
       setOrgCtx(found as OrgContext);
+      setListedOrgId(directory.some(o => o.id === found.id) ? found.id : '');
       if (found.learner_gender === 'female') setGender('female');
       if (found.learner_gender === 'male')   setGender('male');
     } else {
@@ -272,8 +272,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
   const handleCoJoinCodeChange = async (code: string) => {
     const upper = code.toUpperCase();
     setCoJoinCode(upper);
-    setCoListedOrgId('');
-    if (upper.length < 6) { setCoJoinStatus('idle'); setCoOrgCtx(null); return; }
+    if (upper.length < 6) { setCoJoinStatus('idle'); if (!coListedOrgId) setCoOrgCtx(null); return; }
     setCoJoinStatus('checking');
     const { data } = await supabase
       .rpc('find_org_by_join_code', { lookup_code: upper });
@@ -281,6 +280,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
     if (found) {
       setCoJoinStatus('found');
       setCoOrgCtx(found as OrgContext);
+      setCoListedOrgId(directory.some(o => o.id === found.id) ? found.id : '');
     } else {
       setCoJoinStatus('not_found');
       setCoOrgCtx(null);
@@ -310,7 +310,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
     // Learners can only join through an organization — a leader then
     // approves them before they see anyone else in it.
     if (role === 'student' && !orgCtx) {
-      setError('Please enter your join code, or choose your organization from the list'); return;
+      setError('Please choose your organization'); return;
     }
 
     if (role === 'site_leader') {
@@ -318,7 +318,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
         setError('Please choose to join an existing organization or create a new one'); return;
       }
       if (leaderOrgMode === 'join') {
-        if (!coOrgCtx) { setError('Please enter a valid join code, or choose the organization from the list'); return; }
+        if (!coOrgCtx) { setError('Please choose your organization'); return; }
       }
       if (leaderOrgMode === 'create') {
         if (!orgName.trim()) { setError('Please enter your organization name'); return; }
@@ -777,7 +777,7 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { value: 'student',      label: 'Student / Learner',  desc: 'I have a join code from my teacher' },
+                  { value: 'student',      label: 'Student / Learner',  desc: 'I will choose my organization' },
                   { value: 'site_leader',  label: 'Teacher / Educator', desc: 'I lead a learning group' },
                 ].map(opt => (
                   <label key={opt.value}
@@ -808,52 +808,46 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
             ══════════════════════════════════════════════════════════════ */}
             {role === 'student' && (
               <>
-                {/* Join code */}
+                {/* Organization: choose from the list (no typing, so no misspellings) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <Key className="inline mr-1" size={14} /> Organization Join Code *
-                    <span className="text-gray-400 font-normal ml-1">(ask your leader)</span>
+                    <Building2 className="inline mr-1" size={14} /> Your organization *
+                  </label>
+                  <select value={listedOrgId} onChange={e => handleListedOrgChange(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white" required>
+                    <option value="">Select your organization…</option>
+                    {directory.map(o => (<option key={o.id} value={o.id}>{o.name}</option>))}
+                  </select>
+                  {orgCtx && (
+                    <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <p className="text-sm font-semibold text-emerald-800">✓ {orgCtx.name}</p>
+                      {[orgCtx.city, orgCtx.state, orgCtx.country].filter(Boolean).length > 0 && (
+                        <p className="text-xs text-emerald-600 mt-0.5">
+                          {[orgCtx.city, orgCtx.state, orgCtx.country].filter(Boolean).join(', ')}
+                        </p>
+                      )}
+                      <p className="text-xs text-emerald-700 mt-1">
+                        A leader of this organization will approve you before you can see anything.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Join code: optional, for people who were given one */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Key className="inline mr-1" size={14} /> Have a join code?
+                    <span className="text-gray-400 font-normal ml-1">(optional; it picks your organization for you)</span>
                   </label>
                   <input type="text" value={joinCode}
                     onChange={e => handleJoinCodeChange(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-mono tracking-widest uppercase"
                     placeholder="e.g. DAV001" maxLength={6} />
-
                   {joinCodeStatus === 'checking' && (
                     <p className="mt-1.5 text-xs text-gray-400">Looking up code…</p>
                   )}
-                  {joinCodeStatus === 'found' && orgCtx && (
-                    <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                      <p className="text-sm font-semibold text-emerald-800">✓ {orgCtx.name}</p>
-                      <p className="text-xs text-emerald-600 mt-0.5">
-                        {[orgCtx.city, orgCtx.state, orgCtx.country].filter(Boolean).join(', ')}
-                      </p>
-                      {(orgCtx.learner_age_min || orgCtx.learner_age_max) && (
-                        <p className="text-xs text-emerald-600">
-                          Ages {orgCtx.learner_age_min}–{orgCtx.learner_age_max}
-                        </p>
-                      )}
-                    </div>
-                  )}
                   {joinCodeStatus === 'not_found' && joinCode.length === 6 && (
-                    <p className="mt-1.5 text-sm text-red-600">Code not found — check with your leader</p>
-                  )}
-                </div>
-
-                {/* No code? Choose from the list (no typing, so no misspellings) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <Building2 className="inline mr-1" size={14} /> No join code? Choose your organization
-                  </label>
-                  <select value={listedOrgId} onChange={e => handleListedOrgChange(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
-                    <option value="">Select your organization…</option>
-                    {directory.map(o => (<option key={o.id} value={o.id}>{o.name}</option>))}
-                  </select>
-                  {listedOrgId && (
-                    <p className="mt-1.5 text-xs text-gray-500">
-                      A leader of this organization will approve you before you can see anything.
-                    </p>
+                    <p className="mt-1.5 text-sm text-red-600">Code not found — check with your leader, or choose your organization above</p>
                   )}
                 </div>
 
@@ -981,13 +975,28 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                   {/* ── Join existing org ────────────────────────────────── */}
                   {leaderOrgMode === 'join' && (
                     <div className="stack-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                      <p className="text-xs text-indigo-700 font-medium">
-                        Enter a join code from the primary leader of the organization you are co-facilitating.
-                        Your view will be scoped to learners who joined using this specific code.
-                      </p>
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">
-                          <Key className="inline mr-1" size={12} /> Organization Join Code *
+                          <Building2 className="inline mr-1" size={12} /> Your organization *
+                        </label>
+                        <select value={coListedOrgId} onChange={e => handleCoListedOrgChange(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-sm">
+                          <option value="">Select your organization…</option>
+                          {directory.map(o => (<option key={o.id} value={o.id}>{o.name}</option>))}
+                        </select>
+                        {coOrgCtx && (
+                          <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                            <p className="text-sm font-semibold text-emerald-800">✓ {coOrgCtx.name}</p>
+                            <p className="text-xs text-indigo-600 mt-1.5">
+                              The platform administrator will approve you before you can see {coOrgCtx.name}'s learners.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <Key className="inline mr-1" size={12} /> Have a join code?
+                          <span className="text-gray-400 font-normal ml-1">(optional; it picks your organization for you)</span>
                         </label>
                         <input type="text" value={coJoinCode}
                           onChange={e => handleCoJoinCodeChange(e.target.value)}
@@ -996,34 +1005,8 @@ const ProfileCompletionPopup: React.FC<ProfileCompletionPopupProps> = ({ userId,
                         {coJoinStatus === 'checking' && (
                           <p className="mt-1.5 text-xs text-gray-400">Looking up code…</p>
                         )}
-                        {coJoinStatus === 'found' && coOrgCtx && (
-                          <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                            <p className="text-sm font-semibold text-emerald-800">✓ {coOrgCtx.name}</p>
-                            <p className="text-xs text-emerald-600 mt-0.5">
-                              {[coOrgCtx.city, coOrgCtx.state, coOrgCtx.country].filter(Boolean).join(', ')}
-                            </p>
-                            <p className="text-xs text-indigo-600 mt-1.5">
-                              You will be added as a co-facilitator. The primary leader remains unchanged.
-                            </p>
-                          </div>
-                        )}
                         {coJoinStatus === 'not_found' && coJoinCode.length === 6 && (
-                          <p className="mt-1.5 text-sm text-red-600">Code not found — check with the primary leader</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          <Building2 className="inline mr-1" size={12} /> No join code? Choose your organization
-                        </label>
-                        <select value={coListedOrgId} onChange={e => handleCoListedOrgChange(e.target.value)}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-sm">
-                          <option value="">Select your organization…</option>
-                          {directory.map(o => (<option key={o.id} value={o.id}>{o.name}</option>))}
-                        </select>
-                        {coListedOrgId && coOrgCtx && (
-                          <p className="mt-1.5 text-xs text-indigo-600">
-                            The platform administrator will approve you before you can see {coOrgCtx.name}'s learners.
-                          </p>
+                          <p className="mt-1.5 text-sm text-red-600">Code not found — check with the primary leader, or choose your organization above</p>
                         )}
                       </div>
                     </div>
