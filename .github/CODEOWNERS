@@ -1,13 +1,16 @@
-# Sensitive areas get a named reviewer. Add the security and privacy advisor's GitHub username next to
-# each line once they join (for example: /supabase/migrations/ @khallinan12345 @advisor-username),
-# then turn on "Require review from Code Owners" in the main branch protection.
-/supabase/migrations/        @khallinan12345
-/supabase/functions/         @khallinan12345
-/api/                        @khallinan12345
-/src/lib/supabaseClient.ts   @khallinan12345
-/src/pages/PrivacyPage.tsx   @khallinan12345
-/docs/platform-management/SECURITY-PROGRAM.md    @khallinan12345
-/docs/privacy-and-legal/DPIA.md                @khallinan12345
-/docs/privacy-and-legal/DATA-MAP.md            @khallinan12345
-/docs/templates/             @khallinan12345
-/.github/                    @khallinan12345
+# Sensitive areas get named reviewers. Owners:
+#   @khallinan12345 Kevin Hallinan     @adsi4nt Randy Hinders         @SilasClergy Silas Clergy
+#   @D1I2V3I4N5E6 Divinegift Morris    @confidenceonuoha416-prog Confidence Onuoha
+# Add the security and privacy advisor's GitHub username to each line once they join, then turn on
+# "Require review from Code Owners" in the main branch protection (it is not on yet, so this file has no
+# effect on merging until then).
+/supabase/migrations/        @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/supabase/functions/         @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/api/                        @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/src/lib/supabaseClient.ts   @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/src/pages/PrivacyPage.tsx   @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/docs/platform-management/SECURITY-PROGRAM.md    @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/docs/privacy-and-legal/DPIA.md                @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/docs/privacy-and-legal/DATA-MAP.md            @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/docs/templates/             @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
+/.github/                    @khallinan12345 @adsi4nt @SilasClergy @D1I2V3I4N5E6 @confidenceonuoha416-prog
