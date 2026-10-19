@@ -688,7 +688,9 @@ async function runTiebreak(
   ].filter(Boolean).join('\n')).join('\n\n---\n\n');
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5-5',
+    // Sonnet 5.5 rejects `temperature`; effort is set to medium for grading. Cast: SDK 0.27 types lack output_config.
+    ...({ output_config: { effort: 'medium' } } as Record<string, unknown>),
     max_tokens: 512,
     system: `You are a fair judge for a youth AI learning competition in ${location}. ${learners.length} learners tied at the highest tier. Choose ONE weekly champion based on: depth of community impact, quality of AI use, specificity, initiative, community ripple. Respond ONLY with valid JSON: {"winner_user_id":"<id>","reasoning":"<2-3 encouraging sentences>"}`,
     messages: [{ role: 'user', content: `Choose the weekly champion.\n\n${learnersText}\n\nUser IDs:\n${learners.map(l => `${l.display_name}: ${l.user_id}`).join('\n')}` }],

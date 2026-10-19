@@ -32,7 +32,7 @@ replaces names and places). Items marked *verify* are read from code and not con
 | **Supabase** | everything in section 1; login credentials | database, auth, file storage, edge functions | US (AWS), exact region *verify* |
 | **Vercel** | all web and API traffic; request logs | hosting, API functions, cron | US functions, region not pinned |
 | **Anthropic** | scrubbed chat and tutoring text; learner work for evaluation; the **unscrubbed** latest message for the safety classifier (by design, so leaders see the real words) | AI tutoring, evaluation, safety | US |
-| **OpenAI** | learner prompts and code for task instructions and web-session evaluation (`gpt-4o`); optional Pidgin translation (`gpt-3.5`) | AI | US |
+| **OpenAI** | learner prompts and code for task instructions (`gpt-4o`; web-session evaluation moved to Claude on 18 Oct 2026); optional Pidgin translation (`gpt-3.5`) | AI | US |
 | **Free-tier AI chain**: Groq, Cerebras, Cloudflare Workers AI, OpenRouter, Mistral (code also references Gemini and DeepSeek) | scrubbed chat text for pages on the free tier | AI tutoring at no cost | various, terms not vetted |
 | **E2B** | the code a student runs | sandboxed code execution | US *verify* |
 | **Replicate** | image prompts (scrubbed), video prompts and voice text from the edge functions | image, video and voice generation | US |
