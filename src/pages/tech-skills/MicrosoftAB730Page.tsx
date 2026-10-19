@@ -155,7 +155,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
   ],
   agents_copilot: [
     { teaching: 'Copilot agents are AI assistants customised for specific tasks or workflows. The Researcher agent searches the web and your files for accurate sourced information. The Analyst agent processes data and creates charts. Custom agents can be built in Copilot Studio for specific business needs.',
-      question: 'The Girls AIing and Vibing platform uses an AI to help learners in Oloibiri — this is similar to a custom Copilot agent. Describe what a custom Copilot agent is, what types of tasks it is best suited for, and how it differs from just using the general Copilot chat.' },
+      question: 'The nextVillage platform uses an AI to help learners in Oloibiri — this is similar to a custom Copilot agent. Describe what a custom Copilot agent is, what types of tasks it is best suited for, and how it differs from just using the general Copilot chat.' },
     { teaching: 'Copilot Studio allows business users (not just developers) to build custom agents using a low-code interface. You can connect the agent to your organisation\'s data, define its behaviour, and deploy it in Microsoft Teams. This is a key topic tested on AB-730.',
       question: 'A community health NGO wants to create a Copilot agent that answers staff questions about patient procedures using their internal procedure manuals. Which Microsoft tool would they use to build this — and what three things would they need to configure when building the agent?' },
     { teaching: 'Agents can be assigned capabilities: web search, file access, code interpretation, and image generation. Matching the right capability to the task is an exam skill. A marketing agent that creates visual assets needs image generation. An analyst agent that processes spreadsheets needs code interpreter.',
@@ -171,7 +171,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
   ],
   copilot_word: [
     { teaching: 'In Microsoft Word, Copilot can draft documents from scratch, rewrite or improve existing text, summarise long documents, and extract key information. The "/Draft with Copilot" feature starts a new document. The Copilot pane on the right allows conversation about the open document.',
-      question: 'You need to write a 500-word community impact report about the Girls AIing and Vibing programme in Oloibiri for a donor. Describe step by step how you would use Copilot in Word to create the first draft — what information would you include in your prompt, and what would you check before finalising?' },
+      question: 'You need to write a 500-word community impact report about the nextVillage programme in Oloibiri for a donor. Describe step by step how you would use Copilot in Word to create the first draft — what information would you include in your prompt, and what would you check before finalising?' },
     { teaching: 'Copilot in Word can reference other files when drafting. You can say "Draft a project summary based on /[filename]" and Copilot will use that file as source material. This is only possible if you have permission to access the referenced file.',
       question: 'You have a 40-page programme evaluation report and need to create a two-page executive summary for community leaders who are not familiar with technical terms. Write the Copilot in Word prompt you would use — and explain which Responsible AI check you would apply before sharing the summary.' },
     { teaching: 'The Rewrite feature in Word lets you ask Copilot to change the tone (more professional, more conversational), length (shorter, longer), or format (as bullet points, as a table) of selected text without rewriting the whole document.',
@@ -195,7 +195,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
   ],
   copilot_outlook: [
     { teaching: 'Copilot in Outlook can draft new emails, reply to emails, summarise long email threads, and identify action items from your inbox. The "Draft with Copilot" button appears when composing a new email or reply.',
-      question: 'You received a 15-email thread about organising the next Girls AIing cohort in Ibiade. You need to quickly understand what was agreed and what is still outstanding before joining a call. Which Copilot in Outlook feature would you use — and write the prompt you would give it?' },
+      question: 'You received a 15-email thread about organising the next nextVillage cohort in Ibiade. You need to quickly understand what was agreed and what is still outstanding before joining a call. Which Copilot in Outlook feature would you use — and write the prompt you would give it?' },
     { teaching: 'Copilot can adjust the tone of a drafted email: "Make it more formal," "Make it shorter," "Make it more persuasive." The Coaching feature in Outlook reviews your draft and suggests improvements for tone, clarity, and sentiment before you send.',
       question: 'You drafted an email declining a partnership offer from a donor organisation. You want to decline politely but leave the door open for future collaboration. Write a Copilot coaching prompt that asks for feedback on your draft — and list the two specific things you want Copilot to check.' },
     { teaching: 'Copilot can schedule follow-up actions from emails: "Create a task from this email," "Schedule a meeting based on this thread." These integrations between Outlook and Microsoft To Do / Calendar are tested on the AB-730 exam.',
@@ -205,7 +205,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     { teaching: 'Copilot in Teams has two key features: Meeting recap (automatic summary, action items, and decisions after a meeting) and Meeting chat Copilot (asking questions about what was said during a live or recorded meeting without watching the whole recording).',
       question: 'You missed a 45-minute Teams strategy meeting because of a connectivity issue in Oloibiri. You need to know what was decided and what actions were assigned to you. Which two Copilot in Teams features would help — and write the specific prompt you would use for each one?' },
     { teaching: 'Copilot in Teams Channels can summarise unread channel messages, highlight key discussions, and identify items that need your attention. This is especially useful for busy community coordinators managing multiple project channels.',
-      question: 'You manage three Teams channels for different Girls AIing cohorts (Oloibiri, Ibiade, and the Next Village partners). You have been offline for 3 days. How would you use Copilot in Teams Channels to catch up efficiently — and what prompt would you use for each channel?' },
+      question: 'You manage three Teams channels for different nextVillage cohorts (Oloibiri, Ibiade, and the Next Village partners). You have been offline for 3 days. How would you use Copilot in Teams Channels to catch up efficiently — and what prompt would you use for each channel?' },
     { teaching: 'Microsoft Pages and Notebooks (within Teams and Loop) allow teams to co-create documents alongside Copilot. Copilot can help draft, expand, or summarise collaborative pages in real time during a working session.',
       question: 'During a live Teams meeting, your team is co-editing a community action plan in a shared Loop page. Describe how Copilot in Pages could help the team during the meeting — give two specific examples of prompts the meeting facilitator might use.' },
   ],
@@ -314,7 +314,7 @@ const AB730Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
     <div className="p-3 bg-gray-800/40 rounded-lg border border-gray-700">
       <p className="text-xs font-bold text-gray-300 mb-1.5">💡 How this prep course works</p>
       <p className="text-xs text-gray-400 leading-relaxed">
-        You already use AI every day in the Girls AIing platform — that makes you better prepared than most
+        You already use AI every day in the nextVillage platform — that makes you better prepared than most
         AB-730 candidates. This course will connect what you already do to the exam vocabulary and Microsoft
         Copilot context. All examples are grounded in <strong className="text-white">Oloibiri, Nigeria</strong>.
       </p>

@@ -227,9 +227,7 @@ Deno.serve(async (req) => {
         : `This week's Community Champion is ${championName}, earning the ${tierLabel} tier!${storySnippet} Congratulations ${championName} — and thank you to every learner who took their skills into the community.`;
 
       try {
-        const newsUrl = Deno.env.get('SUPABASE_URL')!
-          .replace('supabase.co', 'vercel.app')
-          .replace('https://wohmsbeygxrbwogrggkq.', 'https://girls-aiing-and-vibing.');
+        const newsUrl = 'https://www.nextvillage.community';
 
         await fetch(`${newsUrl}/api/platform-news`, {
           method: 'POST',

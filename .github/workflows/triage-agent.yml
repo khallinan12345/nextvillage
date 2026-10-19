@@ -109,7 +109,7 @@ jobs:
           BRANCH="triage/${EVENT_TYPE}-$(date +%Y%m%d-%H%M%S)"
 
           git config user.email "triage@girlsaiing.com"
-          git config user.name  "Girls AIing Triage Bot"
+          git config user.name  "nextVillage Triage Bot"
           git checkout -b "$BRANCH"
 
           cp .github/triage/autofix-prompt.txt /tmp/prompt.txt

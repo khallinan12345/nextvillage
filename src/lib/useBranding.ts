@@ -6,7 +6,6 @@
  *
  * Priority (org-id match wins; vai is the default for all unaffiliated users):
  * 1. NPower org                  → NPower branding
- * 2. 100 Black Girls in STEM org → Girls AI-ing branding
  * 3. Solardero org               → Solardero branding
  * 4. Oloibiri (Davidson) org     → Oloibiri/vAI branding
  * 5. Everyone else               → vAI branding (default)
@@ -22,13 +21,12 @@ import { useAuth } from '../hooks/useAuth';
 // ─── Organisation constants ────────────────────────────────────────────────────
 
 export const NPOWER_ORG_ID    = 'cd0fc311-2194-485f-b8f4-e3d69022fcde';
-export const BGS100_ORG_ID    = 'c0b48eae-67af-449d-8c04-cc6950bf0982';
 export const SOLARDERO_ORG_ID = 'a1b2c3d4-0002-0002-0002-000000000002';
 export const OLOIBIRI_ORG_ID  = 'a1b2c3d4-0001-0001-0001-000000000001';
 
 // ─── Branding types ────────────────────────────────────────────────────────────
 
-export type BrandingVariant = 'npower' | 'girls-ai-ing' | 'solardero' | 'oloibiri' | 'vai';
+export type BrandingVariant = 'npower' | 'solardero' | 'oloibiri' | 'vai';
 
 export interface Branding {
   variant: BrandingVariant;
@@ -50,14 +48,6 @@ const BRANDING_MAP: Record<BrandingVariant, Omit<Branding, 'isReady'>> = {
     logoPath: '/npower-logo.svg',
     logoPathLight: '/npower-logo.svg',
     textColor: 'text-blue-700',
-  },
-  'girls-ai-ing': {
-    variant: 'girls-ai-ing',
-    institutionName: 'Girls AI-ing',
-    shortName: 'Girls AI-ing',
-    logoPath: null,
-    logoPathLight: null,
-    textColor: 'text-pink-600',
   },
   solardero: {
     variant: 'solardero',
@@ -91,7 +81,6 @@ export const resolveVariant = (
   organizationId: string | null,
 ): BrandingVariant => {
   if (organizationId === NPOWER_ORG_ID)    return 'npower';
-  if (organizationId === BGS100_ORG_ID)    return 'girls-ai-ing';
   if (organizationId === SOLARDERO_ORG_ID) return 'solardero';
   if (organizationId === OLOIBIRI_ORG_ID)  return 'oloibiri';
   return 'vai';
