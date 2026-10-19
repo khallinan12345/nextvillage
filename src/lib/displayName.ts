@@ -12,7 +12,7 @@ export function shortDisplayName(fullName: string | null | undefined): string {
 }
 
 // Public pages (the landing page) show a learner only by initials, never a name. Many winners are
-// children, and public display needs a parent's specific consent (docs/AI-LEGAL-REVIEW.md, A4).
+// children, and public display needs a parent's specific consent (docs/privacy-and-legal/AI-LEGAL-REVIEW.md, A4).
 //   'Daniel Peace Azibaolari' -> 'D. A.'   'Learner 4821' stays as it is   blank -> 'A learner'
 export function publicInitials(fullName: string | null | undefined): string {
   const name = (fullName ?? '').trim();

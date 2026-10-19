@@ -14,7 +14,7 @@
  *   2. Deletes the auth user. Foreign keys cascade to the database rows that
  *      belong to them; rows that only record "who reviewed this" are detached.
  *
- * What it does NOT do (see docs/DATA-MAP.md, "Deletion"): remove the person's
+ * What it does NOT do (see docs/privacy-and-legal/DATA-MAP.md, "Deletion"): remove the person's
  * name from other people's free text, or from emails already sent; undo
  * anonymised, aggregated research figures.
  */

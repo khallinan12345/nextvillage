@@ -1,6 +1,6 @@
 # nextVillage privacy notice: DRAFT for attorney review
 
-Status: working draft, 14 October 2026. Written from `docs/DATA-MAP.md` (what we hold, who else sees it,
+Status: working draft, 14 October 2026. Written from `docs/privacy-and-legal/DATA-MAP.md` (what we hold, who else sees it,
 how long we keep it). **Not legal advice and not yet published.** Items in **[brackets]** are decisions
 or facts Kevin must confirm before this goes live. A privacy attorney should read it before it is
 published or before we open in the US, UK or EU (COPPA, GDPR Article 8, UK Children's Code, state

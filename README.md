@@ -51,7 +51,7 @@ supabase db pull    # requires Docker (or a lightweight alternative like colima)
 
 ## Contributing
 
-Full process (branching, PRs, what the CI check verifies) is in [`docs/GitHub-Push-Process-Report.pdf`](docs/GitHub-Push-Process-Report.pdf). Short version: branch off `development`, open a PR into `main`, wait for the `typecheck-and-build` check (which also runs the test suite) to pass, merge. Direct pushes to `main` are blocked for everyone except the repo owner.
+Full process (branching, PRs, what the CI check verifies) is in [`docs/platform-management/GitHub-Push-Process-Report.pdf`](docs/platform-management/GitHub-Push-Process-Report.pdf). Short version: branch off `development`, open a PR into `main`, wait for the `typecheck-and-build` check (which also runs the test suite) to pass, merge. Direct pushes to `main` are blocked for everyone except the repo owner.
 
 ## Deployment
 

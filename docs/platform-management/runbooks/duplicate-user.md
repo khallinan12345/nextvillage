@@ -3,7 +3,7 @@
 **Owner:** Silas Clergy  
 **Escalate to:** Kevin Hallinan  
 **Last updated:** June 2026  
-**Location in repo:** `docs/runbooks/duplicate-user.md`
+**Location in repo:** `docs/platform-management/runbooks/duplicate-user.md`
 
 ---
 
@@ -201,7 +201,7 @@ WHERE id IN ('CANONICAL_ID', 'GHOST_ID');
 
 Expected: canonical row has `is_active = true`, ghost row has `is_active = false` and `merged_into` set.
 
-Then log what you did in the repo. Add a row to `docs/runbooks/merge-log.md`:
+Then log what you did in the repo. Add a row to `docs/platform-management/runbooks/merge-log.md`:
 
 ```
 | Date | Ghost ID (first 8 chars) | Canonical ID (first 8 chars) | Name | Reason |

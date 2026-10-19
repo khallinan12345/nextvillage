@@ -149,6 +149,6 @@ Confidence Onuoha. See the privacy notice for the details.
 | Removing personal details | `api/_lib/piiScrubbing.js` |
 | Younger-learner rules | `api/_lib/youngLearner.js` and the database functions it mirrors |
 | What happens after a flag | Child safeguarding policy, section 6 |
-| Incidents | `docs/runbooks/incident-response.md` |
-| AI providers and data flows | `docs/VENDOR-REVIEW.md`, `docs/DATA-MAP.md` |
-| How a change to any of this is decided | `docs/CHANGE-PROCESS.md` |
+| Incidents | `docs/platform-management/runbooks/incident-response.md` |
+| AI providers and data flows | `docs/privacy-and-legal/VENDOR-REVIEW.md`, `docs/privacy-and-legal/DATA-MAP.md` |
+| How a change to any of this is decided | `docs/platform-management/CHANGE-PROCESS.md` |

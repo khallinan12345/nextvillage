@@ -194,5 +194,5 @@ through the change process.
 | Certifications | `/certifications/...` |
 | Prompt Challenge | Offered on the learner's dashboard |
 | Community impact pages | Community Impact in the sidebar |
-| How students are evaluated | `docs/STUDENT-EVALUATION.md` |
-| Leader training | `docs/LEADER-TRAINING.md` |
+| How students are evaluated | `docs/evaluation/STUDENT-EVALUATION.md` |
+| Leader training | `docs/onboarding/LEADER-TRAINING.md` |
