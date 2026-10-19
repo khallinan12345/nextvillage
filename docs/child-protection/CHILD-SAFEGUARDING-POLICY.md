@@ -9,7 +9,7 @@ confidenceonuoha416@gmail.com. **Platform contact:** Kevin Hallinan, kevin.halli
 Version 1, 17 October 2026. To be adopted by the child-protection lead and the platform owner, reviewed
 once a year, and reviewed by a lawyer for each country where we work (see the legal review brief).
 
-Every organization we work with must name a **child safety officer** before any child is enrolled. The platform enforces this: registering an organization asks for one, learners cannot be approved without one, and the officer's name and contact details appear on the organization's leader dashboard, on each member's profile, and on the family "My path" card. At the
+Davidson AI Futures Lab, Maji Mazuri and Open Mind Africa must each name a **child safety officer** before any child is enrolled, and so must any new organization that serves children (the platform administrator switches this on for it). The platform enforces this: learners cannot be approved without one, and the officer's name and contact details appear on the organization's leader dashboard, on each member's profile, and on the family "My path" card. Other organizations, such as universities and adult groups, need none. At the
 Davidson AI Futures Lab it is Confidence Onuoha. In this policy "child-protection lead" and "child safety
 officer" mean the same person.
 

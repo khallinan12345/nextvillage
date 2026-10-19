@@ -1,6 +1,7 @@
 // src/components/dashboard/SafetyOfficerCard.tsx
 //
-// Every organization must name a child safety officer (a person families can go to with a worry).
+// Davidson AI Futures Lab, Maji Mazuri and Open Mind Africa must name a child safety officer (a person
+// families can go to with a worry); other organizations need none (organizations.requires_safety_officer).
 // Until one is named this card is prominent and the database refuses to let a leader approve new
 // learners (see 20261018100000_child_safety_officer.sql). Once named, it shows who it is and lets a
 // leader change them. The details also appear on the organization's printable "My path" card.
@@ -17,6 +18,8 @@ const SafetyOfficerCard: React.FC = () => {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
   const [officer, setOfficer] = useState<Officer | null>(null);
+  // Treated as required until the database says otherwise, so a failed lookup never hides the warning.
+  const [required, setRequired] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
@@ -33,6 +36,8 @@ const SafetyOfficerCard: React.FC = () => {
     if (org) {
       const { data: o } = await supabase.from('organizations').select('join_code').eq('id', org).maybeSingle();
       setJoinCode((o?.join_code as string | null) ?? null);
+      const { data: req } = await supabase.from('organizations').select('requires_safety_officer').eq('id', org).maybeSingle();
+      setRequired((req?.requires_safety_officer as boolean | undefined) ?? true);
     }
     const { data } = await supabase.rpc('my_safety_officer');
     const row = (Array.isArray(data) ? data[0] : data) as Officer | undefined;
@@ -43,6 +48,8 @@ const SafetyOfficerCard: React.FC = () => {
   useEffect(() => { void load(); }, [load]);
 
   if (!loaded || !orgId) return null;
+  // An organization that needs no safety officer and has not named one shows nothing here.
+  if (!required && !officer) return null;
 
   const startEdit = () => {
     setName(officer?.officer_name ?? '');
