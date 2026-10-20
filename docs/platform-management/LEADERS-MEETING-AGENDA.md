@@ -85,3 +85,32 @@ Questions for the group:
 | | | |
 
 After the meeting, Kevin records the decisions in `docs/platform-management/DECISION-LOG.md`.
+
+## Documents
+
+All files are in the public repository. Base: https://github.com/khallinan12345/nextvillage/blob/main/docs/
+
+**Child safety**
+- [Leader guide](https://github.com/khallinan12345/nextvillage/blob/main/docs/onboarding/LEADER-GUIDE.md)
+- [Child safeguarding policy](https://github.com/khallinan12345/nextvillage/blob/main/docs/child-protection/CHILD-SAFEGUARDING-POLICY.md)
+- [AI safety and guardrails](https://github.com/khallinan12345/nextvillage/blob/main/docs/child-protection/AI-SAFETY-AND-GUARDRAILS.md)
+- [Leader training and sign-off](https://github.com/khallinan12345/nextvillage/blob/main/docs/onboarding/LEADER-TRAINING.md)
+- [Code of conduct](https://github.com/khallinan12345/nextvillage/blob/main/docs/templates/CODE-OF-CONDUCT.md)
+
+**Forms**
+- [Forms index](https://github.com/khallinan12345/nextvillage/blob/main/docs/forms/README.md)
+- Parent consent form: [text](https://github.com/khallinan12345/nextvillage/blob/main/docs/templates/PARENT-CONSENT-FORM.md), [Word download](https://github.com/khallinan12345/nextvillage/raw/main/docs/forms/Parent%20consent%20form%20-%20full.docx)
+- Parent consent add-on: [text](https://github.com/khallinan12345/nextvillage/blob/main/docs/templates/PARENT-CONSENT-ADDENDUM.md), [Word download](https://github.com/khallinan12345/nextvillage/raw/main/docs/forms/Parent%20consent%20add-on.docx)
+
+**Privacy**
+- [Learner privacy](https://github.com/khallinan12345/nextvillage/blob/main/docs/privacy-and-legal/LEARNER-PRIVACY.md)
+- [Data handling commitment](https://github.com/khallinan12345/nextvillage/blob/main/docs/templates/DATA-HANDLING-COMMITMENT.md)
+
+**Change process**
+- [Change process](https://github.com/khallinan12345/nextvillage/blob/main/docs/platform-management/CHANGE-PROCESS.md)
+- [Decision log](https://github.com/khallinan12345/nextvillage/blob/main/docs/platform-management/DECISION-LOG.md)
+- [Security program](https://github.com/khallinan12345/nextvillage/blob/main/docs/platform-management/SECURITY-PROGRAM.md)
+
+**Onboarding**
+- [Onboarding guide](https://www.nextvillage.community/docs/Community-Onboarding-Guide.html) (live site)
+- Partnership agreement: [text](https://github.com/khallinan12345/nextvillage/blob/main/docs/templates/PARTNERSHIP-AGREEMENT.md), [Word download](https://github.com/khallinan12345/nextvillage/raw/main/docs/forms/Partnership%20agreement.docx)
