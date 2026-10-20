@@ -46,6 +46,7 @@ The platform has several leader-type roles, and each sees different things:
 | Teacher, facilitator | Work with learners; see the progress report for their own organization |
 | Child safety officer | Required for Davidson AI Futures Lab, Maji Mazuri and Open Mind Africa |
 | Platform administrator | Kevin and Randy; sees everything and approves sensitive changes |
+| Platform administrator assistant | Silas Clergy; receives the safety and triage emails |
 
 Questions for the group:
 - Who in each organization should hold which role? Is anyone in the wrong one?
@@ -83,7 +84,22 @@ The programme must keep running, and children must stay safe, when any one perso
 
 Scenarios: short absence (up to 2 weeks), long absence (2 weeks to 3 months), permanent change, a platform outage, a local outage.
 
-Every critical role needs a primary and a named backup: owner, technical operations, child protection lead, primary leader at Oloibiri, partner lead, finance, and the safety alert fallback inbox. At least two trusted people should be able to reach every system (domain, GitHub, Vercel, Supabase, AI providers, email service, payments, monitoring). No passwords go in the plan.
+nextVillage and vAI own the platform. No single person is the owner.
+
+Every critical role needs a primary and a named backup:
+
+| Role | Primary | Backup |
+|---|---|---|
+| Lead | Bennywhite Davidson | To be named |
+| Chief Technical Officer | Kevin Hallinan; Randy Hinders will take over as CTO in time | The security and technical advisor, once on the team |
+| Grants and Partnership Leadership | Kevin Hallinan | To be named |
+| Platform Administrator Assistant (safety and triage emails) | Silas Clergy | To be named; watched daily |
+| Child protection lead, Educator | Confidence Onuoha | To be named at Oloibiri |
+| Outreach Director, Educator, Proposal Writer, Oloibiri | Divinegift Morris | To be named at Oloibiri |
+| Partner lead | Bennywhite Davidson | To be named |
+| Finance (AI costs, hosting) | Kevin Hallinan | To be named |
+
+A role with no backup is a risk to fix first. At least two trusted people should be able to reach every system (domain, GitHub, Vercel, Supabase, AI providers, email service, payments, monitoring). No passwords go in the plan.
 
 If the platform is down: check whether it is the site, sign-in or the AI; tell learners and post a note in the lab; run the printed offline activities; the platform team checks hosting and database status and rolls back the last change if it caused the problem; record it in the incident and decision logs. A safety concern is handled under the safeguarding policy as normal, by phone or WhatsApp.
 
