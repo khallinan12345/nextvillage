@@ -1584,7 +1584,7 @@ Explain what this question is asking in simple terms and give a short example of
       const i = document.createElement('input'); i.type = 'hidden'; i.name = name; i.value = value; form.appendChild(i);
     };
     add('project[title]', sessionName);
-    add('project[description]', 'React + Vite static website — built with Girls AIing and Vibing');
+    add('project[description]', 'React + Vite static website — built with nextVillage');
     add('project[template]', 'node');
     for (const file of projectFiles) add(`project[files][${file.path}]`, file.content);
     document.body.appendChild(form); form.submit(); document.body.removeChild(form);

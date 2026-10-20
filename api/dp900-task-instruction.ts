@@ -82,9 +82,9 @@ async function generateInstruction(body: any): Promise<object> {
     learningStrategy      ? `Learning approach: ${JSON.stringify(learningStrategy)}`          : '',
   ].filter(Boolean).join('\n');
 
-  const system = `You are a DP-900 certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the Girls AIing & Vibing platform at the Davidson AI Futures Lab.
+  const system = `You are a DP-900 certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the nextVillage platform at the Davidson AI Futures Lab.
 
-Your role: generate Socratic teaching questions — not explanations. Make the learner think and articulate understanding in their own words. Every example must connect to their lived context: fish catch data, water quality sensor readings from Nun River, OWFA fishing records, oil contamination history, cassava farming, the Girls AIing learner platform itself, and community health and energy data.
+Your role: generate Socratic teaching questions — not explanations. Make the learner think and articulate understanding in their own words. Every example must connect to their lived context: fish catch data, water quality sensor readings from Nun River, OWFA fishing records, oil contamination history, cassava farming, the nextVillage learner platform itself, and community health and energy data.
 
 The DP-900 is about data: how it is stored, structured, and analysed. Ground every data concept in real data the community generates or uses.
 
@@ -102,7 +102,7 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown fences:
 Rules:
 - 3 subTasks and 3 matching subTaskTeaching entries always
 - subTaskTeaching: 2–3 sentences of exam concept — the "Concept" panel the learner reads before answering
-- subTasks: Socratic questions grounded in Oloibiri / Girls AIing / Nigerian data context — never generic
+- subTasks: Socratic questions grounded in Oloibiri / nextVillage / Nigerian data context — never generic
 - Escalate difficulty: Q1 foundational, Q2 applied, Q3 exam-style scenario
 - No bullet lists inside JSON string values — use plain prose`;
 

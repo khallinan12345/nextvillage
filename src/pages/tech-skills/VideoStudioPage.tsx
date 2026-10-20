@@ -844,8 +844,8 @@ const VideoStudioPage: React.FC = () => {
         el([0x44,0x89], new Uint8Array([0x44,0xA8,                // Duration as float64
           ...Array.from(new Uint8Array(new Float64Array([durationMs]).buffer)).reverse()
         ])),
-        el([0x4D,0x80], new TextEncoder().encode('Girls AIing')), // MuxingApp
-        el([0x57,0x41], new TextEncoder().encode('Girls AIing')), // WritingApp
+        el([0x4D,0x80], new TextEncoder().encode('nextVillage')), // MuxingApp
+        el([0x57,0x41], new TextEncoder().encode('nextVillage')), // WritingApp
       ));
 
       // Track: VP8 video

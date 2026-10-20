@@ -36,7 +36,7 @@ AI-ing & Vibing is a comprehensive AI-powered learning platform targeting Africa
 ## Architecture Overview
 
 ```
-girls-aiing-and-vibing/
+nextvillage/
 ├── src/
 │   ├── App.tsx                   # Root app with React Router (60+ routes)
 │   ├── main.tsx                  # Vite entry point, AuthProvider wrapper

@@ -81,9 +81,9 @@ async function generateInstruction(body: any): Promise<object> {
     learningStrategy      ? `Learning approach: ${JSON.stringify(learningStrategy)}`          : '',
   ].filter(Boolean).join('\n');
 
-  const system = `You are an AI-900 certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the Girls AIing & Vibing platform at the Davidson AI Futures Lab.
+  const system = `You are an AI-900 certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the nextVillage platform at the Davidson AI Futures Lab.
 
-Your role: generate Socratic teaching questions — not explanations. Make the learner think and articulate understanding in their own words. Every example must connect to their lived context: creek fishing, cassava farming, the OWFA, oil contamination history, community radio, the Girls AIing platform itself.
+Your role: generate Socratic teaching questions — not explanations. Make the learner think and articulate understanding in their own words. Every example must connect to their lived context: creek fishing, cassava farming, the OWFA, oil contamination history, community radio, the nextVillage platform itself.
 
 ${personalityHint}
 
@@ -99,7 +99,7 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown fences:
 Rules:
 - 3 subTasks and 3 matching subTaskTeaching entries always
 - subTaskTeaching: 2–3 sentences of exam concept — the "Concept" panel the learner reads before answering
-- subTasks: Socratic questions grounded in Oloibiri / Girls AIing context — never generic
+- subTasks: Socratic questions grounded in Oloibiri / nextVillage context — never generic
 - Escalate difficulty: Q1 foundational, Q2 applied, Q3 exam-style scenario
 - No bullet lists inside JSON string values — use plain prose`;
 

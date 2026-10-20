@@ -8,7 +8,7 @@
 #   tail -f assessment_log.txt
 
 SECRET="6ad112ec5c77390594b5d2519d8ced2daf59db83919d4921bada3f7576417cbc"
-BASE="https://girls-aiing-and-vibing.vercel.app/api/assess-monthly"
+BASE="https://www.nextvillage.community/api/assess-monthly"
 START="2026-04-01"
 END="2026-04-29"
 

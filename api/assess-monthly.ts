@@ -1715,7 +1715,7 @@ function buildEmailHtml(
 <div style="max-width:760px;margin:20px auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
   <div style="background:linear-gradient(135deg,#1a3d2b 0%,#2d6a4f 100%);padding:32px 36px;">
-    <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#52b788;margin-bottom:8px;font-weight:600;">Girls AIing &amp; Vibing · Oloibiri · Davidson AI Futures Lab</div>
+    <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#52b788;margin-bottom:8px;font-weight:600;">nextVillage · Oloibiri · Davidson AI Futures Lab</div>
     <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">Monthly Assessment Report</div>
     <div style="font-size:14px;color:rgba(255,255,255,0.55);">${monthLabel} · PUE Linkage + Longitudinal Analysis · v2.0</div>
   </div>
@@ -1874,7 +1874,7 @@ function buildEmailHtml(
 
     <div style="border-top:1px solid #e5e7eb;padding-top:16px;color:#9ca3af;font-size:11px;">
       <div>⏱️ ${(durationMs/1000).toFixed(1)}s &nbsp;·&nbsp; 🤖 Claude Sonnet 4.6 &nbsp;·&nbsp; 🌍 Africa cohort &nbsp;·&nbsp;
-        <a href="https://girls-aiing-and-vibing.vercel.app" style="color:#2d6a4f;text-decoration:none;">Open App ↗</a></div>
+        <a href="https://www.nextvillage.community" style="color:#2d6a4f;text-decoration:none;">Open App ↗</a></div>
       <div style="margin-top:3px;">v2.1 captures PUE domain linkage, scaffolding convergence, reasoning levels, metacognition, role readiness, enterprise artifacts, AI Proficiency scores (formal + GPT), and certification summaries.</div>
     </div>
   </div>
@@ -1965,7 +1965,7 @@ async function sendEmailReport(
     method: "POST",
     headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Girls AIing & Vibing <onboarding@resend.dev>",
+      from: "nextVillage <onboarding@resend.dev>",
       to: ["khallinan1@udayton.edu"],
       subject: `📊 Monthly Report — ${monthLabel} · ${newCount} assessed · ${idsWithHistory.length} learners total`,
       html,

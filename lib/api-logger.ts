@@ -69,7 +69,7 @@ async function sendAlert(event: SystemEvent): Promise<void> {
   if (!RESEND_KEY || !ALERT_EMAIL) return;
 
   const providerLabel = event.provider ? ` [${event.provider.toUpperCase()}]` : '';
-  const subject = `[Girls AIing]${providerLabel} ${event.severity.toUpperCase()}: ${event.event_type} in ${event.function_name}`;
+  const subject = `[nextVillage]${providerLabel} ${event.severity.toUpperCase()}: ${event.event_type} in ${event.function_name}`;
   const body = `
 <h2 style="color:#c0392b">${event.severity.toUpperCase()}: ${event.event_type}</h2>
 <p><strong>Function:</strong> ${event.function_name}</p>
@@ -80,7 +80,7 @@ ${event.user_id ? `<p><strong>User:</strong> ${event.user_id}</p>`   : ''}
 <h3>Details</h3>
 <pre style="background:#f4f4f4;padding:12px;border-radius:4px">${JSON.stringify(event.payload, null, 2)}</pre>
 <hr/>
-<p style="color:#888;font-size:12px">Girls AIing Triage Agent</p>
+<p style="color:#888;font-size:12px">nextVillage Triage Agent</p>
   `.trim();
 
   try {

@@ -110,7 +110,7 @@ const DOMAIN_META: Record<number, { label: string; shortLabel: string; color: st
 const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> = {
   ai_workloads: [
     { teaching: 'AI workloads are the types of tasks that AI systems perform. The five main types on the AI-900 exam are: machine learning, computer vision, natural language processing (NLP), document intelligence, and knowledge mining.',
-      question: 'In your own words, describe one AI workload you have already used in the Girls AIing platform. Which of the five types does it belong to, and why?' },
+      question: 'In your own words, describe one AI workload you have already used in the nextVillage platform. Which of the five types does it belong to, and why?' },
     { teaching: 'Each AI workload maps to real-world problems. Computer vision reads images. NLP understands language. Knowledge mining finds patterns in large document sets. Generative AI creates new content.',
       question: 'Think about cassava farming in Oloibiri. Which AI workload would help a farmer detect crop disease from a phone photo — and what would help them get advice in their local language? Name the workload type for each.' },
     { teaching: 'The AI-900 exam uses scenario questions: "A company wants to identify objects in photos — which workload do they need?" Knowing which workload matches which problem is the key skill.',
@@ -120,7 +120,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     { teaching: 'Microsoft defines six Responsible AI principles that appear throughout the AI-900 exam: Fairness, Reliability & Safety, Privacy & Security, Inclusiveness, Transparency, and Accountability.',
       question: 'In your own words, explain what "Fairness" means in AI. Give one example of an AI system that could be unfair — perhaps one that was trained on data that did not include people from rural Nigeria.' },
     { teaching: 'Transparency means people should know when they are interacting with AI. Accountability means humans remain responsible for AI decisions — AI cannot be held legally responsible.',
-      question: 'The Girls AIing platform has a disclaimer at the bottom: "Claude is AI and can make mistakes." Which Responsible AI principle does this address — Transparency or Accountability? Explain your reasoning.' },
+      question: 'The nextVillage platform has a disclaimer at the bottom: "Claude is AI and can make mistakes." Which Responsible AI principle does this address — Transparency or Accountability? Explain your reasoning.' },
     { teaching: 'The AI-900 exam often presents a scenario and asks: "Which Responsible AI principle is being violated?" Practice by identifying the principle from the problem described.',
       question: 'An AI model gives better loan approval rates to men than women because it was trained on historical data where men received more loans. Which Responsible AI principle is violated — Fairness, Reliability, or Inclusiveness? Justify your answer.' },
   ],
@@ -170,7 +170,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     { teaching: 'Named entity recognition (NER) finds specific types of information in text: person names, organisations, locations, dates. This is useful for extracting structured data from unstructured documents like government reports.',
       question: 'The sentence is: "On 14 March 2024, the OWFA signed an agreement with Bayelsa State in Yenagoa." Using named entity recognition, identify each named entity and its type (person, organisation, location, or date).' },
     { teaching: 'Speech recognition converts spoken audio to text (speech-to-text). Speech synthesis converts text to spoken audio (text-to-speech). Translation converts between languages. These are three distinct NLP workloads with different Azure services.',
-      question: 'The Girls AIing platform uses voice input in Nigerian English and reads AI responses aloud. Name the two NLP workload types being used — and explain the difference between them in one sentence each.' },
+      question: 'The nextVillage platform uses voice input in Nigerian English and reads AI responses aloud. Name the two NLP workload types being used — and explain the difference between them in one sentence each.' },
   ],
   azure_nlp: [
     { teaching: 'Azure AI Language covers text analytics: key phrase extraction, entity recognition, sentiment analysis, and language understanding. Azure AI Speech covers speech-to-text, text-to-speech, and speaker recognition. Azure AI Translator covers language translation.',
@@ -194,7 +194,7 @@ const FALLBACK_SEEDS: Record<string, { teaching: string; question: string }[]> =
     { teaching: 'Zero-shot prompting gives the AI no examples — just the instruction. Few-shot prompting includes 2–3 examples before asking. Chain-of-thought prompting asks the AI to reason step by step before giving a final answer.',
       question: 'You need the AI to classify water quality descriptions as "safe" or "unsafe". Write one zero-shot prompt and one few-shot prompt for the same task. Which produces a more reliable result — and why?' },
     { teaching: 'System prompts set the AI\'s behaviour for an entire conversation — like the "Be warm, encouraging, and precise" instruction in your platform. User prompts are the individual messages. Understanding this distinction helps both exam answers and real platform development.',
-      question: 'The Girls AIing platform system prompt says "You are a thinking partner, not an answer machine." In the context of the AI-900 exam, what aspect of generative AI does this system prompt address — responsible AI, grounding, or prompt engineering? Justify your answer.' },
+      question: 'The nextVillage platform system prompt says "You are a thinking partner, not an answer machine." In the context of the AI-900 exam, what aspect of generative AI does this system prompt address — responsible AI, grounding, or prompt engineering? Justify your answer.' },
   ],
   azure_genai: [
     { teaching: 'Azure OpenAI Service gives enterprise access to OpenAI\'s GPT models (and DALL-E for images) through Microsoft\'s Azure infrastructure — with Microsoft\'s security, compliance, and support. It is conceptually similar to Claude but from OpenAI, hosted on Azure.',

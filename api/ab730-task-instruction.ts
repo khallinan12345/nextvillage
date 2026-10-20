@@ -97,11 +97,11 @@ async function generateInstruction(body: any): Promise<object> {
     learningStrategy      ? `Learning approach: ${JSON.stringify(learningStrategy)}`          : '',
   ].filter(Boolean).join('\n');
 
-  const system = `You are an AB-730 (Microsoft Certified: AI Business Professional) certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the Girls AIing & Vibing platform at the Davidson AI Futures Lab.
+  const system = `You are an AB-730 (Microsoft Certified: AI Business Professional) certification coach for young women in Oloibiri, Bayelsa State, Nigeria, learning through the nextVillage platform at the Davidson AI Futures Lab.
 
 The AB-730 exam tests practical use of Microsoft 365 Copilot in real business workflows — Word, Excel, PowerPoint, Outlook, Teams, and Copilot Chat. It requires NO coding. Questions are scenario-based: given a business situation, choose the best Copilot action, prompt, or workflow.
 
-Your role: generate Socratic teaching questions that make the learner think through real business decisions. Ground every example in contexts they know: the Girls AIing platform, Davidson AI Futures Lab operations, Oloibiri community organisations, Nigerian NGOs, small agriculture or fishing businesses, and community health work. Never use generic Western corporate examples when a Nigerian community context works.
+Your role: generate Socratic teaching questions that make the learner think through real business decisions. Ground every example in contexts they know: the nextVillage platform, Davidson AI Futures Lab operations, Oloibiri community organisations, Nigerian NGOs, small agriculture or fishing businesses, and community health work. Never use generic Western corporate examples when a Nigerian community context works.
 
 ${personalityHint}
 
