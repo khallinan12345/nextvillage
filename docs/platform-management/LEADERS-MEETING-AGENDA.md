@@ -1,6 +1,6 @@
-# Leaders meeting: child safety, roles, change process, onboarding
+# Leaders meeting: child safety, roles, change process, onboarding, continuity
 
-Thursday 22 October 2026. About 90 minutes. Organizer: Kevin Hallinan.
+Thursday 22 October 2026. About 105 minutes. Organizer: Kevin Hallinan.
 
 **Goal:** leave with decisions and named owners, not just discussion.
 
@@ -13,6 +13,7 @@ Thursday 22 October 2026. About 90 minutes. Organizer: Kevin Hallinan.
 | 20 min | 2. Roles | This page, section 2 |
 | 20 min | 3. Change process | `docs/platform-management/CHANGE-PROCESS.md` |
 | 10 min | 4. Onboarding new organizations | Community onboarding guide (www.nextvillage.community/docs/Community-Onboarding-Guide.html); `docs/templates/PARTNERSHIP-AGREEMENT.md` |
+| 15 min | 5. Continuity plan | Backups for every role; the Oloibiri worksheet |
 | 5 min | Decisions, owners and dates | |
 
 ## 1. Child safety (30 min)
@@ -75,6 +76,20 @@ Questions for the group:
 - Where did Maji Mazuri's start go smoothly, and where did it get stuck?
 - What should an organization have ready before enrolling children (partnership agreement, Schedule B, signed parent forms, safety officer named)?
 - Who mentors a new organization in its first month?
+
+## 5. Continuity plan (15 min)
+
+The programme must keep running, and children must stay safe, when any one person is missing. Priority order: child safety (alerts reach a person who acts, the child protection lead can be reached); learners can sign in and learn; their data stays protected; leaders can run sessions (power, internet, computers); reports and certificates; improvements can pause.
+
+Scenarios: short absence (up to 2 weeks), long absence (2 weeks to 3 months), permanent change, a platform outage, a local outage.
+
+Every critical role needs a primary and a named backup: owner, technical operations, child protection lead, primary leader at Oloibiri, partner lead, finance, and the safety alert fallback inbox. At least two trusted people should be able to reach every system (domain, GitHub, Vercel, Supabase, AI providers, email service, payments, monitoring). No passwords go in the plan.
+
+If the platform is down: check whether it is the site, sign-in or the AI; tell learners and post a note in the lab; run the printed offline activities; the platform team checks hosting and database status and rolls back the last change if it caused the problem; record it in the incident and decision logs. A safety concern is handled under the safeguarding policy as normal, by phone or WhatsApp.
+
+Questions for the Oloibiri team (the 12-question worksheet): who runs the lab if Divinegift is away; who backs up Confidence; power at night and on cloudy days; who holds and pays for the internet account and the backup; where the computers and spares are; where the signed consent forms are kept and copied; who can record consent and approve learners when the leader is away; offline activities; how families reach someone; how the Oloibiri team reaches the platform team, in order; local costs and late payment.
+
+Next step: a 90-minute working session with Divinegift, Confidence and Bennywhite to complete the worksheet, name every backup, and plan the first drill within three months.
 
 ## Decisions to record
 
