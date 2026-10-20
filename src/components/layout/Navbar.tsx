@@ -24,7 +24,7 @@ const Navbar: React.FC = () => {
 
   // Monthly progress report: site leaders, teachers and facilitators (for their own organization), and administrators
   const canSeeProgressReport =
-    user?.role === 'site_leader' || user?.role === 'teacher' || user?.role === 'facilitator' || user?.role === 'platform_administrator';
+    user?.role === 'site_leader' || user?.role === 'leader' || user?.role === 'teacher' || user?.role === 'facilitator' || user?.role === 'platform_administrator';
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
