@@ -6,9 +6,9 @@ sensitive data, consent plus confirmed safeguards (s.49). This is that record. A
 confirm (`LEGAL-REVIEW-BRIEF.md`, question 2). It is **not** a statement that every basis below is already
 fully in place; the "Status" column says what is missing.
 
-## 1. What leaves Nigeria and Kenya, and where it goes
+## 1. What leaves Nigeria, Kenya and Ghana, and where it goes
 
-Everything the platform stores for learners in Nigeria and Kenya is held in the **United States** (Supabase,
+Everything the platform stores for learners in Nigeria, Kenya and Ghana is held in the **United States** (Supabase,
 AWS Ohio) and delivered through US-based services. Text typed to AI features is sent, after names and
 contact details are removed, to the AI vendors in `VENDOR-REVIEW.md`, which are mostly in the US.
 
@@ -20,6 +20,7 @@ contact details are removed, to the AI vendors in `VENDOR-REVIEW.md`, which are 
 | **NDPA s.41(1)(b), s.43(a)** | The data subject (here the parent or guardian for a child) consented "after having been informed of the possible risks" | The guardian consent form and the public notice state that data is stored and processed in the US and by named categories of vendor, and the risks | **To confirm** when the consent form is received; wording to be added if missing |
 | **Kenya DPA s.48(a)-(b)** | Controller has "given proof to the Data Commissioner on the appropriate safeguards" | Safeguards: vendor clauses, scrubbing before AI calls, access controls, retention limits (`SECURITY-PROGRAM.md`) | **Not lodged** with the ODPC. Ask counsel whether lodging is required for this scale |
 | **Kenya DPA s.49** | Transfer of **sensitive** personal data (health status; family details) only with the data subject's consent and confirmed safeguards | Health consultation records about community members are rare, identifiers are removed when finished, and the person must have agreed (confirmation added 16 Oct) | **Partly.** The agreement is confirmed by a tick box, not a signed consent |
+| **Ghana Act 843** | The Act has **no transfer section** (checked in the Commission's published text, 20 Oct 2026). The duties that bite are s.28 (security), s.30(2) (written contract with each processor) and s.27(2)(g) (tell the parent who receives the data). Child data is special data needing consent (s.37) | Same vendor clauses and informed guardian consent as above; the Ghana supplement to the consent form names the recipients and the US storage | **Not yet complete.** Vendor agreements still being collected. Ask a Ghanaian lawyer whether DPC practice expects more (`GHANA-LEGAL-REVIEW.md`, question 2) |
 
 ## 3. Adequacy of protection (NDPA s.42)
 
@@ -41,3 +42,4 @@ use of voice data, and E2B's region and retention.
 | Date | Decision |
 |---|---|
 | 16 Oct 2026 | Keep US hosting (Supabase does not offer an African region; moving is a large project). Rely on vendor clauses plus informed guardian consent. Revisit after lawyer review |
+| 20 Oct 2026 | Added Ghana (Act 843). No transfer rule; rely on ss.27-30, vendor contracts and informed guardian consent. Revisit after Ghanaian lawyer review |

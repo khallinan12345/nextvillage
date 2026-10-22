@@ -18,7 +18,7 @@ assessment data about the same child over time.
 | Item | Description |
 |---|---|
 | **Purpose** | Teach AI, coding and entrepreneurship skills; give feedback; help learners do community projects; keep learners safe; report grouped progress to funders and for research |
-| **Who is affected** | Several hundred learners, mostly aged 10 to 17, some 8 to 12, in Nigeria (Oloibiri), Kenya and a small US group; leaders and teachers; adults helped through community projects (no accounts) |
+| **Who is affected** | Several hundred learners, mostly aged 10 to 17, some 8 to 12, in Nigeria (Oloibiri), Kenya, Ghana (Open Mind Africa, no learners yet) and a small US group; leaders and teachers; adults helped through community projects (no accounts) |
 | **Data** | Name, email, school, town, country, **birth year only**, optional photo; learning work; chats with the AI tutor; code; media created; messages in group rooms; scores and assessments; safety flags; guardian-consent records; privacy requests; for community projects, a helped person's name, village, phone and notes (health records have identifiers removed when finished) |
 | **Sources** | The learner, their leader, the platform's own activity |
 | **Where it goes** | Supabase (AWS Ohio, USA) stores everything; Vercel serves the site; AI and tool vendors receive scrubbed text, listed in `VENDOR-REVIEW.md`; Resend emails leader alerts |
@@ -74,3 +74,21 @@ agreements; (3) train leaders on alerts and consent; (4) record the transfer bas
 | Date | Version | By | Note |
 |---|---|---|---|
 | 16 Oct 2026 | 1 | Drafted by Claude (AI) for Kevin Hallinan | First assessment; awaiting lawyer review |
+| 22 Oct 2026 | 1.1 | Drafted by Claude (AI) for Kevin Hallinan | Added Annex A (Ghana) |
+
+## Annex A. Ghana (Open Mind Africa)
+
+Added 22 Oct 2026 from `GHANA-LEGAL-REVIEW.md`. Act 843 has no DPIA requirement, so this annex is good practice.
+The assessment above applies unchanged; these points are specific to Ghana.
+
+- **Lawful basis:** a child under parental control is *special personal data* (s.37(1)(a)); processing needs
+  consent (s.37(2)(b)). Same guardian-consent gate as elsewhere, using the Ghana supplement.
+- **Scale risk (new):** Open Mind Africa may bring a very large cohort through schools. Consent collection and
+  safety-officer capacity are the limiting risks (review section 6). Mitigation: pilot cohort first; a head
+  safety officer plus a deputy per school or district.
+- **School records (new):** do not import school rosters or results; s.62(b) restricts a school's disclosure of
+  pupil records. Learners join by code.
+- **Registration:** the controller must register with the Data Protection Commission (ss.27, 46, 53); a
+  non-Ghanaian controller registers as an external company (s.45(2)). Who registers is open (lawyer question 1).
+- **Breach:** notify the Commission and the families as soon as reasonably practicable (s.31); see the runbook.
+- **Residual risk:** medium, as elsewhere. Prior consultation is not required by the Act.
