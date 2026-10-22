@@ -36,7 +36,7 @@ with no photo). The public never sees a child's name on the website; it sees ini
 
 **AI helpers and computers in other countries.** What your child types to the AI helper is sent, **after names
 and phone numbers are removed**, to AI companies, mostly in the United States. Your child's information is
-stored on computers in the **United States** (Ohio). **Risks:** US companies and courts, not Nigerian ones,
+stored on computers in the **United States** (Ohio). **Risks:** US companies and courts, not those of your own country,
 control those computers; companies may keep records for a short time; no computer system is perfectly safe.
 We choose companies that say they do not use our data to train their AI, we limit what is sent, and we delete
 data on a schedule. Children under 13 use only one carefully chosen AI company.

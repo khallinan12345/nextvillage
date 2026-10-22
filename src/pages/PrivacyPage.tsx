@@ -140,7 +140,7 @@ const PrivacyPage: React.FC = () => (
       </div>
       <p className="mt-3">
         These companies are in the United States or other countries, so your information is processed outside
-        Nigeria and outside your home country. We prefer services that say they do not use customers’ content to train
+        your home country. We prefer services that say they do not use customers’ content to train
         their AI models, and we are reviewing each service’s terms.
       </p>
 
@@ -185,7 +185,8 @@ const PrivacyPage: React.FC = () => (
       </p>
       <p className="mt-3">
         If you are not happy with our answer, you can complain to the data protection regulator where you
-        live: in Nigeria, the Nigeria Data Protection Commission; in the United States, the Federal Trade
+        live: in Nigeria, the Nigeria Data Protection Commission; in Kenya, the Office of the Data Protection
+        Commissioner; in Ghana, the Data Protection Commission; in the United States, the Federal Trade
         Commission.
       </p>
 
