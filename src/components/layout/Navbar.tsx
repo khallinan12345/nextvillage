@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
-import { Menu, X, Sparkles, LogOut, ShieldCheck, ChevronUp, ChevronDown, TrendingUp } from 'lucide-react';
+import { Menu, X, Sparkles, LogOut, ShieldCheck, ChevronUp, ChevronDown } from 'lucide-react';
 import classNames from 'classnames';
 import { useBranding } from '../../lib/useBranding';
 
@@ -17,10 +17,6 @@ const Navbar: React.FC = () => {
     user?.role === 'site_administrator' ||
     user?.role === 'research_lead' ||
     user?.role === 'platform_administrator';
-
-  // Monthly progress report: site leaders, teachers and facilitators (for their own organization), and administrators
-  const canSeeProgressReport =
-    user?.role === 'site_leader' || user?.role === 'leader' || user?.role === 'teacher' || user?.role === 'facilitator' || user?.role === 'platform_administrator';
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -361,21 +357,6 @@ const Navbar: React.FC = () => {
 
           {/* Right-side user actions — same height/font as nav links */}
           <div className="hidden xl:flex items-stretch h-full flex-shrink-0 gap-0.5">
-            {canSeeProgressReport && (
-              <Link
-                to="/progress-report"
-                className={classNames(
-                  navItemBase,
-                  'gap-1.5',
-                  isActivePath('/progress-report')
-                    ? 'text-amber-700 border-b-2 border-amber-500'
-                    : 'text-amber-600 hover:text-amber-700 border-b-2 border-transparent hover:border-amber-300'
-                )}
-              >
-                <TrendingUp size={14} />
-                Progress report
-              </Link>
-            )}
             {isLeaderOrAdmin && (
               <Link
                 to="/admin/student-dashboard"
@@ -535,16 +516,6 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="border-t border-gray-100 px-2 pt-2 pb-3 stack-y-0.5">
-            {canSeeProgressReport && (
-              <Link
-                to="/progress-report"
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-semibold text-amber-600 hover:bg-amber-50 hover:text-amber-700 transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <TrendingUp size={14} />
-                Progress report
-              </Link>
-            )}
             {isLeaderOrAdmin && (
               <Link
                 to="/admin/student-dashboard"
