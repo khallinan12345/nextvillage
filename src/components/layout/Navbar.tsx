@@ -13,6 +13,8 @@ const Navbar: React.FC = () => {
 
   // Admin link visible to leaders and platform administrators
   const isLeaderOrAdmin =
+    user?.role === 'teacher' ||
+    user?.role === 'facilitator' ||
     user?.role === 'site_leader' ||
     user?.role === 'site_administrator' ||
     user?.role === 'research_lead' ||
