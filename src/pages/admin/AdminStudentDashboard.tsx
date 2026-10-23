@@ -18,6 +18,7 @@ import UngroupedMembersCard from '../../components/dashboard/UngroupedMembersCar
 import DuplicateAccountsCard from '../../components/dashboard/DuplicateAccountsCard';
 import SafetyOfficerCard from '../../components/dashboard/SafetyOfficerCard';
 import MissingBirthYearCard from '../../components/dashboard/MissingBirthYearCard';
+import ChangeRequestsCard from '../../components/dashboard/ChangeRequestsCard';
 import SafetyFlagsCard from '../../components/dashboard/SafetyFlagsCard';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
@@ -2857,6 +2858,13 @@ const AdminStudentDashboard: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
+              onClick={() => navigate('/admin/changes?new=1')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-800 bg-white hover:bg-gray-50 border border-gray-300 transition-colors"
+            >
+              <Lightbulb size={14} />
+              Suggest change
+            </button>
+            <button
               onClick={() => navigate('/progress-report')}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
             >
@@ -2873,6 +2881,8 @@ const AdminStudentDashboard: React.FC = () => {
             )}
           </div>
         </div>
+
+        <div className="mb-5"><ChangeRequestsCard /></div>
 
         {/* Safety flags and join requests — first thing a leader sees on a busy intake day.
             research_lead can view the dashboard but can't approve members. */}

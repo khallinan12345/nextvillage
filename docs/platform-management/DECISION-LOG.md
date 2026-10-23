@@ -5,6 +5,7 @@ decided. If a decision is reversed, add a new line; do not delete the old one.
 
 | Date | Decision | Why | Decided by |
 |---|---|---|---|
+| 2026-10-23 | **Staff can suggest platform changes in the app** (Admin dashboard, Suggest change): all panel members give feedback, the proposal is updated, a site leader names the owner, and the panel reviews the finished change. The panel is site leaders, leaders, teachers, facilitators, child safety officers and platform administrators | The change process was only visible to leaders on the Team page; teachers and facilitators see learners' progress and should shape changes | Kevin Hallinan |
 | 2026-10-17 | Adopt a written change process: propose, triage weekly, plan monthly, privacy and safety check, peer review, check results | One person was deciding everything; the team and the security advisor need shared ownership | Kevin Hallinan |
 | 2026-10-16 | Public name is **nextVillage.community** (not "AI'ing & Vibing") | One clear name for families, partners and regulators | Kevin Hallinan |
 | 2026-10-16 | The privacy contact is the child-protection lead, Confidence Onuoha; the Davidson AI Futures Lab has no street address | Parents without email need a local, reachable person | Kevin Hallinan |
