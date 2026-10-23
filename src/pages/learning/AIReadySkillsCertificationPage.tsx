@@ -663,10 +663,10 @@ Respond ONLY in this JSON format:
     const columnBase = `certification_${selectedCertification.certification_name.toLowerCase().replace(/ /g, '_').replace(/[^a-z0-9_]/g, '')}_${selectedAssessment.assessment_name.toLowerCase().replace(/ /g, '_').replace(/[^a-z0-9_]/g, '')}`;
     const activityName = `${selectedCertification.certification_name} Certification`;
     
-    let progressStatus = 'started';
-    if (score >= 3) {
-      progressStatus = 'completed';
-    }
+    // Certified once every assessment is Proficient (2) or higher; a 3 across the board is Advanced.
+    const allPassed = assessmentScores.length > 0 && assessmentScores.every(s =>
+      s.assessment_name === selectedAssessment.assessment_name ? score >= 2 : (s.score ?? -1) >= 2);
+    const progressStatus = allPassed ? 'completed' : 'started';
     
     try {
       const { data: existingRecord } = await supabase

@@ -274,8 +274,10 @@ Honest list, so the team can decide what to improve. Each should go through the 
 6. **Which certifications use which route needs checking.** Certification evaluations in the chat
    route (any page named *CertificationPage) now use Sonnet 5.5. A few (financial literacy, solar
    engineering, web development) may reach the AI by a different path and should still be confirmed.
-7. **The "pass at 2" line is a design choice, not a tested standard.** Whether level 2 is the right bar
-   for each certification has not been reviewed by subject teachers.
+7. **The "pass at 2" line is a design choice, not a tested standard.** Decided by Kevin on 22 Oct 2026: a
+   score of 2 (Proficient) earns the certification on every criterion, and a 3 on every criterion makes it
+   Advanced. All 18 certification pages now apply this. Whether level 2 is the right bar for each
+   certification has still not been reviewed by subject teachers.
 8. **Scoring rubric wording was drafted by the AI.** The rubric dimensions for the repeated task need
    a human educator's review.
 9. **An older monthly-assessment function exists in the database project** next to the live one. Confirm

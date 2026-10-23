@@ -634,10 +634,10 @@ Respond ONLY in this JSON format:
       `certification_ai_proficiency_${selectedAssessment.assessment_name.toLowerCase().replace(/ /g, '_').replace(/[^a-z0-9_]/g, '')}`;
     
     // Determine progress status based on score
-    let progressStatus = 'started'; // Default when they've submitted but not passed
-    if (score >= 3) {
-      progressStatus = 'completed'; // Advanced level
-    }
+    // Certified once every assessment is Proficient (2) or higher; a 3 across the board is Advanced.
+    const allPassed = assessmentScores.length > 0 && assessmentScores.every(s =>
+      s.assessment_name === selectedAssessment.assessment_name ? score >= 2 : (s.score ?? -1) >= 2);
+    const progressStatus = allPassed ? 'completed' : 'started';
     
     try {
       // Check if record exists
@@ -658,7 +658,7 @@ Respond ONLY in this JSON format:
 
       // Only update progress if:
       // 1. It's not already 'completed', OR
-      // 2. The new status is 'completed' (advanced score)
+      // 2. The new status is 'completed' (every assessment Proficient or higher)
       if (existingRecord) {
         // Update existing record
         if (existingRecord.progress !== 'completed' || progressStatus === 'completed') {
