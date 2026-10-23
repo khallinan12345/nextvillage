@@ -105,6 +105,24 @@ advisor reviews and the privacy documents are updated **with** the change, not a
 At the next monthly meeting, for each shipped change, compare the result with the success measure written in
 the proposal. Keep, adjust or undo. Record what we learned in the decision log.
 
+## Suggest Change (in the app)
+
+Anyone on the staff panel can use the **Suggest change** button on the Admin dashboard. The panel is site leaders,
+leaders, teachers, facilitators, each organization's child safety officer, and platform administrators.
+
+1. **Suggest.** The proposer describes the problem, who is affected, the evidence, exactly what should change, what it
+   will take and how we will know it worked.
+2. **Feedback.** Every other panel member gets an action item on their Admin dashboard and answers: support, support
+   with changes, or a concern (with a comment). Feedback is due in 14 days. When everyone has answered, the proposal
+   moves on; after the due date the proposer or a site leader can move it on without the missing answers.
+3. **Update.** The proposer rewrites the proposal to reflect the feedback and says what changed.
+4. **Owner.** A site leader or platform administrator names who is responsible (or records why it is not going ahead).
+5. **Make the change.** The owner marks it done and says what was done.
+6. **Review.** Every panel member except the owner gives a thumbs up or feedback. A site leader can send it back to the
+   owner if reviewers found problems. When everyone has reviewed, it is closed.
+
+The leaders-only proposals list in the Team workspace (triage, tiers and scoring above) is separate and still there.
+
 ## 4. Urgent changes
 
 A security hole, a child at risk, an outage, or a legal deadline can skip the queue. The platform lead (or the
