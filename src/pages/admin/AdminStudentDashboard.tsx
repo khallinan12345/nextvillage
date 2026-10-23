@@ -2852,14 +2852,23 @@ const AdminStudentDashboard: React.FC = () => {
             </div>
             <p className="text-sm text-gray-500 ml-9">Student activity, certification scores, and API cost analytics.</p>
           </div>
-          {(isPlatformAdmin || isLeader) && (
-            <NewsManager
-              isPlatformAdmin={isPlatformAdmin}
-              userOrgId={newsOrgId}
-              userOrgName={newsOrgName}
-              allOrgs={newsOrgOptions}
-            />
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => navigate('/progress-report')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
+            >
+              <TrendingUp size={14} />
+              Monthly progress report
+            </button>
+            {(isPlatformAdmin || isLeader) && (
+              <NewsManager
+                isPlatformAdmin={isPlatformAdmin}
+                userOrgId={newsOrgId}
+                userOrgName={newsOrgName}
+                allOrgs={newsOrgOptions}
+              />
+            )}
+          </div>
         </div>
 
         {/* Safety flags and join requests — first thing a leader sees on a busy intake day.
