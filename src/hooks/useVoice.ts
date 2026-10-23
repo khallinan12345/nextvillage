@@ -49,12 +49,15 @@ import {
   registerEnglishSpeak,
   playPidginVoice,
 } from '../lib/speechCoordination';
+import { getVoiceStage, ensureVoiceStageLoaded } from './useVoiceStage';
+import { isUserGesture } from '../lib/voicePolicy';
+import { setPendingSpeech } from '../lib/voiceQueue';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface UseVoiceReturn {
   /** Speak the given text. If TTS unavailable, sets fallbackText instead. */
-  speak: (text: string) => void;
+  speak: (text: string, opts?: { force?: boolean }) => void;
   /** Cancel any current speech. */
   cancel: () => void;
   /** True while the browser is actively speaking. */
@@ -132,6 +135,8 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
   const [audioLoading, setAudioLoading] = useState(false);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => { void ensureVoiceStageLoaded(); }, []);
 
   // Recognition language — Nigerian English understands Nigerian-accented speech
   // far better than en-US
@@ -281,9 +286,19 @@ export function useVoice(isAfrica: boolean = false): UseVoiceReturn {
   // ── speak() — always tries SpeechGen (Ezinne) first, falls back to browser ─
   // Note: always 'english' mode here — harmless now that both modes
   // resolve to the same voice server-side, kept for clarity/future use.
-  const speak = useCallback((text: string) => {
+  // Replies that arrive on their own are read aloud only while the learner is in the "auto" stage; after that
+  // they wait for a tap on the Listen button. A click on a speaker button (or force) always plays.
+  const speak = useCallback((text: string, opts?: { force?: boolean }) => {
     if (!text.trim()) return;
 
+    const direct = opts?.force || isUserGesture();
+    const stage = getVoiceStage();
+    if (!direct && stage !== 'auto') {
+      if (stage === 'tap') setPendingSpeech(text);
+      return;
+    }
+
+    setPendingSpeech(null);
     setFallbackText(null);
     void speakSpeechGen(text, 'english');
   }, [speakSpeechGen]);

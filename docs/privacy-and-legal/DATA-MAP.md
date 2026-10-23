@@ -36,7 +36,8 @@ replaces names and places). Items marked *verify* are read from code and not con
 | **Free-tier AI chain**: Groq, Cerebras, Cloudflare Workers AI, OpenRouter, Mistral (code also references Gemini and DeepSeek) | scrubbed chat text for pages on the free tier | AI tutoring at no cost | various, terms not vetted |
 | **E2B** | the code a student runs | sandboxed code execution | US *verify* |
 | **Replicate** | image prompts (scrubbed), video prompts and voice text from the edge functions | image, video and voice generation | US |
-| **ElevenLabs / SpeechGen** | text to be spoken (Pidgin text-to-speech) | voice | *verify* |
+| **Microsoft Azure AI Speech** (when configured; replaces SpeechGen) / ElevenLabs / SpeechGen | the first few sentences of an AI reply, with code, links and lists removed (text-to-speech) | voice | Azure region chosen at setup; *verify* others |
+| **Supabase Storage** (`tts-cache`, private) | the generated audio clip, named by a hash of its text; no user id in the name | avoids paying twice for the same clip | us-east-2 |
 | **Resend** | leader email addresses; safety alerts containing student name, email, city and the flagged text; digests | email | US |
 | **StackBlitz** | the student's own project code when they open a preview | live preview | US |
 | Bluesky / X / LinkedIn digests | platform news only; no learner data intended | public posts | n/a |

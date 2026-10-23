@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
+import VoiceListenButton from '../VoiceListenButton';
 import Navbar from './Navbar';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -35,6 +36,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           {children}
         </main>
       </div>
+      <VoiceListenButton />
     </div>
   );
 };

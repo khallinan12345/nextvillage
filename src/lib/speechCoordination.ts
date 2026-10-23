@@ -6,9 +6,9 @@
 const PIDGIN_TTS_API_PATH = '/api/pidgin-tts';
 
 let activePidginCancel: (() => void) | null = null;
-let englishSpeak: ((text: string) => void) | null = null;
+let englishSpeak: ((text: string, opts?: { force?: boolean }) => void) | null = null;
 
-export function registerEnglishSpeak(fn: (text: string) => void): () => void {
+export function registerEnglishSpeak(fn: (text: string, opts?: { force?: boolean }) => void): () => void {
   englishSpeak = fn;
   return () => {
     if (englishSpeak === fn) {
@@ -62,7 +62,7 @@ export async function speakEnglish(text: string): Promise<void> {
   if (ok) return;
 
   if (englishSpeak) {
-    englishSpeak(text);
+    englishSpeak(text, { force: true });
   } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
   }
@@ -93,8 +93,11 @@ export async function playPidginVoice(
     });
 
     const data = (await response.json().catch(() => null)) as
-      | { audioUrl?: string; error?: string }
+      | { audioUrl?: string | null; error?: string; skipped?: string }
       | null;
+
+    // Nothing worth reading aloud in this reply (for example only code): stay silent, not an error.
+    if (response.ok && data?.skipped) return true;
 
     if (!response.ok || !data?.audioUrl) {
       throw new Error(data?.error || 'Pidgin TTS request failed.');
