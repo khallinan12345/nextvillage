@@ -302,7 +302,7 @@ const ADMIN_IDS = new Set([
   '8b3f70dc-e5d0-4eb0-af7d-ec6181968213',
 ]);
 
-const DASHBOARD_ROLES = new Set(['leader', 'site_leader', 'site_administrator', 'research_lead', 'platform_administrator']);
+const DASHBOARD_ROLES = new Set(['teacher', 'facilitator', 'leader', 'site_leader', 'site_administrator', 'research_lead', 'platform_administrator']);
 
 const EXCLUDED_IDS = new Set([
   '0e738663-a70e-4fd3-9ba6-718c02e116c2',
@@ -2296,6 +2296,9 @@ const AdminStudentDashboard: React.FC = () => {
 
   const isPlatformAdmin = ADMIN_IDS.has(user?.id ?? '') || userRole === 'platform_administrator';
   const isLeader = (userRole === 'leader' || userRole === 'site_leader' || userRole === 'site_administrator' || userRole === 'research_lead') && !isPlatformAdmin;
+  // Teachers and facilitators see their own organization's learners (Student Activity tab only);
+  // the leader-only tabs and tools stay gated on isLeader.
+  const isOrgStaff = isLeader || userRole === 'teacher' || userRole === 'facilitator';
 
   const [activeTab, setActiveTab] = useState<'student' | 'platform-global' | 'create-challenge' | 'model-overview' | 'cost-overview' | 'cost-learner' | 'community-impact' | 'tech-skills-roadmap' | 'youth-enterprises'>(
     ADMIN_IDS.has(user?.id ?? '') ? 'platform-global' : 'student'
@@ -2369,7 +2372,7 @@ const AdminStudentDashboard: React.FC = () => {
 
   // Fetch leader orgs
   useEffect(() => {
-    if (!isLeader || !user?.id) return;
+    if (!isOrgStaff || !user?.id) return;
     (async () => {
       const { data: ownedOrgs } = await supabase
         .from('organizations')
@@ -2409,7 +2412,7 @@ const AdminStudentDashboard: React.FC = () => {
       setLeaderJoinCodes([...new Set(codes)]);
       setSelectedOrgId(orgs[0]?.id ?? myProfile?.organization_id ?? null);
     })();
-  }, [isLeader, user?.id]);
+  }, [isOrgStaff, user?.id]);
 
   // (adminOrgJoinCodes removed - unused)
 
@@ -2436,7 +2439,7 @@ const AdminStudentDashboard: React.FC = () => {
           .select('id, name, email, grade_level, continent, country, organization_id, join_code_used')
           .order('name', { ascending: true });
 
-        if (isLeader) {
+        if (isOrgStaff) {
           if (leaderJoinCodes.length > 0) {
             query = query.in('join_code_used', leaderJoinCodes);
           } else {
@@ -2462,7 +2465,7 @@ const AdminStudentDashboard: React.FC = () => {
         setLoadingLearners(false);
       }
     })();
-  }, [authChecked, isLeader, isPlatformAdmin, leaderJoinCodes.join(','), selectedOrgId, userOrgId, effectiveOrgId, effectiveOrgJoinCodes.join(',')]);
+  }, [authChecked, isOrgStaff, isPlatformAdmin, leaderJoinCodes.join(','), selectedOrgId, userOrgId, effectiveOrgId, effectiveOrgJoinCodes.join(',')]);
 
   // ── Community Impact rollup ("47 consultations this quarter, ~₦380,000...") ─
   const [communityImpactRows, setCommunityImpactRows] = useState<CommunityImpactRow[]>([]);
@@ -2941,7 +2944,7 @@ const AdminStudentDashboard: React.FC = () => {
               </>
             )}
 
-            {isLeader && (
+            {isOrgStaff && (
               <>
                 {leaderOrgs.length > 1 && (
                   <div className="flex items-center gap-3 mb-4 flex-wrap">

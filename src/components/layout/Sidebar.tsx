@@ -44,9 +44,8 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const isLeaderOrAdmin = user?.role === 'site_leader' || user?.role === 'site_administrator' || user?.role === 'research_lead' || user?.role === 'platform_administrator';
+  const isTeacherStaff = user?.role === 'teacher' || user?.role === 'facilitator';
   const isTeamMember = isLeaderOrAdmin || user?.role === 'leader';
-  const canSeeProgressReport =
-    user?.role === 'site_leader' || user?.role === 'leader' || user?.role === 'teacher' || user?.role === 'facilitator' || user?.role === 'platform_administrator';
 
   const mainNavigation: NavItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: <Database size={20} /> },
@@ -365,7 +364,7 @@ const Sidebar: React.FC = () => {
             })}
           </div>
 
-          {isLeaderOrAdmin && (
+          {(isLeaderOrAdmin || isTeacherStaff) && (
             <>
               <div className="h-px bg-gray-100 my-3" />
               <Link
@@ -385,6 +384,7 @@ const Sidebar: React.FC = () => {
                 </span>
                 Admin
               </Link>
+              {isLeaderOrAdmin && (
               <Link
                 to="/admin/learner-growth"
                 className={classNames(
@@ -402,24 +402,8 @@ const Sidebar: React.FC = () => {
                 </span>
                 Learner growth
               </Link>
-            </>
-          )}
-
-          {canSeeProgressReport && (
-            <Link
-              to="/progress-report"
-              className={classNames(
-                'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors',
-                isActive('/progress-report')
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'text-amber-600 hover:bg-amber-50 hover:text-amber-700'
               )}
-            >
-              <span className={classNames('flex-shrink-0', isActive('/progress-report') ? 'text-amber-700' : 'text-amber-400')}>
-                <TrendingUp size={20} />
-              </span>
-              Progress report
-            </Link>
+            </>
           )}
 
           {isTeamMember && (
