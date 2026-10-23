@@ -40,6 +40,7 @@ function sanitize(t: string): string {
 import { createClient } from "@supabase/supabase-js";
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { logApiCost } from "../lib/api-cost-logger.js";
+import { summariseCertRows } from "./_lib/certSummary.js";
 
 // ─── Excluded Users (admins / facilitators — never assessed or reported) ─────
 // All Kevin Hallinan and Bennywhite Davidson accounts — never assessed or shown in reports
@@ -529,34 +530,20 @@ async function fetchUserCertData(userId: string): Promise<CertData> {
     cert_names_attempted: [], cert_names_passed: [], cert_avg_score: null,
   };
   try {
-    // Fetch all dashboard rows that have a certification score for this user
-    const { data: certRows } = await supabase
+    // Certifications come only from the Certification page (no AI scaffolding). Scaffolded
+    // learning rows also carry certification_evaluation_score, so select by category instead.
+    const { data: allCertRows } = await supabase
       .from("dashboard")
-      .select(`
-        title, activity, progress, certification_evaluation_score,
-        certification_ai_proficiency_application_of_ai_score,
-        certification_ai_proficiency_ethics_responsibility_score,
-        certification_ai_proficiency_understanding_ai_score,
-        certification_ai_proficiency_verification_bias_score
-      `)
+      .select("*")
       .eq("user_id", userId)
-      .not("certification_evaluation_score", "is", null);
+      .eq("category_activity", "Certification");
 
-    if (!certRows?.length) return empty;
+    const summary = summariseCertRows(allCertRows);
+    const certRows = summary.certRows;
+    if (!certRows.length) return empty;
 
-    // Gather all-cert summary
-    const names: string[] = [];
-    const passed: string[] = [];
-    let scoreSum = 0;
-    let scoreCount = 0;
-
-    for (const row of certRows) {
-      const title = row.title || row.activity || "Unknown";
-      names.push(title);
-      const score = Number(row.certification_evaluation_score);
-      if (!isNaN(score)) { scoreSum += score; scoreCount++; }
-      if (score >= 2.25) passed.push(title);
-    }
+    const names = summary.names;
+    const passed = summary.passed;
 
     // Find the AI Proficiency cert row specifically
     const aiProfRow = certRows.find(
@@ -593,9 +580,9 @@ async function fetchUserCertData(userId: string): Promise<CertData> {
       ai_prof_cert_level: certLevel,
       cert_attempted_count: names.length,
       cert_passed_count: passed.length,
-      cert_names_attempted: [...new Set(names)],
-      cert_names_passed: [...new Set(passed)],
-      cert_avg_score: scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 100) / 100 : null,
+      cert_names_attempted: names,
+      cert_names_passed: passed,
+      cert_avg_score: summary.avgScore,
     };
   } catch (err: any) {
     console.warn(`   fetchUserCertData error: ${err.message}`);
@@ -843,7 +830,7 @@ async function assessMonthlySkills(
           "You write concise, encouraging educational progress summaries.",
           `Write a 2-sentence summary for a monthly report about a learner's certification activity at an AI learning lab in rural Nigeria.
 Certifications attempted: ${certData.cert_names_attempted.join(", ")}
-Certifications passed (score ≥ 2.25/3): ${certData.cert_names_passed.length > 0 ? certData.cert_names_passed.join(", ") : "None yet"}
+Certifications passed: ${certData.cert_names_passed.length > 0 ? certData.cert_names_passed.join(", ") : "None yet"}
 Average cert score: ${certData.cert_avg_score ?? "N/A"}/3
 AI Proficiency cert level: ${certData.ai_prof_cert_level}
 AI Proficiency dimension scores (0-3): Application=${certData.ai_prof_application_score ?? "N/A"}, Ethics=${certData.ai_prof_ethics_score ?? "N/A"}, Understanding=${certData.ai_prof_understanding_score ?? "N/A"}, Verification=${certData.ai_prof_verification_score ?? "N/A"}
@@ -2468,7 +2455,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   "You write concise, encouraging educational progress summaries.",
                   `Write a 2-sentence summary for a monthly report about a learner certification activity at an AI learning lab in rural Nigeria.
 Certifications attempted: ${certData.cert_names_attempted.join(", ")}
-Certifications passed (score >= 2.25/3): ${certData.cert_names_passed.length > 0 ? certData.cert_names_passed.join(", ") : "None yet"}
+Certifications passed: ${certData.cert_names_passed.length > 0 ? certData.cert_names_passed.join(", ") : "None yet"}
 Average cert score: ${certData.cert_avg_score ?? "N/A"}/3
 AI Proficiency cert level: ${certData.ai_prof_cert_level}
 AI Proficiency dimension scores (0-3): Application=${certData.ai_prof_application_score ?? "N/A"}, Ethics=${certData.ai_prof_ethics_score ?? "N/A"}, Understanding=${certData.ai_prof_understanding_score ?? "N/A"}, Verification=${certData.ai_prof_verification_score ?? "N/A"}
@@ -2714,7 +2701,7 @@ Be encouraging and specific. Note strongest and weakest dimensions if AI Profici
                 "You write concise, encouraging educational progress summaries.",
                 `Write a 2-sentence summary for a monthly report about a learner certification activity at an AI learning lab in rural Nigeria.
 Certifications attempted: ${certData.cert_names_attempted.join(", ")}
-Certifications passed (score >= 2.25/3): ${certData.cert_names_passed.length > 0 ? certData.cert_names_passed.join(", ") : "None yet"}
+Certifications passed: ${certData.cert_names_passed.length > 0 ? certData.cert_names_passed.join(", ") : "None yet"}
 Average cert score: ${certData.cert_avg_score ?? "N/A"}/3
 AI Proficiency cert level: ${certData.ai_prof_cert_level}
 AI Proficiency dimension scores (0-3): Application=${certData.ai_prof_application_score ?? "N/A"}, Ethics=${certData.ai_prof_ethics_score ?? "N/A"}, Understanding=${certData.ai_prof_understanding_score ?? "N/A"}, Verification=${certData.ai_prof_verification_score ?? "N/A"}

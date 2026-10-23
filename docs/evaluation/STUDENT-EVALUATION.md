@@ -291,8 +291,10 @@ Honest list, so the team can decide what to improve. Each should go through the 
     (b) coverage: only about 10% of Oloibiri learners (13 of 130 for August) have a monthly score,
     because the monthly assessment needs at least three active sessions in the month and now also
     evaluates "Use Claude" use. Kevin chose to leave this as is (19 Oct), so most reports will list
-    most learners as "too little activity to score"; (c) find out why the stored certification count is
-    wrong before it is shown to leaders.
+    most learners as "too little activity to score"; (c) the stored certification count was wrong because the monthly
+    assessment counted scaffolded learning scores as certifications; fixed in code (certificates now come
+    only from Certification-page rows marked completed), but counts already stored stay wrong until
+    those months are re-run, so keep them out of leaders' reports until then.
 11. **No appeal path is written for learners.** Section 9 describes how a family can ask for a review.
     A one-page "if you disagree with a score" note for leaders should be added.
 
