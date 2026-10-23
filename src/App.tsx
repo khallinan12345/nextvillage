@@ -53,7 +53,6 @@ const SolarEngineeringCertificationPage = lazy(() => import('./pages/learning/So
 const AIPlaygroundPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundPage'));
 const AIPlaygroundTogetherPage = lazy(() => import('./pages/AIPlayground/AIPlaygroundTogetherPage'));
 const SystemsThinkPage = lazy(() => import('./pages/AIPlayground/SystemsThinkPage'));
-const UDolliPage = lazy(() => import('./pages/UDolli/UDolliPage'));
 
 // Tech Skills Pages
 const WebDevelopmentPage = lazy(() => import('./pages/tech-skills/WebDevelopmentPage'));
@@ -298,7 +297,6 @@ export const AppContent: React.FC = () => {
         <Route path="/playground" element={<AIPlaygroundPage />} />
         <Route path="/playground/together" element={<AIPlaygroundTogetherPage />} />
         <Route path="/systems-think" element={<SystemsThinkPage />} />
-        <Route path="/udolli" element={<UDolliPage />} />
 
         {/* Tech Skills Routes */}
         <Route path="/tech-skills/vibe-coding" element={<VibeCodingPage />} />
