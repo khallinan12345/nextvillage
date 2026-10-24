@@ -66,6 +66,36 @@ export const RULES = {
     why: 'Logs are kept for months and read by more people than the database is. Student messages must not end up there.',
     fix: 'Log ids and counts, never message text, prompts or request bodies.',
   },
+  'code-exec-outside-sandbox': {
+    severity: 'high',
+    title: 'Code run on our own server instead of the E2B sandbox',
+    why: 'eval, new Function, child_process and Node\'s vm module are not sandboxes. Learner-written code that reaches them can take over the server, steal keys or attack other learners.',
+    fix: 'Run learner code only through E2B (api/execute-code.ts). There must be no local fallback, even for testing.',
+  },
+  'iframe-no-sandbox': {
+    severity: 'high',
+    title: 'Embedded page that can run learner code without a safe sandbox',
+    why: 'An iframe showing learner-written HTML without sandbox="allow-scripts" (or with allow-same-origin added) can reach the signed-in session of whoever opens it.',
+    fix: 'Use sandbox="allow-scripts" and never add allow-same-origin to it.',
+  },
+  'pii-column-datamap': {
+    severity: 'low',
+    title: 'New column that looks like personal data',
+    why: 'Anything that holds personal information about people must be in the data map and covered by the retention rules before it ships.',
+    fix: 'Add it to the data map (kept in the private working-documents repo) and say so in the PR. If already done: add the ignore comment.',
+  },
+  'chat-table-no-safety': {
+    severity: 'low',
+    title: 'New message or chat table with no safety check',
+    why: 'Peer messages between children need the automatic safety flags that Together Room has. AI-only chats are different, so this is a prompt to confirm which this is.',
+    fix: 'If people write to each other here, add a safety trigger like together_messages_safety_check. If it is AI-only, add the ignore comment.',
+  },
+  'public-sensitive-doc': {
+    severity: 'medium',
+    title: 'Working document with real numbers in the public repository',
+    why: 'Row counts and table inventories about children tell an attacker where the data is and how much. This repository is public and git keeps history.',
+    fix: 'Keep working documents (data map, DPIA, reviews) in the private repository, or remove the numbers.',
+  },
   'new-external-host': {
     severity: 'medium',
     title: 'New outside service called',
@@ -212,6 +242,79 @@ export function checkBrowserCode(file, text) {
   return out;
 }
 
+// ── Code execution, iframes, personal data, chat tables, public docs ─────────
+
+const noLineComments = (t) => t.replace(/^\s*(?:\/\/|\*|\/\*).*$/gm, (c) => ' '.repeat(c.length));
+
+export function checkCodeExecution(file, text) {
+  if (/\.test\.[jt]s$/.test(file) || ignored(text, 'code-exec-outside-sandbox')) return [];
+  const code = noLineComments(text);
+  const m = code.match(/\beval\s*\(|new\s+Function\s*\(|child_process|\bexecSync\b|\bspawnSync\b|\bexecFile(?:Sync)?\b|from\s+['"](?:node:)?vm['"]|require\(\s*['"](?:node:)?vm['"]\s*\)|\bvm\.(?:run\w*|Script)\b/);
+  return m ? [finding('code-exec-outside-sandbox', file, lineOf(code, m.index), m[0])] : [];
+}
+
+export function checkIframes(file, text) {
+  const out = [];
+  if (ignored(text, 'iframe-no-sandbox')) return out;
+  for (const m of text.matchAll(/<iframe\b((?:[^>]|=>)*?)>/g)) {
+    const attrs = m[1];
+    const sandbox = attrs.match(/\bsandbox\s*=\s*(?:"([^"]*)"|\{\s*["'`]([^"'`]*)["'`]\s*\})/);
+    const line = lineOf(text, m.index);
+    if (sandbox) {
+      if (/allow-same-origin/.test(sandbox[1] ?? sandbox[2]) && /allow-scripts/.test(sandbox[1] ?? sandbox[2]))
+        out.push(finding('iframe-no-sandbox', file, line, 'sandbox has both allow-scripts and allow-same-origin'));
+      continue;
+    }
+    if (/\bsandbox\b/.test(attrs)) continue; // set by a variable; a person should read it, but not flag it
+    // A fixed https address (a video embed, say) shows nobody's code; anything else might.
+    const fixedAddress = /\bsrc\s*=\s*"https:\/\/[^"]+"/.test(attrs) && !/srcDoc/.test(attrs);
+    if (!fixedAddress) out.push(finding('iframe-no-sandbox', file, line, 'iframe without a sandbox attribute'));
+  }
+  return out;
+}
+
+const PII_NAME = '[a-z_]*(?:email(?!ed)|phone|birth|dob|address|first_name|last_name|full_name|surname|guardian|ip_address|latitude|longitude|national_id|passport)[a-z_]*';
+const COLUMN_TYPE = '(?:text|varchar|character|citext|date|timestamp|timestamptz|inet|numeric|integer|int|bigint|jsonb)';
+
+export function checkSchemaSignals(file, text, { corpus = null } = {}) {
+  const out = [];
+  // Look only at CREATE TABLE / ALTER TABLE statements (not function bodies, where variables share these names).
+  const sql = stripSqlComments(text).replace(/\$(\w*)\$[\s\S]*?\$\1\$/g, (b) => b.replace(/[^\n]/g, ' '));
+  const statements = sql.split(';');
+  let at = 0;
+  const piiHits = new Set();
+  for (const st of statements) {
+    const start = at;
+    at += st.length + 1;
+    if (!/^\s*(?:CREATE\s+(?:UNLOGGED\s+)?TABLE|ALTER\s+TABLE)\b/i.test(st)) continue;
+    const re = new RegExp(`(?:ADD\\s+COLUMN\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?|[(,]\\s*)"?(${PII_NAME})"?\\s+${COLUMN_TYPE}\\b`, 'gi');
+    for (const m of st.matchAll(re)) {
+      const name = m[1].toLowerCase();
+      if (/^(?:p|v)_/.test(name) || /_(?:at|by|count|status|sent)$/.test(name) || piiHits.has(name)) continue;
+      piiHits.add(name);
+      if (!ignored(text, 'pii-column-datamap')) out.push(finding('pii-column-datamap', file, lineOf(sql, start + m.index), name));
+    }
+    // Peer messaging tables: a new table named like messages/chat.
+    const t = st.match(/CREATE\s+(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([\w."]+)/i);
+    const table = t ? nameOf(t[1]) : '';
+    const covered =
+      /safety/i.test(text) ||
+      (corpus && new RegExp(`CREATE\\s+(?:OR\\s+REPLACE\\s+)?TRIGGER[^;]*safety[^;]*\\bON\\s+(?:public\\.)?"?${table}"?`, 'i').test(corpus));
+    if (t && /message|chat/i.test(t[1]) && !covered && !ignored(text, 'chat-table-no-safety'))
+      out.push(finding('chat-table-no-safety', file, lineOf(sql, start + (t.index ?? 0)), nameOf(t[1])));
+  }
+  return out;
+}
+
+// Documents meant for families may stay public; working documents should not carry real numbers.
+const PUBLIC_DOCS = /^docs\/(?:forms|templates)\/|\/(?:LEARNER-PRIVACY|PRIVACY-NOTICE-DRAFT|CHILD-SAFEGUARDING-POLICY)\.md$/i;
+
+export function checkPublicDoc(file, text) {
+  if (PUBLIC_DOCS.test(file) || ignored(text, 'public-sensitive-doc')) return [];
+  const m = text.match(/~?\b\d[\d,]*\s+rows\b/i);
+  return m ? [finding('public-sensitive-doc', file, lineOf(text, m.index), m[0])] : [];
+}
+
 // ── New outside hosts ─────────────────────────────────────────────────────────
 
 const HOST_RE = /https?:\/\/([a-z0-9][a-z0-9.-]*\.[a-z]{2,})/gi;
@@ -241,9 +344,14 @@ export function checkNewHosts(file, text, known) {
 
 export function checkFile(file, text, { knownHosts = null, corpus = null, checkGrants = true, latestDefinition = null } = {}) {
   const out = [];
-  if (/^supabase\/migrations\/.+\.sql$/.test(file)) out.push(...checkMigration(file, text, { corpus, checkGrants, latestDefinition }));
-  else if (/^api\/.+\.(js|ts)$/.test(file)) out.push(...checkApiRoute(file, text));
-  else if (/^src\/.+\.(ts|tsx|js|jsx)$/.test(file)) out.push(...checkBrowserCode(file, text));
+  if (/^supabase\/migrations\/.+\.sql$/.test(file)) {
+    out.push(...checkMigration(file, text, { corpus, checkGrants, latestDefinition }));
+    out.push(...checkSchemaSignals(file, text, { corpus }));
+  }
+  else if (/^api\/.+\.(js|ts)$/.test(file)) out.push(...checkApiRoute(file, text), ...checkCodeExecution(file, text));
+  else if (/^src\/.+\.(ts|tsx|js|jsx)$/.test(file)) out.push(...checkBrowserCode(file, text), ...(/\.(tsx|jsx)$/.test(file) ? checkIframes(file, text) : []));
+  else if (/^(?:lib\/.+\.(js|ts)|[^/]+\.cjs|scripts\/.+\.(ts|js))$/.test(file)) out.push(...checkCodeExecution(file, text));
+  else if (/^docs\/.+\.(md|html)$/.test(file)) out.push(...checkPublicDoc(file, text));
   if (knownHosts && /^(api|src|lib)\/.+\.(js|ts|tsx|jsx)$/.test(file) && !/\.test\./.test(file))
     out.push(...checkNewHosts(file, text, knownHosts));
   return out;

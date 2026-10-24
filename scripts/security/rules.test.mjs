@@ -125,3 +125,64 @@ describe('new outside hosts', () => {
     expect([...hostsIn('see https://github.com/x and https://api.foo.dev')]).toEqual(['api.foo.dev']);
   });
 });
+
+describe('code execution outside the sandbox', () => {
+  it('flags eval, new Function, child_process and vm in server code', () => {
+    for (const code of ['eval(x)', 'new Function("return 1")', "const { exec } = require('child_process')", "import vm from 'node:vm'", 'vm.runInNewContext(code)'])
+      expect(ids('api/run.js', `requireUser(); ${code}`)).toContain('code-exec-outside-sandbox');
+  });
+  it('flags it in the local server file too', () => {
+    expect(ids('real-e2b-server.cjs', 'vm.runInNewContext(code)')).toContain('code-exec-outside-sandbox');
+  });
+  it('ignores mentions in comments and tests', () => {
+    expect(ids('api/ok.js', 'requireUser();\n// there is deliberately no eval( fallback or vm.run here')).toEqual([]);
+    expect(ids('api/ok.test.js', 'eval(x)')).toEqual([]);
+  });
+});
+
+describe('iframes', () => {
+  const tsx = (tag) => ids('src/pages/X.tsx', tag);
+  it('flags a srcDoc iframe with no sandbox', () => {
+    expect(tsx('<iframe srcDoc={html} />')).toContain('iframe-no-sandbox');
+  });
+  it('flags a dynamic src with no sandbox', () => {
+    expect(tsx('<iframe src={`/api/site-page?x=${id}`} />')).toContain('iframe-no-sandbox');
+  });
+  it('flags allow-scripts together with allow-same-origin', () => {
+    expect(tsx('<iframe srcDoc={h} sandbox="allow-scripts allow-same-origin" />')).toContain('iframe-no-sandbox');
+  });
+  it('accepts sandbox="allow-scripts" and fixed video embeds', () => {
+    expect(tsx('<iframe srcDoc={h} sandbox="allow-scripts" />')).toEqual([]);
+    expect(tsx('<iframe src="https://www.youtube.com/embed/abc" />')).toEqual([]);
+  });
+});
+
+describe('personal data columns and chat tables', () => {
+  const f = 'supabase/migrations/20261101000000_x.sql';
+  const safe = 'ALTER TABLE public.t ENABLE ROW LEVEL SECURITY; REVOKE ALL ON public.t FROM anon, authenticated;';
+  it('reminds about a new personal-data column', () => {
+    expect(ids(f, `CREATE TABLE public.t (id int, guardian_email text); ${safe}`)).toContain('pii-column-datamap');
+    expect(ids(f, `ALTER TABLE public.t ADD COLUMN IF NOT EXISTS birth_year integer; ${safe}`)).toContain('pii-column-datamap');
+  });
+  it('does not fire on timestamps, variables or function bodies', () => {
+    expect(ids(f, `CREATE TABLE public.t (id int, emailed_at timestamptz); ${safe}`)).not.toContain('pii-column-datamap');
+    const fn = `CREATE FUNCTION public.f() RETURNS void LANGUAGE plpgsql SET search_path = public AS $$ DECLARE email text; BEGIN END $$;`;
+    expect(ids(f, fn)).not.toContain('pii-column-datamap');
+  });
+  it('prompts for a safety check on a new message table', () => {
+    expect(ids(f, `CREATE TABLE public.room_messages (id int); ${safe}`)).toContain('chat-table-no-safety');
+  });
+  it('is satisfied when the migration has a safety trigger', () => {
+    const sql = `CREATE TABLE public.room_messages (id int); ${safe} CREATE TRIGGER room_messages_safety AFTER INSERT ON public.room_messages FOR EACH ROW EXECUTE FUNCTION f();`;
+    expect(ids(f, sql)).not.toContain('chat-table-no-safety');
+  });
+});
+
+describe('public working documents', () => {
+  it('flags row counts in a working document', () => {
+    expect(ids('docs/privacy-and-legal/DATA-MAP.md', '| profiles (~325 rows) |')).toContain('public-sensitive-doc');
+  });
+  it('allows documents meant for families', () => {
+    expect(ids('docs/privacy-and-legal/LEARNER-PRIVACY.md', 'about 325 rows')).toEqual([]);
+  });
+});

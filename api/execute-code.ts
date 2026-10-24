@@ -1,4 +1,5 @@
 // api/execute-code.ts — Real E2B code execution
+// security-check: ignore code-exec-outside-sandbox -- the 'child_process' below is a blocked-pattern list, not a call
 //
 // Uses @e2b/code-interpreter to run Python and JavaScript in isolated sandboxes.
 // Each request spins up a fresh sandbox, executes the code, and closes it.
