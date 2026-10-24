@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "deadcode": "knip",
+    "security-check": "node scripts/security/security-check.mjs",
     "preview": "vite preview",
     "assess:baseline": "tsx --env-file=.env.local scripts/baseline.ts",
     "assess:monthly": "tsx --env-file=.env.local scripts/monthly.ts",

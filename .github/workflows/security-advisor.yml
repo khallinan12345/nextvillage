@@ -1,0 +1,61 @@
+name: Security advisor
+
+# Advisory only: this never blocks a merge and is not a required check. It looks at what a pull request
+# changes and reports concerns for a person to read (see scripts/security/rules.mjs).
+#
+# Because this repository is public, details go to the Security tab (visible to people with access), and
+# the public job summary and pull request comment show counts only. Run `npm run security-check` locally
+# for the full readable report.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write   # upload findings to the Security tab (not available on pull requests from forks)
+  pull-requests: write     # the one counts-only comment (not available on pull requests from forks)
+
+jobs:
+  advise:
+    runs-on: ubuntu-latest
+    continue-on-error: true   # advisory: a problem in this job must never turn the pull request red
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Run the security advisor
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+        run: |
+          node scripts/security/security-check.mjs --audit --summary "$RUNNER_TEMP/summary.md" --sarif "$RUNNER_TEMP/advisor.sarif" --out "$RUNNER_TEMP/report"
+          cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Send details to the Security tab
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: ${{ runner.temp }}/advisor.sarif
+          category: security-advisor
+
+      - name: Keep one counts-only comment up to date
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          marker='<!-- security-advisor -->'
+          body="$marker"$'\n'"$(cat "$RUNNER_TEMP/summary.md")"
+          id=$(gh api "repos/$REPO/issues/$PR/comments" --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" > /dev/null
+          else
+            gh api "repos/$REPO/issues/$PR/comments" -f body="$body" > /dev/null
+          fi

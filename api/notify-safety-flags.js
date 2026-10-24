@@ -1,4 +1,5 @@
 // api/notify-safety-flags.js
+// security-check: ignore api-no-auth -- deliberately public; the reason is explained below
 // Vercel Serverless Function
 // Usage: POST /api/notify-safety-flags   (no body, no login)
 //
