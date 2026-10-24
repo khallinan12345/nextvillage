@@ -30,7 +30,34 @@ expose data. Re-run the advisor after any database change and compare with this 
 
 ## Outside the database
 
-- GitHub **Dependabot alerts** are switched off for the repository, and **code scanning** is not set up.
-  Both are toggled in the repository's Security settings. Dependency version updates (pull requests)
-  already run weekly.
+- **Code scanning (CodeQL)**, secret scanning with push protection, and Dependabot security updates are
+  on (checked 24 October 2026). Dependency version updates (pull requests) run weekly.
 - `npm audit`: 0 known vulnerabilities (16 October 2026). Secret scanning: 0 open alerts.
+
+## Security advisor on pull requests (added 24 October 2026)
+
+An advisory check, never a required one: it cannot block a merge. It reads what a pull request changes and
+flags concerns for a person to look at. Rules are in `scripts/security/rules.mjs`:
+
+| Rule | Looks for |
+|---|---|
+| `db-no-rls` | a new table without row-level security |
+| `db-default-grants` | a new table, view or function not revoked from `anon` and `authenticated` |
+| `db-definer-search-path` | a `SECURITY DEFINER` function with no fixed `search_path` |
+| `db-definer-no-caller-check` | a `SECURITY DEFINER` function that app users can call and that never checks who is asking |
+| `ai-temperature-claude` | `temperature` sent straight to Claude (newer models answer 400) |
+| `api-no-auth` | an API route with no sign-in, cron secret or webhook secret |
+| `api-trusts-body-id` | a user id taken from the request body or query |
+| `secret-in-browser` | a server secret read from browser code or a `VITE_` variable |
+| `log-student-content` | request bodies, prompts or messages written to logs |
+| `new-external-host` | a call to an outside service that no code on `main` calls yet |
+
+- **Locally:** `npm run security-check` (changed files vs `main`) or `npm run security-check -- --all --open`
+  (whole repo; opens a readable report, which can be saved as PDF from the browser's print dialog).
+- **On a pull request:** the workflow `security-advisor.yml` sends details to the Security tab and leaves one
+  counts-only comment. The repository is public, so the comment and job summary never include file names or
+  descriptions.
+- **Deliberate exceptions:** put `security-check: ignore <rule-id> -- <reason>` in the file. Two API routes
+  that are public on purpose (`notify-safety-flags`, `site-page`) already carry it.
+- These are simple pattern checks. They miss things and sometimes flag something fine, and they do not
+  replace the Supabase advisor or a person's review.

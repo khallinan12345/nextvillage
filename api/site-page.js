@@ -1,4 +1,5 @@
 // api/site-page.js
+// security-check: ignore api-no-auth -- deliberately public; the reason is explained below
 //
 // Publicly serves one published page of a "Website Builder" site
 // (src/pages/tech-skills/WebsiteBuilderPage.tsx) as raw HTML — no login
