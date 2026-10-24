@@ -37,6 +37,14 @@ const ResetPasswordPage: React.FC = () => {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
 
+      // A reset usually means the old password may be known to someone else (or a shared computer was used):
+      // end every other sign-in so only this one survives. Failure here must not undo the reset.
+      try {
+        await supabase.auth.signOut({ scope: 'others' });
+      } catch (signOutError) {
+        console.warn('Could not sign out other sessions after the password change:', signOutError);
+      }
+
       setSuccess(true);
       setTimeout(() => navigate('/home'), 2500);
     } catch (err: any) {
