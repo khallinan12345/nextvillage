@@ -67,8 +67,12 @@ interface BookImage {
   sender_name: string;
 }
 
-// Matches the leader-role set enforced by RLS (together_rooms_update /
-// together_messages_update_moderate) — keep in sync with the migration.
+// Matches the leader-role set enforced by RLS (together_rooms_update / together_rooms_delete /
+// together_messages_update_moderate). Those policies list teacher, site_leader, facilitator, leader and
+// research_lead but not site_administrator on purpose: they read the role from get_my_effective_profile(),
+// which reports an approved site administrator as 'site_leader' (migration 20261017140000), so a site
+// administrator passes the same policies. Keep this list in step with them, counting site_administrator
+// as site_leader.
 const LEADER_ROLES = new Set(['teacher', 'site_leader', 'site_administrator', 'facilitator', 'leader', 'research_lead']);
 
 interface TogetherRoom {
