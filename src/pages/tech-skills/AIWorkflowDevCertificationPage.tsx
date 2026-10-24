@@ -1,3 +1,4 @@
+// security-check: ignore secret-in-browser -- VITE_ANTHROPIC_API_KEY appears only inside starter-project templates shown to learners, not as a key this app reads
 // src/pages/tech-skills/AIWorkflowDevCertificationPage.tsx
 //
 // AI Workflow Development Certification — React + Anthropic API

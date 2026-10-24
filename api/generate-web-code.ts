@@ -360,7 +360,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (prompt.length > 5000)
       return res.status(400).json({ error: 'Prompt too long (max 5,000 chars)' });
 
-    console.log(`[generate-web-code] action=${action}, source=${source}, prompt="${prompt.substring(0, 80)}...", images=${images?.length || 0}`);
+    // Log sizes, never the learner's words: logs are read by more people and kept longer than the database.
+    console.log(`[generate-web-code] action=${action}, source=${source}, promptChars=${prompt.length}, images=${images?.length || 0}`);
 
     switch (action) {
       case 'generate': {

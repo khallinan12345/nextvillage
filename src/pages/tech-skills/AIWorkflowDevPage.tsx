@@ -1,3 +1,4 @@
+// security-check: ignore secret-in-browser -- VITE_ANTHROPIC_API_KEY appears only inside starter-project templates shown to learners, not as a key this app reads
 // src/pages/tech-skills/AIWorkflowDevPage.tsx
 //
 // Full-Stack App + AI Agent Development
