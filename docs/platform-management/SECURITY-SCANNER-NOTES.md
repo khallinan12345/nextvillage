@@ -50,6 +50,11 @@ flags concerns for a person to look at. Rules are in `scripts/security/rules.mjs
 | `api-trusts-body-id` | a user id taken from the request body or query |
 | `secret-in-browser` | a server secret read from browser code or a `VITE_` variable |
 | `log-student-content` | request bodies, prompts or messages written to logs |
+| `code-exec-outside-sandbox` | `eval`, `new Function`, `child_process` or Node `vm` in server code: learner code must run only in E2B |
+| `iframe-no-sandbox` | an iframe showing learner code without `sandbox="allow-scripts"`, or with `allow-same-origin` added |
+| `pii-column-datamap` | a new column that looks like personal data (a reminder to update the data map) |
+| `chat-table-no-safety` | a new message or chat table with no safety trigger (a prompt to confirm it is AI-only) |
+| `public-sensitive-doc` | row counts in a working document in the public repository |
 | `new-external-host` | a call to an outside service that no code on `main` calls yet |
 
 - **Locally:** `npm run security-check` (changed files vs `main`) or `npm run security-check -- --all --open`
