@@ -22,6 +22,7 @@ import BirthYearPrompt from './components/profile/BirthYearPrompt';
 import YoungGate from './components/auth/YoungGate';
 import RequireAuth from './components/auth/RequireAuth';
 import { AuthProvider } from './hooks/useAuth';
+import IdleSignOut from './components/auth/IdleSignOut';
 
 // Auth Pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -428,6 +429,7 @@ function App() {
       <ImpersonationProvider>
         <BrowserRouter>
           <ImpersonationBanner />
+          <IdleSignOut />
           <AppContent />
         </BrowserRouter>
       </ImpersonationProvider>
