@@ -1,10 +1,12 @@
 import React from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import AuthForm from '../../components/auth/AuthForm';
 import { useAuth } from '../../hooks/useAuth';
 
 const LoginPage: React.FC = () => {
   const { user, loading } = useAuth();
+  const [params] = useSearchParams();
+  const signedOutForIdle = params.get('idle') === '1';
 
   // Redirect to dashboard if already logged in
   if (user && !loading) {
@@ -24,6 +26,11 @@ const LoginPage: React.FC = () => {
       
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-sm sm:rounded-lg sm:px-10">
+          {signedOutForIdle && (
+            <p role="status" className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              You were signed out because there was no activity for a while. This keeps your account safe on shared computers. Please sign in again.
+            </p>
+          )}
           <AuthForm mode="login" />
         </div>
         <p className="mt-4 text-center text-xs text-gray-500">
