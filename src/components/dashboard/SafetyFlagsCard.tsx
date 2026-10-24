@@ -36,6 +36,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   job_or_travel_offer:  'Job or travel abroad',
   money_request:        'Money or bank details',
   secrecy_or_meeting:   'Secrecy, meeting or photos',
+  sexual_content:       'Sexual content',
+  escalating_pattern:   'Warning signs over recent messages',
 };
 
 const REFRESH_MS = 60_000;

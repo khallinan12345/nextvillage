@@ -5,7 +5,8 @@
 //
 // Emails an organization's leaders about new "Use Claude Together" safety
 // flags — messages the database flagged automatically (phone numbers,
-// "WhatsApp me", job/travel offers abroad, money requests, secrecy) and
+// "WhatsApp me", job/travel offers abroad, money requests, secrecy, sexual content, or warning
+// signs that build up across a sender's recent messages) and
 // messages a member reported. Called by the database itself: a trigger on
 // together_safety_flags pings this endpoint via pg_net, and a pg_cron job
 // retries every 10 minutes while anything is still unsent. See
@@ -40,6 +41,8 @@ const CATEGORY_LABELS = {
   job_or_travel_offer:  'Job, travel or visa offer abroad',
   money_request:        'Money, airtime or bank details',
   secrecy_or_meeting:   'Secrecy, meeting up, or asking for photos',
+  sexual_content:       'Sexual content or a sexual request',
+  escalating_pattern:   'Several warning signs across recent messages (read the whole exchange)',
 };
 
 function escapeHtml(s) {
@@ -60,7 +63,7 @@ function flagHtml(flag, reporterName) {
         From <strong style="color:#1B2420;">${escapeHtml(flag.sender_name || 'unknown')}</strong>
         in room “${escapeHtml(flag.room_name || 'deleted room')}” · ${new Date(flag.created_at).toUTCString()}
       </p>
-      <blockquote style="margin:0;border-left:3px solid #ccc;padding-left:12px;color:#333;font-size:14px;white-space:pre-wrap;">${escapeHtml((flag.excerpt || '').slice(0, 1000))}</blockquote>
+      <blockquote style="margin:0;border-left:3px solid #ccc;padding-left:12px;color:#333;font-size:14px;white-space:pre-wrap;">${escapeHtml((flag.excerpt || '').slice(0, 2000))}</blockquote>
     </div>`;
 }
 

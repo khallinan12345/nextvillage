@@ -33,7 +33,9 @@ only when there is something to do; an empty dashboard means you are caught up.
 
 ### 3.1 Safety flags
 **What it is.** A message in a group room was flagged (a phone number, "WhatsApp me", an offer from abroad, a
-money request, secrecy, or a member pressed Report). AI chat flags arrive by email as well.
+money request, secrecy, sexual content, or a member pressed Report). A flag labelled "several warning signs"
+means one person's recent messages added up (for example asking age, whether the child is alone, and giving
+compliments); the email shows the whole exchange. AI chat flags arrive by email as well.
 **What to do.**
 1. Read it the same day. It is automatic and can be wrong.
 2. Talk to the learner **in person, kindly and casually** (see the leader guide). Do not say they were "flagged".
