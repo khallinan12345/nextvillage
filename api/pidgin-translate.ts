@@ -1,3 +1,4 @@
+// security-check: ignore ai-temperature-claude -- temperature is sent only in the Groq and OpenAI branches, never to Claude
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 import { fetchCallerIsYoung } from './_lib/youngLearner.js';
@@ -11,7 +12,7 @@ interface TranslationRequest {
 }
 
 interface AnthropicMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -54,8 +55,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const systemPrompt = `You are an expert Nigerian Pidgin translator. Translate the exact input into simple, clear Nigerian Pidgin. Output only the raw translated text with no explanation, no labels, and no additional punctuation or quotes.`;
 
+  // Anthropic takes the system prompt as a top-level `system` field; a `system` entry inside `messages`
+  // is rejected with a 400. (Under-13 learners are served by Anthropic only, so this path must work.)
   const anthropicMessages: AnthropicMessage[] = [
-    { role: 'system', content: systemPrompt },
     { role: 'user', content: `Translate this English text into Nigerian Pidgin: ${text.trim()}` },
   ];
 
@@ -98,6 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       model: providerModel,
       max_tokens: 300,
       output_config: { effort: 'low' },
+      system: systemPrompt,
       messages: anthropicMessages,
     };
   }
