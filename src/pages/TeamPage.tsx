@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FileText, ExternalLink, CheckCircle2, Clock, AlertTriangle, Plus, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
-import { DOC_GROUPS, PRIVATE_DOCS, docUrl, REPO_URL } from '../lib/teamDocs';
+import { DOC_GROUPS, PRIVATE_DOCS, docUrl, isPrivateDoc, REPO_URL, PRIVATE_REPO_URL } from '../lib/teamDocs';
 import { dueInfo, describeDue, sortByUrgency, type ReviewItem } from '../lib/teamReviews';
 
 const TEAM_ROLES = new Set(['leader', 'site_leader', 'site_administrator', 'research_lead', 'platform_administrator']);
@@ -206,6 +206,9 @@ const Documents: React.FC = () => (
                 {d.title} <ExternalLink size={14} />
               </a>
               <p className="text-sm text-gray-600 mt-1">{d.about}</p>
+              {isPrivateDoc(d.path) && (
+                <p className="text-xs text-gray-500 mt-1">Private repository: opens only for people who have been given access.</p>
+              )}
               {d.word && (
                 <a href={docUrl(d.word)} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-600 hover:underline mt-2 inline-block">Word copy</a>
               )}
@@ -222,7 +225,8 @@ const Documents: React.FC = () => (
         ))}
       </ul>
       <p className="text-xs text-gray-500 mt-4">
-        The documents above are kept in the project's repository ({REPO_URL.replace('https://', '')}) and open in a new tab.
+        The documents above are kept in the project's repositories ({REPO_URL.replace('https://', '')} for public
+        documents, {PRIVATE_REPO_URL.replace('https://', '')} for working documents) and open in a new tab.
       </p>
     </section>
   </div>

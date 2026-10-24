@@ -119,7 +119,7 @@ After the meeting, Kevin records the decisions in `docs/platform-management/DECI
 
 ## Documents
 
-All files are in the public repository. Base: https://github.com/khallinan12345/nextvillage/blob/main/docs/
+Most files are in the public repository. The decision log and security program are in the private repository (`nextvillage-private`) and open only for people who have been given access. Base: https://github.com/khallinan12345/nextvillage/blob/main/docs/
 
 **Child safety**
 - [Leader guide](https://github.com/khallinan12345/nextvillage/blob/main/docs/onboarding/LEADER-GUIDE.md)
@@ -139,8 +139,8 @@ All files are in the public repository. Base: https://github.com/khallinan12345/
 
 **Change process**
 - [Change process](https://github.com/khallinan12345/nextvillage/blob/main/docs/platform-management/CHANGE-PROCESS.md)
-- [Decision log](https://github.com/khallinan12345/nextvillage/blob/main/docs/platform-management/DECISION-LOG.md)
-- [Security program](https://github.com/khallinan12345/nextvillage/blob/main/docs/platform-management/SECURITY-PROGRAM.md)
+- [Decision log](https://github.com/khallinan12345/nextvillage-private/blob/main/docs/platform-management/DECISION-LOG.md)
+- [Security program](https://github.com/khallinan12345/nextvillage-private/blob/main/docs/platform-management/SECURITY-PROGRAM.md)
 
 **Onboarding**
 - [Onboarding guide](https://www.nextvillage.community/docs/Community-Onboarding-Guide.html) (live site)
