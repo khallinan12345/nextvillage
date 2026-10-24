@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { findSimilarProfile, sendDuplicateResetLink, type SimilarProfileMatch } from '../../lib/duplicateDetection';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import { Github, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { passwordProblem, friendlyPasswordError, PASSWORD_RULE_TEXT } from '../../lib/passwordRules';
 
 interface AuthFormProps {
@@ -165,7 +165,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   };
 
   // ─── OAuth ────────────────────────────────────────────────────────────────
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+  const handleOAuthLogin = async (provider: 'google') => {
     try {
       setError('');
       const { error } = await supabase.auth.signInWithOAuth({
@@ -404,7 +404,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6">
           <Button
             type="button"
             variant="outline"
@@ -412,15 +412,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             fullWidth
           >
             Google
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleOAuthLogin('github')}
-            icon={<Github size={16} />}
-            fullWidth
-          >
-            GitHub
           </Button>
         </div>
       </div>
