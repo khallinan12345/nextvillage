@@ -2,11 +2,38 @@
 //
 // The documentation library shown on /team. Paths are relative to the repository root; the page links
 // to them on GitHub. Keep this list in step with docs/ when a document is added or renamed.
-// Private documents (not in the repository) are listed in PRIVATE_DOCS with where to ask for them.
+// Documents held in the private repository open through docUrl (see PRIVATE_PATHS below).
+// Private documents that are in no repository are listed in PRIVATE_DOCS with where to ask for them.
 
 export const REPO_URL = 'https://github.com/khallinan12345/nextvillage';
 
-export const docUrl = (path: string) => `${REPO_URL}/blob/main/${path}`;
+// Working documents (data map, DPIA, legal and vendor reviews, security program, decision log, incident
+// runbook) live in a private repository with the same folder layout. Only people added as collaborators
+// can open those links; everyone else sees GitHub's "not found" page.
+export const PRIVATE_REPO_URL = 'https://github.com/khallinan12345/nextvillage-private';
+
+const PRIVATE_PATHS = new Set<string>([
+  'docs/privacy-and-legal/AI-LEGAL-REVIEW.md',
+  'docs/privacy-and-legal/DATA-MAP.md',
+  'docs/privacy-and-legal/DATA-SECURITY-AND-IDENTITY-PROTECTION.md',
+  'docs/privacy-and-legal/Data-Security-and-Identity-Protection.docx',
+  'docs/privacy-and-legal/DPIA.md',
+  'docs/privacy-and-legal/GHANA-LEGAL-REVIEW.md',
+  'docs/privacy-and-legal/LEGAL-REVIEW-BRIEF.md',
+  'docs/privacy-and-legal/PRIVACY-COMPLIANCE-PLAN.md',
+  'docs/privacy-and-legal/TRANSFER-BASIS.md',
+  'docs/privacy-and-legal/VENDOR-DPA-CHECKLIST.md',
+  'docs/privacy-and-legal/VENDOR-REVIEW.md',
+  'docs/platform-management/DECISION-LOG.md',
+  'docs/platform-management/SECURITY-PROGRAM.md',
+  'docs/platform-management/SECURITY-SCANNER-NOTES.md',
+  'docs/platform-management/runbooks/incident-response.md',
+]);
+
+export const docUrl = (path: string) => `${PRIVATE_PATHS.has(path) ? PRIVATE_REPO_URL : REPO_URL}/blob/main/${path}`;
+
+/** True when the document is held in the private repository. */
+export const isPrivateDoc = (path: string) => PRIVATE_PATHS.has(path);
 
 export interface TeamDoc {
   title: string;
