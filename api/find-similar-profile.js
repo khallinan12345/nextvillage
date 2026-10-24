@@ -22,6 +22,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { findBestMatch, maskEmail } from './_lib/duplicateMatch.js';
+import { allowRequest, callerAddress, fingerprint } from './_lib/rateLimit.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -66,6 +67,20 @@ export default async function handler(req, res) {
 
   const body = req.body ?? {};
   try {
+    // Anyone can call this, and it can email a sign-in link to a real account holder, so it is limited per
+    // caller and per target. A school sharing one connection still has plenty of room to sign up a class.
+    const me = fingerprint(callerAddress(req));
+    const TOO_MANY = { error: 'Too many attempts. Please wait a little while and try again.' };
+    if (body.action === 'check' && !(await allowRequest(supabase, `fsp:check:${me}`, 120, 3600))) {
+      return res.status(429).json(TOO_MANY);
+    }
+    if (body.action === 'send-reset') {
+      const okCaller = await allowRequest(supabase, `fsp:reset:${me}`, 10, 3600);
+      const okTarget = typeof body.match_id === 'string' &&
+        await allowRequest(supabase, `fsp:reset-target:${fingerprint(body.match_id)}`, 3, 3600);
+      if (!okCaller || !okTarget) return res.status(429).json(TOO_MANY);
+    }
+
     const userId = await callerId(req);
     const found = await match(body, userId);
 
