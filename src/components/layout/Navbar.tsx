@@ -91,6 +91,7 @@ const Navbar: React.FC = () => {
             { name: 'Website Builder', path: '/tech-skills/website-builder' },
             { name: 'Vite/React Web Site Development', path: '/tech-skills/web-development' },
             { name: 'Full-Stack App Development', path: '/tech-skills/full-stack-development' },
+            { name: 'Security & Safety', path: '/tech-skills/security-safety' },
             { name: 'AI Workflow Development', path: '/tech-skills/ai-workflow-development' },
             { name: 'GitHub Foundations GH-300 Prep', path: '/tech-skills/github-gh300' },
           ],

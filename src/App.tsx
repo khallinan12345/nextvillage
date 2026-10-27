@@ -63,6 +63,7 @@ const PlayGamePage = lazy(() => import('./pages/tech-skills/PlayGamePage'));
 const WebsiteBuilderPage = lazy(() => import('./pages/tech-skills/WebsiteBuilderPage'));
 const SiteViewerPage = lazy(() => import('./pages/SiteViewerPage'));
 const FullStackDevelopmentPage = lazy(() => import('./pages/tech-skills/FullStackDevelopmentPage'));
+const SecuritySafetyPage = lazy(() => import('./pages/tech-skills/SecuritySafetyPage'));
 const ImageGenerationPage = lazy(() => import('./pages/tech-skills/ImageGenerationPage'));
 const VideoGenerationPage = lazy(() => import('./pages/tech-skills/VideoGenerationPage'));
 const VideoStudioPage = lazy(() => import('./pages/tech-skills/VideoStudioPage'));
@@ -308,6 +309,7 @@ export const AppContent: React.FC = () => {
         <Route path="/tech-skills/sites/:siteId/:slug" element={<SiteViewerPage />} />
         <Route path="/tech-skills/web-development" element={<WebDevelopmentPage />} />
         <Route path="/tech-skills/full-stack-development" element={<FullStackDevelopmentPage />} />
+        <Route path="/tech-skills/security-safety" element={<SecuritySafetyPage />} />
         <Route path="/tech-skills/ai-image-creation" element={<ImageGenerationPage />} />
         <Route path="/tech-skills/ai-voice-creation" element={<VoiceCreationPage />} />
         <Route path="/tech-skills/ai-video-creation" element={<VideoGenerationPage />} />

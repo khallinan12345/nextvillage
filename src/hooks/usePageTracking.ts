@@ -27,6 +27,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/tech-skills/website-builder':                   'website_builder',
   '/tech-skills/web-development':                   'web_development',
   '/tech-skills/full-stack-development':            'full_stack_development',
+  '/tech-skills/security-safety':                   'security_safety',
   '/tech-skills/ai-image-creation':                 'ai_image_creation',
   '/tech-skills/ai-voice-creation':                 'ai_voice_creation',
   '/tech-skills/ai-video-creation':                 'ai_video_creation',
