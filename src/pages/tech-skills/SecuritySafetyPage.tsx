@@ -510,6 +510,12 @@ const SecuritySafetyPage: React.FC = () => {
                   <FeedbackBox tone="info" title="➡️ Next steps">{evalNote.nextSteps}</FeedbackBox>
                 </>
               )}
+              {labComplete && (
+                <a href="/certifications/security-safety"
+                  className="block text-center px-4 py-2.5 text-sm font-bold bg-red-600 hover:bg-red-700 rounded-xl transition-colors">
+                  🏆 Ready for the certification? Take the Security &amp; Safety Certification →
+                </a>
+              )}
               {!evalLoading && !evalNote && <p className="text-xs text-gray-400">The coach note is unavailable right now, but your scores above are saved with your progress.</p>}
             </div>
           </div>

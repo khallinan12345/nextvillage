@@ -133,6 +133,7 @@ const Navbar: React.FC = () => {
         { name: 'Vibe Coding', path: '/certifications/vibe-coding' },
         { name: 'Web Dev Certification', path: '/certifications/web-dev-certification' },
         { name: 'Full-Stack Certification', path: '/certifications/full-stack-certification' },
+        { name: 'Security & Safety', path: '/certifications/security-safety' },
         { name: 'AI Video Production', path: '/certifications/ai-video-production' },
         { name: 'AI Image Creation', path: '/certifications/ai-image-creation-cert' },
         { name: 'AI Voice Creation', path: '/certifications/ai-voice-creation' },

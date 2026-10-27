@@ -64,6 +64,7 @@ const WebsiteBuilderPage = lazy(() => import('./pages/tech-skills/WebsiteBuilder
 const SiteViewerPage = lazy(() => import('./pages/SiteViewerPage'));
 const FullStackDevelopmentPage = lazy(() => import('./pages/tech-skills/FullStackDevelopmentPage'));
 const SecuritySafetyPage = lazy(() => import('./pages/tech-skills/SecuritySafetyPage'));
+const SecuritySafetyCertificationPage = lazy(() => import('./pages/tech-skills/SecuritySafetyCertificationPage'));
 const ImageGenerationPage = lazy(() => import('./pages/tech-skills/ImageGenerationPage'));
 const VideoGenerationPage = lazy(() => import('./pages/tech-skills/VideoGenerationPage'));
 const VideoStudioPage = lazy(() => import('./pages/tech-skills/VideoStudioPage'));
@@ -291,6 +292,7 @@ export const AppContent: React.FC = () => {
         <Route path="/certifications/vibe-coding" element={<VibeCodingCertificationPage />} />
         <Route path="/certifications/web-dev-certification" element={<WebDevCertificationPage />} />
         <Route path="/certifications/full-stack-certification" element={<FullStackCertificationPage />} />
+        <Route path="/certifications/security-safety" element={<SecuritySafetyCertificationPage />} />
         <Route path="/certifications/ai-video-production" element={<AIVideoProductionCertificationPage />} />
         <Route path="/certifications/ai-image-creation-cert" element={<AIImageCertificationPage />} />
         <Route path="/certifications/ai-voice-creation" element={<AIVoiceCertificationPage />} />
