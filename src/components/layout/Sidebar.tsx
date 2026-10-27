@@ -99,6 +99,7 @@ const Sidebar: React.FC = () => {
         { name: 'Vibe Coding',     path: '/certifications/vibe-coding',             icon: <Wand2 size={20} />         },
         { name: 'Web Dev',         path: '/certifications/web-dev-certification',   icon: <Code2 size={20} />         },
         { name: 'Full-Stack',      path: '/certifications/full-stack-certification',icon: <Database size={20} />      },
+        { name: 'Security & Safety',path: '/certifications/security-safety',        icon: <ShieldCheck size={20} />   },
         { name: 'AI Workflow Dev', path: '/certifications/ai-workflow-dev',         icon: <Cpu size={20} />           },
         { name: 'AI for Business', path: '/certifications/ai-for-business',         icon: <Briefcase size={20} />     },
         { name: 'AI Voice',        path: '/certifications/ai-voice-creation',       icon: <MicIcon size={20} />       },
