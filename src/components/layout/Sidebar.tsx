@@ -127,6 +127,7 @@ const Sidebar: React.FC = () => {
             { name: 'Website Builder',  path: '/tech-skills/website-builder',        icon: <Globe size={20} />         },
             { name: 'Web Development',  path: '/tech-skills/web-development',        icon: <Code size={20} />          },
             { name: 'Full-Stack Dev',   path: '/tech-skills/full-stack-development', icon: <Layers size={20} />        },
+            { name: 'Security & Safety',path: '/tech-skills/security-safety',        icon: <ShieldCheck size={20} />   },
             { name: 'AI Workflow Dev',  path: '/tech-skills/ai-workflow-development',icon: <Zap size={20} />           },
             { name: 'GitHub GH-300',    path: '/tech-skills/github-gh300',           icon: <GitBranch size={20} />     },
           ],
