@@ -9,10 +9,18 @@
 // process, or "AI that coaches instead of answers." Drafts appear in the
 // digest email under each post — edit, personalize, post.
 //
+// COMPARISON TRIAL: each post also gets a draft from Mistral Large, shown
+// beside the Sonnet draft with token counts, so the two can be judged on
+// real posts. Nothing student-facing and no student data is involved — the
+// input is public Bluesky posts. If Mistral fails, the email still goes out
+// with the Sonnet drafts and a note saying why.
+//
 // Environment variables needed:
 //   RESEND_API_KEY      — already configured (used by chat.js, triage-webhook.ts, etc.)
 //   DIGEST_RECIPIENTS   — comma-separated, e.g. "kevin@...,divinegift@..." (already set)
 //   ANTHROPIC_API_KEY   — for reply drafting (already set for chat.js)
+//   MISTRAL_API_KEY     — for the Mistral Large comparison (already set for chat.js)
+//   MISTRAL_COMPARE_MODEL — optional; overrides the Mistral model ID below
 //   CRON_SECRET         — already configured (shared with the other cron endpoints)
 //   BLUESKY_IDENTIFIER  — the account handle posts are searched as, e.g. "nextvillage.community"
 //   BLUESKY_APP_PASSWORD — a Bluesky App Password (Settings → Privacy and Security →
@@ -55,6 +63,18 @@ const DRAFT_TOP_N = 10;
 
 // Fallback if model_config lookup is unavailable
 const DEFAULT_SONNET = "claude-sonnet-5-5";
+
+// Mistral Large for the side-by-side. The ID comes from Mistral's launch
+// notes and is unverified — the email prints the model name the API reports.
+const DEFAULT_MISTRAL_COMPARE = "mistral-large-4";
+
+// List prices in USD per million tokens, used only for the footer estimate.
+// Sonnet 5.5 matches PRICING in chat.js; the Mistral rate is the Ollama Cloud
+// price from the launch notes and may differ from Mistral's own API.
+const PRICE_PER_MTOK = {
+  sonnet:  { input: 2.0, output: 10.0 },
+  mistral: { input: 0.7, output: 2.1 },
+};
 
 const SUBSTACK_URL = "https://substack.com/@kevinpatrickhallinan";
 
@@ -114,6 +134,19 @@ interface RankedPost {
   matchedQueries: string[];
   draft?: string;       // Sonnet-drafted reply
   draftAngle?: string;  // which vAI element it leads with
+  mistralDraft?: string;       // Mistral Large's reply, for comparison
+  mistralAngle?: string;
+}
+
+interface Draft { index: number; angle: string; draft: string }
+
+interface DraftRun {
+  label: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  error?: string;
 }
 
 // ============================================================
@@ -230,21 +263,34 @@ async function getSonnetModel(): Promise<string> {
   return DEFAULT_SONNET;
 }
 
-async function draftReplies(posts: RankedPost[]): Promise<void> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey || posts.length === 0) return;
-
-  const targets = posts.slice(0, DRAFT_TOP_N);
-  const model = await getSonnetModel();
-
-  const userMessage =
+function buildDraftMessage(targets: RankedPost[]): string {
+  return (
     `Draft one reply per post below. Return the JSON array only.\n\n` +
     targets
       .map(
         (p, i) =>
           `POST ${i}\nAuthor: ${p.author} (@${p.handle})\nText: ${p.text}\nEngagement: ${p.likes} likes, ${p.reposts} reposts, ${p.replies} replies`,
       )
-      .join("\n\n");
+      .join("\n\n")
+  );
+}
+
+export function parseDrafts(text: string): Draft[] {
+  const clean = text.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(clean);
+  if (!Array.isArray(parsed)) throw new Error("Model did not return a JSON array");
+  return parsed as Draft[];
+}
+
+function estimateUsd(rate: { input: number; output: number }, inTok: number, outTok: number): number {
+  return (inTok / 1e6) * rate.input + (outTok / 1e6) * rate.output;
+}
+
+async function draftWithSonnet(targets: RankedPost[]): Promise<{ drafts: Draft[]; run: DraftRun }> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const model = await getSonnetModel();
+  const run: DraftRun = { label: "Sonnet", model, inputTokens: 0, outputTokens: 0, costUsd: 0 };
+  if (!apiKey) return { drafts: [], run: { ...run, error: "ANTHROPIC_API_KEY not set" } };
 
   try {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
@@ -259,14 +305,14 @@ async function draftReplies(posts: RankedPost[]): Promise<void> {
         max_tokens: 4000,
         ...(/^claude-haiku/.test(model) ? {} : { output_config: { effort: "low" } }),
         system: DRAFT_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userMessage }],
+        messages: [{ role: "user", content: buildDraftMessage(targets) }],
       }),
     });
 
     if (!resp.ok) {
       const body = await resp.text();
       console.error(`[digest] Anthropic draft call failed: HTTP ${resp.status}`, body.slice(0, 500));
-      return; // digest still goes out, just without drafts
+      return { drafts: [], run: { ...run, error: `HTTP ${resp.status}` } }; // digest still goes out, just without drafts
     }
 
     const data = await resp.json();
@@ -275,20 +321,89 @@ async function draftReplies(posts: RankedPost[]): Promise<void> {
       .map((b: any) => b.text)
       .join("");
 
-    const clean = text.replace(/```json|```/g, "").trim();
-    const drafts: Array<{ index: number; angle: string; draft: string }> = JSON.parse(clean);
-
-    for (const d of drafts) {
-      const post = targets[d.index];
-      if (!post) continue;
-      // Enforce the Bluesky limit even if the model miscounted
-      post.draft = (d.draft ?? "").slice(0, 300);
-      post.draftAngle = d.angle ?? "";
-    }
-    console.log(`[digest] Drafted ${drafts.length} replies with ${model}`);
+    run.inputTokens = data.usage?.input_tokens ?? 0;
+    run.outputTokens = data.usage?.output_tokens ?? 0;
+    run.costUsd = estimateUsd(PRICE_PER_MTOK.sonnet, run.inputTokens, run.outputTokens);
+    return { drafts: parseDrafts(text), run };
   } catch (err: any) {
-    console.error("[digest] Reply drafting failed (digest continues without drafts):", err?.message);
+    console.error("[digest] Sonnet drafting failed (digest continues without drafts):", err?.message);
+    return { drafts: [], run: { ...run, error: err?.message ?? "unknown error" } };
   }
+}
+
+async function draftWithMistral(targets: RankedPost[]): Promise<{ drafts: Draft[]; run: DraftRun }> {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  const model = process.env.MISTRAL_COMPARE_MODEL || DEFAULT_MISTRAL_COMPARE;
+  const run: DraftRun = { label: "Mistral Large", model, inputTokens: 0, outputTokens: 0, costUsd: 0 };
+  if (!apiKey) return { drafts: [], run: { ...run, error: "MISTRAL_API_KEY not set" } };
+
+  try {
+    const resp = await fetch("https://api.mistral.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model,
+        max_tokens: 4000,
+        messages: [
+          { role: "system", content: DRAFT_SYSTEM_PROMPT },
+          { role: "user", content: buildDraftMessage(targets) },
+        ],
+      }),
+    });
+
+    if (!resp.ok) {
+      const body = await resp.text();
+      console.error(`[digest] Mistral draft call failed: HTTP ${resp.status}`, body.slice(0, 500));
+      return { drafts: [], run: { ...run, error: `HTTP ${resp.status} ${body.slice(0, 120)}` } };
+    }
+
+    const data = await resp.json();
+    // Mistral returns either a string or an array of content chunks
+    const raw = data.choices?.[0]?.message?.content;
+    const text: string = Array.isArray(raw)
+      ? (raw as Array<{ type?: string; text?: string }>)
+          .filter((c) => c?.type === "text")
+          .map((c) => c.text ?? "")
+          .join("")
+      : String(raw ?? "");
+
+    run.model = data.model || model;
+    run.inputTokens = data.usage?.prompt_tokens ?? 0;
+    run.outputTokens = data.usage?.completion_tokens ?? 0;
+    run.costUsd = estimateUsd(PRICE_PER_MTOK.mistral, run.inputTokens, run.outputTokens);
+    return { drafts: parseDrafts(text), run };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "unknown error";
+    console.error("[digest] Mistral drafting failed (digest continues without it):", message);
+    return { drafts: [], run: { ...run, error: message } };
+  }
+}
+
+async function draftReplies(posts: RankedPost[]): Promise<DraftRun[]> {
+  if (posts.length === 0) return [];
+
+  const targets = posts.slice(0, DRAFT_TOP_N);
+  const [sonnet, mistral] = await Promise.all([draftWithSonnet(targets), draftWithMistral(targets)]);
+
+  // Enforce the Bluesky limit even if a model miscounted
+  for (const d of sonnet.drafts) {
+    const post = targets[d.index];
+    if (!post) continue;
+    post.draft = (d.draft ?? "").slice(0, 300);
+    post.draftAngle = d.angle ?? "";
+  }
+  for (const d of mistral.drafts) {
+    const post = targets[d.index];
+    if (!post) continue;
+    post.mistralDraft = (d.draft ?? "").slice(0, 300);
+    post.mistralAngle = d.angle ?? "";
+  }
+
+  console.log(
+    `[digest] Drafted ${sonnet.drafts.length} replies with ${sonnet.run.model}, ` +
+    `${mistral.drafts.length} with ${mistral.run.model}`,
+  );
+  return [sonnet.run, mistral.run];
 }
 
 // ============================================================
@@ -303,24 +418,52 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function formatEmail(posts: RankedPost[]): string {
+function draftBox(label: string, color: string, bg: string, text: string, angle: string): string {
+  return `<div style="margin-top:10px;padding:10px 12px;background:${bg};border-left:3px solid ${color};border-radius:0 6px 6px 0;">
+             <div style="font-size:11px;color:${color};font-weight:700;text-transform:uppercase;margin-bottom:4px;">
+               ${esc(label)} · ${esc(angle)} · ${text.length}/300 chars
+             </div>
+             <div style="font-size:14px;color:#1a202c;white-space:pre-wrap;">${esc(text)}</div>
+           </div>`;
+}
+
+function comparisonFooter(runs: DraftRun[]): string {
+  if (runs.length === 0) return "";
+  const rows = runs
+    .map((r) => {
+      const detail = r.error
+        ? `failed: ${esc(r.error)}`
+        : `${r.inputTokens.toLocaleString()} in / ${r.outputTokens.toLocaleString()} out · about $${r.costUsd.toFixed(4)} at list price`;
+      return `<div style="margin-top:4px;"><b>${esc(r.label)}</b> (${esc(r.model)}): ${detail}</div>`;
+    })
+    .join("");
+  return `<div style="margin:16px 0 0 0;padding:10px 12px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;color:#4a5568;">
+      <b>Model comparison trial</b> — same prompt, same posts. Which drafts would you actually post?${rows}
+    </div>`;
+}
+
+function formatEmail(posts: RankedPost[], runs: DraftRun[]): string {
   const date = new Date().toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric", timeZone: "Africa/Lagos",
   });
+  const mistralLabel = runs.find((r) => r.label === "Mistral Large")?.model ?? "Mistral Large";
 
   const items = posts
     .map((p, i) => {
-      const draftBlock = p.draft
-        ? `<div style="margin-top:10px;padding:10px 12px;background:#eef6f1;border-left:3px solid #2f855a;border-radius:0 6px 6px 0;">
-             <div style="font-size:11px;color:#2f855a;font-weight:700;text-transform:uppercase;margin-bottom:4px;">
-               Suggested reply · ${esc(p.draftAngle || "")} · ${p.draft.length}/300 chars
-             </div>
-             <div style="font-size:14px;color:#1a202c;white-space:pre-wrap;">${esc(p.draft)}</div>
-             <div style="font-size:11px;color:#718096;margin-top:6px;">Edit before posting — make it yours.</div>
-           </div>`
+      const sonnetBlock = p.draft
+        ? draftBox("Sonnet", "#2f855a", "#eef6f1", p.draft, p.draftAngle || "")
         : p.draftAngle
-          ? `<div style="margin-top:8px;font-size:12px;color:#a0aec0;">No draft: ${esc(p.draftAngle)}</div>`
+          ? `<div style="margin-top:8px;font-size:12px;color:#a0aec0;">Sonnet, no draft: ${esc(p.draftAngle)}</div>`
           : "";
+      const mistralBlock = p.mistralDraft
+        ? draftBox(mistralLabel, "#6b46c1", "#f5f0ff", p.mistralDraft, p.mistralAngle || "")
+        : p.mistralAngle
+          ? `<div style="margin-top:8px;font-size:12px;color:#a0aec0;">Mistral, no draft: ${esc(p.mistralAngle)}</div>`
+          : "";
+      const draftBlock = sonnetBlock + mistralBlock +
+        (p.draft || p.mistralDraft
+          ? `<div style="font-size:11px;color:#718096;margin-top:6px;">Edit before posting — make it yours.</div>`
+          : "");
 
       return `
       <div style="padding:14px 0;border-bottom:1px solid #e2e8f0;">
@@ -340,13 +483,14 @@ function formatEmail(posts: RankedPost[]): string {
       Suggested replies are starting points, not scripts. Read the post, adjust the draft in your own voice, then reply.
     </p>
     ${items}
+    ${comparisonFooter(runs)}
     <p style="margin:24px 0 0 0;font-size:12px;color:#a0aec0;">
       Sent by bluesky-digest · nextvillage.community · stories: <a href="${SUBSTACK_URL}" style="color:#a0aec0;">${SUBSTACK_URL}</a>
     </p>
   </div>`;
 }
 
-async function sendDigest(posts: RankedPost[]): Promise<void> {
+async function sendDigest(posts: RankedPost[], runs: DraftRun[]): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const recipients = (process.env.DIGEST_RECIPIENTS ?? "")
     .split(",").map((s) => s.trim()).filter(Boolean);
@@ -365,7 +509,7 @@ async function sendDigest(posts: RankedPost[]): Promise<void> {
       from: "digest@nextvillage.community",
       to: recipients,
       subject: `vAI Bluesky Digest — ${posts.length} posts, ${drafted} replies drafted`,
-      html: formatEmail(posts),
+      html: formatEmail(posts, runs),
     }),
   });
   if (!resp.ok) {
@@ -383,8 +527,8 @@ async function runDigest() {
   if (posts.length === 0) {
     return { posts: 0, drafted: 0, note: "No matching posts today — no email sent." };
   }
-  await draftReplies(posts);
-  await sendDigest(posts);
+  const runs = await draftReplies(posts);
+  await sendDigest(posts, runs);
   return { posts: posts.length, drafted: posts.filter((p) => p.draft).length };
 }
 
