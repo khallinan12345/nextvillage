@@ -50,7 +50,7 @@ it, so that a leader can help if someone may be in danger.
 | Free AI services (Groq, Cerebras, Cloudflare, OpenRouter, Mistral) | AI tutor on free pages | cleaned chat text **[vendor terms not yet reviewed]** |
 | E2B | runs the code you write in a safe sandbox | your code |
 | Replicate | makes images, video, voice | cleaned prompts and text |
-| ElevenLabs / SpeechGen | reads text aloud | the text to read **[confirm]** |
+| SpeechGen | reads text aloud | the text to read **[confirm]** |
 | Resend | sends emails | leader emails; safety alerts |
 | StackBlitz | live preview of your project | your project code |
 
@@ -126,5 +126,5 @@ If we change this notice in a meaningful way, we will tell you in the app before
 3. Under-13 / under-16 stance undecided; parental consent flow not built.
 4. Retention figures for learner content are proposals, not enforced.
 5. Vendor terms and data-processing agreements not yet reviewed for OpenAI, the free-tier chain,
-   ElevenLabs/SpeechGen, E2B; regions of Supabase and E2B unconfirmed.
+   SpeechGen, E2B; regions of Supabase and E2B unconfirmed.
 6. No in-app way to see "my data" or request deletion (administrators run `npm run user:delete`).

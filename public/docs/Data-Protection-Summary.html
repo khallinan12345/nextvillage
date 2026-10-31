@@ -368,7 +368,7 @@
               <tr><td>Vercel Inc.</td><td>Data processor</td><td>Application hosting, serverless API functions.</td></tr>
               <tr><td>Anthropic, PBC</td><td>Data processor (sub-processor)</td><td>Learner text sent to Claude for chat, tutoring, assessment, scrubbing, and safety classification. The only AI vendor for children under 13.</td></tr>
               <tr><td>OpenAI; Groq, Cerebras, Cloudflare, Mistral</td><td>Data processors (sub-processors)</td><td>Task instructions and feedback (OpenAI); free-tier AI tutor on a defined set of pages (the other four). Not used for children under 13 — see §07.</td></tr>
-              <tr><td>Replicate; ElevenLabs, SpeechGen</td><td>Data processors (sub-processors)</td><td>Image/video/voice generation; reading text aloud. Not used for children under 13.</td></tr>
+              <tr><td>Replicate; SpeechGen</td><td>Data processors (sub-processors)</td><td>Image/video/voice generation; reading text aloud. Not used for children under 13.</td></tr>
               <tr><td>E2B; StackBlitz</td><td>Data processors (sub-processors)</td><td>Run and preview the code learners write.</td></tr>
               <tr><td>Resend</td><td>Data processor (sub-processor)</td><td>Transactional and authentication email, including safety-flag alerts to leaders.</td></tr>
             </tbody>
@@ -477,7 +477,7 @@
           <li><strong>Groq, Cerebras, Cloudflare</strong> state they do not train on customer content and keep little or nothing; Groq offers a zero-retention setting.</li>
           <li><strong>Mistral:</strong> sources disagree on whether API data is used for training; the setting is to be checked in Mistral’s admin console, or the provider removed.</li>
           <li><strong>OpenAI:</strong> API data is not used for training unless the customer opts in; abuse-monitoring logs are kept up to 30 days. Not used for under-13s.</li>
-          <li><strong>Replicate</strong> deletes API prediction data after one hour by default. <strong>ElevenLabs</strong> says its service is not directed to children under 13 and may use voice data to improve its systems; to be confirmed for the API.</li>
+          <li><strong>Replicate</strong> deletes API prediction data after one hour by default.</li>
           <li>Signed data processing agreements are not yet on file for any vendor (§13, item 03). Vercel, Resend, StackBlitz, and SpeechGen terms are still to be reviewed.</li>
         </ul>
         <p>The full review, with sources, is maintained alongside this document.</p>
@@ -596,7 +596,7 @@
         <div class="actionlist">
           <div class="action"><div class="idx">01</div><div class="body"><p>Have a lawyer in each country (Kenya, Nigeria, US) review this summary and the public privacy notice.</p><p class="why">Confirms roles, the cross-border basis, whether leader attestation satisfies consent verification, and COPPA status.</p></div><span class="status gap">Gap</span></div>
           <div class="action"><div class="idx">02</div><div class="body"><p>Set <code>SAFETY_ALERT_FALLBACK_EMAIL</code> on Vercel and Supabase, add the Resend key to Supabase secrets, and run one deliberate test with a real flag.</p><p class="why">Today a flag for a learner with no leader on file reaches no one.</p></div><span class="status gap">Gap</span></div>
-          <div class="action"><div class="idx">03</div><div class="body"><p>Collect and file signed data processing agreements for Supabase, Vercel, Anthropic, OpenAI, Groq, Cerebras, Cloudflare, Mistral, Replicate, ElevenLabs, E2B, and Resend; switch on zero retention where offered; confirm Mistral’s training setting.</p><p class="why">The paperwork behind §06 and §07.</p></div><span class="status gap">Gap</span></div>
+          <div class="action"><div class="idx">03</div><div class="body"><p>Collect and file signed data processing agreements for Supabase, Vercel, Anthropic, OpenAI, Groq, Cerebras, Cloudflare, Mistral, Replicate, E2B, and Resend; switch on zero retention where offered; confirm Mistral’s training setting.</p><p class="why">The paperwork behind §06 and §07.</p></div><span class="status gap">Gap</span></div>
           <div class="action"><div class="idx">04</div><div class="body"><p>Finish recording guardian consent for current learners (leaders) and store the signed forms safely.</p><p class="why">The platform record exists; the evidence is only as good as the forms behind it.</p></div><span class="status gap">In progress</span></div>
           <div class="action"><div class="idx">05</div><div class="body"><p>Extend PII scrubbing (or a documented exception) to the remaining edge functions that call Anthropic directly.</p><p class="why">Out of scope of the original scrub change; should be closed deliberately.</p></div><span class="status gap">Gap</span></div>
           <div class="action"><div class="idx">06</div><div class="body"><p>Confirm regulator registration duties (ODPC in Kenya, NDPC in Nigeria) and any data protection officer requirement.</p><p class="why">A children’s-data threshold may apply regardless of size.</p></div><span class="status recommend">Recommended</span></div>

@@ -128,7 +128,7 @@ const PrivacyPage: React.FC = () => (
               ['OpenAI', 'Some task instructions, feedback and images', 'Learner prompts and code (not for learners under 13)'],
               ['Groq, Cerebras, Cloudflare, Mistral', 'Free AI tutor on some pages', 'Cleaned chat text (not for learners under 13)'],
               ['Replicate', 'Makes images, video and voice', 'Cleaned prompts and text (not for learners under 13)'],
-              ['ElevenLabs, SpeechGen', 'Reads text aloud', 'The text to read (not for learners under 13)'],
+              ['SpeechGen', 'Reads text aloud', 'The text to read (not for learners under 13)'],
               ['E2B', 'Runs the code you write in a safe sandbox', 'Your code'],
               ['StackBlitz', 'Live preview of your project', 'Your project code'],
               ['Resend', 'Sends emails, including safety alerts to leaders', 'Leaders’ email addresses and the alert text'],
