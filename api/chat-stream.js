@@ -19,7 +19,7 @@
 // Safety floor + moderation/leader-escalation live in api/_lib/safetyGuardrails.js
 // — shared with api/chat.js so both AI text endpoints get the same baseline.
 // Pure `fetch`-based, no Node-only APIs, so it works unmodified in this Edge runtime.
-import { checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
+import { checkAndEscalate, FACILITATOR_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 import { fetchCallerIsYoung } from './_lib/youngLearner.js';
 import { estimateTokens, fitToBudget, usesHaiku55 } from './_lib/promptBudget.js';
@@ -513,15 +513,15 @@ export default async function handler(req) {
   const firstName = await fetchFirstName(user_id, SUPABASE_URL, SUPABASE_KEY);
   const messages  = await scrubMessagesPII(rawMessages, firstName, 'strict', (evt) => logEvent({ function_name: 'chat-stream', user_id, cohort, ...evt }));
 
-  // Two separate blocks, not one concatenated string: SAFETY_FLOOR is
-  // identical on every single request platform-wide, so it's the only part
+  // Two separate blocks, not one concatenated string: FACILITATOR_FLOOR (safety
+  // limits + community values) is identical on every single request platform-wide, so it's the only part
   // marked for caching. The page's own system text is per-page and often
   // per-learner (grade level, communication strategy, session count) — folding
   // it into the same cached block as before meant nearly every request had a
   // unique combined string, so the cache almost never hit. Splitting them
-  // lets the stable SAFETY_FLOOR prefix cache even though the tail can't.
+  // lets the stable FACILITATOR_FLOOR prefix cache even though the tail can't.
   const systemPayload = [
-    { type: 'text', text: SAFETY_FLOOR, cache_control: { type: 'ephemeral' } },
+    { type: 'text', text: FACILITATOR_FLOOR, cache_control: { type: 'ephemeral' } },
     ...(system ? [{ type: 'text', text: system }] : []),
   ];
 
