@@ -17,7 +17,6 @@ describe('pidgin-translate for under-13 learners (Anthropic only)', () => {
   beforeEach(() => {
     process.env.ANTHROPIC_API_KEY = 'test-key';
     delete process.env.GROQ_API_KEY;
-    delete process.env.OPENAI_API_KEY;
     delete process.env.VITE_GROQ_API_KEY;
   });
 

@@ -46,7 +46,6 @@ it, so that a leader can help if someone may be in danger.
 | Supabase | stores accounts, work and files | everything above |
 | Vercel | runs the website | web traffic |
 | Anthropic | AI tutor, feedback, safety check | cleaned chat text; learner work for feedback; raw latest message for safety |
-| OpenAI | some task instructions and feedback | learner prompts and code |
 | Free AI services (Groq, Cerebras, Cloudflare, OpenRouter, Mistral) | AI tutor on free pages | cleaned chat text **[vendor terms not yet reviewed]** |
 | E2B | runs the code you write in a safe sandbox | your code |
 | Replicate | makes images, video, voice | cleaned prompts and text |
@@ -125,6 +124,6 @@ If we change this notice in a meaningful way, we will tell you in the app before
 2. No consent practice for non-users entered in community records (patients especially).
 3. Under-13 / under-16 stance undecided; parental consent flow not built.
 4. Retention figures for learner content are proposals, not enforced.
-5. Vendor terms and data-processing agreements not yet reviewed for OpenAI, the free-tier chain,
+5. Vendor terms and data-processing agreements not yet reviewed for the free-tier chain,
    SpeechGen, E2B; regions of Supabase and E2B unconfirmed.
 6. No in-app way to see "my data" or request deletion (administrators run `npm run user:delete`).

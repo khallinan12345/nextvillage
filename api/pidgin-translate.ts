@@ -1,10 +1,9 @@
-// security-check: ignore ai-temperature-claude -- temperature is sent only in the Groq and OpenAI branches, never to Claude
+// security-check: ignore ai-temperature-claude -- temperature is sent only in the Groq branch, never to Claude
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
 import { requireUser } from './_lib/requireUser.js';
 import { fetchCallerIsYoung } from './_lib/youngLearner.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 interface TranslationRequest {
@@ -16,7 +15,7 @@ interface AnthropicMessage {
   content: string;
 }
 
-type TranslationProvider = 'groq' | 'openai' | 'anthropic';
+type TranslationProvider = 'groq' | 'anthropic';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'application/json');
@@ -31,21 +30,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const caller = await requireUser(req, res);
   if (!caller) return;
 
-  // Under-13 tier: young learners' text only goes to Anthropic (not Groq or OpenAI).
+  // Under-13 tier: young learners' text only goes to Anthropic (not Groq).
   const young = await fetchCallerIsYoung(caller.id);
 
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
 
   const provider = young ? (anthropicKey ? 'anthropic' : null)
     : groqKey ? 'groq'
-    : openaiKey ? 'openai'
     : anthropicKey ? 'anthropic'
     : null;
 
   if (!provider) {
-    return res.status(500).json({ error: 'No translation provider is configured on the server. Set GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY.' });
+    return res.status(500).json({ error: 'No translation provider is configured on the server. Set GROQ_API_KEY or ANTHROPIC_API_KEY.' });
   }
 
   const { text } = req.body as TranslationRequest;
@@ -70,19 +67,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     providerUrl = GROQ_API_URL;
     providerApiKey = groqKey!;
     providerModel = 'llama-3.3-70b-versatile';
-    requestBody = {
-      model: providerModel,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: text.trim() },
-      ],
-      max_tokens: 300,
-      temperature: 0.3,
-    };
-  } else if (provider === 'openai') {
-    providerUrl = OPENAI_API_URL;
-    providerApiKey = openaiKey!;
-    providerModel = 'gpt-3.5-turbo';
     requestBody = {
       model: providerModel,
       messages: [

@@ -125,7 +125,6 @@ const PrivacyPage: React.FC = () => (
               ['Supabase', 'Stores accounts, work and files (servers in Ohio, USA)', 'Everything described above'],
               ['Vercel', 'Runs the website', 'Web traffic'],
               ['Anthropic', 'AI tutor, feedback and the safety check', 'Cleaned chat text; learner work for feedback; the latest message as written, for the safety check'],
-              ['OpenAI', 'Some task instructions, feedback and images', 'Learner prompts and code (not for learners under 13)'],
               ['Groq, Cerebras, Cloudflare, Mistral', 'Free AI tutor on some pages', 'Cleaned chat text (not for learners under 13)'],
               ['Replicate', 'Makes images, video and voice', 'Cleaned prompts and text (not for learners under 13)'],
               ['SpeechGen', 'Reads text aloud', 'The text to read (not for learners under 13)'],
