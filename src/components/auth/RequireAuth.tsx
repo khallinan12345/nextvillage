@@ -16,6 +16,7 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import PendingApprovalScreen from './PendingApprovalScreen';
+import ForcePasswordChange from './ForcePasswordChange';
 
 const RequireAuth: React.FC = () => {
   const { user, session, loading } = useAuth();
@@ -30,6 +31,12 @@ const RequireAuth: React.FC = () => {
 
   if (!session && !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Created by an administrator with a temporary password: nothing else is available until the person
+  // chooses their own. app_metadata can only be written on the server, so the browser cannot clear this.
+  if (session?.user?.app_metadata?.must_change_password === true) {
+    return <ForcePasswordChange />;
   }
 
   // Joined an organization but no leader has approved it yet (or one
