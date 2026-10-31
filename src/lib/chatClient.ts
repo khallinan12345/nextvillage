@@ -195,21 +195,3 @@ export async function chatJSON({
     throw new Error(`Failed to parse JSON response: ${(parseError as Error).message}\nContent preview: ${raw.slice(0, 200)}`);
   }
 }
-
-// Optional image generation helper (if your page needs it)
-export async function generateImageViaServer({
-  prompt,
-  size = '1024x1024',
-}: {
-  prompt: string;
-  size?: '512x512' | '1024x1024' | '2048x2048';
-}) {
-  const r = await fetch('/api/image', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, size }),
-  });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data?.error || `Image proxy error ${r.status}`);
-  return data; // { b64: string }
-}

@@ -13,12 +13,8 @@
 //   { headline: string, context: string, subTasks: string[], examplePrompt: string }
 
 import type { VercelRequest, VercelResponse } from './_lib/vercelTypes';
-import OpenAI from 'openai';
 import { requireUser } from './_lib/requireUser.js';
-import { fetchCallerIsYoung } from './_lib/youngLearner.js';
 import { claudeText } from './_lib/claudeText.js';
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -117,19 +113,7 @@ Completed tasks so far: ${completed.length > 0 ? completed.join(', ') : 'none ye
 Write the adaptive task instruction.`;
 
   try {
-    // Under-13 tier: young learners' context goes to Claude, never OpenAI.
-    const young = await fetchCallerIsYoung(caller.id);
-    const raw = young
-      ? (await claudeText({ system, user, maxTokens: 600 })) || '{}'
-      : (await openai.chat.completions.create({
-          model: 'gpt-4o',
-          max_tokens: 600,
-          temperature: 0.4,
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: user },
-          ],
-        })).choices[0]?.message?.content || '{}';
+    const raw = (await claudeText({ system, user, maxTokens: 600 })) || '{}';
     const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
 
     let result: any;

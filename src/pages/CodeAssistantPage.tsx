@@ -9,7 +9,7 @@ import { VoiceFallback } from '../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../components/AIPidginCoachWrapper';
 import Editor from '@monaco-editor/react';
 // Import the chat client functions
-import { chatText, chatJSON, generateImageViaServer } from '../lib/chatClient';
+import { chatText, chatJSON } from '../lib/chatClient';
 import { buildSafeHtml } from '../lib/sandboxSafety';
 import {
   Code,
