@@ -3,7 +3,7 @@
 // Safety floor + moderation/leader-escalation live in api/_lib/safetyGuardrails.js
 // — shared with api/chat-stream.js so both AI text endpoints get the same
 // baseline regardless of which page's system prompt (or lack of one) called them.
-import { appendSafetyFloor, checkAndEscalate, SAFETY_FLOOR } from './_lib/safetyGuardrails.js';
+import { appendSafetyFloor, appendFacilitatorFloor, checkAndEscalate, SAFETY_FLOOR, FACILITATOR_FLOOR } from './_lib/safetyGuardrails.js';
 import { fetchFirstName, scrubMessagesPII } from './_lib/piiScrubbing.js';
 import { requireUser } from './_lib/requireUser.js';
 import { fetchCallerIsYoung } from './_lib/youngLearner.js';
@@ -524,29 +524,41 @@ function modelAllowsCustomTemperature(model) {
   return !/^claude-(sonnet-5-5|haiku-5-5|opus-4-[7-9]|fable-5|mythos)/.test(model);
 }
 
-// `system` here is always appendSafetyFloor()'d — built once at the top of
-// the request and shared with every non-Anthropic provider in the fallback
+// `system` here is always appendFacilitatorFloor()'d (safety limits + community values),
+// or appendSafetyFloor()'d alone on the pages that skip the values (see usesCommunityValues()).
+// It is built once at the top of the request and shared with every non-Anthropic provider in the fallback
 // chain, which each take one plain string. For Anthropic specifically, we
-// want SAFETY_FLOOR cached on its own: it's byte-identical on every request
+// want FACILITATOR_FLOOR cached on its own: it's byte-identical on every request
 // platform-wide, but the rest of `system` (page instructions, and often
 // per-learner personalization — grade level, communication strategy, session
 // count) differs on nearly every call. Caching the whole concatenated string
 // as one block meant that difference busted the entire cached prefix almost
-// every time. Splitting SAFETY_FLOOR back out (it's always the suffix —
-// see appendSafetyFloor()) lets the stable prefix cache even though the
+// every time. Splitting FACILITATOR_FLOOR back out (it's always the suffix —
+// see appendFacilitatorFloor()) lets the stable prefix cache even though the
 // per-request tail can't.
 function splitCacheableSystem(system) {
-  const suffix = `\n\n${SAFETY_FLOOR}`;
-  if (system && system.endsWith(suffix)) {
-    const pageSystem = system.slice(0, -suffix.length);
-    return [
-      { type: 'text', text: SAFETY_FLOOR, cache_control: { type: 'ephemeral' } },
-      { type: 'text', text: pageSystem },
-    ];
+  for (const floor of [FACILITATOR_FLOOR, SAFETY_FLOOR]) {
+    const suffix = `\n\n${floor}`;
+    if (system && system.endsWith(suffix)) {
+      const pageSystem = system.slice(0, -suffix.length);
+      return [
+        { type: 'text', text: floor, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: pageSystem },
+      ];
+    }
   }
-  // system === SAFETY_FLOOR alone (no page system), or an unexpected shape —
+  // system is a floor alone (no page system), or an unexpected shape —
   // fall back to caching it as a single block rather than guessing further.
   return system ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }] : undefined;
+}
+
+// The community values (tutor-style coaching, culture, human wisdom) go on facilitator
+// chat. Two kinds of page keep the plain safety floor so their results stay comparable:
+// certification evaluations (the same rubric for every learner) and the PromptChallenge
+// anchor task (repeated at 0/25/50/100 sessions to measure growth — changing the
+// facilitator mid-series would break the comparison). Revisit the anchor deliberately.
+function usesCommunityValues(page) {
+  return !isCertPage(page) && page !== 'PromptChallengePage';
 }
 
 async function callAnthropic(model, messages, system, max_tokens, temperature, page = '') {
@@ -1170,7 +1182,7 @@ export default async function handler(req, res) {
     let messages   = rawMessages
       .map(m => ({ ...m, content: sanitizeContent(m.content) }))
       .filter(m => (typeof m.content === 'string' ? m.content.trim() !== '' : !Array.isArray(m.content) || m.content.length > 0));
-    const system   = appendSafetyFloor(stripLoneSurrogates(rawSystem));
+    const system   = (usesCommunityValues(page) ? appendFacilitatorFloor : appendSafetyFloor)(stripLoneSurrogates(rawSystem));
 
     // Fire-and-forget: classify the latest (pre-scrub) user message and
     // email the student's community leader(s) if it's flagged. Never
