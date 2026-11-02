@@ -12,6 +12,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import CohortProgress from '../components/CohortProgress';
+import ScoresBySessions from '../components/ScoresBySessions';
 import {
   ArrowRight, Mail, Linkedin, MessageCircle, Sparkles,
   Globe, ChevronDown, Brain, Code, ImagePlus, Briefcase, Heart,
@@ -882,6 +883,8 @@ const PublicLandingPage: React.FC = () => {
                     Certifications: {Object.entries(headline.certifications_by_type).map(([t, n]) => `${t.replace(/ Certification$/, '')} ${n}`).join(' · ')}.
                   </div>
                 )}
+
+                <ScoresBySessions />
 
                 <CohortProgress />
 
