@@ -2090,7 +2090,7 @@ const HealthcareNavigatorPage: React.FC = () => {
 
           {/* Chief complaint */}
           <div className="bg-card border border-hair rounded-2xl shadow-md p-4 sm:p-5">
-            <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><FileText size={15} className="text-blue-600"/> Chief Complaint</h3>
+            <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><FileText size={15} className="text-blue-600"/> Chief Complaint <span className="text-red-600 font-semibold">* required</span></h3>
             <textarea value={assessment.chiefComplaint} onChange={e => setField('chiefComplaint', e.target.value)} rows={2}
               placeholder="Main reason for this visit — what the patient/caregiver says in their own words…"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-base resize-none focus:outline-hidden focus:ring-2 focus:ring-blue-400"/>
@@ -2336,11 +2336,16 @@ const HealthcareNavigatorPage: React.FC = () => {
 
           {/* AI Triage */}
           {!triageResult ? (
+            <div className="space-y-2">
             <button onClick={runTriage} disabled={isTriaging || !assessment.chiefComplaint.trim()}
               className={classNames('w-full py-4 rounded-xl font-bold text-white text-base transition-opacity flex items-center justify-center gap-2',
                 !isTriaging && assessment.chiefComplaint.trim() ? 'bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
               {isTriaging ? <><Loader2 size={18} className="animate-spin"/>Running AI Triage…</> : <><Stethoscope size={18}/>Run AI Triage Classification</>}
             </button>
+            {!isTriaging && !assessment.chiefComplaint.trim() && (
+              <p className="text-sm text-amber-700 text-center">Fill in the Chief Complaint box (near the top) to turn this button on.</p>
+            )}
+            </div>
           ) : (
             <div className={classNames('bg-card border border-hair rounded-2xl shadow-md p-5 border-2', TRIAGE_CONFIG[triageResult.level].border)}>
               <div className="flex items-center justify-between mb-4">
