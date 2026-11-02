@@ -851,6 +851,7 @@ const HealthcareNavigatorPage: React.FC = () => {
   const [newGroup, setNewGroup] = useState<PatientGroup>('adult');
   const [newNotes, setNewNotes] = useState('');
   const [savingPatient, setSavingPatient] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   // ── Assessment form
   const [assessment, setAssessment] = useState<AssessmentData>({ ...BLANK_ASSESSMENT });
@@ -1297,6 +1298,7 @@ const HealthcareNavigatorPage: React.FC = () => {
   const savePatient = async () => {
     if (!user || !newName.trim() || !newVillage || !personAgreed) return;
     setSavingPatient(true);
+    setSaveError('');
     try {
       const { error } = await supabase.from('health_patients').insert({
         youth_user_id: user.id,
@@ -1309,7 +1311,15 @@ const HealthcareNavigatorPage: React.FC = () => {
         patient_group: newGroup,
         notes: newNotes || null,
       });
-      if (!error) { await loadPatients(); resetAddPatient(); setMode('dashboard'); }
+      if (error) {
+        console.error('Register patient failed', error);
+        setSaveError(`The patient was not saved: ${error.message}${error.code ? ` (code ${error.code})` : ''}. Please tell your administrator.`);
+        return;
+      }
+      await loadPatients(); resetAddPatient(); setMode('dashboard');
+    } catch (e) {
+      console.error('Register patient failed', e);
+      setSaveError('The patient was not saved because of a connection problem. Please try again.');
     } finally { setSavingPatient(false); }
   };
 
@@ -1911,6 +1921,7 @@ const HealthcareNavigatorPage: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-400 text-base resize-none"/>
               </div>
               <PersonAgreedCheck checked={personAgreed} onChange={setPersonAgreed} />
+              {saveError && <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{saveError}</p>}
               <button onClick={savePatient} disabled={!newName.trim() || !newVillage || !personAgreed || savingPatient}
                 className={classNames('w-full py-3.5 rounded-xl font-bold text-white text-base transition-opacity',
                   newName.trim() && newVillage && personAgreed && !savingPatient ? 'bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90' : 'bg-gray-300 cursor-not-allowed')}>
