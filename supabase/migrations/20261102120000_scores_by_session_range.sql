@@ -3,8 +3,9 @@
 --
 -- Rules: staff excluded (same enrolled definition as get_cohort_progress); usage-only months and
 -- all-zero scoring failures excluded; repeat scorings in one learner-month averaged first so no
--- learner counts twice in a month; a session range with fewer than 5 learners returns NULL scores
--- so no individual can be picked out. Aggregates only.
+-- learner counts twice in a month; each learner then counts once per session range (the average
+-- of their own months in it); a session range with fewer than 5 learners returns NULL scores so
+-- no individual can be picked out. Aggregates only.
 
 CREATE OR REPLACE FUNCTION public.get_scores_by_session_range()
 RETURNS TABLE (
@@ -60,11 +61,16 @@ AS $$
                    WHEN sess < 200 THEN 4 ELSE 5 END AS bin
     FROM lm
   ),
+  pl AS (  -- one value per learner per range, so a learner with many scored months does not outweigh the rest
+    SELECT bin, user_id, count(*) AS n_months,
+           avg(cog) AS cog, avg(ct) AS ct, avg(ps) AS ps, avg(cr) AS cr
+    FROM b GROUP BY bin, user_id
+  ),
   agg AS (
-    SELECT bin, count(DISTINCT user_id)::int AS n_learners, count(*)::int AS n_months,
+    SELECT bin, count(*)::int AS n_learners, sum(n_months)::int AS n_months,
            avg(cog) AS cog, avg(ct) AS ct, avg(ps) AS ps, avg(cr) AS cr,
            avg((cog + ct + ps + cr) / 4) AS overall
-    FROM b GROUP BY bin
+    FROM pl GROUP BY bin
   )
   SELECT r.o, r.l,
          coalesce(a.n_learners, 0), coalesce(a.n_months, 0),
