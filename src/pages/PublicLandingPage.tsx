@@ -584,6 +584,7 @@ const PublicLandingPage: React.FC = () => {
               <a href="#programmes"  className="nav-lnk">Programmes</a>
               <a href="#challenges"  className="nav-lnk">Challenges</a>
               <a href="#story"       className="nav-lnk">Our Story</a>
+              <a href="#team"        className="nav-lnk">Our Team</a>
               <a href="#vision"      className="nav-lnk">Their Vision</a>
               <a href="#voices"      className="nav-lnk">Voices</a>
               <a href="#research"    className="nav-lnk">Research</a>
@@ -631,6 +632,7 @@ const PublicLandingPage: React.FC = () => {
                 { href: "#programmes", label: "Programmes" },
                 { href: "#challenges", label: "Challenges" },
                 { href: "#story",      label: "Our Story" },
+                { href: "#team",       label: "Our Team" },
                 { href: "#vision",     label: "Their Vision" },
                 { href: "#voices",     label: "Voices" },
                 { href: "#research",   label: "Research" },
@@ -2091,6 +2093,127 @@ const PublicLandingPage: React.FC = () => {
                   When the lab became something more →
                 </a>
               </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ── Our Team ─────────────────────────────────────────────────────── */}
+        <section id="team" style={{ background: "#fff", padding: "5rem 2rem" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+            <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+              <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#d97706", marginBottom: "0.6rem" }}>
+                Our Team
+              </div>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.8rem,4vw,2.8rem)", fontWeight: 700, color: "#1a1208", margin: "0 0 1rem" }}>
+                It takes a village. Here's ours.
+              </h2>
+              <p style={{ color: "rgba(26,18,8,0.6)", fontSize: "1.05rem", lineHeight: 1.8, maxWidth: 640, margin: "0 auto" }}>
+                The people helping young people in rural communities learn AI, build skills and lead their own futures.
+              </p>
+            </div>
+
+            {/* Co-founders */}
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.35rem", fontWeight: 700, color: "#1a1208", margin: "0 0 1.25rem" }}>
+              Co-founders
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.75rem", marginBottom: "3.5rem" }}>
+              {[
+                {
+                  name: "Bennywhite Davidson",
+                  role: "Co-founder, Director & Partnerships Lead",
+                  bio: "Bennywhite sets the direction for nextVillage and builds the partnerships that bring AI learning to rural communities.",
+                  photo: "/our-team/images/bennywhite.jpg",
+                  linkedin: "https://www.linkedin.com/in/davidson-bennywhite-3825b72a9/",
+                },
+                {
+                  name: "Kevin Hallinan",
+                  role: "Co-founder, Chief Technical Officer & Grants Lead",
+                  bio: "Kevin leads the technology behind the platform and the grants and partnerships that fund it.",
+                  photo: "/our-team/images/kevin.jpg",
+                  email: "kevin.hallinan@udayton.edu",
+                  linkedin: "https://www.linkedin.com/in/kevinhallinan-ai-for-empowerment/",
+                },
+              ].map(p => (
+                <div key={p.name} className="contact-card" style={{ padding: 0, overflow: "hidden", gap: 0 }}>
+                  <img src={p.photo} alt={`Portrait of ${p.name}`} loading="lazy"
+                    style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", objectPosition: "center 25%", display: "block" }} />
+                  <div style={{ padding: "1.5rem 1.75rem 1.75rem", display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                    <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.45rem", fontWeight: 700, color: "#1a1208", margin: 0 }}>
+                      {p.name}
+                    </h4>
+                    <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#b45309" }}>{p.role}</div>
+                    <p style={{ fontSize: "0.92rem", color: "rgba(26,18,8,0.62)", lineHeight: 1.7, margin: "0 0 0.5rem" }}>{p.bio}</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+                      {p.email && (
+                        <a href={`mailto:${p.email}`} className="pub-btn btn-amber" style={{ padding: "0.55rem 1.1rem", fontSize: "0.82rem" }}>
+                          <Mail size={14} /> Email
+                        </a>
+                      )}
+                      <a href={p.linkedin} target="_blank" rel="noopener noreferrer"
+                        className="pub-btn" style={{ background: "#0077b5", color: "#fff", padding: "0.55rem 1.1rem", fontSize: "0.82rem" }}>
+                        <Linkedin size={14} /> LinkedIn
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Leadership team */}
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.35rem", fontWeight: 700, color: "#1a1208", margin: "0 0 1.25rem" }}>
+              Leadership team
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem" }}>
+              {[
+                {
+                  name: "Confidence Onuoha",
+                  role: "Child Protection Lead & Educator",
+                  bio: "Confidence makes sure every child learning with nextVillage is safe, and teaches in the community.",
+                  photo: "/our-team/images/confidence.jpg",
+                  linkedin: "https://www.linkedin.com/in/confidence-onuoha-007a8b3b0/",
+                },
+                {
+                  name: "Divinegift Morris",
+                  role: "Outreach Director & Educator",
+                  bio: "Divinegift leads outreach to new communities, teaches, and writes the proposals that help nextVillage grow.",
+                  photo: "/our-team/images/divinegift.jpg",
+                  linkedin: "https://www.linkedin.com/in/divinegift-morris-658094403/",
+                },
+                {
+                  name: "Gabriel Possible",
+                  role: "Educator",
+                  bio: "Gabriel teaches young people in the community as they learn AI and build new skills.",
+                  photo: "/our-team/images/gabriel.jpg",
+                  linkedin: "",
+                },
+                {
+                  name: "Silas Clergy",
+                  role: "Platform Administrator & Mentor",
+                  bio: "Silas keeps the platform running safely every day and mentors the young people who learn on it.",
+                  photo: "/our-team/images/silas.jpg",
+                  linkedin: "https://www.linkedin.com/in/silas-clergy-baa950423/",
+                },
+              ].map(p => (
+                <div key={p.name} className="contact-card" style={{ padding: 0, overflow: "hidden", gap: 0 }}>
+                  <img src={p.photo} alt={`Portrait of ${p.name}`} loading="lazy"
+                    style={{ width: "100%", aspectRatio: "4 / 5", objectFit: "cover", display: "block" }} />
+                  <div style={{ padding: "1.25rem 1.4rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
+                    <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 700, color: "#1a1208", margin: 0 }}>
+                      {p.name}
+                    </h4>
+                    <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#b45309" }}>{p.role}</div>
+                    <p style={{ fontSize: "0.85rem", color: "rgba(26,18,8,0.62)", lineHeight: 1.7, margin: 0, flex: 1 }}>{p.bio}</p>
+                    {p.linkedin && (
+                      <a href={p.linkedin} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", marginTop: "0.5rem", minHeight: 44, fontSize: "0.82rem", fontWeight: 700, color: "#0077b5" }}>
+                        <Linkedin size={14} /> LinkedIn
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
           </div>
