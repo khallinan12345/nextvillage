@@ -196,7 +196,7 @@ const DEFAULT_MODELS = {
   cerebras:         'gpt-oss-120b',             // same weights — dual-homed, no output drift on failover
   gemini:           'gemini-2.0-flash',
   cloudflare:       '@cf/openai/gpt-oss-120b',  // same weights as groq/cerebras; was llama-3.3-70b-instruct-fp8-fast
-  cloudflare_nemotron: '@cf/nvidia/nemotron-3-120b-a12b', // second Cloudflare model, own cooldown slot
+  cloudflare_nemotron: '@cf/google/gemma-4-26b-a4b-it', // second Cloudflare model, own cooldown slot (nemotron retires 2026-11-20; slot key kept)
   mistral:          'mistral-small-latest',
 };
 
@@ -1103,7 +1103,7 @@ export default async function handler(req, res) {
       providers: [
         'groq/llama-3.3-70b (primary free)',
         'gemini/2.0-flash (free fallback)',
-        'cloudflare/gpt-oss-120b + nemotron-3-120b (free fallbacks)',
+        'cloudflare/gpt-oss-120b + gemma-4-26b (free fallbacks)',
         'mistral/small (free fallback)',
         'anthropic/haiku (final paid fallback + most coding tasks)',
         'anthropic/sonnet-5.5 (Create Game + Website Builder coding tasks)',
