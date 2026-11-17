@@ -582,6 +582,7 @@ const PublicLandingPage: React.FC = () => {
             <div className="hide-sm" style={{ display: "flex", alignItems: "center", gap: "1.1rem" }}>
               <a href="#impact"      className="nav-lnk">Impact</a>
               <a href="#programmes"  className="nav-lnk">Programmes</a>
+              <a href="#startups"    className="nav-lnk">Startups</a>
               <a href="#challenges"  className="nav-lnk">Challenges</a>
               <a href="#story"       className="nav-lnk">Our Story</a>
               <a href="#team"        className="nav-lnk">Our Team</a>
@@ -725,6 +726,16 @@ const PublicLandingPage: React.FC = () => {
               research across Sub-Saharan Africa and beyond.
             </p>
 
+            <div className="fu fu2" style={{
+              maxWidth: 700, margin: "0 auto 2.25rem", padding: "1rem 1.25rem",
+              background: "rgba(217,119,6,0.14)", border: "1px solid rgba(251,191,36,0.45)",
+              borderRadius: 14, color: "#fff", lineHeight: 1.65, fontSize: "clamp(0.95rem,2vw,1.08rem)",
+            }}>
+              <strong style={{ color: "#fbbf24" }}>Our goal goes beyond AI proficiency, tech skills, and workforce readiness: we are building a pipeline to future jobs.</strong>{" "}
+              Young people now learn by doing, working on real tasks that support entrepreneurial tech companies.{" "}
+              <a href="#startups" style={{ color: "#fbbf24", fontWeight: 700, whiteSpace: "nowrap" }}>Meet our first partners →</a>
+            </div>
+
             <div className="fu fu3" style={{ display: "flex", gap: "0.9rem", justifyContent: "center", flexWrap: "wrap" }}>
               <a href="#impact" className="pub-btn btn-amber" style={{ fontSize: "1rem", padding: "0.8rem 1.9rem" }}>
                 See Our Impact <ArrowRight size={15} />
@@ -743,6 +754,63 @@ const PublicLandingPage: React.FC = () => {
             <ChevronDown size={22} />
           </div>
         </div>
+
+        {/* ── Startup partners / real-world experience ────────────────────── */}
+        <section id="startups" style={{ background: "#0c160a", padding: "5rem 2rem" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ marginBottom: "2.5rem" }}>
+              <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#fbbf24", marginBottom: "0.6rem" }}>
+                From Learning to Jobs
+              </div>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.7rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", margin: "0 0 0.75rem" }}>
+                Real-world experience with tech startups
+              </h2>
+              <p style={{ color: "rgba(255,255,255,0.65)", maxWidth: 680, lineHeight: 1.72, margin: 0 }}>
+                Skills matter most when they lead somewhere. We bring real projects from entrepreneurial
+                tech companies to our learners, so they build experience on real work and a path to
+                future jobs while they learn.
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: "1.25rem", marginBottom: "2.5rem" }}>
+              {[
+                { name: "ChiwiQ", desc: "An AI tech company building AI agents that help businesses run smarter. One of the first companies offering real-world experience to our young people." },
+                { name: "quSafe.ai", desc: "An entrepreneurial tech startup, also among the first companies offering real-world experience to our young people." },
+              ].map(c => (
+                <div key={c.name} style={{
+                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(251,191,36,0.3)",
+                  borderRadius: 14, padding: "1.4rem",
+                }}>
+                  <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#fbbf24", marginBottom: "0.4rem" }}>
+                    First partner company
+                  </div>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.5rem", fontWeight: 700, color: "#fff", marginBottom: "0.5rem" }}>{c.name}</div>
+                  <div style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.62)", lineHeight: 1.65 }}>{c.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              background: "rgba(217,119,6,0.12)", border: "1px solid rgba(217,119,6,0.4)",
+              borderRadius: 16, padding: "1.75rem", textAlign: "center",
+            }}>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem", color: "#fff", margin: "0 0 0.6rem" }}>
+                Tech startup leader? Bring us your idea.
+              </h3>
+              <p style={{ color: "rgba(255,255,255,0.65)", maxWidth: 600, margin: "0 auto 1.25rem", lineHeight: 1.7, fontSize: "0.92rem" }}>
+                If you lead an early-stage tech company and have a project, product, or idea where
+                motivated young people could gain real experience, we would like to hear from you.
+              </p>
+              <a href="mailto:kevin.hallinan@udayton.edu?subject=Startup%20Partnership%20-%20nextVillage&body=Hello%20Kevin%2C%0A%0ACompany%3A%20%0AWebsite%3A%20%0AYour%20name%20and%20role%3A%20%0AThe%20idea%20or%20project%20you%20would%20like%20learners%20to%20work%20on%3A%20%0A"
+                className="pub-btn btn-amber" style={{ fontSize: "1rem", padding: "0.82rem 1.9rem" }}>
+                Email Kevin About Your Idea <ArrowRight size={15} />
+              </a>
+              <div style={{ marginTop: "0.9rem", fontSize: "0.82rem", color: "rgba(255,255,255,0.5)" }}>
+                or write to <a href="mailto:kevin.hallinan@udayton.edu" style={{ color: "#fbbf24" }}>kevin.hallinan@udayton.edu</a>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* ── Programmes ──────────────────────────────────────────────────── */}
         <section id="programmes" style={{ background: "#fff", padding: "5rem 2rem" }}>
