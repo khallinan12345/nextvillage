@@ -775,7 +775,7 @@ const PublicLandingPage: React.FC = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: "1.25rem", marginBottom: "2.5rem" }}>
               {[
                 { name: "ChiwiQ", desc: "An AI tech company building AI agents that help businesses run smarter. One of the first companies offering real-world experience to our young people." },
-                { name: "quSafe.ai", desc: "An entrepreneurial tech startup, also among the first companies offering real-world experience to our young people." },
+                { name: "quSafe.ai", desc: "A startup helping companies get ready for future quantum computing hacking threats. Also one of the first companies offering real-world experience to our young people." },
               ].map(c => (
                 <div key={c.name} style={{
                   background: "rgba(255,255,255,0.05)", border: "1px solid rgba(251,191,36,0.3)",
