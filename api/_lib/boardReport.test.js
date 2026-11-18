@@ -47,3 +47,37 @@ describe('buildBoardReport', () => {
     expect(e.text).toContain('AI costs: $0.00');
   });
 });
+
+describe('donations section', () => {
+  const donations = {
+    count: 2, total_usd: 350, all_time_count: 5, all_time_usd: 1200,
+    received_by_currency: [{ currency: 'NGN', amount: 512000 }],
+    items: [
+      { received_on: '2026-10-04', donor: 'Jane <Doe>', amount_usd: 100, purpose: 'Cohort laptops' },
+      { received_on: '2026-10-20', donor: 'Anonymous', amount_usd: 250, purpose: null },
+    ],
+  };
+  const r = buildBoardReport({ stats, donations, monthLabel: 'October 2026' });
+  it('lists the month with totals, donors, purposes and the all-time figure', () => {
+    expect(r.text).toContain('Donations received: $350.00 from 2 donations');
+    expect(r.text).toContain('Oct 4: Jane <Doe> gave $100.00 (Cohort laptops)');
+    expect(r.text).toContain('Oct 20: Anonymous gave $250.00');
+    expect(r.text).toContain('512,000 NGN');
+    expect(r.text).toContain('All time: $1,200.00 from 5 donations to date');
+    expect(r.counts.donations).toBe(2);
+  });
+  it('escapes donor names in the HTML', () => {
+    expect(r.html).toContain('Jane &lt;Doe&gt;');
+    expect(r.html).not.toContain('Jane <Doe>');
+  });
+  it('says none when the month had no donations', () => {
+    const e = buildBoardReport({ stats, donations: { count: 0, total_usd: 0, items: [], all_time_count: 1, all_time_usd: 50 }, monthLabel: 'May 2026' });
+    expect(e.text).toContain('Donations received: none this month');
+    expect(e.text).toContain('All time: $50.00 from 1 donation to date');
+  });
+  it('leaves the section out when donations could not be fetched', () => {
+    const e = buildBoardReport({ stats, donations: null, monthLabel: 'May 2026' });
+    expect(e.text).not.toContain('Donations');
+    expect(e.html).not.toContain('Donations');
+  });
+});

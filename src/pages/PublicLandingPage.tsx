@@ -322,6 +322,14 @@ const PublicLandingPage: React.FC = () => {
   const [impactTiers, setImpactTiers]           = useState<ImpactTier[]>([]);
   const [weeklyWinners, setWeeklyWinners]       = useState<WeeklyWinner[]>([]);
   const [selectedWinner, setSelectedWinner]     = useState<WeeklyWinner | null>(null);
+  // Donor wall: opted-in donor names only (get_donor_wall never returns amounts or contact details).
+  const [donors, setDonors]                     = useState<{ display_name: string; month_start: string }[]>([]);
+
+  useEffect(() => {
+    supabase.rpc('get_donor_wall').then(({ data, error }) => {
+      if (!error && Array.isArray(data)) setDonors(data);
+    });
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -2849,6 +2857,34 @@ const PublicLandingPage: React.FC = () => {
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Donor wall: only donors who agreed to be named; no amounts */}
+            <div id="donor-wall" style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+              <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#d97706", marginBottom: "0.6rem" }}>
+                Donor Wall
+              </div>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.45rem", fontWeight: 700, color: "#1a1208", margin: "0 0 0.5rem" }}>
+                With gratitude to the people who make this possible
+              </h3>
+              {donors.length > 0 ? (
+                <ul style={{ listStyle: "none", margin: "1.25rem auto 0", padding: 0, display: "flex", flexWrap: "wrap", gap: "0.6rem", justifyContent: "center", maxWidth: 900 }}>
+                  {donors.map((d, i) => (
+                    <li key={`${d.display_name}-${d.month_start}-${i}`}
+                      style={{ background: "#fff", border: "1px solid rgba(217,119,6,0.25)", borderRadius: 999, padding: "0.45rem 1rem", fontSize: "0.9rem", color: "#1a1208", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <Heart size={13} color="#d97706" aria-hidden="true" />
+                      <span style={{ fontWeight: 600 }}>{d.display_name}</span>
+                      <span style={{ color: "rgba(26,18,8,0.45)", fontSize: "0.78rem" }}>
+                        {new Date(d.month_start + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ color: "rgba(26,18,8,0.55)", fontSize: "0.9rem", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+                  Every gift is recorded and thanked here, with the donor's permission. Your name could be the first.
+                </p>
+              )}
             </div>
 
             {/* Contact block */}

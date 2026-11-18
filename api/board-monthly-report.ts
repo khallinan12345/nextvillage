@@ -3,7 +3,8 @@
  *
  * "Impact Mining Program News": monthly email to the board of directors, covering the previous
  * calendar month: new students per African organization, new certifications, new organizations,
- * sessions and AI costs. Counts only: no learner names or work.
+ * sessions, AI costs and donations (recorded by hand, sent by Impact Mining, Inc. via Sendwave).
+ * Counts only about learners: no learner names or work.
  * Two cron runs each month:
  *   3rd, 10:00 UTC  ?preview=1  a [Preview] copy to the address(es) in report_recipients with
  *                   report = 'board_monthly_preview' (Kevin), so it can be checked first
@@ -64,7 +65,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { data: stats, error } = await supabase.rpc("get_board_monthly_stats", { p_month_start: month.start });
     if (error) throw new Error(error.message);
-    const msg = buildBoardReport({ stats, monthLabel: month.label });
+    // Donations are fetched separately; if that fails the report still goes out without the section.
+    const { data: donations, error: dErr } = await supabase.rpc("get_board_donations", { p_month_start: month.start });
+    if (dErr) console.error("board report: get_board_donations failed:", dErr.message);
+    const msg = buildBoardReport({ stats, donations: dErr ? null : donations, monthLabel: month.label });
 
     const previewMsg = { ...msg, subject: `[Preview] ${msg.subject}` };
     if (previewTo) {
