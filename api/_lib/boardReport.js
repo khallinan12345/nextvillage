@@ -52,7 +52,7 @@ export function buildBoardReport({ stats, monthLabel, baseUrl = 'https://www.nex
   lines.push('', `AI costs: ${usd(cost)} across ${n(requests)} AI requests` + (perSession !== null ? ` (about ${usd(perSession)} per session)` : ''));
   for (const p of providers) lines.push(`  - ${p.provider}: ${usd(p.usd)}`);
   if (freeRequests > 0) lines.push(`  - ${n(freeRequests)} further requests ran on free-tier providers at no cost`);
-  lines.push('', 'Counts only: no learner names or work are included. Sent automatically on the 5th of each month.');
+  lines.push('', 'Counts only: no learner names or work are included. Sent automatically each month.');
   const text = lines.join('\n');
 
   const stat = (label, value, sub) =>
@@ -75,7 +75,7 @@ ${newOrgs.length > 0 ? ul(newOrgs.map((o) => esc(orgLabel(o)))) : '<p style="col
 ${h('AI costs')}
 <p style="margin:4px 0;font-size:14px;color:#333">${usd(cost)} across ${n(requests)} AI requests${perSession !== null ? ` (about ${usd(perSession)} per session)` : ''}.</p>
 ${ul([...providers.map((p) => `${esc(p.provider)}: ${usd(p.usd)}`), ...(freeRequests > 0 ? [`${n(freeRequests)} further requests ran on free-tier providers at no cost`] : [])])}
-<p style="margin-top:26px;font-size:12px;color:#8a7f6a">Counts only; no learner names or work are included. Sent automatically on the 5th of each month. <a href="${esc(baseUrl)}" style="color:#8a7f6a">nextVillage.community</a></p>
+<p style="margin-top:26px;font-size:12px;color:#8a7f6a">Counts only; no learner names or work are included. Sent automatically each month. <a href="${esc(baseUrl)}" style="color:#8a7f6a">nextVillage.community</a></p>
 </div>`;
 
   return { subject, html, text, counts: { newStudents, certs, newOrgs: newOrgs.length, sessions, cost } };

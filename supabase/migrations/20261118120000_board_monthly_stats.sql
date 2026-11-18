@@ -1,3 +1,21 @@
+-- Board of directors who receive the monthly board report, and the monthly numbers for it.
+-- Directors are NOT seeded here (this repo is public); rows are added in the database directly:
+--   insert into board_directors (name, email) values ('Name', 'name@example.com');
+-- and removed from the mailing with: update board_directors set active = false where email = '...';
+
+CREATE TABLE IF NOT EXISTS public.board_directors (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text NOT NULL UNIQUE,
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.board_directors ENABLE ROW LEVEL SECURITY;
+-- No policies: only the service role (which bypasses RLS) reads it. Revoke per role because
+-- anon/authenticated get automatic grants on new tables.
+REVOKE ALL ON public.board_directors FROM PUBLIC, anon, authenticated;
+GRANT ALL ON public.board_directors TO service_role;
+
 -- Monthly numbers for the board report ("Impact Mining Program News", api/board-monthly-report.ts).
 -- One call returns everything for one calendar month as JSON. Counts only: no learner names or
 -- anything a learner wrote. Admin / facilitator accounts (Kevin, Bennywhite) are left out of

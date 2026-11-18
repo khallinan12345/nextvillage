@@ -52,6 +52,10 @@
       "schedule": "0 8 1 * *"
     },
     {
+      "path": "/api/board-monthly-report?preview=1",
+      "schedule": "0 10 3 * *"
+    },
+    {
       "path": "/api/board-monthly-report",
       "schedule": "0 10 5 * *"
     }
