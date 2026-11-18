@@ -7,7 +7,7 @@ import {
   Code, Database, Layers, ImagePlus, Video, Mic, PenLine, Zap,
   Briefcase, Code2, Film, ImagePlus as ImagePlusIcon, Mic as MicIcon,
   Cpu, Wand2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Users, Sprout, Fish, Heart,
-  GitBranch, ClipboardList, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe, Puzzle
+  GitBranch, ClipboardList, HandHeart, PawPrint, FlaskConical, Tree, Leaf, Bot, Sparkles, Gamepad2, Globe, Puzzle
 } from 'lucide-react';
 import classNames from 'classnames';
 
@@ -46,6 +46,8 @@ const Sidebar: React.FC = () => {
   const isLeaderOrAdmin = user?.role === 'site_leader' || user?.role === 'site_administrator' || user?.role === 'research_lead' || user?.role === 'platform_administrator';
   const isTeacherStaff = user?.role === 'teacher' || user?.role === 'facilitator';
   const isTeamMember = isLeaderOrAdmin || user?.role === 'leader';
+  // Donations: vAI leaders (role 'leader') and platform administrators. The database enforces this too.
+  const canSeeDonations = user?.role === 'leader' || user?.role === 'platform_administrator';
 
   const mainNavigation: NavItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: <Database size={20} /> },
@@ -426,6 +428,23 @@ const Sidebar: React.FC = () => {
                 Team workspace
               </Link>
             </>
+          )}
+
+          {canSeeDonations && (
+            <Link
+              to="/admin/donations"
+              className={classNames(
+                'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors',
+                isActive('/admin/donations')
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'text-amber-600 hover:bg-amber-50 hover:text-amber-700'
+              )}
+            >
+              <span className={classNames('flex-shrink-0', isActive('/admin/donations') ? 'text-amber-700' : 'text-amber-400')}>
+                <HandHeart size={20} />
+              </span>
+              Donations
+            </Link>
           )}
 
         </nav>

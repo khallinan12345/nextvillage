@@ -3,7 +3,8 @@
 // "Impact Mining Program News": the monthly email to the board of directors. Pure functions; the
 // route (api/board-monthly-report.ts) fetches the numbers (get_board_monthly_stats) and sends it.
 //
-// Counts only. No learner names, nothing a learner wrote, no scores. New students are shown per
+// Counts only about learners: no learner names, nothing a learner wrote, no scores. The donations section
+// names donors (the board sees who gave and how much; the public wall shows opted-in names only). New students are shown per
 // African partner organization (organizations.continent = 'Africa').
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -20,7 +21,11 @@ export function previousMonth(now = new Date()) {
   return { start: `${y}-${String(m + 1).padStart(2, '0')}-01`, label: `${MONTHS[m]} ${y}` };
 }
 
-export function buildBoardReport({ stats, monthLabel, baseUrl = 'https://www.nextvillage.community' }) {
+const shortDate = (iso) => new Date(`${String(iso).slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+// `donations` is the result of get_board_donations (or null/undefined when it could not be fetched, in which
+// case the section is left out rather than shown as zero).
+export function buildBoardReport({ stats, donations = null, monthLabel, baseUrl = 'https://www.nextvillage.community' }) {
   const orgs = stats.new_students_by_org ?? [];
   const newStudents = orgs.reduce((a, o) => a + Number(o.new_students || 0), 0);
   const totalStudents = orgs.reduce((a, o) => a + Number(o.total_students || 0), 0);
@@ -34,6 +39,14 @@ export function buildBoardReport({ stats, monthLabel, baseUrl = 'https://www.nex
   const providers = (stats.ai_cost_by_provider ?? []).filter((p) => Number(p.usd) > 0);
   const freeRequests = (stats.ai_cost_by_provider ?? []).filter((p) => Number(p.usd) === 0).reduce((a, p) => a + Number(p.requests || 0), 0);
   const perSession = sessions > 0 ? cost / sessions : null;
+
+  const don = donations && typeof donations === 'object' ? donations : null;
+  const donItems = don?.items ?? [];
+  const donCount = Number(don?.count || 0);
+  const donTotal = Number(don?.total_usd || 0);
+  const donReceived = (don?.received_by_currency ?? []).map((r) => `${Number(r.amount).toLocaleString('en-US', { maximumFractionDigits: 2 })} ${r.currency}`);
+  const donAllTime = don ? `${usd(don.all_time_usd)} from ${n(don.all_time_count)} donation${Number(don.all_time_count) === 1 ? '' : 's'} to date` : '';
+  const donLine = (i) => `${shortDate(i.received_on)}: ${i.donor} gave ${usd(i.amount_usd)}${i.purpose ? ` (${i.purpose})` : ''}`;
 
   const orgLabel = (o) => (o.country ? `${o.name} (${o.country})` : o.name);
   const subject = `Impact Mining Program News: ${monthLabel}`;
@@ -52,6 +65,12 @@ export function buildBoardReport({ stats, monthLabel, baseUrl = 'https://www.nex
   lines.push('', `AI costs: ${usd(cost)} across ${n(requests)} AI requests` + (perSession !== null ? ` (about ${usd(perSession)} per session)` : ''));
   for (const p of providers) lines.push(`  - ${p.provider}: ${usd(p.usd)}`);
   if (freeRequests > 0) lines.push(`  - ${n(freeRequests)} further requests ran on free-tier providers at no cost`);
+  if (don) {
+    lines.push('', donCount > 0 ? `Donations received: ${usd(donTotal)} from ${n(donCount)} donation${donCount === 1 ? '' : 's'} (via Impact Mining, Inc. and Sendwave)` : 'Donations received: none this month');
+    for (const i of donItems) lines.push(`  - ${donLine(i)}`);
+    if (donReceived.length > 0) lines.push(`  Received by vAI after fees and conversion: ${donReceived.join(', ')}`);
+    lines.push(`  All time: ${donAllTime}`);
+  }
   lines.push('', 'Counts only: no learner names or work are included. Sent automatically each month.');
   const text = lines.join('\n');
 
@@ -75,8 +94,11 @@ ${newOrgs.length > 0 ? ul(newOrgs.map((o) => esc(orgLabel(o)))) : '<p style="col
 ${h('AI costs')}
 <p style="margin:4px 0;font-size:14px;color:#333">${usd(cost)} across ${n(requests)} AI requests${perSession !== null ? ` (about ${usd(perSession)} per session)` : ''}.</p>
 ${ul([...providers.map((p) => `${esc(p.provider)}: ${usd(p.usd)}`), ...(freeRequests > 0 ? [`${n(freeRequests)} further requests ran on free-tier providers at no cost`] : [])])}
+${don ? `${h('Donations')}
+${donCount > 0 ? `<p style="margin:4px 0;font-size:14px;color:#333"><b>${usd(donTotal)}</b> from ${n(donCount)} donation${donCount === 1 ? '' : 's'}, sent by Impact Mining, Inc. through Sendwave.</p>${ul([...donItems.map((i) => esc(donLine(i))), ...(donReceived.length > 0 ? [`Received by vAI after fees and conversion: ${esc(donReceived.join(', '))}`] : [])])}` : '<p style="color:#666;font-size:14px;margin:4px 0">None this month.</p>'}
+<p style="margin:6px 0 0;font-size:12px;color:#8a7f6a">All time: ${esc(donAllTime)}.</p>` : ''}
 <p style="margin-top:26px;font-size:12px;color:#8a7f6a">Counts only; no learner names or work are included. Sent automatically each month. <a href="${esc(baseUrl)}" style="color:#8a7f6a">nextVillage.community</a></p>
 </div>`;
 
-  return { subject, html, text, counts: { newStudents, certs, newOrgs: newOrgs.length, sessions, cost } };
+  return { subject, html, text, counts: { newStudents, certs, newOrgs: newOrgs.length, sessions, cost, donations: don ? donCount : null } };
 }

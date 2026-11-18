@@ -94,6 +94,7 @@ const CodeAssistantPage = lazy(() => import('./pages/CodeAssistantPage'));
 const AdminStudentDashboard = lazy(() => import('./pages/admin/AdminStudentDashboard'));
 const LearnerGrowthPage = lazy(() => import('./pages/admin/LearnerGrowthPage'));
 const ChangeRequestsPage = lazy(() => import('./pages/admin/ChangeRequestsPage'));
+const DonationsPage = lazy(() => import('./pages/admin/DonationsPage'));
 const OrgProgressReportPage = lazy(() => import('./pages/OrgProgressReportPage'));
 const TeamPage = lazy(() => import('./pages/TeamPage'));
 const MyPathPage = lazy(() => import('./pages/MyPathPage'));
@@ -395,6 +396,7 @@ export const AppContent: React.FC = () => {
         <Route path="/admin/learner-growth" element={<LearnerGrowthPage />} />
         <Route path="/admin/changes" element={<ChangeRequestsPage />} />
         <Route path="/admin/changes/:id" element={<ChangeRequestsPage />} />
+        <Route path="/admin/donations" element={<DonationsPage />} />
         <Route path="/progress-report" element={<OrgProgressReportPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/teacher-dashboard" element={<Navigate to="/admin/student-dashboard" replace />} />
