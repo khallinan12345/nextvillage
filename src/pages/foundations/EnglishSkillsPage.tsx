@@ -1,5 +1,7 @@
 // src/pages/EnglishSkillsPage.tsx
 
+import { parseVizContent, stripVizForSpeech, MathVizRenderer, VizFallback } from '../../components/MathViz';
+import { buildVizInstructions } from '../../components/viz/vizPrompt';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
@@ -348,10 +350,14 @@ Explanation: 2–3 warm sentences to the student explaining WHAT changed and WHY
 
 const MessageContent: React.FC<{ content: string }> = ({ content }) => {
   const { text: cleanedContent, scene } = extractIllustration(content);
-  const lines = cleanedContent.split('\n');
   return (
     <>
-      <span>
+      {parseVizContent(cleanedContent).map((seg, si) => {
+        if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={si} spec={seg.spec} />;
+        if (seg.kind === 'viz-error') return <VizFallback key={si} />;
+        const lines = (seg.text ?? '').split('\n');
+        return (
+      <span key={si}>
         {lines.map((line, i) => {
           const isCorrection = line.trimStart().startsWith('✅');
           if (isCorrection) {
@@ -372,6 +378,8 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
           );
         })}
       </span>
+        );
+      })}
       {scene && <SceneIllustration scene={scene} />}
     </>
   );
@@ -740,7 +748,7 @@ const EnglishSkillsPage: React.FC = () => {
   // ── Auto-speak AI messages ────────────────────────────────────────────
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (last?.role === 'assistant') speak(last.content);
+    if (last?.role === 'assistant') speak(stripVizForSpeech(last.content));
   }, [messages, speak]);
 
   // ── Auto-scroll ───────────────────────────────────────────────────────
@@ -1018,7 +1026,7 @@ Respond ONLY with valid JSON:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + buildVizInstructions('english');
       const welcome = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: [{ role: 'user', content: `The student has chosen the topic: "${t}". Give a warm 2-sentence welcome and ask your very first question or prompt. Be friendly and encouraging.` }],
@@ -1062,7 +1070,7 @@ Respond ONLY with valid JSON:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + buildVizInstructions('english');
       const aiText = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         // Only the recent turns go to the AI: a long session sent in full overflows the free
@@ -1565,7 +1573,7 @@ Respond ONLY with valid JSON:
                     ) : (
                       <div className="max-w-[80%] text-[15px] leading-[1.7] text-body">
                         <MessageContent content={msg.content} />
-                        <AIPidginCoachWrapper englishText={msg.content} />
+                        <AIPidginCoachWrapper englishText={stripVizForSpeech(msg.content)} />
                       </div>
                     )}
                   </div>

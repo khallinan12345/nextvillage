@@ -17,7 +17,8 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { saveEvaluation } from '../../lib/evaluations';
-import { parseVizContent, stripVizForSpeech, MathVizRenderer, VIZ_INSTRUCTIONS } from '../../components/MathViz';
+import { parseVizContent, stripVizForSpeech, MathVizRenderer, VizFallback } from '../../components/MathViz';
+import { buildVizInstructions } from '../../components/viz/vizPrompt';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -487,6 +488,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
     <div className="stack-y-1">
       {segments.map((seg, s) => {
         if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={s} spec={seg.spec} />;
+        if (seg.kind === 'viz-error') return <VizFallback key={s} />;
         return (seg.text ?? '').split('\n').map((line, i) => {
           if (!line.trim()) return null;
           if (line.startsWith('✅')) {
@@ -993,7 +995,7 @@ LANGUAGE RULES:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + VIZ_INSTRUCTIONS + SOCRATIC_CORE;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildMathLevelBlock(mathLevel) + buildVizInstructions('math') + SOCRATIC_CORE;
       const welcome = await chatText({
         page: 'MathSkillsPage',
         messages: [{ role: 'user', content: `The student has chosen to practice "${selectedStage.name}" using the context of: "${t}". Give a warm 2-sentence welcome and pose your very first math question or challenge, grounded in their context. Be encouraging and make it feel like an adventure.` }],
@@ -1042,7 +1044,7 @@ LANGUAGE RULES:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + VIZ_INSTRUCTIONS + SOCRATIC_CORE;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildMathLevelBlock(mathLevel) + buildVizInstructions('math') + SOCRATIC_CORE;
       const aiText = await chatText({
         page: 'MathSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),

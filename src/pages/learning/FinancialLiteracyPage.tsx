@@ -16,6 +16,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { RichMarkdown } from '../../components/viz/RichMarkdown';
+import { buildVizInstructions } from '../../components/viz/vizPrompt';
+import { stripVizForSpeech } from '../../components/viz/vizSpec';
 import classNames from 'classnames';
 import {
   Wallet, PiggyBank, CreditCard, ShieldCheck, Store,
@@ -396,7 +399,7 @@ const FinancialLiteracyPage: React.FC = () => {
 
   const systemPrompt = useMemo(() => {
     if (!session || !sessionArea) return '';
-    return buildFinLitFacilitatorPrompt({
+    const base = buildFinLitFacilitatorPrompt({
       area: sessionArea,
       moduleTitle: session.title,
       context: session.description,
@@ -405,6 +408,7 @@ const FinancialLiteracyPage: React.FC = () => {
       baseline,
       moduleInstructions: session.isOwn ? null : session.moduleInstructions, // own modules: description already holds the context
     });
+    return base + buildVizInstructions('finance');
   }, [session, sessionArea, locale, commLevel, baseline]);
 
   // ── Chat turn ────────────────────────────────────────────────────────────
@@ -451,7 +455,7 @@ const FinancialLiteracyPage: React.FC = () => {
 
       const { text: visible, rubric } = splitRubric(content, sessionArea);
       if (rubric) setLatestRubric(rubric);
-      if (voiceOn) speak(visible.replace(/[*_#>`]/g, ''));
+      if (voiceOn) speak(stripVizForSpeech(visible).replace(/[*_#>`]/g, ''));
       await persistTurn(final, rubric);
     } catch (err) {
       console.error('[FinLit] Chat error:', err);
@@ -820,7 +824,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
               const weakest = rubric?.weakest ? rubric.scores[rubric.weakest] : undefined;
               return (
                 <>
-                  <div className="text-base"><ReactMarkdown components={markdown}>{text}</ReactMarkdown></div>
+                  <div className="text-base"><RichMarkdown text={text} components={markdown} /></div>
                   {rubric && (
                     <div className="mt-3 stack-y-2">
                       <div className="flex flex-wrap gap-1.5">
@@ -843,7 +847,7 @@ Return ONLY JSON: {"improved_text": "..."}`,
                       </button>
                     </div>
                   )}
-                  <AIPidginCoachWrapper englishText={text} />
+                  <AIPidginCoachWrapper englishText={stripVizForSpeech(text)} />
                 </>
               );
             }}

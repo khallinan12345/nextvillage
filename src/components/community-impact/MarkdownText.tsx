@@ -12,18 +12,26 @@ import React from 'react';
 import { extractIllustration } from './illustrationParser';
 import { SceneIllustration } from './SceneIllustration';
 import { escapeHtml } from '../../lib/escapeHtml';
+import { parseVizContent } from '../viz/vizSpec';
+import { MathVizRenderer, VizFallback } from '../viz/VizRenderer';
 
 export const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const { text: cleanedText, scene } = extractIllustration(text);
 
+  const renderLines = (t: string, key: string) => t.split('\n').map((line, i) => {
+    if (!line.trim()) return <div key={`${key}-${i}`} className="h-1.5" />;
+    const html = escapeHtml(line)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    return <p key={`${key}-${i}`} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
+  });
+
   return (
     <div className="stack-y-1.5">
-      {cleanedText.split('\n').map((line, i) => {
-        if (!line.trim()) return <div key={i} className="h-1.5" />;
-        const html = escapeHtml(line)
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>');
-        return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
+      {parseVizContent(cleanedText).map((seg, s) => {
+        if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={s} spec={seg.spec} />;
+        if (seg.kind === 'viz-error') return <VizFallback key={s} />;
+        return renderLines(seg.text ?? '', String(s));
       })}
       {scene && <SceneIllustration scene={scene} />}
     </div>
