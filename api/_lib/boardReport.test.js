@@ -54,14 +54,15 @@ describe('donations section', () => {
     received_by_currency: [{ currency: 'NGN', amount: 512000 }],
     items: [
       { received_on: '2026-10-04', donor: 'Jane <Doe>', amount_usd: 100, purpose: 'Cohort laptops' },
-      { received_on: '2026-10-20', donor: 'Anonymous', amount_usd: 250, purpose: null },
+      { received_on: '2026-10-20', donor: 'Anonymous', amount_usd: 250, purpose: null, channel: 'gofundme' },
     ],
   };
   const r = buildBoardReport({ stats, donations, monthLabel: 'October 2026' });
   it('lists the month with totals, donors, purposes and the all-time figure', () => {
     expect(r.text).toContain('Donations received: $350.00 from 2 donations');
     expect(r.text).toContain('Oct 4: Jane <Doe> gave $100.00 (Cohort laptops)');
-    expect(r.text).toContain('Oct 20: Anonymous gave $250.00');
+    expect(r.text).toContain('Oct 20: Anonymous gave $250.00 via GoFundMe');
+    expect(r.text).toContain('Oct 4: Jane <Doe> gave $100.00 (Cohort laptops)');
     expect(r.text).toContain('512,000 NGN');
     expect(r.text).toContain('All time: $1,200.00 from 5 donations to date');
     expect(r.counts.donations).toBe(2);
