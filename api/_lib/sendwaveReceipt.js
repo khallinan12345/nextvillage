@@ -27,14 +27,37 @@ export function parseSendwaveReceipt({ subject = '', body = '', html = '' }) {
   return parseOne({ subject, body: htmlToText(html) });
 }
 
-/** Turn the receipt's HTML into plain lines: each table cell / paragraph / <br> becomes a line. */
+const LINE_BREAK_TAGS = new Set(['br', 'td', 'th', 'tr', 'p', 'div', 'li', 'h1', 'h2', 'h3', 'h4', 'b', 'strong']);
+// '&amp;' last, so '&amp;lt;' becomes the text '&lt;' and is not decoded twice.
+const ENTITIES = { '&nbsp;': ' ', '&#39;': "'", '&apos;': "'", '&quot;': '"', '&lt;': '<', '&gt;': '>', '&amp;': '&' };
+
+/**
+ * Turn the receipt's HTML into plain lines: each table cell / paragraph / <br> becomes a line.
+ * Reads the text one character at a time (no tag-matching patterns): text only is kept, and the
+ * contents of <script>/<style> are dropped. The result is only ever parsed for numbers and names,
+ * never shown or rendered as HTML.
+ */
 export function htmlToText(html) {
-  return String(html)
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
-    .replace(/<\s*br\s*\/?>|<\/(td|th|tr|p|div|li|h\d|b|strong)>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/\n{2,}/g, '\n');
+  const src = String(html);
+  let out = '';
+  let i = 0;
+  while (i < src.length) {
+    if (src[i] !== '<') { out += src[i++]; continue; }
+    const end = src.indexOf('>', i);
+    if (end === -1) break; // unterminated tag: drop the rest
+    const raw = src.slice(i + 1, end).trim().toLowerCase();
+    const name = raw.replace(/^\//, '').split(/[\s/]/)[0];
+    i = end + 1;
+    if ((name === 'script' || name === 'style') && !raw.startsWith('/')) {
+      const close = src.toLowerCase().indexOf('</' + name, i);
+      const closeEnd = close === -1 ? -1 : src.indexOf('>', close);
+      i = closeEnd === -1 ? src.length : closeEnd + 1;
+      continue;
+    }
+    if (LINE_BREAK_TAGS.has(name) && (name === 'br' || raw.startsWith('/') || name === 'tr' || name === 'p' || name === 'div')) out += '\n';
+  }
+  for (const [k, v] of Object.entries(ENTITIES)) out = out.split(k).join(v);
+  return out.split('\n').map((l) => l.trim()).filter(Boolean).join('\n');
 }
 
 function parseOne({ subject = '', body = '' }) {
