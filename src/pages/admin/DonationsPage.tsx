@@ -17,8 +17,14 @@ interface Donation {
   id: string; received_on: string; donor_name: string; donor_email: string | null; amount_usd: number;
   amount_received: number | null; received_currency: string | null; sendwave_reference: string | null;
   purpose: string | null; notes: string | null; show_on_wall: boolean; wall_name: string | null;
-  needs_donor: boolean;
+  needs_donor: boolean; channel: string | null;
 }
+
+const CHANNELS: [string, string][] = [
+  ['bank_transfer', 'Bank transfer'], ['check', 'Check'], ['venmo', 'Venmo'],
+  ['substack', 'Substack'], ['gofundme', 'GoFundMe'], ['other', 'Other'],
+];
+const channelLabel = (c: string | null) => CHANNELS.find(([k]) => k === c)?.[1] ?? null;
 
 const box = 'bg-white border border-gray-200 rounded-xl p-5';
 const field = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm';
@@ -31,7 +37,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const blank = {
   received_on: today(), donor_name: '', donor_email: '', amount_usd: '', amount_received: '', received_currency: 'NGN',
-  sendwave_reference: '', purpose: '', notes: '', show_on_wall: false, wall_name: '',
+  sendwave_reference: '', purpose: '', notes: '', show_on_wall: false, wall_name: '', channel: '',
 };
 
 const Label: React.FC<{ title: string; hint?: string; children: React.ReactNode }> = ({ title, hint, children }) => (
@@ -46,14 +52,14 @@ const fromRow = (r: Donation) => ({
   received_on: r.received_on, donor_name: r.needs_donor ? '' : r.donor_name, donor_email: r.donor_email ?? '',
   amount_usd: String(r.amount_usd), amount_received: r.amount_received == null ? '' : String(r.amount_received),
   received_currency: r.received_currency ?? 'NGN', sendwave_reference: r.sendwave_reference ?? '', purpose: r.purpose ?? '',
-  notes: r.notes ?? '', show_on_wall: r.show_on_wall, wall_name: r.wall_name ?? '',
+  notes: r.notes ?? '', show_on_wall: r.show_on_wall, wall_name: r.wall_name ?? '', channel: r.channel ?? '',
 });
 
 const DonationForm: React.FC<{ existing?: Donation; onSaved: () => void; onCancel: () => void }> = ({ existing, onSaved, onCancel }) => {
   const [f, setF] = useState(existing ? fromRow(existing) : blank);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const set = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setF({ ...f, [k]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value });
   const orNull = (s: string) => (s.trim() === '' ? null : s.trim());
 
@@ -65,7 +71,7 @@ const DonationForm: React.FC<{ existing?: Donation; onSaved: () => void; onCance
       amount_received: f.amount_received.trim() === '' ? null : Number(f.amount_received),
       received_currency: f.amount_received.trim() === '' ? null : f.received_currency.trim().toUpperCase(),
       sendwave_reference: orNull(f.sendwave_reference), purpose: orNull(f.purpose), notes: orNull(f.notes),
-      show_on_wall: f.show_on_wall, wall_name: orNull(f.wall_name), needs_donor: false,
+      show_on_wall: f.show_on_wall, wall_name: orNull(f.wall_name), needs_donor: false, channel: orNull(f.channel),
     };
     const { error } = existing
       ? await supabase.from('donations').update(payload).eq('id', existing.id)
@@ -99,6 +105,11 @@ const DonationForm: React.FC<{ existing?: Donation; onSaved: () => void; onCance
           <input className={field} maxLength={3} pattern="[A-Za-z]{3}" value={f.received_currency} onChange={set('received_currency')} /></Label>
         <Label title="Sendwave reference (optional)" hint="Transaction ID from the receipt. Stops the same transfer being entered twice.">
           <input className={field} maxLength={100} value={f.sendwave_reference} onChange={set('sendwave_reference')} /></Label>
+        <Label title="How it reached Impact Mining (optional)" hint="Before Impact Mining sent it to vAI by Sendwave.">
+          <select className={field} value={f.channel} onChange={set('channel')}>
+            <option value="">Not recorded</option>
+            {CHANNELS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+          </select></Label>
         <Label title="Purpose (optional)" hint="General, a program, an organization…">
           <input className={field} maxLength={200} value={f.purpose} onChange={set('purpose')} /></Label>
       </div>
@@ -227,7 +238,7 @@ const DonationsPage: React.FC = () => {
                     <table className="w-full text-sm">
                       <thead className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
                         <tr><th className="p-3">Date</th><th className="p-3">Donor</th><th className="p-3">Sent</th><th className="p-3">Received</th>
-                          <th className="p-3">Purpose / reference</th><th className="p-3">On wall</th>{canWrite && <th className="p-3"><span className="sr-only">Delete</span></th>}</tr>
+                          <th className="p-3">Via / purpose / reference</th><th className="p-3">On wall</th>{canWrite && <th className="p-3"><span className="sr-only">Delete</span></th>}</tr>
                       </thead>
                       <tbody>
                         {rows.map(r => (
@@ -237,7 +248,7 @@ const DonationsPage: React.FC = () => {
                               {r.notes && <div className="text-xs text-gray-500 whitespace-pre-wrap">{r.notes}</div>}</td>
                             <td className="p-3 whitespace-nowrap">{usd(r.amount_usd)}</td>
                             <td className="p-3 whitespace-nowrap">{r.amount_received ? `${Number(r.amount_received).toLocaleString('en-US')} ${r.received_currency ?? ''}` : '–'}</td>
-                            <td className="p-3">{r.purpose ?? '–'}{r.sendwave_reference && <div className="text-xs text-gray-500">Ref {r.sendwave_reference}</div>}</td>
+                            <td className="p-3">{channelLabel(r.channel) && <div className="text-xs font-semibold text-gray-700">via {channelLabel(r.channel)}</div>}{r.purpose ?? '–'}{r.sendwave_reference && <div className="text-xs text-gray-500">Ref {r.sendwave_reference}</div>}</td>
                             <td className="p-3">
                               {canWrite
                                 ? <button className={quiet} disabled={r.needs_donor} onClick={() => toggleWall(r)} aria-label={`Toggle donor wall for ${r.donor_name}`}>{r.show_on_wall ? 'Yes' : 'No'}</button>

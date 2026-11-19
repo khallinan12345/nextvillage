@@ -21,6 +21,7 @@ export function previousMonth(now = new Date()) {
   return { start: `${y}-${String(m + 1).padStart(2, '0')}-01`, label: `${MONTHS[m]} ${y}` };
 }
 
+const CHANNELS = { bank_transfer: 'bank transfer', check: 'check', venmo: 'Venmo', substack: 'Substack', gofundme: 'GoFundMe', other: 'other' };
 const shortDate = (iso) => new Date(`${String(iso).slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 // `donations` is the result of get_board_donations (or null/undefined when it could not be fetched, in which
@@ -46,7 +47,7 @@ export function buildBoardReport({ stats, donations = null, monthLabel, baseUrl 
   const donTotal = Number(don?.total_usd || 0);
   const donReceived = (don?.received_by_currency ?? []).map((r) => `${Number(r.amount).toLocaleString('en-US', { maximumFractionDigits: 2 })} ${r.currency}`);
   const donAllTime = don ? `${usd(don.all_time_usd)} from ${n(don.all_time_count)} donation${Number(don.all_time_count) === 1 ? '' : 's'} to date` : '';
-  const donLine = (i) => `${shortDate(i.received_on)}: ${i.donor} gave ${usd(i.amount_usd)}${i.purpose ? ` (${i.purpose})` : ''}`;
+  const donLine = (i) => `${shortDate(i.received_on)}: ${i.donor} gave ${usd(i.amount_usd)}${i.channel && CHANNELS[i.channel] ? ` via ${CHANNELS[i.channel]}` : ''}${i.purpose ? ` (${i.purpose})` : ''}`;
 
   const orgLabel = (o) => (o.country ? `${o.name} (${o.country})` : o.name);
   const subject = `Impact Mining Program News: ${monthLabel}`;
