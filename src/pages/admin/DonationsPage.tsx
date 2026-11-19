@@ -7,8 +7,8 @@
 // "Show on the public donor wall" is opt-in and is off until the donor has agreed to be named.
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '../../components/layout/AppLayout';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
@@ -17,6 +17,7 @@ interface Donation {
   id: string; received_on: string; donor_name: string; donor_email: string | null; amount_usd: number;
   amount_received: number | null; received_currency: string | null; sendwave_reference: string | null;
   purpose: string | null; notes: string | null; show_on_wall: boolean; wall_name: string | null;
+  needs_donor: boolean;
 }
 
 const box = 'bg-white border border-gray-200 rounded-xl p-5';
@@ -41,8 +42,15 @@ const Label: React.FC<{ title: string; hint?: string; children: React.ReactNode 
   </label>
 );
 
-const DonationForm: React.FC<{ onSaved: () => void; onCancel: () => void }> = ({ onSaved, onCancel }) => {
-  const [f, setF] = useState(blank);
+const fromRow = (r: Donation) => ({
+  received_on: r.received_on, donor_name: r.needs_donor ? '' : r.donor_name, donor_email: r.donor_email ?? '',
+  amount_usd: String(r.amount_usd), amount_received: r.amount_received == null ? '' : String(r.amount_received),
+  received_currency: r.received_currency ?? 'NGN', sendwave_reference: r.sendwave_reference ?? '', purpose: r.purpose ?? '',
+  notes: r.notes ?? '', show_on_wall: r.show_on_wall, wall_name: r.wall_name ?? '',
+});
+
+const DonationForm: React.FC<{ existing?: Donation; onSaved: () => void; onCancel: () => void }> = ({ existing, onSaved, onCancel }) => {
+  const [f, setF] = useState(existing ? fromRow(existing) : blank);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const set = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -51,14 +59,17 @@ const DonationForm: React.FC<{ onSaved: () => void; onCancel: () => void }> = ({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null);
-    const { error } = await supabase.from('donations').insert({
+    const payload = {
       received_on: f.received_on, donor_name: f.donor_name.trim(), donor_email: orNull(f.donor_email),
       amount_usd: Number(f.amount_usd),
       amount_received: f.amount_received.trim() === '' ? null : Number(f.amount_received),
       received_currency: f.amount_received.trim() === '' ? null : f.received_currency.trim().toUpperCase(),
       sendwave_reference: orNull(f.sendwave_reference), purpose: orNull(f.purpose), notes: orNull(f.notes),
-      show_on_wall: f.show_on_wall, wall_name: orNull(f.wall_name),
-    });
+      show_on_wall: f.show_on_wall, wall_name: orNull(f.wall_name), needs_donor: false,
+    };
+    const { error } = existing
+      ? await supabase.from('donations').update(payload).eq('id', existing.id)
+      : await supabase.from('donations').insert(payload);
     setBusy(false);
     if (error) {
       setErr(error.code === '23505' ? 'That Sendwave reference is already recorded.' : friendly(error.message));
@@ -69,7 +80,8 @@ const DonationForm: React.FC<{ onSaved: () => void; onCancel: () => void }> = ({
 
   return (
     <form onSubmit={submit} className={`${box} mb-6`}>
-      <h2 className="text-lg font-bold text-gray-900 mb-1">Record a donation</h2>
+      <h2 className="text-lg font-bold text-gray-900 mb-1">{existing?.needs_donor ? 'Who gave this?' : existing ? 'Edit donation' : 'Record a donation'}</h2>
+      {existing?.needs_donor && <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">This transfer was picked up automatically from the Sendwave receipt. Add the donor who is being thanked, then save.</p>}
       <p className="text-sm text-gray-600 mb-4">
         Sent by Impact Mining, Inc. through Sendwave. Enter the donor who is being thanked, the USD amount sent, and (once it
         has landed) what vAI actually received after Sendwave&rsquo;s fees and conversion.
@@ -103,7 +115,7 @@ const DonationForm: React.FC<{ onSaved: () => void; onCancel: () => void }> = ({
       </div>
       {err && <p className="text-sm text-red-700 mb-3">{err}</p>}
       <div className="flex gap-2">
-        <button className={primary} disabled={busy}>{busy ? 'Saving…' : 'Save donation'}</button>
+        <button className={primary} disabled={busy}>{busy ? 'Saving…' : existing ? 'Save changes' : 'Save donation'}</button>
         <button type="button" className={quiet} onClick={onCancel} disabled={busy}>Cancel</button>
       </div>
     </form>
@@ -113,6 +125,8 @@ const DonationForm: React.FC<{ onSaved: () => void; onCancel: () => void }> = ({
 const DonationsPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const completeId = params.get('complete');
   const canRead = user?.role === 'leader' || user?.role === 'platform_administrator';
   const canWrite = user?.role === 'platform_administrator';
 
@@ -120,6 +134,7 @@ const DonationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -129,6 +144,11 @@ const DonationsPage: React.FC = () => {
   }, []);
 
   useEffect(() => { if (canRead) void load(); }, [canRead, load]);
+
+  // The link in the "Who gave this?" email opens that entry's form straight away.
+  const editing = rows.find(r => r.id === (editingId ?? completeId)) ?? null;
+  const closeEdit = () => { setEditingId(null); if (completeId) setParams({}, { replace: true }); };
+  const waiting = rows.filter(r => r.needs_donor);
 
   const totals = useMemo(() => {
     const thisYear = String(new Date().getUTCFullYear());
@@ -170,6 +190,14 @@ const DonationsPage: React.FC = () => {
         {canRead && (
           <>
             {canWrite && adding && <DonationForm onCancel={() => setAdding(false)} onSaved={async () => { setAdding(false); await load(); }} />}
+            {canWrite && editing && !adding && (
+              <DonationForm key={editing.id} existing={editing} onCancel={closeEdit} onSaved={async () => { closeEdit(); await load(); }} />
+            )}
+            {canWrite && !loading && waiting.length > 0 && !editing && (
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
+                {waiting.length === 1 ? '1 donation is' : `${waiting.length} donations are`} waiting for a donor name. Use “Add donor” in the list below.
+              </p>
+            )}
             {loading && <Loader2 className="animate-spin text-gray-400" />}
             {loadError && <p className="text-sm text-red-700">{loadError}</p>}
             {actionError && <p className="text-sm text-red-700 mb-3">{actionError}</p>}
@@ -203,20 +231,27 @@ const DonationsPage: React.FC = () => {
                       </thead>
                       <tbody>
                         {rows.map(r => (
-                          <tr key={r.id} className="border-b border-gray-100 align-top">
+                          <tr key={r.id} className={`border-b border-gray-100 align-top ${r.needs_donor ? 'bg-amber-50' : ''}`}>
                             <td className="p-3 whitespace-nowrap">{day(r.received_on)}</td>
-                            <td className="p-3">{r.donor_name}{r.donor_email && <div className="text-xs text-gray-500">{r.donor_email}</div>}
+                            <td className="p-3">{r.needs_donor ? <span className="font-semibold text-amber-700">Donor not yet recorded</span> : r.donor_name}{r.donor_email && <div className="text-xs text-gray-500">{r.donor_email}</div>}
                               {r.notes && <div className="text-xs text-gray-500 whitespace-pre-wrap">{r.notes}</div>}</td>
                             <td className="p-3 whitespace-nowrap">{usd(r.amount_usd)}</td>
                             <td className="p-3 whitespace-nowrap">{r.amount_received ? `${Number(r.amount_received).toLocaleString('en-US')} ${r.received_currency ?? ''}` : '–'}</td>
                             <td className="p-3">{r.purpose ?? '–'}{r.sendwave_reference && <div className="text-xs text-gray-500">Ref {r.sendwave_reference}</div>}</td>
                             <td className="p-3">
                               {canWrite
-                                ? <button className={quiet} onClick={() => toggleWall(r)} aria-label={`Toggle donor wall for ${r.donor_name}`}>{r.show_on_wall ? 'Yes' : 'No'}</button>
+                                ? <button className={quiet} disabled={r.needs_donor} onClick={() => toggleWall(r)} aria-label={`Toggle donor wall for ${r.donor_name}`}>{r.show_on_wall ? 'Yes' : 'No'}</button>
                                 : (r.show_on_wall ? 'Yes' : 'No')}
                               {r.show_on_wall && r.wall_name && <div className="text-xs text-gray-500">as “{r.wall_name}”</div>}
                             </td>
-                            {canWrite && <td className="p-3"><button className="text-gray-400 hover:text-red-700" onClick={() => remove(r)} aria-label={`Delete donation from ${r.donor_name}`}><Trash2 size={16} /></button></td>}
+                            {canWrite && (
+                              <td className="p-3 whitespace-nowrap">
+                                {r.needs_donor
+                                  ? <button className={primary} onClick={() => setEditingId(r.id)}>Add donor</button>
+                                  : <button className="text-gray-400 hover:text-gray-700 mr-3" onClick={() => setEditingId(r.id)} aria-label={`Edit donation from ${r.donor_name}`}><Pencil size={16} /></button>}
+                                <button className="text-gray-400 hover:text-red-700 ml-2" onClick={() => remove(r)} aria-label={`Delete donation from ${r.donor_name}`}><Trash2 size={16} /></button>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
