@@ -47,14 +47,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   if (!secretMatches(req.headers["x-intake-secret"])) return res.status(401).json({ error: "Unauthorized" });
 
-  const { from, subject, body } = (req.body ?? {}) as { from?: string; subject?: string; body?: string };
-  if (typeof body !== "string" || typeof subject !== "string" || body.length > MAX_BODY_CHARS) {
+  const { from, subject, body, html } = (req.body ?? {}) as { from?: string; subject?: string; body?: string; html?: string };
+  if (typeof body !== "string" || typeof subject !== "string" || body.length > MAX_BODY_CHARS || (html !== undefined && (typeof html !== "string" || html.length > MAX_BODY_CHARS * 4))) {
     return res.status(400).json({ error: "subject and body (text) are required" });
   }
   if (!/@(?:[\w-]+\.)*sendwave\.com>?\s*$/i.test(String(from ?? ""))) return res.status(200).json({ ignored: "not from sendwave.com" });
 
-  const receipt = parseSendwaveReceipt({ subject, body });
-  if (!receipt.ok) return res.status(200).json({ ignored: receipt.reason });
+  const receipt = parseSendwaveReceipt({ subject, body, html });
+  if (!receipt.ok) {
+    // A receipt we could not read must NOT be marked done by the Gmail script: retry: true tells it to try again later.
+    const retry = receipt.code === "unreadable";
+    if (retry) console.error("donation-intake: could not read a Sendwave receipt:", receipt.reason);
+    return res.status(200).json({ ignored: receipt.reason, retry });
+  }
 
   const allowed = (process.env.DONATION_INTAKE_RECIPIENTS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (allowed.length > 0 && !allowed.some((a) => (receipt.recipientName ?? "").toLowerCase().includes(a))) {
