@@ -27,7 +27,8 @@ import { PidginTooltip } from '../../components/PidginTooltip';
 import { VoiceFallback } from '../../components/VoiceFallback';
 import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { saveEvaluation } from '../../lib/evaluations';
-import { parseVizContent, stripVizForSpeech, MathVizRenderer, VIZ_INSTRUCTIONS } from '../../components/MathViz';
+import { parseVizContent, stripVizForSpeech, MathVizRenderer, VizFallback } from '../../components/MathViz';
+import { buildVizInstructions } from '../../components/viz/vizPrompt';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -634,6 +635,7 @@ const MessageContent: React.FC<{ content: string }> = ({ content }) => {
     <div className="stack-y-3">
       {vizSegments.map((seg, s) => {
         if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={s} spec={seg.spec} />;
+        if (seg.kind === 'viz-error') return <VizFallback key={s} />;
         // Text segment — run through the existing block renderer
         const blocks = (seg.text ?? '').split(/\n{2,}/);
         return blocks.map((block, bi) => {
@@ -1182,7 +1184,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     const withUser = [...messages, userMsg];
     setMessages(withUser);
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel) + VIZ_INSTRUCTIONS;
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel) + buildVizInstructions('science');
       const aiText = await chatText({
         page: 'ScienceSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),

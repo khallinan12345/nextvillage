@@ -1,4 +1,6 @@
 // AILearningPage.tsx - Dashboard-based AI learning with interactive activities
+import { parseVizContent, MathVizRenderer, VizFallback } from '../../components/MathViz';
+import { buildVizInstructions } from '../../components/viz/vizPrompt';
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -341,7 +343,11 @@ const MarkdownText: React.FC<{
 
   return (
     <div className="leading-[1.7]">
-      {text.split('\n\n').map((p, i) => renderParagraph(p, i)).filter(Boolean)}
+      {parseVizContent(text).map((seg, si) => {
+        if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={`v${si}`} spec={seg.spec} />;
+        if (seg.kind === 'viz-error') return <VizFallback key={`v${si}`} />;
+        return (seg.text ?? '').split('\n\n').map((p, i) => renderParagraph(p, si * 1000 + i)).filter(Boolean);
+      })}
     </div>
   );
 };
@@ -664,7 +670,8 @@ function buildAILearningMockActivities(userId: string): DashboardActivity[] {
       const style = learningStyles[index % learningStyles.length];
       const id = `mock-${metadata.label}-${index + 1}`;
       const description = `${style} challenge in Nigeria: ${title}. Learners explore ${category.themeHint} through a hands-on scenario.`;
-      const systemPrompt = buildAILearningSystemPrompt(title, category.subCategory, style);
+      const systemPrompt = buildAILearningSystemPrompt(title, category.subCategory, style)
+        + (style === 'interactive roleplay' ? '' : buildVizInstructions('general')); // roleplay stays in character, no pictures
 
       mockActivities.push({
         id,
