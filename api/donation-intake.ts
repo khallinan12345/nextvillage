@@ -10,7 +10,9 @@
  *   5. emails report_recipients (report = 'donation_prompt') a link to add the donor's name.
  * The recipient's account number is never stored.
  *
- * Auth:  header "x-intake-secret: $DONATION_INTAKE_SECRET"
+ * Auth:  header "x-intake-secret: $DONATION_INTAKE_SECRET", compared in constant time. This is a machine-to-machine
+ *        route called only by the owner's Gmail script, so it uses a shared secret rather than a user sign-in.
+ *        security-check: ignore api-no-auth -- shared-secret header (DONATION_INTAKE_SECRET) checked before anything else
  * Body:  { from, subject, body }   (JSON, POST)
  * Env:   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, DONATION_INTAKE_SECRET,
  *        DONATION_INTAKE_RECIPIENTS (comma-separated names; if unset every Sendwave transfer is accepted)
@@ -88,7 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       for (const addr of to) { await sendEmail([addr], msg); emailed++; }
     } catch (mailErr) {
       // The donation is recorded either way; the daily reminder will still prompt for the donor name.
-      console.error("donation-intake: prompt email failed:", (mailErr as Error).message);
+      console.error("donation-intake: notification email failed:", (mailErr as Error).message);
     }
     return res.status(200).json({ created: true, id: row.id, emailed });
   } catch (err) {

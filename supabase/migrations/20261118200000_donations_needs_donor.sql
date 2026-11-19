@@ -10,6 +10,8 @@ ALTER TABLE public.donations ADD CONSTRAINT donations_needs_donor_not_public CHE
 
 CREATE INDEX IF NOT EXISTS donations_needs_donor_idx ON public.donations (created_at) WHERE needs_donor;
 
+-- security-check: ignore db-definer-no-caller-check -- the public donor wall is deliberately open to everyone; it
+-- returns only opted-in display names and months, never amounts or contact details.
 -- The wall also excludes needs_donor rows directly (belt and braces with the check above).
 CREATE OR REPLACE FUNCTION public.get_donor_wall()
 RETURNS TABLE (display_name text, month_start date)
