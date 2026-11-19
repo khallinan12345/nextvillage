@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseSendwaveReceipt } from './sendwaveReceipt.js';
+import { parseSendwaveReceipt, htmlToText } from './sendwaveReceipt.js';
 
 // Shape copied from a real Sendwave receipt (account numbers and names replaced).
 const body = `You sent $250.00 to Jane Roe
@@ -59,5 +59,25 @@ describe('parseSendwaveReceipt', () => {
   it('still works if the amount received is missing', () => {
     const x = parseSendwaveReceipt({ subject: 'You sent', body: body.replace('Total to Recipient', 'Other') });
     expect(x).toMatchObject({ ok: true, amountReceived: null, receivedCurrency: null });
+  });
+
+  it('falls back to the HTML when the plain-text layout is unreadable (real Sendwave table shape)', () => {
+    const html = `<table><tr>
+      <td><p><b>Transfer Amount</b> <br>USD 1000.00<br></p></td>
+      <td><p><b>Recipient Name</b><br> Bennywhite Inengite Davidson<br><br></p></td></tr>
+      <tr><td><p><b>Confirmation Code</b><br>BAN-261119-L8CWP7<br></p></td></tr>
+      <tr><td><p><b>Transfer Date</b><br>Nov 19, 2026, 12:36:15 PM<br></p></td>
+      <td><p><b>Exchange Rate</b><br>1432.04<br></p></td></tr>
+      <tr><td><p><b>Total to Recipient</b><br>NGN 1432044<br><i>Your recipient may receive less.</i></p></td></tr></table>`;
+    const flattened = 'You sent $1,000.00 Sender Name Transfer Amount Recipient Name Bank Details Kevin USD 1000.00 Bennywhite';
+    const r = parseSendwaveReceipt({ subject: 'You sent $1,000.00 to Bennywhite Inengite Davidson', body: flattened, html });
+    expect(r).toMatchObject({ ok: true, reference: 'BAN-261119-L8CWP7', amountUsd: 1000, receivedOn: '2026-11-19', receivedCurrency: 'NGN', recipientName: 'Bennywhite Inengite Davidson' });
+  });
+  it('marks an unreadable receipt as retry-able, and other mail as final', () => {
+    expect(parseSendwaveReceipt({ subject: 'You sent $5 to X', body: 'garbage' })).toMatchObject({ ok: false, code: 'unreadable' });
+    expect(parseSendwaveReceipt({ subject: 'Welcome to Sendwave', body: '' })).toMatchObject({ ok: false, code: 'not_receipt' });
+  });
+  it('htmlToText drops scripts and tags', () => {
+    expect(htmlToText('<p>A&amp;B<script>x()</script></p><br>C')).toBe('A&B\nC');
   });
 });
