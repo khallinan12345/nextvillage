@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "crons": [
     {
@@ -58,6 +61,10 @@
     {
       "path": "/api/board-monthly-report",
       "schedule": "0 10 5 * *"
+    },
+    {
+      "path": "/api/donation-reminders",
+      "schedule": "0 13 * * *"
     }
   ]
 }
