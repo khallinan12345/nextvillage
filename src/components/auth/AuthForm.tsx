@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { findSimilarProfile, sendDuplicateResetLink, type SimilarProfileMatch } from '../../lib/duplicateDetection';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import FindMyLogin from './FindMyLogin';
 import { Eye, EyeOff } from 'lucide-react';
 import { passwordProblem, friendlyPasswordError, PASSWORD_RULE_TEXT } from '../../lib/passwordRules';
 
@@ -384,11 +385,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
               Email me a link to reset my password
             </button>
             <p className="mt-1 text-xs text-blue-800">Type your email address above first.</p>
+            <FindMyLogin />
           </div>
         )}
         {mode === 'signup' && (
           <p className="text-xs text-gray-600 text-center">
             Already joined before? Do not make a second account. Go back to sign in and use "Email me a link to reset my password".
+          </p>
+        )}
+        {mode === 'signup' && (
+          <p className="text-xs text-gray-600 text-center">
+            Write down the email you use here. It is your username when you sign in.
           </p>
         )}
       </form>
