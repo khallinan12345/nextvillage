@@ -70,7 +70,7 @@ const FindMyLogin: React.FC = () => {
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
           <div className="flex gap-2">
             <Button type="submit" isLoading={busy} size="sm">Send me the answer</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>Close</Button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setOpen(false)}>Close</Button>
           </div>
         </form>
       ) : (
@@ -79,7 +79,7 @@ const FindMyLogin: React.FC = () => {
           <p className="text-sm text-gray-700">
             We sent a message to each address you typed. Open each inbox (and the spam folder). The message will say which one is your sign-in email.
           </p>
-          <Button type="button" variant="outline" size="sm" onClick={() => { setSent(null); setText(''); }}>Try other addresses</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => { setSent(null); setText(''); }}>Try other addresses</Button>
         </div>
       )}
     </div>
