@@ -81,6 +81,8 @@ Examples — copy these shapes exactly:
 ${keys.map(k => EXAMPLES[k]).join('\n\n')}
 
 Hard rules:
+- If another instruction limits how many sentences or how long your reply should be, that limit is
+  about your written words only. A picture never counts against it and is never a reason to leave one out.
 - Every number in a picture must match the numbers in your words exactly. Do the arithmetic before you draw.
 - Pick emoji from the learner's chosen topic (market → 🧺, fishing → 🐟, animals → 🐄).
 - viz blocks hold valid JSON only: double quotes, no trailing commas, no comments.
