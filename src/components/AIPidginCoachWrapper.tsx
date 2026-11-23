@@ -4,6 +4,8 @@ import { chatText } from '../lib/chatClient';
 import { usePidginSpeech } from '../hooks/usePidginSpeech';
 import { speakEnglish, stopBrowserSpeech } from '../lib/speechCoordination';
 import { useAuth } from '../hooks/useAuth';
+import { stripVizForSpeech } from './MathViz';
+import { RichMarkdown } from './viz/RichMarkdown';
 
 interface AIPidginCoachWrapperProps {
   englishText: string;
@@ -42,20 +44,26 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
     setIsTranslating(true);
     setErrorMessage('');
     try {
+      // Picture blocks (```viz / ```mermaid) are code, not prose — translating them risks the
+      // model mangling the syntax (e.g. collapsing the diagram onto one line) or "translating"
+      // JSON field values. The picture itself is already shown once, in the English-language
+      // message above this toggle, so only the prose needs a Pidgin version.
+      const textToTranslate = stripVizForSpeech(englishText);
+
       // Direct, clean processing constraints payload
-      const systemPrompt = 
+      const systemPrompt =
         "You are a professional educational translator. Your task is to fulfill these structural processing rules:\n" +
         "1. COMPLETE DYNAMIC TRANSLATION: Translate the entire input text block fully into natural, fluent, and conversational Nigerian Pidgin English.\n" +
         "2. CONTEXT PRESERVATION: Retain all mathematical values, numbers, fractions, percentages, variables, data points, formulas, and scenario conditions exactly as they are so the educational context is completely preserved.\n" +
         "3. CLEAN STRING OUTPUT: Return ONLY the clean, successfully translated Pidgin text string. Do not append system debug tags, bracketed commentary, boilerplate text, notes, or placeholder hints. Output the raw translation directly.";
-      
+
       let response = "";
       const requestPayload = {
         url: '/api/chat',
         page: 'PidginTranslationModule',
         system: systemPrompt,
         messages: [
-          { role: 'user', content: englishText }
+          { role: 'user', content: textToTranslate }
         ],
       };
 
@@ -71,7 +79,7 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
           page: 'PidginTranslationModule',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: englishText }
+            { role: 'user', content: textToTranslate }
           ]
         } as any);
       }
@@ -133,7 +141,7 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
     }
 
     if (englishText.trim()) {
-      speakEnglish(englishText);
+      speakEnglish(stripVizForSpeech(englishText));
     }
   };
 
@@ -141,7 +149,7 @@ export const AIPidginCoachWrapper: React.FC<AIPidginCoachWrapperProps> = ({ engl
     <div className="mt-2 stack-y-2 border-t border-slate-700/30 pt-2 text-left">
       {showPidgin && pidginText && (
         <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-lg p-2.5 text-xs text-emerald-200 italic leading-relaxed">
-          {pidginText}
+          <RichMarkdown text={pidginText} />
         </div>
       )}
 
