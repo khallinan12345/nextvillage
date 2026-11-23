@@ -68,4 +68,25 @@ describe('safeParseSpec', () => {
   it('diagram inside viz json', () => {
     expect(safeParseSpec(JSON.stringify({ type: 'diagram', code: 'flowchart LR\nA-->B' }))).toMatchObject({ type: 'diagram' });
   });
+  it('scene: draws physical/spatial shapes, clamps and drops bad ones', () => {
+    const ok = safeParseSpec(JSON.stringify({
+      type: 'scene',
+      shapes: [
+        { kind: 'line', x1: 0, y1: 240, x2: 400, y2: 240 },
+        { kind: 'rect', x: 165, y: 137, w: 50, h: 26, rotation: 999, color: 99, label: 'Block' },
+        { kind: 'arrow', x1: 190, y1: 150, x2: 190, y2: 210, color: 3, label: 'gravity' },
+        { kind: 'circle', x: 50, y: 50, r: 9999 },
+        { kind: 'text', x: 10, y: 10, text: 'theta' },
+        { kind: 'nonsense' },
+        { kind: 'text', x: 1, y: 1, text: '   ' },
+      ],
+    })) as any;
+    expect(ok.type).toBe('scene');
+    expect(ok.shapes).toHaveLength(5); // the two invalid shapes are dropped
+    expect(ok.shapes[1].rotation).toBe(180); // clamped into [-180, 180]
+    expect(ok.shapes[1].color).toBe(7); // clamped into [0, PALETTE.length - 1]
+    expect(ok.shapes[3].r).toBe(140); // clamped
+    expect(safeParseSpec(JSON.stringify({ type: 'scene', shapes: [] }))).toBeNull();
+    expect(safeParseSpec(JSON.stringify({ type: 'scene', shapes: [{ kind: 'nonsense' }] }))).toBeNull();
+  });
 });
