@@ -29,7 +29,7 @@ const KINDS: Record<string, string> = {
   graph: '• How an equation or formula behaves (let the learner drag a slider) → graph',
   table: '• Side-by-side comparison, a data table       → table',
   cycle: '• A repeating loop (water, carbon, seasons, cash flow) → cycle',
-  mermaid: '• Process, steps, cause and effect, timeline, how parts connect, concept map → ```mermaid block',
+  mermaid: '• Process, steps, cause and effect, timeline, how parts connect, concept map → ```mermaid block\n  (boxes and arrows only — never a scene with real shapes, angles or positions: see Hard rules)',
 };
 
 const EXAMPLES: Record<string, string> = {
@@ -87,6 +87,9 @@ Hard rules:
 - Pick emoji from the learner's chosen topic (market → 🧺, fishing → 🐟, animals → 🐄).
 - viz blocks hold valid JSON only: double quotes, no trailing commas, no comments.
 - Write formulas as plain text (for example A = P × (1 + r)^t), never with dollar-sign LaTeX.
+- Mermaid only draws boxes-and-arrows diagrams. Never reach for it to draw a physical scene —
+  an inclined plane, forces on an object, a lever, a circuit layout, a map, any real shape, angle,
+  or position. For those, skip the picture and paint the scene vividly in words instead.
 - If you are not sure a picture is correct, leave it out and explain in words.`;
 }
 
