@@ -6,7 +6,7 @@
 // Mermaid diagrams are new.
 
 import React, { Suspense, useId, useMemo, useState } from 'react';
-import { PALETTE, type VizSpec } from './vizSpec';
+import { PALETTE, SCENE_W, SCENE_H, type VizSpec } from './vizSpec';
 import { compileExpr } from './expr';
 
 const PALETTE_LIGHT = ['#eef2ff','#fffbeb','#ecfdf5','#fff1f2','#e0f2fe','#f5f3ff','#fff7ed','#f0fdfa'];
@@ -515,6 +515,62 @@ const Cycle: React.FC<{ spec: Extract<VizSpec, { type: 'cycle' }> }> = ({ spec }
   );
 };
 
+// ── Scene (physical/spatial sketches: inclines, forces, levers, simple layouts) ─
+
+const Scene: React.FC<{ spec: Extract<VizSpec, { type: 'scene' }> }> = ({ spec }) => {
+  const id = useId().replace(/[^a-zA-Z0-9]/g, '');
+  return (
+    <Frame label={spec.label} color={6}>
+      <svg viewBox={`0 0 ${SCENE_W} ${SCENE_H}`} className="w-full max-w-xl" role="img" aria-label={spec.alt ?? 'diagram'}>
+        <defs>
+          {PALETTE.map((c, i) => (
+            <marker key={i} id={`${id}-${i}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill={c} />
+            </marker>
+          ))}
+        </defs>
+        {spec.shapes.map((sh, i) => {
+          switch (sh.kind) {
+            case 'line':
+              return <line key={i} x1={sh.x1} y1={sh.y1} x2={sh.x2} y2={sh.y2} stroke="#475569" strokeWidth="2.5"
+                strokeLinecap="round" strokeDasharray={sh.dashed ? '6 4' : undefined} />;
+            case 'rect': {
+              const cx = sh.x + sh.w / 2, cy = sh.y + sh.h / 2;
+              return (
+                <g key={i} transform={sh.rotation ? `rotate(${sh.rotation} ${cx} ${cy})` : undefined}>
+                  <rect x={sh.x} y={sh.y} width={sh.w} height={sh.h} rx="4" fill={PALETTE_LIGHT[sh.color]} stroke={PALETTE_MID[sh.color]} strokeWidth="2.5" />
+                  {sh.label && <text x={cx} y={cy + 4} textAnchor="middle" fontSize="12" fontWeight="700" fill={PALETTE[sh.color]}>{sh.label}</text>}
+                </g>
+              );
+            }
+            case 'circle':
+              return (
+                <g key={i}>
+                  <circle cx={sh.x} cy={sh.y} r={sh.r} fill={PALETTE_LIGHT[sh.color]} stroke={PALETTE_MID[sh.color]} strokeWidth="2.5" />
+                  {sh.label && <text x={sh.x} y={sh.y + 4} textAnchor="middle" fontSize="12" fontWeight="700" fill={PALETTE[sh.color]}>{sh.label}</text>}
+                </g>
+              );
+            case 'arrow': {
+              const mx = (sh.x1 + sh.x2) / 2, my = (sh.y1 + sh.y2) / 2;
+              return (
+                <g key={i}>
+                  <line x1={sh.x1} y1={sh.y1} x2={sh.x2} y2={sh.y2} stroke={PALETTE[sh.color]} strokeWidth="3"
+                    strokeLinecap="round" markerEnd={`url(#${id}-${sh.color})`} />
+                  {sh.label && <text x={mx} y={my - 6} textAnchor="middle" fontSize="11.5" fontWeight="700" fill={PALETTE[sh.color]}>{sh.label}</text>}
+                </g>
+              );
+            }
+            case 'text':
+              return <text key={i} x={sh.x} y={sh.y} fontSize="13" fontWeight="600" fill="#334155">{sh.text}</text>;
+            default:
+              return null;
+          }
+        })}
+      </svg>
+    </Frame>
+  );
+};
+
 // ── Mermaid diagram (flowchart, timeline, mind map, sequence, pie) ───────────
 
 const Diagram: React.FC<{ spec: Extract<VizSpec, { type: 'diagram' }> }> = ({ spec }) => (
@@ -541,6 +597,7 @@ const Picture: React.FC<{ spec: VizSpec }> = ({ spec }) => {
     case 'table':           return <VizTable spec={spec} />;
     case 'cycle':           return <Cycle spec={spec} />;
     case 'diagram':         return <Diagram spec={spec} />;
+    case 'scene':           return <Scene spec={spec} />;
     default:                return null;
   }
 };

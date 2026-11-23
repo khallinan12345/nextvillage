@@ -17,6 +17,7 @@ const EX_GRAPH = '```viz\n{"type":"graph","alt":"parabola whose steepness the le
 const EX_TABLE = '```viz\n{"type":"table","alt":"comparison of two loans","label":"Two loans","columns":["","Loan A","Loan B"],"rows":[["Interest","5%","8%"],["Monthly payment","$120","$140"]]}\n```';
 const EX_CYCLE = '```viz\n{"type":"cycle","alt":"the water cycle","label":"Water cycle","center":"Water","steps":["Evaporation","Condensation","Rain","Runoff"]}\n```';
 const EX_MERMAID = '```mermaid\nflowchart TD\n  A[Sunlight hits panel] --> B[Panel makes DC power]\n  B --> C[Inverter makes AC power]\n  C --> D[Home uses power]\n```\n(also: timeline, mindmap, sequenceDiagram, pie. Plain Mermaid code only. Short labels, no HTML, no links. Use ONLY words and letters in node labels, no parentheses inside [ ].)';
+const EX_SCENE = '```viz\n{"type":"scene","alt":"a block resting on an inclined plane with gravity and normal force arrows","label":"Block on an incline","shapes":[\n  {"kind":"line","x1":30,"y1":240,"x2":370,"y2":240},\n  {"kind":"line","x1":80,"y1":60,"x2":300,"y2":240},\n  {"kind":"rect","x":165,"y":137,"w":50,"h":26,"rotation":39,"color":4,"label":"Block"},\n  {"kind":"arrow","x1":190,"y1":150,"x2":190,"y2":210,"color":3,"label":"gravity"},\n  {"kind":"arrow","x1":190,"y1":150,"x2":225,"y2":107,"color":2,"label":"normal"},\n  {"kind":"text","x":250,"y":225,"text":"39°"}\n]}\n```\n(shapes, in drawing order, each a plain object — never raw SVG or HTML:\n  rect {x,y,w,h,rotation,color,label?} — rotate to sit flush on a slanted surface;\n  line {x1,y1,x2,y2,dashed?} — a straight edge, surface, or ground, never a force;\n  arrow {x1,y1,x2,y2,color,label?} — a force, motion, or direction;\n  circle {x,y,r,color,label?} — a ball, wheel, or pivot;\n  text {x,y,text} — an angle or distance label.\n  Canvas is 400 wide × 280 tall, (0,0) top-left, y increases downward. color is a palette index 0–7, never a color name. Keep it a clear, labelled sketch, not a precise technical drawing.)';
 
 const KINDS: Record<string, string> = {
   counters: '• Small counts + story objects        → counters',
@@ -30,18 +31,19 @@ const KINDS: Record<string, string> = {
   table: '• Side-by-side comparison, a data table       → table',
   cycle: '• A repeating loop (water, carbon, seasons, cash flow) → cycle',
   mermaid: '• Process, steps, cause and effect, timeline, how parts connect, concept map → ```mermaid block\n  (boxes and arrows only — never a scene with real shapes, angles or positions: see Hard rules)',
+  scene: '• A physical or spatial scene — an inclined plane, forces on an object, a lever, a simple\n  circuit layout, a floor plan, any real shape, angle or position → scene',
 };
 
 const EXAMPLES: Record<string, string> = {
   counters: EX_COUNTERS, numberline: EX_NUMBERLINE, tape: EX_TAPE, array: EX_ARRAY, fraction: EX_FRACTION,
-  bars: EX_BARS, line: EX_LINE, graph: EX_GRAPH, table: EX_TABLE, cycle: EX_CYCLE, mermaid: EX_MERMAID,
+  bars: EX_BARS, line: EX_LINE, graph: EX_GRAPH, table: EX_TABLE, cycle: EX_CYCLE, mermaid: EX_MERMAID, scene: EX_SCENE,
 };
 
 const MENUS: Record<VizSubject, string[]> = {
-  math: ['counters', 'numberline', 'tape', 'array', 'fraction', 'bars', 'line', 'graph', 'table', 'mermaid'],
-  science: ['line', 'graph', 'cycle', 'mermaid', 'table', 'bars', 'counters', 'fraction'],
+  math: ['counters', 'numberline', 'tape', 'array', 'fraction', 'bars', 'line', 'graph', 'table', 'mermaid', 'scene'],
+  science: ['line', 'graph', 'cycle', 'mermaid', 'scene', 'table', 'bars', 'counters', 'fraction'],
   finance: ['line', 'graph', 'bars', 'table', 'tape', 'mermaid', 'cycle'],
-  energy: ['line', 'graph', 'bars', 'table', 'mermaid', 'cycle'],
+  energy: ['line', 'graph', 'bars', 'table', 'mermaid', 'scene', 'cycle'],
   business: ['bars', 'line', 'table', 'mermaid', 'cycle', 'tape'],
   english: ['mermaid', 'table', 'cycle'],
   general: ['mermaid', 'table', 'line', 'bars', 'cycle'],
@@ -87,9 +89,10 @@ Hard rules:
 - Pick emoji from the learner's chosen topic (market → 🧺, fishing → 🐟, animals → 🐄).
 - viz blocks hold valid JSON only: double quotes, no trailing commas, no comments.
 - Write formulas as plain text (for example A = P × (1 + r)^t), never with dollar-sign LaTeX.
-- Mermaid only draws boxes-and-arrows diagrams. Never reach for it to draw a physical scene —
-  an inclined plane, forces on an object, a lever, a circuit layout, a map, any real shape, angle,
-  or position. For those, skip the picture and paint the scene vividly in words instead.
+- Mermaid only draws boxes-and-arrows diagrams. Never reach for it to draw a physical or spatial
+  scene — an inclined plane, forces on an object, a lever, a circuit layout, a map, any real shape,
+  angle, or position. Use the scene type for those where this menu offers it; where it does not,
+  skip the picture and paint the scene vividly in words instead.
 - If you are not sure a picture is correct, leave it out and explain in words.`;
 }
 

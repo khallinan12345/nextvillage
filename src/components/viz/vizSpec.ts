@@ -12,10 +12,21 @@ import { compileExpr } from './expr';
 export const PALETTE = ['#4f46e5', '#f59e0b', '#059669', '#e11d48', '#0284c7', '#7c3aed', '#ea580c', '#0d9488'];
 export const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
+// Fixed canvas for the "scene" picture type: (0,0) top-left, y increases downward.
+export const SCENE_W = 400;
+export const SCENE_H = 280;
+
 type Alt = { alt?: string };
 
 export type GraphParam = { name: string; min: number; max: number; value: number; step: number };
 export type SeriesPoint = [string | number, number];
+
+export type SceneShape =
+  | { kind: 'rect'; x: number; y: number; w: number; h: number; rotation: number; color: number; label?: string }
+  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; dashed: boolean }
+  | { kind: 'arrow'; x1: number; y1: number; x2: number; y2: number; color: number; label?: string }
+  | { kind: 'circle'; x: number; y: number; r: number; color: number; label?: string }
+  | { kind: 'text'; x: number; y: number; text: string };
 
 export type VizSpec = Alt & (
   | { type: 'counters'; groups: { count: number; emoji?: string; label?: string }[] }
@@ -30,6 +41,7 @@ export type VizSpec = Alt & (
   | { type: 'table'; label?: string; columns: string[]; rows: string[][] }
   | { type: 'cycle'; label?: string; center?: string; steps: string[] }
   | { type: 'diagram'; label?: string; code: string }
+  | { type: 'scene'; label?: string; shapes: SceneShape[] }
 );
 
 export interface ParsedSegment {
@@ -91,6 +103,38 @@ export function diagramSpec(raw: string, label?: string, alt?: string): VizSpec 
 
 const num = (v: unknown, fallback = 0) => { const n = Number(v); return Number.isFinite(n) ? n : fallback; };
 const str = (v: unknown, max: number) => String(v ?? '').slice(0, max);
+const sceneX = (v: unknown) => clamp(num(v), -20, SCENE_W + 20);
+const sceneY = (v: unknown) => clamp(num(v), -20, SCENE_H + 20);
+const colorIdx = (v: unknown) => clamp(Math.round(num(v, 0)), 0, PALETTE.length - 1);
+const shapeLabel = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 20) : undefined);
+
+function parseSceneShape(raw: unknown): SceneShape | null {
+  const s = raw as Record<string, unknown>;
+  if (!s || typeof s.kind !== 'string') return null;
+  switch (s.kind) {
+    case 'rect':
+      return {
+        kind: 'rect', x: sceneX(s.x), y: sceneY(s.y),
+        w: clamp(num(s.w, 20), 4, SCENE_W), h: clamp(num(s.h, 20), 4, SCENE_H),
+        rotation: clamp(num(s.rotation, 0), -180, 180),
+        color: colorIdx(s.color), label: shapeLabel(s.label),
+      };
+    case 'line':
+      return { kind: 'line', x1: sceneX(s.x1), y1: sceneY(s.y1), x2: sceneX(s.x2), y2: sceneY(s.y2), dashed: s.dashed === true };
+    case 'arrow':
+      return {
+        kind: 'arrow', x1: sceneX(s.x1), y1: sceneY(s.y1), x2: sceneX(s.x2), y2: sceneY(s.y2),
+        color: colorIdx(s.color), label: shapeLabel(s.label),
+      };
+    case 'circle':
+      return { kind: 'circle', x: sceneX(s.x), y: sceneY(s.y), r: clamp(num(s.r, 10), 2, 140), color: colorIdx(s.color), label: shapeLabel(s.label) };
+    case 'text':
+      if (typeof s.text !== 'string' || !s.text.trim()) return null;
+      return { kind: 'text', x: sceneX(s.x), y: sceneY(s.y), text: s.text.trim().slice(0, 40) };
+    default:
+      return null;
+  }
+}
 
 function parseSeriesPoint(p: unknown): SeriesPoint | null {
   if (!Array.isArray(p) || p.length < 2) return null;
@@ -234,6 +278,12 @@ export function safeParseSpec(raw: string): VizSpec | null {
       }
       case 'diagram':
         return diagramSpec(s.code, label, alt);
+      case 'scene': {
+        if (!Array.isArray(s.shapes) || s.shapes.length === 0) return null;
+        const shapes = s.shapes.slice(0, 20).map(parseSceneShape).filter((x: SceneShape | null): x is SceneShape => x !== null);
+        if (!shapes.length) return null;
+        return withAlt({ type: 'scene', label, shapes });
+      }
       default:
         return null;
     }
