@@ -88,16 +88,30 @@ export function stripVizForSpeech(content: string): string {
 const MERMAID_START = /^(flowchart|graph|timeline|mindmap|sequenceDiagram|pie|stateDiagram-v2|journey)\b/;
 const MERMAID_FORBIDDEN = /(<\s*script|<\s*iframe|<\s*img|javascript:|%%\{|\bclick\b|\bcallback\b|onerror|onload)/i;
 
+// The model is told never to put parentheses inside a [ ] node label (vizPrompt.ts), but it
+// slips occasionally — e.g. A[Generator (offline)] — and unquoted parentheses are a genuine
+// Mermaid flowchart syntax error, not just a style nit. Auto-quoting the label fixes it without
+// needing the model to get it right every time; a normal label with no parentheses is untouched.
+function quoteParenLabels(code: string): string {
+  return code.replace(/\[([^[\]\n]*)\]/g, (whole, labelText: string) => {
+    const trimmed = labelText.trim();
+    if (!trimmed || !/[()]/.test(trimmed)) return whole;
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) return whole;
+    return `[${JSON.stringify(trimmed)}]`;
+  });
+}
+
 function cleanAlt(v: unknown): string | undefined {
   return typeof v === 'string' && v.trim() ? v.trim().slice(0, 300) : undefined;
 }
 
 export function diagramSpec(raw: string, label?: string, alt?: string): VizSpec | null {
-  const code = String(raw ?? '').replace(/\r\n/g, '\n').trim();
+  let code = String(raw ?? '').replace(/\r\n/g, '\n').trim();
   if (!code || code.length > 2500) return null;
   const first = code.split('\n').find(l => l.trim() && !l.trim().startsWith('%%')) ?? '';
   if (!MERMAID_START.test(first.trim())) return null;
   if (MERMAID_FORBIDDEN.test(code)) return null;
+  code = quoteParenLabels(code);
   return { type: 'diagram', code, label: typeof label === 'string' ? label.slice(0, 80) : undefined, alt };
 }
 

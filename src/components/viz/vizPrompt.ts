@@ -46,7 +46,7 @@ const MENUS: Record<VizSubject, string[]> = {
   energy: ['line', 'graph', 'bars', 'table', 'mermaid', 'scene', 'cycle'],
   business: ['bars', 'line', 'table', 'mermaid', 'cycle', 'tape'],
   english: ['mermaid', 'table', 'cycle'],
-  general: ['mermaid', 'table', 'line', 'bars', 'cycle'],
+  general: ['mermaid', 'table', 'line', 'bars', 'cycle', 'scene'],
 };
 
 const WHEN: Record<VizSubject, string> = {
@@ -56,7 +56,8 @@ const WHEN: Record<VizSubject, string> = {
   energy: `Use a picture when a quantity changes over time or with another quantity (sun hours, load, battery charge, cost), when a formula behaves differently as inputs change, or when showing how the parts of a system connect.`,
   business: `Use a picture to compare options or numbers, show a process or customer journey, or show how money flows.`,
   english: `Use a picture only for structure: a story's order of events, how ideas connect, a comparison, or steps in writing. Do NOT add pictures to vocabulary, grammar corrections, or conversation.`,
-  general: `Use a picture when it makes a process, a comparison, or a change over time clearer.`,
+  general: `Use a picture when it makes a process, a flow of steps, a comparison, a sketch of how
+  something is laid out or connects, or a change over time clearer.`,
 };
 
 export function buildVizInstructions(subject: VizSubject = 'general'): string {

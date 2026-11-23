@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseVizContent, stripVizForSpeech, safeParseSpec } from './vizSpec';
+import { parseVizContent, stripVizForSpeech, safeParseSpec, diagramSpec } from './vizSpec';
 
 const block = (json: unknown) => '```viz\n' + JSON.stringify(json) + '\n```';
 
@@ -88,5 +88,10 @@ describe('safeParseSpec', () => {
     expect(ok.shapes[3].r).toBe(140); // clamped
     expect(safeParseSpec(JSON.stringify({ type: 'scene', shapes: [] }))).toBeNull();
     expect(safeParseSpec(JSON.stringify({ type: 'scene', shapes: [{ kind: 'nonsense' }] }))).toBeNull();
+  });
+  it('diagram: auto-quotes a node label with unquoted parentheses', () => {
+    const spec = diagramSpec('flowchart TD\nA[Main grid power] --> B[Lab panels]\nA --> C[Generator (offline)]') as any;
+    expect(spec.code).toContain('C["Generator (offline)"]');
+    expect(spec.code).toContain('A[Main grid power]'); // untouched — no parentheses
   });
 });
