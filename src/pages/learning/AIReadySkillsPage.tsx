@@ -61,6 +61,10 @@ import { saveEvaluation } from '../../lib/evaluations';
 import { extractIllustration } from '../../components/community-impact/illustrationParser';
 import { SceneIllustration } from '../../components/community-impact/SceneIllustration';
 import { withIllustration } from '../../lib/illustrationAgent';
+import { parseVizContent, MathVizRenderer, VizFallback } from '../../components/MathViz';
+import { buildVizInstructions } from '../../components/viz/vizPrompt';
+import { parseMarkdownTable } from '../../components/viz/markdownTableSpec';
+import { MarkdownTable } from '../../components/viz/MarkdownTable';
 import {
   Monitor,
   Lightbulb,
@@ -214,7 +218,6 @@ const MarkdownText: React.FC<{
   rubricMode?: 'compact' | 'full';
   onViewEvaluation?: (evaluationText: string) => void;
 }> = ({ text, rubricMode = 'compact', onViewEvaluation }) => {
-  const { text: cleanedText, scene } = extractIllustration(text);
   const renderParagraph = (paragraph: string, pIndex: number) => {
     const lines = paragraph.split('\n').filter(l => l.trim());
     if (!lines.length) return null;
@@ -331,6 +334,10 @@ const MarkdownText: React.FC<{
       return <div key={pIndex} className={cls}>{parseInline(hm[2], `h-${pIndex}`)}</div>;
     }
 
+    // ── Table ─────────────────────────────────────────────────────────────
+    const table = parseMarkdownTable(lines);
+    if (table) return <MarkdownTable key={pIndex} header={table.header} rows={table.rows} />;
+
     // ── Bullet list ───────────────────────────────────────────────────────
     if (lines.every(l => /^[-*]\s/.test(l))) {
       return (
@@ -374,8 +381,17 @@ const MarkdownText: React.FC<{
 
   return (
     <div className="leading-relaxed">
-      {cleanedText.split('\n\n').map((p, i) => renderParagraph(p, i)).filter(Boolean)}
-      {scene && <SceneIllustration scene={scene} />}
+      {parseVizContent(text).map((seg, si) => {
+        if (seg.kind === 'viz' && seg.spec) return <MathVizRenderer key={`v${si}`} spec={seg.spec} />;
+        if (seg.kind === 'viz-error') return <VizFallback key={`v${si}`} />;
+        const { text: cleanedText, scene } = extractIllustration(seg.text ?? '');
+        return (
+          <React.Fragment key={`t${si}`}>
+            {cleanedText.split('\n\n').map((p, i) => renderParagraph(p, si * 1000 + i)).filter(Boolean)}
+            {scene && <SceneIllustration scene={scene} />}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };
@@ -2111,9 +2127,9 @@ LANGUAGE RULES:
         category: data?.category || '',
         subCategory: data?.sub_category || '',
         learningOrCertification: data?.learning_or_certification || '',
-        aiInstructions: data?.ai_facilitator_instructions 
-          ? `${gradeInstructions}\n\n${data.ai_facilitator_instructions}`
-          : `${gradeInstructions}\n\nYou are a helpful skills learning assistant. Guide the student through this learning activity with patience and encouragement. Ask questions to check their understanding and provide helpful feedback.`,
+        aiInstructions: data?.ai_facilitator_instructions
+          ? `${gradeInstructions}\n\n${data.ai_facilitator_instructions}\n${buildVizInstructions('general')}`
+          : `${gradeInstructions}\n\nYou are a helpful skills learning assistant. Guide the student through this learning activity with patience and encouragement. Ask questions to check their understanding and provide helpful feedback.\n${buildVizInstructions('general')}`,
         assessmentInstructions: data?.ai_assessment_instructions || 'Based on the conversation history, evaluate the student\'s performance in this skills learning activity. Consider their engagement, understanding, effort, and progress.',
         successMetrics: data?.metrics_for_success || 'Evaluate based on student engagement, understanding of concepts, quality of responses, and overall learning progress.',
         outcomes: data?.outcomes || 'Develop skills and understanding through guided practice and reflection.'
@@ -2129,7 +2145,7 @@ LANGUAGE RULES:
         category: '',
         subCategory: '',
         learningOrCertification: '',
-        aiInstructions: `${gradeInstructions}\n\nYou are a helpful skills learning assistant. Guide the student through this learning activity with patience and encouragement. Ask questions to check their understanding and provide helpful feedback.`,
+        aiInstructions: `${gradeInstructions}\n\nYou are a helpful skills learning assistant. Guide the student through this learning activity with patience and encouragement. Ask questions to check their understanding and provide helpful feedback.\n${buildVizInstructions('general')}`,
         assessmentInstructions: `Based on the conversation history, evaluate the student's performance in this skills learning activity. Consider their engagement, understanding, effort, and progress. Provide a score from 0-100 with justification.`,
         successMetrics: 'Evaluate based on student engagement, understanding of concepts, quality of responses, and overall learning progress.',
         outcomes: 'Develop skills and understanding through guided practice and reflection.'
@@ -2165,7 +2181,7 @@ LANGUAGE RULES:
       const response = await chatText({
         messages,
         system: contextualPrompt,
-        max_tokens: 500,
+        max_tokens: 900, // room for a picture's JSON alongside the reply — 500 could truncate one
         temperature: 0.7,
         page: 'SkillsDevelopmentPage',  // → Groq Llama 3.3 70B
       });
