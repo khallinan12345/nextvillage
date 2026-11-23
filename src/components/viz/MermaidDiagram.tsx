@@ -23,6 +23,7 @@ const MermaidDiagram: React.FC<{ code: string; alt?: string }> = ({ code, alt })
           mermaid.initialize({
             startOnLoad: false,
             securityLevel: 'strict',
+            suppressErrorRendering: true,
             theme: 'base',
             fontFamily: 'inherit',
             flowchart: { htmlLabels: false, curve: 'basis' },
