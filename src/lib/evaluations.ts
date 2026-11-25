@@ -39,6 +39,19 @@ export async function saveEvaluation(userId: string, record: EvaluationRecord): 
     );
 
   if (error) throw error;
+
+  // Append-only snapshot — evaluations itself is overwritten in place on every
+  // re-evaluation, so this is the only place attempt-over-time history survives.
+  // Never blocks the caller: a learner's evaluation is already saved above.
+  const { error: historyError } = await supabase.from('evaluation_history').insert({
+    user_id: userId,
+    dashboard_id: record.dashboardId,
+    activity_type: record.activityType,
+    overall_score: record.overallScore,
+    max_score: record.maxScore ?? 3,
+    criteria: record.criteria,
+  });
+  if (historyError) console.warn('[evaluations] Failed to write evaluation_history:', historyError);
 }
 
 // For activities that score one criterion at a time (e.g. a portfolio
