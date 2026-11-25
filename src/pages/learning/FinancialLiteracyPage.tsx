@@ -491,7 +491,15 @@ Return ONLY JSON: {"improved_text": "..."}`,
         max_tokens: 600,
         temperature: 0.2,
       });
-      if (result?.improved_text) setInput(result.improved_text);
+      if (result?.improved_text) {
+        setInput(result.improved_text);
+        const id = session?.dashboardId;
+        if (id && !id.startsWith('mock-')) {
+          supabase.rpc('increment_hint_used', { p_dashboard_id: id }).then(({ error }) => {
+            if (error) console.warn('[FinLit] increment_hint_used failed:', error);
+          });
+        }
+      }
     } catch (err) {
       console.error('[FinLit] Improve English error:', err);
     } finally {
