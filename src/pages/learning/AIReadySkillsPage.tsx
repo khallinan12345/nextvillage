@@ -2929,7 +2929,15 @@ Provide assessment now:`;
         max_tokens: 600,
         temperature: 0.3,
       });
-      if (result?.improved_text) setUserInput(result.improved_text);
+      if (result?.improved_text) {
+        setUserInput(result.improved_text);
+        const id = selectedActivity?.id;
+        if (id && !id.startsWith('mock-')) {
+          supabase.rpc('increment_hint_used', { p_dashboard_id: id }).then(({ error }) => {
+            if (error) console.warn('[AIReadySkillsPage] increment_hint_used failed:', error);
+          });
+        }
+      }
     } catch (err) {
       console.error('Improve English error:', err);
     } finally {
