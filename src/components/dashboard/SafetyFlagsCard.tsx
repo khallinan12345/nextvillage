@@ -8,12 +8,14 @@
 // an email for each one too (api/notify-safety-flags.js).
 //
 // RLS (together_safety_flags_select) limits the query to organizations the
-// caller leads; "Mark reviewed" goes through review_together_safety_flag(),
-// and "Remove message" uses the same soft-delete leaders already have in the
-// room itself. See 20261005021247_together_room_safety_flags.sql.
+// caller leads; "Confirm violation"/"Dismiss" both go through
+// review_together_safety_flag() with the chosen disposition, and "Remove
+// message" uses the same soft-delete leaders already have in the room
+// itself. See 20261005021247_together_room_safety_flags.sql and
+// 20261125130000_safety_flag_disposition.sql.
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { ShieldAlert, Check, Trash2, Loader2 } from 'lucide-react';
+import { ShieldAlert, Check, X, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -69,10 +71,10 @@ const SafetyFlagsCard: React.FC = () => {
     return () => window.clearInterval(timer);
   }, [load]);
 
-  const markReviewed = async (flag: SafetyFlag) => {
+  const markReviewed = async (flag: SafetyFlag, disposition: 'confirmed' | 'dismissed') => {
     setBusyId(flag.id);
     setError(null);
-    const { error: rpcError } = await supabase.rpc('review_together_safety_flag', { p_flag_id: flag.id });
+    const { error: rpcError } = await supabase.rpc('review_together_safety_flag', { p_flag_id: flag.id, p_disposition: disposition });
     setBusyId(null);
     if (rpcError) { setError(rpcError.message); return; }
     setFlags(prev => prev.filter(f => f.id !== flag.id));
@@ -149,12 +151,20 @@ const SafetyFlagsCard: React.FC = () => {
               )}
               {removedIds.has(f.id) && <span className="text-sm text-gray-500 self-center">Message removed from the room.</span>}
               <button
-                onClick={() => markReviewed(f)}
+                onClick={() => markReviewed(f, 'confirmed')}
                 disabled={busyId === f.id}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60"
               >
                 {busyId === f.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                Mark reviewed
+                Confirm violation
+              </button>
+              <button
+                onClick={() => markReviewed(f, 'dismissed')}
+                disabled={busyId === f.id}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 disabled:opacity-60"
+              >
+                {busyId === f.id ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+                Dismiss (false positive)
               </button>
             </div>
           </li>

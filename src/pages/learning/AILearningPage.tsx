@@ -2373,7 +2373,14 @@ Use section headers like "Deepen Understanding:", "Practice Application:", "Deve
         max_tokens: 600,
         temperature: 0.3,
       });
-      if (result?.improved_text) setUserInput(result.improved_text);
+      if (result?.improved_text) {
+        setUserInput(result.improved_text);
+        if (currentDashboardId && !currentDashboardId.startsWith('mock-')) {
+          supabase.rpc('increment_hint_used', { p_dashboard_id: currentDashboardId }).then(({ error }) => {
+            if (error) console.warn('[AILearningPage] increment_hint_used failed:', error);
+          });
+        }
+      }
     } catch (err) {
       console.error('Improve English error:', err);
     } finally {
