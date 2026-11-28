@@ -122,10 +122,15 @@ const HYBRID_CODING_PAGES = new Set([
 //     sessions to measure growth. The free-tier chain rotates between
 //     different providers and models, which would change the facilitator
 //     between checkpoints, so this page is pinned to one model.
+//   PathwaysExplorerPage: the personalized-journey mentor must stay grounded
+//     in the real pathway catalog it's given and never invent a path or a
+//     statistic — a free-tier model swap mid-conversation is the kind of
+//     reliability risk this page can't take.
 const SONNET55_PAGES = new Set([
   'SystemsThinkPage',
   'HealthcareNavigatorPage',
   'PromptChallengePage',
+  'PathwaysExplorerPage',
 ]);
 
 // Per-task reasoning effort — a good model at low effort has held up well
