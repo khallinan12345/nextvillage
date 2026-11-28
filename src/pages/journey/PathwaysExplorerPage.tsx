@@ -7,7 +7,7 @@
 // "Choosing a Direction" and beyond). Nothing here is saved yet; the
 // conversation lives only in this page's own state.
 
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { chatText } from '../../lib/chatClient';
 import { supabase } from '../../lib/supabaseClient';
@@ -18,8 +18,37 @@ import {
   type PathwayCatalogRow,
 } from '../../lib/journeyMentorPrompt';
 
+// Same Mermaid renderer the AI tutoring pages already use for diagrams
+// (src/components/viz), lazy-loaded the same way since the library is large.
+const MermaidDiagram = lazy(() => import('../../components/viz/MermaidDiagram'));
+
+// A fixed, hand-authored diagram (not AI-generated), so it needs no validation
+// pass — just the mentoring journey's own throughline: interests lead to
+// aligned learning, which leads to both a career/life for the learner and a
+// benefit for their community. Colors reuse the same palette MermaidDiagram.tsx
+// sets globally (emerald/amber), so this matches every other diagram on the site.
+const JOURNEY_DIAGRAM = `flowchart LR
+  A[Your Interests and Strengths] --> B[Mentoring Conversation]
+  B --> C[Learning Aligned to You]
+  C --> D[Your Career and Life]
+  C --> E[Your Community]
+  classDef career fill:#ecfdf5,stroke:#059669,color:#064e3b
+  classDef community fill:#fffbeb,stroke:#f59e0b,color:#78350f
+  class D career
+  class E community`;
+
 type Message = { role: 'user' | 'assistant'; content: string };
 type Phase = 'loading' | 'chat' | 'error';
+
+function readSavedMessages(raw: unknown): Message[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((m): m is Message =>
+    !!m && typeof m === 'object'
+    && ((m as Record<string, unknown>).role === 'user' || (m as Record<string, unknown>).role === 'assistant')
+    && typeof (m as Record<string, unknown>).content === 'string'
+    && (m as Record<string, unknown>).content !== '',
+  );
+}
 
 // The mentor is asked to put each pathway on its own dashed line and end
 // every message with one question on its own line, so this renders those as
@@ -60,11 +89,17 @@ export default function PathwaysExplorerPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc('pathway_catalog');
+      const { data: catalogData, error: catalogError } = await supabase.rpc('pathway_catalog');
       if (cancelled) return;
-      if (error || !data) { setPhase('error'); return; }
-      setCatalog(data as PathwayCatalogRow[]);
-      setMessages([{ role: 'assistant', content: journeyOpeningMessage() }]);
+      if (catalogError || !catalogData) { setPhase('error'); return; }
+      setCatalog(catalogData as PathwayCatalogRow[]);
+
+      // Resume an in-progress conversation if one was saved, so a refresh
+      // never means starting over.
+      const { data: savedData } = await supabase.rpc('my_journey_session');
+      if (cancelled) return;
+      const saved = readSavedMessages(savedData);
+      setMessages(saved.length > 0 ? saved : [{ role: 'assistant', content: journeyOpeningMessage() }]);
       setPhase('chat');
     })();
     return () => { cancelled = true; };
@@ -89,7 +124,11 @@ export default function PathwaysExplorerPage() {
         messages: withLearner,
         max_tokens: 500,
       }));
-      setMessages([...withLearner, { role: 'assistant', content: reply }]);
+      const full: Message[] = [...withLearner, { role: 'assistant', content: reply }];
+      setMessages(full);
+      supabase.rpc('save_journey_session', { p_transcript: full }).then(({ error: saveError }) => {
+        if (saveError) setNotice('Your conversation was saved up to your last message, but the latest reply may not have saved. If you refresh, you may need to repeat your last message.');
+      });
     } catch {
       setNotice('The mentor could not answer just now. Please try sending your message again.');
       setMessages(messages);
@@ -123,6 +162,13 @@ export default function PathwaysExplorerPage() {
         <h1 className="mt-3 text-xl font-semibold text-gray-900">Explore your path</h1>
         <p className="text-sm text-gray-600 mt-1">A conversation to help you think about the kind of work and life you might want.</p>
       </header>
+
+      <div className="rounded-xl p-3 shadow-xs" style={{ background: '#eef2ff', border: '2px solid #818cf8' }}>
+        <p className="text-xs font-bold mb-2 uppercase tracking-wide text-indigo-700">Your journey</p>
+        <Suspense fallback={<p className="text-sm text-slate-500">Drawing diagram…</p>}>
+          <MermaidDiagram code={JOURNEY_DIAGRAM} alt="Your interests and strengths lead into a mentoring conversation, which leads to learning aligned to you, which leads to both your career and life and your community" />
+        </Suspense>
+      </div>
 
       <div className="flex flex-col gap-3" aria-live="polite">
         {messages.map((m, i) => (
