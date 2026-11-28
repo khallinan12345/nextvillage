@@ -56,6 +56,7 @@ import InactiveAccountsCard from '../components/dashboard/InactiveAccountsCard';
 import ConsentRecordsCard from '../components/dashboard/ConsentRecordsCard';
 import MissingBirthYearCard from '../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../components/dashboard/SafetyFlagsCard';
+import LifeSkillMetricsCard from '../components/dashboard/LifeSkillMetricsCard';
 import { EvidencePicker } from '../components/community-impact/EvidencePicker';
 import classNames from 'classnames';
 
@@ -2273,6 +2274,9 @@ ${prior.impact_arc}
 
             {/* ── Prompt Challenge: shown only when a checkpoint or revisit is due ── */}
             {['student', 'learner'].includes(user?.role ?? '') && <AnchorPromptCard />}
+
+            {/* ── Life-skill metrics: Grit, Independence, Feedback-responsiveness, Community Standards ── */}
+            {['student', 'learner'].includes(user?.role ?? '') && <LifeSkillMetricsCard />}
 
             {/* ── Module Progress Ring + Achievements ─────────────────────── */}
             {user?.role === 'student' && (
