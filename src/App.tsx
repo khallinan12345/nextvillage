@@ -40,6 +40,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Learning Pages
+const PathwaysExplorerPage = lazy(() => import('./pages/journey/PathwaysExplorerPage'));
 const AILearningPage = lazy(() => import('./pages/learning/AILearningPage'));
 const PromptChallengePage = lazy(() => import('./pages/learning/PromptChallengePage'));
 const AIReadySkillsPage = lazy(() => import('./pages/learning/AIReadySkillsPage'));
@@ -284,6 +285,10 @@ export const AppContent: React.FC = () => {
         <Route path="/learning/skills" element={<AIReadySkillsPage />} />
         <Route path="/learning/financial-literacy" element={<FinancialLiteracyPage />} />
         <Route path="/learning/solar-engineering" element={<SolarEngineeringPage />} />
+
+        {/* Personalized journey — Phase 1 private pilot (Stages 1-3 only).
+            Direct link only: deliberately not added to any nav or sidebar. */}
+        <Route path="/pathways" element={<PathwaysExplorerPage />} />
 
         {/* Certification Routes */}
         <Route path="/certifications/ai-proficiency" element={<AILearningCertificationPage />} />
