@@ -63,6 +63,7 @@ import { SceneIllustration } from '../../components/community-impact/SceneIllust
 import { withIllustration } from '../../lib/illustrationAgent';
 import { parseVizContent, MathVizRenderer, VizFallback } from '../../components/MathViz';
 import { buildVizInstructions } from '../../components/viz/vizPrompt';
+import { buildGritInstructions } from '../../lib/gritPrompt';
 import { parseMarkdownTable } from '../../components/viz/markdownTableSpec';
 import { MarkdownTable } from '../../components/viz/MarkdownTable';
 import {
@@ -1707,7 +1708,8 @@ ${personalizedBlock}
 GOAL: Your primary goal is to help the learner improve their skills in ${subCategory} based on the following rubric dimensions:
 ${(RUBRIC_DEFINITIONS[subCategory] || []).map(d => `- ${d.replace(/_/g, ' ')}`).join('\n')}
 
-Since this learner is just starting, focus on building foundational understanding across all dimensions.`;
+Since this learner is just starting, focus on building foundational understanding across all dimensions.
+${buildGritInstructions()}`;
     }
 
     // Build performance summary
@@ -1746,7 +1748,8 @@ Reference the specific rubric criteria naturally in your feedback. For example:
 - "Excellent! That response demonstrates proficient [dimension] because..."
 - "I notice you're still at the no evidence level for [dimension]. Let's work on that by..."
 
-Remember: Every response is an opportunity to help them improve. Be specific, encouraging, and always tie feedback back to the rubric dimensions.`;
+Remember: Every response is an opportunity to help them improve. Be specific, encouraging, and always tie feedback back to the rubric dimensions.
+${buildGritInstructions()}`;
   };
 
   // Load dashboard activities
