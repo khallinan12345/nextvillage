@@ -29,6 +29,7 @@ import { AIPidginCoachWrapper } from '../../components/AIPidginCoachWrapper';
 import { saveEvaluation } from '../../lib/evaluations';
 import { parseVizContent, stripVizForSpeech, MathVizRenderer, VizFallback } from '../../components/MathViz';
 import { buildVizInstructions } from '../../components/viz/vizPrompt';
+import { buildGritInstructions } from '../../lib/gritPrompt';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1184,7 +1185,7 @@ Push for precision, nuance, and connection between concepts. Challenge oversimpl
     const withUser = [...messages, userMsg];
     setMessages(withUser);
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel) + buildVizInstructions('science');
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildScienceLevelBlock(scienceLevel) + buildVizInstructions('science') + buildGritInstructions();
       const aiText = await chatText({
         page: 'ScienceSkillsPage',
         messages: withUser.map(m => ({ role: m.role, content: m.content })),

@@ -13,6 +13,8 @@
 // - The facilitator returns a machine-readable <rubric>{json}</rubric> tag on
 //   every scored turn, so per-turn scoring needs no second API call.
 
+import { buildGritInstructions } from './gritPrompt';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
@@ -366,6 +368,7 @@ ${localeBlock(locale)}
 ${commLevelRules(communicationLevel)}
 ${baselineBlock(baseline)}
 ${SAFETY_RULES}
+${buildGritInstructions()}
 
 HOW TO TEACH (constructivist, Socratic):
 - Work with REAL NUMBERS in ${locale.currencyName}. Give the learner a small concrete situation with amounts, and make THEM do the calculation. Money skill is shown in numbers, not opinions.

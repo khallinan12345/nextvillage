@@ -1,6 +1,7 @@
 // AILearningPage.tsx - Dashboard-based AI learning with interactive activities
 import { parseVizContent, MathVizRenderer, VizFallback } from '../../components/MathViz';
 import { buildVizInstructions } from '../../components/viz/vizPrompt';
+import { buildGritInstructions } from '../../lib/gritPrompt';
 import { parseMarkdownTable } from '../../components/viz/markdownTableSpec';
 import { MarkdownTable } from '../../components/viz/MarkdownTable';
 import React, { useState, useEffect, useRef } from 'react';
@@ -1859,7 +1860,8 @@ SUB-CATEGORY: ${subCategory}
 
 FACILITATOR INSTRUCTIONS: ${data.ai_facilitator_instructions}
 ${TUTOR_BEHAVIOR_RULES}
-${buildVizInstructions('general')}`
+${buildVizInstructions('general')}
+${buildGritInstructions()}`
         : `${gradeInstructions}
 
 ${unescoGuidance}
@@ -1870,7 +1872,8 @@ SUB-CATEGORY: ${subCategory}
 
 You are a helpful AI learning assistant guiding a student through this learning activity. Be encouraging, patient, and provide step-by-step guidance. Ask questions to check understanding and provide hints when needed.
 ${TUTOR_BEHAVIOR_RULES}
-${buildVizInstructions('general')}`;
+${buildVizInstructions('general')}
+${buildGritInstructions()}`;
 
       return {
         title: data?.title || 'this learning activity',
@@ -1888,7 +1891,7 @@ ${buildVizInstructions('general')}`;
       return {
         title: 'this learning activity',
         description: 'Description could not be loaded.',
-        aiInstructions: `${gradeInstructions}\n\nYou are a helpful AI learning assistant. Guide the student through this learning activity with patience and encouragement.\n${TUTOR_BEHAVIOR_RULES}\n${buildVizInstructions('general')}`,
+        aiInstructions: `${gradeInstructions}\n\nYou are a helpful AI learning assistant. Guide the student through this learning activity with patience and encouragement.\n${TUTOR_BEHAVIOR_RULES}\n${buildVizInstructions('general')}\n${buildGritInstructions()}`,
         assessmentInstructions: "Based on the conversation history, evaluate the student's performance. Consider engagement, effort, and understanding.",
         successMetrics: "Evaluate based on student engagement, understanding of concepts, quality of responses, and overall learning progress.",
         outcomes: ''
