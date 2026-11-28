@@ -1106,6 +1106,12 @@ Respond ONLY with valid JSON:
       const updatedMsgs = [...messages, explainMsg];
       setMessages(updatedMsgs);
       await persistToDashboard(updatedMsgs, evaluation);
+      const id = dashboardRowId.current;
+      if (id && !id.startsWith('mock-')) {
+        supabase.rpc('increment_hint_used', { p_dashboard_id: id }).then(({ error }) => {
+          if (error) console.warn('[EnglishSkillsPage] increment_hint_used failed:', error);
+        });
+      }
     } catch (err) { console.error('Improve error:', err); }
     finally { setIsImproving(false); }
   };
