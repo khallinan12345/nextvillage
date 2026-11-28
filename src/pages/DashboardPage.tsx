@@ -57,6 +57,7 @@ import ConsentRecordsCard from '../components/dashboard/ConsentRecordsCard';
 import MissingBirthYearCard from '../components/dashboard/MissingBirthYearCard';
 import SafetyFlagsCard from '../components/dashboard/SafetyFlagsCard';
 import LifeSkillMetricsCard from '../components/dashboard/LifeSkillMetricsCard';
+import ExplorePathCard from '../components/dashboard/ExplorePathCard';
 import { EvidencePicker } from '../components/community-impact/EvidencePicker';
 import classNames from 'classnames';
 
@@ -2277,6 +2278,9 @@ ${prior.impact_arc}
 
             {/* ── Life-skill metrics: Grit, Independence, Feedback-responsiveness, Community Standards ── */}
             {['student', 'learner'].includes(user?.role ?? '') && <LifeSkillMetricsCard />}
+
+            {/* ── Personalized journey, Phase 2 opt-in entry point ────────── */}
+            {['student', 'learner'].includes(user?.role ?? '') && <ExplorePathCard />}
 
             {/* ── Module Progress Ring + Achievements ─────────────────────── */}
             {user?.role === 'student' && (

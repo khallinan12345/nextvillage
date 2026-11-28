@@ -17,6 +17,12 @@ import {
   journeyOpeningMessage,
   type PathwayCatalogRow,
 } from '../../lib/journeyMentorPrompt';
+import PathwayBrowser, { type BrowsablePathway } from './PathwayBrowser';
+
+// pathway_catalog() returns more columns than the mentor prompt needs
+// (journeyMentorPrompt's PathwayCatalogRow); this page also needs id and
+// cluster_key for the shortlist browser, so it keeps the fuller row shape.
+type CatalogRow = PathwayCatalogRow & BrowsablePathway;
 
 // Same Mermaid renderer the AI tutoring pages already use for diagrams
 // (src/components/viz), lazy-loaded the same way since the library is large.
@@ -79,7 +85,8 @@ function AssistantContent({ content }: { content: string }) {
 
 export default function PathwaysExplorerPage() {
   const [phase, setPhase] = useState<Phase>('loading');
-  const [catalog, setCatalog] = useState<PathwayCatalogRow[]>([]);
+  const [catalog, setCatalog] = useState<CatalogRow[]>([]);
+  const [shortlist, setShortlist] = useState<Set<string>>(new Set());
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -92,7 +99,7 @@ export default function PathwaysExplorerPage() {
       const { data: catalogData, error: catalogError } = await supabase.rpc('pathway_catalog');
       if (cancelled) return;
       if (catalogError || !catalogData) { setPhase('error'); return; }
-      setCatalog(catalogData as PathwayCatalogRow[]);
+      setCatalog(catalogData as CatalogRow[]);
 
       // Resume an in-progress conversation if one was saved, so a refresh
       // never means starting over.
@@ -100,6 +107,18 @@ export default function PathwaysExplorerPage() {
       if (cancelled) return;
       const saved = readSavedMessages(savedData);
       setMessages(saved.length > 0 ? saved : [{ role: 'assistant', content: journeyOpeningMessage() }]);
+
+      // Stage 4: the learner's current shortlist (pathways marked "exploring").
+      const { data: shortlistData } = await supabase
+        .from('pathway_shortlist')
+        .select('pathway_id, status');
+      if (cancelled) return;
+      if (Array.isArray(shortlistData)) {
+        setShortlist(new Set(
+          shortlistData.filter((r) => r.status === 'exploring').map((r) => r.pathway_id as string),
+        ));
+      }
+
       setPhase('chat');
     })();
     return () => { cancelled = true; };
@@ -138,6 +157,26 @@ export default function PathwaysExplorerPage() {
     }
   }
 
+  async function toggleShortlist(pathwayId: string, nowExploring: boolean) {
+    setShortlist((prev) => {
+      const next = new Set(prev);
+      if (nowExploring) next.add(pathwayId); else next.delete(pathwayId);
+      return next;
+    });
+    const { error } = await supabase.rpc('set_pathway_shortlist_status', {
+      p_pathway_id: pathwayId,
+      p_status: nowExploring ? 'exploring' : 'dropped',
+    });
+    if (error) {
+      setShortlist((prev) => {
+        const next = new Set(prev);
+        if (nowExploring) next.delete(pathwayId); else next.add(pathwayId);
+        return next;
+      });
+      setNotice('Could not save that change. Please try again.');
+    }
+  }
+
   if (phase === 'loading') {
     return <div className="max-w-2xl mx-auto p-6 text-gray-600">Loading your mentor…</div>;
   }
@@ -157,7 +196,7 @@ export default function PathwaysExplorerPage() {
       <header>
         <Link to="/dashboard" className="text-sm text-blue-700 underline">Back to your dashboard</Link>
         <p className="text-xs text-gray-500 mt-0.5">
-          Private preview. Nothing in this conversation is saved yet — this is just for exploring.
+          Your conversation saves automatically, so you can pick up where you left off.
         </p>
         <h1 className="mt-3 text-xl font-semibold text-gray-900">Explore your path</h1>
         <p className="text-sm text-gray-600 mt-1">A conversation to help you think about the kind of work and life you might want.</p>
@@ -212,6 +251,8 @@ export default function PathwaysExplorerPage() {
           Send
         </button>
       </div>
+
+      <PathwayBrowser catalog={catalog} shortlist={shortlist} onToggle={(id, now) => void toggleShortlist(id, now)} />
     </div>
   );
 }
