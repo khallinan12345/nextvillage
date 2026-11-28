@@ -21,6 +21,33 @@ import {
 type Message = { role: 'user' | 'assistant'; content: string };
 type Phase = 'loading' | 'chat' | 'error';
 
+// The mentor is asked to put each pathway on its own dashed line and end
+// every message with one question on its own line, so this renders those as
+// a real list and makes the question stand out instead of dumping everything
+// into one dense paragraph.
+function AssistantContent({ content }: { content: string }) {
+  const lines = content.split('\n').map((l) => l.trim()).filter((l) => l !== '');
+  return (
+    <div className="flex flex-col gap-2">
+      {lines.map((line, i) => {
+        const isBullet = /^[-•]\s+/.test(line);
+        const text = isBullet ? line.replace(/^[-•]\s+/, '') : line;
+        const isQuestion = text.endsWith('?');
+        const questionClass = isQuestion ? 'font-semibold text-blue-900' : '';
+        if (isBullet) {
+          return (
+            <div key={i} className="flex gap-2">
+              <span className="text-blue-700 font-bold shrink-0">•</span>
+              <span className={questionClass}>{text}</span>
+            </div>
+          );
+        }
+        return <p key={i} className={questionClass}>{text}</p>;
+      })}
+    </div>
+  );
+}
+
 export default function PathwaysExplorerPage() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [catalog, setCatalog] = useState<PathwayCatalogRow[]>([]);
@@ -104,10 +131,10 @@ export default function PathwaysExplorerPage() {
             className={
               m.role === 'user'
                 ? 'self-end max-w-[85%] rounded-lg bg-blue-700 text-white px-3 py-2 whitespace-pre-wrap'
-                : 'self-start max-w-[85%] rounded-lg bg-gray-100 text-gray-900 px-3 py-2 whitespace-pre-wrap'
+                : 'self-start max-w-[85%] rounded-lg bg-gray-100 text-gray-900 px-3.5 py-3'
             }
           >
-            {m.content}
+            {m.role === 'user' ? m.content : <AssistantContent content={m.content} />}
           </div>
         ))}
         {busy && <div className="self-start text-sm text-gray-500">Thinking…</div>}
