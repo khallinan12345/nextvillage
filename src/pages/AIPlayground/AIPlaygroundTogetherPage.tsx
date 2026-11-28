@@ -903,7 +903,11 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                 This room is closed. History is still visible above.
               </div>
             ) : (
-              <div className="flex items-end gap-2 px-5 py-3 border-t border-gray-100">
+              <>
+              <p className="px-5 pt-2 text-[11px] text-gray-400 border-t border-gray-100">
+                This is a shared space — be kind, stay on topic, and treat others the way you'd want to be treated.
+              </p>
+              <div className="flex items-end gap-2 px-5 py-3">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -936,6 +940,7 @@ const AIPlaygroundTogetherPage: React.FC = () => {
                   {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                 </button>
               </div>
+              </>
             )}
           </div>
 
