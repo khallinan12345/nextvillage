@@ -2,6 +2,7 @@
 
 import { parseVizContent, stripVizForSpeech, MathVizRenderer, VizFallback } from '../../components/MathViz';
 import { buildVizInstructions } from '../../components/viz/vizPrompt';
+import { buildGritInstructions } from '../../lib/gritPrompt';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
@@ -1026,7 +1027,7 @@ Respond ONLY with valid JSON:
     setView('chat');
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + buildVizInstructions('english');
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', t) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + buildVizInstructions('english') + buildGritInstructions();
       const welcome = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         messages: [{ role: 'user', content: `The student has chosen the topic: "${t}". Give a warm 2-sentence welcome and ask your very first question or prompt. Be friendly and encouraging.` }],
@@ -1070,7 +1071,7 @@ Respond ONLY with valid JSON:
     setMessages(withUser);
 
     try {
-      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + buildVizInstructions('english');
+      const sysPrompt = selectedStage.systemPrompt.replace('{TOPIC}', topic) + buildCommLevelBlock(communicationLevel) + EXTENSIVE_INTERACTIVE_INSTRUCTIONS + buildVizInstructions('english') + buildGritInstructions();
       const aiText = await chatText({
         page: 'EnglishSkillsPage',  // → Groq Llama 3.3 70B
         // Only the recent turns go to the AI: a long session sent in full overflows the free
